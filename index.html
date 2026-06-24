@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Jóga s králíčky — klidné lekce v jejich společnosti</title>
+<meta name="description" content="Lekce jógy, kde se po studiu volně prochází domácí králíčci. Zpomalte, dýchejte a nechte se rozptýlit těmi nejroztomilejšími učiteli klidu." />
+<link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
+<meta property="og:title" content="Jóga s králíčky — klidné lekce v jejich společnosti" />
+<meta property="og:description" content="Hodina jógy, po které volně pobíhá deset chlupatých učitelů zpomalení." />
+<meta property="og:image" content="assets/logo.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Nunito+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #ECEFE2;
+    --cloud: #FAFBF6;
+    --ink: #2A2E24;
+    --ink-soft: #5A6150;
+    --clover: #6E8A4E;
+    --clover-deep: #50693A;
+    --carrot: #E08A4B;
+    --blush: #E8C9C2;
+    --line: #D6DAC7;
+
+    --maxw: 1180px;
+    --r-lg: 32px;
+    --r-md: 20px;
+    --ease: cubic-bezier(.22,.61,.36,1);
+
+    --step--1: clamp(.82rem, .8rem + .15vw, .92rem);
+    --step-0: clamp(1rem, .96rem + .25vw, 1.12rem);
+    --step-1: clamp(1.4rem, 1.2rem + .9vw, 1.85rem);
+    --step-2: clamp(1.9rem, 1.5rem + 1.8vw, 2.9rem);
+    --step-3: clamp(2.6rem, 1.7rem + 4vw, 5rem);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+  body {
+    margin: 0;
+    font-family: "Nunito Sans", system-ui, sans-serif;
+    font-size: var(--step-0);
+    line-height: 1.7;
+    color: var(--ink);
+    background: var(--paper);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3 { font-family: "Fraunces", Georgia, serif; font-weight: 400; line-height: 1.05; letter-spacing: -.02em; margin: 0; }
+  p { margin: 0; }
+  a { color: inherit; text-decoration: none; }
+  img, svg { display: block; max-width: 100%; }
+
+  .wrap { width: min(100% - 2.6rem, var(--maxw)); margin-inline: auto; }
+  .eyebrow {
+    font-size: var(--step--1); font-weight: 700; letter-spacing: .22em;
+    text-transform: uppercase; color: var(--clover);
+    display: inline-flex; align-items: center; gap: .6rem;
+  }
+  .eyebrow::before { content: ""; width: 26px; height: 1px; background: var(--clover); opacity: .6; }
+
+  /* ---------- focus + buttons ---------- */
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--clover); outline-offset: 3px; border-radius: 6px;
+  }
+  .btn {
+    display: inline-flex; align-items: center; gap: .55rem;
+    font-family: inherit; font-size: var(--step-0); font-weight: 600;
+    padding: .85em 1.5em; border-radius: 999px; border: 1px solid transparent;
+    cursor: pointer; transition: transform .35s var(--ease), background-color .35s var(--ease), box-shadow .35s var(--ease);
+  }
+  .btn-primary {
+    background: var(--ink); color: var(--paper);
+    box-shadow: 0 10px 22px -12px rgba(42,46,36,.7);
+  }
+  .btn-primary:hover { transform: translateY(-2px); background: var(--clover-deep); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-ghost { background: transparent; border-color: var(--line); color: var(--ink); }
+  .btn-ghost:hover { transform: translateY(-2px); border-color: var(--clover); background: var(--cloud); }
+  .btn .arrow { transition: transform .35s var(--ease); }
+  .btn:hover .arrow { transform: translateX(3px); }
+
+  /* ---------- nav ---------- */
+  header.nav {
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(10px);
+    background: color-mix(in srgb, var(--paper) 80%, transparent);
+    border-bottom: 1px solid transparent;
+    transition: border-color .4s var(--ease), background-color .4s var(--ease);
+  }
+  header.nav.scrolled { border-color: var(--line); }
+  .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 76px; }
+  .brand { display: inline-flex; align-items: center; gap: .65rem; font-family: "Fraunces"; font-size: 1.3rem; letter-spacing: -.02em; }
+  .brand .mark { width: 34px; height: 34px; flex: none; }
+  .nav-links { display: flex; align-items: center; gap: 2rem; }
+  .nav-links a { font-size: .98rem; font-weight: 600; color: var(--ink-soft); position: relative; transition: color .3s var(--ease); }
+  .nav-links a::after {
+    content: ""; position: absolute; left: 0; bottom: -5px; height: 2px; width: 100%;
+    background: var(--clover); transform: scaleX(0); transform-origin: left; transition: transform .35s var(--ease);
+  }
+  .nav-links a:hover { color: var(--ink); }
+  .nav-links a:hover::after { transform: scaleX(1); }
+  .nav-cta { display: flex; align-items: center; gap: 1.25rem; }
+  .menu-toggle { display: none; background: none; border: 0; cursor: pointer; }
+
+  /* ---------- hero ---------- */
+  .hero { position: relative; padding: clamp(3rem, 6vw, 6rem) 0 clamp(4rem, 7vw, 7rem); overflow: hidden; }
+  .hero-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: clamp(2rem, 5vw, 5rem); align-items: center; }
+  .hero h1 { font-size: var(--step-3); font-weight: 300; }
+  .hero h1 em { font-style: italic; color: var(--clover-deep); font-weight: 400; }
+  .hero .lede { margin-top: 1.5rem; max-width: 30ch; font-size: var(--step-1); line-height: 1.4; color: var(--ink); font-family: "Fraunces"; font-weight: 300; }
+  .hero .sub { margin-top: 1.2rem; max-width: 42ch; color: var(--ink-soft); }
+  .hero-actions { margin-top: 2.2rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
+  .hero-note { font-size: var(--step--1); color: var(--ink-soft); display: flex; align-items: center; gap: .5rem; }
+  .hero-note b { color: var(--ink); font-weight: 700; }
+
+  /* breathing pacer — signature element */
+  .breath { position: relative; aspect-ratio: 1; width: min(100%, 420px); margin-inline: auto; display: grid; place-items: center; }
+  .breath-ring {
+    position: absolute; inset: 0; border-radius: 50%;
+    background: radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--clover) 22%, var(--paper)), var(--paper) 70%);
+    border: 1px solid var(--line);
+  }
+  .breath-pulse {
+    position: absolute; width: 64%; aspect-ratio: 1; border-radius: 50%;
+    background: radial-gradient(circle at 50% 40%, #fff8, var(--blush) 60%, transparent 78%);
+    border: 1.5px solid color-mix(in srgb, var(--clover) 40%, transparent);
+    animation: breathe 9s var(--ease) infinite;
+  }
+  @keyframes breathe {
+    0%, 100% { transform: scale(.7); }
+    44.4%    { transform: scale(1.06); } /* ~4s inhale */
+    55.5%    { transform: scale(1.06); } /* hold */
+  }
+  .breath-label { position: relative; z-index: 2; text-align: center; }
+  .breath-label .word { font-family: "Fraunces"; font-size: 1.6rem; font-style: italic; color: var(--clover-deep); }
+  .breath-label small { display: block; font-size: var(--step--1); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-soft); margin-top: .35rem; }
+  .breath .bun { position: absolute; bottom: 8%; right: 6%; width: 92px; animation: hop 4.5s var(--ease) infinite; transform-origin: bottom center; }
+  @keyframes hop {
+    0%, 70%, 100% { transform: translateY(0) rotate(0); }
+    78% { transform: translateY(-14px) rotate(-4deg); }
+    86% { transform: translateY(0) rotate(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .breath-pulse, .breath .bun, .float { animation: none !important; }
+  }
+
+  /* floating ambient leaves */
+  .float { position: absolute; opacity: .5; pointer-events: none; }
+  .float.f1 { top: 12%; left: 4%; width: 46px; animation: drift 11s ease-in-out infinite; }
+  .float.f2 { bottom: 16%; left: 9%; width: 30px; animation: drift 9s ease-in-out infinite reverse; }
+  .float.f3 { top: 22%; right: 3%; width: 38px; animation: drift 13s ease-in-out infinite; }
+  @keyframes drift { 0%,100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-18px) rotate(6deg); } }
+
+  /* ---------- generic section ---------- */
+  section { padding: clamp(4rem, 8vw, 7.5rem) 0; }
+  .section-head { max-width: 56ch; }
+  .section-head h2 { font-size: var(--step-2); margin-top: 1rem; font-weight: 400; }
+  .section-head p { margin-top: 1.1rem; color: var(--ink-soft); }
+
+  /* reveal */
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity .8s var(--ease), transform .8s var(--ease); }
+  .reveal.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; } }
+
+  /* ---------- intro / stats ---------- */
+  .intro { background: var(--cloud); border-block: 1px solid var(--line); }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(1.5rem, 3vw, 3rem); margin-top: 3rem; }
+  .stat { padding-top: 1.4rem; border-top: 2px solid var(--clover); }
+  .stat .num { font-family: "Fraunces"; font-size: var(--step-2); line-height: 1; color: var(--ink); }
+  .stat .num span { color: var(--carrot); }
+  .stat .lbl { margin-top: .5rem; color: var(--ink-soft); font-size: .98rem; }
+
+  /* ---------- lekce ---------- */
+  .cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-top: 3rem; }
+  .card {
+    position: relative; background: var(--cloud); border: 1px solid var(--line);
+    border-radius: var(--r-lg); padding: 2.2rem; overflow: hidden;
+    transition: transform .45s var(--ease), box-shadow .45s var(--ease), border-color .45s var(--ease);
+  }
+  .card:hover { transform: translateY(-5px); border-color: color-mix(in srgb, var(--clover) 50%, var(--line)); box-shadow: 0 26px 50px -30px rgba(42,46,36,.45); }
+  .card .tag { font-size: var(--step--1); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--clover); }
+  .card h3 { font-size: var(--step-1); margin-top: .7rem; }
+  .card .desc { margin-top: .8rem; color: var(--ink-soft); }
+  .card .meta { margin-top: 1.5rem; display: flex; gap: 1.4rem; flex-wrap: wrap; font-size: var(--step--1); color: var(--ink-soft); }
+  .card .meta b { display: block; color: var(--ink); font-size: var(--step-0); font-family: "Fraunces"; }
+  .card .corner { position: absolute; top: -10px; right: -10px; width: 96px; opacity: .25; transition: opacity .45s var(--ease), transform .45s var(--ease); }
+  .card:hover .corner { opacity: .55; transform: rotate(-6deg) scale(1.05); }
+
+  /* ---------- rozvrh ---------- */
+  .schedule { background: var(--ink); color: var(--paper); }
+  .schedule .eyebrow { color: var(--blush); }
+  .schedule .eyebrow::before { background: var(--blush); }
+  .schedule h2 { color: var(--paper); }
+  .schedule .section-head p { color: color-mix(in srgb, var(--paper) 72%, transparent); }
+  .grid-days { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin-top: 3rem; background: color-mix(in srgb, var(--paper) 18%, transparent); border: 1px solid color-mix(in srgb, var(--paper) 18%, transparent); border-radius: var(--r-md); overflow: hidden; }
+  .day { background: var(--ink); padding: 1.6rem 1.4rem; }
+  .day h4 { font-family: "Fraunces"; font-size: 1.15rem; font-weight: 500; margin: 0 0 1rem; color: var(--blush); }
+  .slot { padding: .55rem 0; border-top: 1px solid color-mix(in srgb, var(--paper) 14%, transparent); }
+  .slot .t { font-weight: 700; }
+  .slot .n { font-size: var(--step--1); color: color-mix(in srgb, var(--paper) 65%, transparent); }
+  .slot.empty { color: color-mix(in srgb, var(--paper) 35%, transparent); }
+
+  /* ---------- bunnies ---------- */
+  .buns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-top: 3rem; }
+  .bun-card { text-align: center; background: var(--cloud); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 2rem 1.4rem; transition: transform .4s var(--ease); }
+  .bun-card:hover { transform: translateY(-6px) rotate(-1deg); }
+  .bun-card .pic { width: 120px; height: 120px; margin: 0 auto 1.2rem; border-radius: 50%; display: grid; place-items: center; }
+  .bun-card h3 { font-size: 1.4rem; }
+  .bun-card .role { font-size: var(--step--1); letter-spacing: .14em; text-transform: uppercase; color: var(--clover); font-weight: 700; margin-top: .4rem; }
+  .bun-card .bio { margin-top: .8rem; font-size: .96rem; color: var(--ink-soft); }
+
+  /* ---------- pricing ---------- */
+  .pricing { background: var(--cloud); border-block: 1px solid var(--line); }
+  .plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 3rem; align-items: stretch; }
+  .plan { display: flex; flex-direction: column; background: var(--paper); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 2.2rem; transition: transform .4s var(--ease); }
+  .plan:hover { transform: translateY(-4px); }
+  .plan.featured { background: var(--ink); color: var(--paper); border-color: var(--ink); position: relative; }
+  .plan.featured .price, .plan.featured h3 { color: var(--paper); }
+  .plan.featured .badge { position: absolute; top: 1.4rem; right: 1.4rem; background: var(--carrot); color: var(--ink); font-size: .72rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: .35em .8em; border-radius: 999px; }
+  .plan h3 { font-size: var(--step-1); }
+  .plan .price { font-family: "Fraunces"; font-size: var(--step-2); margin-top: .8rem; line-height: 1; }
+  .plan .price small { font-family: "Nunito Sans"; font-size: .95rem; font-weight: 400; color: inherit; opacity: .65; }
+  .plan ul { list-style: none; padding: 0; margin: 1.6rem 0 2rem; display: grid; gap: .7rem; }
+  .plan li { position: relative; padding-left: 1.7rem; font-size: .98rem; }
+  .plan li::before { content: ""; position: absolute; left: 0; top: .55em; width: 9px; height: 9px; border-radius: 50%; background: var(--clover); }
+  .plan.featured li::before { background: var(--carrot); }
+  .plan .btn { margin-top: auto; justify-content: center; }
+  .plan.featured .btn-primary { background: var(--carrot); color: var(--ink); box-shadow: none; }
+  .plan.featured .btn-primary:hover { background: var(--blush); }
+
+  /* ---------- faq ---------- */
+  .faq-list { margin-top: 2.5rem; border-top: 1px solid var(--line); }
+  .faq-item { border-bottom: 1px solid var(--line); }
+  .faq-q { width: 100%; text-align: left; background: none; border: 0; cursor: pointer; font-family: "Fraunces"; font-size: var(--step-1); color: var(--ink); padding: 1.5rem 3rem 1.5rem 0; position: relative; display: flex; }
+  .faq-q .ic { position: absolute; right: 0; top: 50%; width: 22px; height: 22px; transition: transform .4s var(--ease); }
+  .faq-q[aria-expanded="true"] .ic { transform: rotate(45deg); }
+  .faq-a { overflow: hidden; max-height: 0; transition: max-height .5s var(--ease); }
+  .faq-a > div { padding-bottom: 1.6rem; color: var(--ink-soft); max-width: 70ch; }
+
+  /* ---------- booking / contact ---------- */
+  .booking { background: var(--clover); color: var(--paper); }
+  .booking .booking-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 5vw, 4.5rem); align-items: center; }
+  .booking .eyebrow { color: var(--paper); }
+  .booking .eyebrow::before { background: var(--paper); opacity: .7; }
+  .booking h2 { font-size: var(--step-2); color: var(--paper); font-weight: 400; }
+  .booking p.lead { margin-top: 1.2rem; color: color-mix(in srgb, var(--paper) 85%, transparent); max-width: 42ch; }
+  .booking .contact-list { margin-top: 2rem; display: grid; gap: 1rem; }
+  .booking .contact-list a { display: inline-flex; align-items: center; gap: .7rem; font-weight: 600; transition: opacity .3s var(--ease); }
+  .booking .contact-list a:hover { opacity: .75; }
+  .form { background: var(--cloud); color: var(--ink); border-radius: var(--r-lg); padding: clamp(1.8rem, 3vw, 2.6rem); box-shadow: 0 30px 60px -30px rgba(42,46,36,.5); }
+  .form .field { margin-bottom: 1.1rem; }
+  .form label { display: block; font-size: var(--step--1); font-weight: 700; margin-bottom: .4rem; }
+  .form input, .form select, .form textarea {
+    width: 100%; font-family: inherit; font-size: var(--step-0); color: var(--ink);
+    padding: .8em 1em; border: 1px solid var(--line); border-radius: 12px; background: var(--paper);
+    transition: border-color .3s var(--ease), box-shadow .3s var(--ease);
+  }
+  .form input:focus, .form select:focus, .form textarea:focus { outline: none; border-color: var(--clover); box-shadow: 0 0 0 3px color-mix(in srgb, var(--clover) 22%, transparent); }
+  .form .btn { width: 100%; justify-content: center; margin-top: .4rem; }
+  .form .note { font-size: var(--step--1); color: var(--ink-soft); margin-top: .8rem; text-align: center; }
+
+  /* ---------- footer ---------- */
+  footer.foot { background: var(--ink); color: color-mix(in srgb, var(--paper) 70%, transparent); padding: 3.5rem 0 2.5rem; }
+  .foot-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 2rem; flex-wrap: wrap; }
+  .foot .brand { color: var(--paper); }
+  .foot-links { display: flex; gap: 2rem; flex-wrap: wrap; }
+  .foot-links a { transition: color .3s var(--ease); }
+  .foot-links a:hover { color: var(--paper); }
+  .foot-bottom { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid color-mix(in srgb, var(--paper) 16%, transparent); display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; font-size: var(--step--1); }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 900px) {
+    .hero-grid { grid-template-columns: 1fr; }
+    .breath { order: -1; width: min(78%, 340px); }
+    .cards, .plans, .grid-days, .buns { grid-template-columns: 1fr 1fr; }
+    .booking .booking-grid { grid-template-columns: 1fr; }
+    .nav-links { display: none; }
+    .menu-toggle { display: inline-flex; }
+    .stats { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .cards, .plans, .grid-days, .buns { grid-template-columns: 1fr; }
+    .nav-cta .btn { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<header class="nav" id="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top" aria-label="Jóga s králíčky — domů">
+      <img class="mark" src="assets/logo.svg" alt="" width="34" height="34" />
+      Jóga&nbsp;s&nbsp;králíčky
+    </a>
+    <nav class="nav-links" aria-label="Hlavní">
+      <a href="#lekce">Lekce</a>
+      <a href="#rozvrh">Rozvrh</a>
+      <a href="#kralicci">Králíčci</a>
+      <a href="#cenik">Ceník</a>
+      <a href="#faq">Dotazy</a>
+    </nav>
+    <div class="nav-cta">
+      <a class="btn btn-primary" href="#rezervace">Rezervovat lekci</a>
+      <button class="menu-toggle" id="menuToggle" aria-label="Otevřít menu">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="#2A2E24" stroke-width="1.6"><path d="M3 7h20M3 13h20M3 19h20"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <svg class="float f1" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2C12 10 6 18 20 38 34 18 28 10 20 2z" fill="#6E8A4E" opacity=".55"/><path d="M20 6v30" stroke="#50693A" stroke-width="1"/></svg>
+    <svg class="float f2" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="14" fill="#E8C9C2"/></svg>
+    <svg class="float f3" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2C12 10 6 18 20 38 34 18 28 10 20 2z" fill="#E08A4B" opacity=".5"/></svg>
+    <div class="wrap hero-grid">
+      <div class="reveal in">
+        <span class="eyebrow">Studio klidu · Brno</span>
+        <h1>Cvičte v&nbsp;klidu.<br /><em>Králíčci</em> se postarají<br />o&nbsp;ten zbytek.</h1>
+        <p class="lede">Hodina jógy, po které volně pobíhá deset chlupatých učitelů zpomalení.</p>
+        <p class="sub">Žádné výkony, žádné zrcadla. Jen měkká podložka, dech v rytmu a králík, který se vám možná uvelebí na koleni během savasany.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#rezervace">Rezervovat lekci <span class="arrow">→</span></a>
+          <a class="btn btn-ghost" href="#lekce">Prohlédnout lekce</a>
+        </div>
+        <p class="hero-note" style="margin-top:1.6rem"><b>4,9 ★</b> z 230 hodnocení · první lekce za zvýhodněnou cenu</p>
+      </div>
+
+      <!-- SIGNATURE: breathing pacer -->
+      <div class="breath" aria-hidden="true">
+        <div class="breath-ring"></div>
+        <div class="breath-pulse"></div>
+        <div class="breath-label">
+          <span class="word" id="breathWord">Nádech</span>
+          <small>dýchejte s&nbsp;námi</small>
+        </div>
+        <svg class="bun" viewBox="0 0 100 120">
+          <ellipse cx="38" cy="30" rx="9" ry="24" fill="#FAFBF6" stroke="#D6DAC7" transform="rotate(-14 38 30)"/>
+          <ellipse cx="60" cy="28" rx="9" ry="24" fill="#FAFBF6" stroke="#D6DAC7" transform="rotate(12 60 28)"/>
+          <ellipse cx="38" cy="32" rx="4" ry="15" fill="#E8C9C2" transform="rotate(-14 38 32)"/>
+          <ellipse cx="60" cy="30" rx="4" ry="15" fill="#E8C9C2" transform="rotate(12 60 30)"/>
+          <circle cx="50" cy="74" r="30" fill="#FAFBF6" stroke="#D6DAC7"/>
+          <circle cx="40" cy="70" r="2.4" fill="#2A2E24"/>
+          <circle cx="60" cy="70" r="2.4" fill="#2A2E24"/>
+          <path d="M50 77c2.4 0 3.4 1.8 0 4-3.4-2.2-2.4-4 0-4z" fill="#E08A4B"/>
+          <circle cx="32" cy="78" r="4" fill="#E8C9C2" opacity=".7"/>
+          <circle cx="68" cy="78" r="4" fill="#E8C9C2" opacity=".7"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ INTRO + STATS ============ -->
+  <section class="intro" id="o-nas">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Co to vlastně je</span>
+        <h2>Jemná jóga a živé zvíře, které vás nenechá spěchat.</h2>
+        <p>Lekce vede certifikovaná lektorka, ale tempo udávají králíci. Když si jeden lehne, zpomalíte. Když k vám přihopká, usmějete se. Je to pomalá, hatha a restorativní jóga — a kontaktní terapie zároveň. Výzkumy i naši hosté se shodují: dvacet minut s králíkem dělá s hladinou stresu zázraky.</p>
+      </div>
+      <div class="stats">
+        <div class="stat reveal"><div class="num">10</div><div class="lbl">králíčků v péči studia, každý s vlastní povahou a oblíbeným místem</div></div>
+        <div class="stat reveal"><div class="num">75<span>′</span></div><div class="lbl">délka lekce — z toho posledních 20 minut čistého mazlení a klidu</div></div>
+        <div class="stat reveal"><div class="num">max&nbsp;12</div><div class="lbl">míst v sále, aby měl každý host i každý králík dost prostoru</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ LEKCE ============ -->
+  <section id="lekce">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Lekce</span>
+        <h2>Vyberte si tempo. Králíci přijdou ke všem.</h2>
+        <p>Každá lekce má jiný rytmus, ale stejný cíl — odejít lehčí, než jste přišli.</p>
+      </div>
+      <div class="cards">
+        <article class="card reveal">
+          <svg class="corner" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="60" r="30" fill="#6E8A4E"/><ellipse cx="40" cy="22" rx="6" ry="18" fill="#6E8A4E" transform="rotate(-12 40 22)"/><ellipse cx="60" cy="20" rx="6" ry="18" fill="#6E8A4E" transform="rotate(12 60 20)"/></svg>
+          <span class="tag">Pro každého</span>
+          <h3>Ranní protažení</h3>
+          <p class="desc">Pomalá hatha jóga, kterou rozhýbete tělo i den. Králíci jsou ráno nejzvědavější — počítejte s návštěvami u podložky.</p>
+          <div class="meta"><span><b>60 min</b>úroveň: začátečník</span><span><b>Po · St · Pá</b>7:30</span></div>
+        </article>
+        <article class="card reveal">
+          <svg class="corner" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="60" r="30" fill="#E08A4B"/><ellipse cx="40" cy="22" rx="6" ry="18" fill="#E08A4B" transform="rotate(-12 40 22)"/><ellipse cx="60" cy="20" rx="6" ry="18" fill="#E08A4B" transform="rotate(12 60 20)"/></svg>
+          <span class="tag">Nejoblíbenější</span>
+          <h3>Hatha s králíčky</h3>
+          <p class="desc">Naše klasika. 55 minut pohybu a dechu, 20 minut savasany, kdy se mezi vámi králíci prochází a vybírají si klín.</p>
+          <div class="meta"><span><b>75 min</b>úroveň: všichni</span><span><b>Út · Čt</b>18:00</span></div>
+        </article>
+        <article class="card reveal">
+          <svg class="corner" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="60" r="30" fill="#E8C9C2"/><ellipse cx="40" cy="22" rx="6" ry="18" fill="#E8C9C2" transform="rotate(-12 40 22)"/><ellipse cx="60" cy="20" rx="6" ry="18" fill="#E8C9C2" transform="rotate(12 60 20)"/></svg>
+          <span class="tag">Rodiny</span>
+          <h3>Děti &amp; králíci</h3>
+          <p class="desc">Hravá lekce pro děti od 5 let s rodičem. Více her než ásan a spousta jemného seznamování se zvířátky.</p>
+          <div class="meta"><span><b>45 min</b>úroveň: děti 5+</span><span><b>Sobota</b>9:30</span></div>
+        </article>
+        <article class="card reveal">
+          <svg class="corner" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="60" r="30" fill="#2A2E24"/><ellipse cx="40" cy="22" rx="6" ry="18" fill="#2A2E24" transform="rotate(-12 40 22)"/><ellipse cx="60" cy="20" rx="6" ry="18" fill="#2A2E24" transform="rotate(12 60 20)"/></svg>
+          <span class="tag">Večerní klid</span>
+          <h3>Soumrak &amp; restorativní</h3>
+          <p class="desc">Téměř bez pohybu. Dlouhé držené polohy, dečky, ztlumené světlo a králíci, kteří už taky usínají. Ideální před spaním.</p>
+          <div class="meta"><span><b>60 min</b>úroveň: všichni</span><span><b>Neděle</b>19:30</span></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ROZVRH ============ -->
+  <section class="schedule" id="rozvrh">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Týdenní rozvrh</span>
+        <h2>Kdy přijít</h2>
+        <p>Rezervace míst se otvírají vždy týden dopředu. Kapacita je malá, proto se vyplatí být rychlí.</p>
+      </div>
+      <div class="grid-days">
+        <div class="day reveal">
+          <h4>Pondělí</h4>
+          <div class="slot"><div class="t">7:30</div><div class="n">Ranní protažení</div></div>
+          <div class="slot empty"><div class="t">—</div><div class="n">volno</div></div>
+        </div>
+        <div class="day reveal">
+          <h4>Úterý</h4>
+          <div class="slot"><div class="t">18:00</div><div class="n">Hatha s králíčky</div></div>
+          <div class="slot"><div class="t">19:45</div><div class="n">Hatha s králíčky</div></div>
+        </div>
+        <div class="day reveal">
+          <h4>Středa</h4>
+          <div class="slot"><div class="t">7:30</div><div class="n">Ranní protažení</div></div>
+          <div class="slot empty"><div class="t">—</div><div class="n">volno</div></div>
+        </div>
+        <div class="day reveal">
+          <h4>Čtvrtek</h4>
+          <div class="slot"><div class="t">18:00</div><div class="n">Hatha s králíčky</div></div>
+          <div class="slot empty"><div class="t">—</div><div class="n">volno</div></div>
+        </div>
+        <div class="day reveal">
+          <h4>Pátek</h4>
+          <div class="slot"><div class="t">7:30</div><div class="n">Ranní protažení</div></div>
+          <div class="slot"><div class="t">17:30</div><div class="n">Soumrak &amp; restorativní</div></div>
+        </div>
+        <div class="day reveal">
+          <h4>Sobota</h4>
+          <div class="slot"><div class="t">9:30</div><div class="n">Děti &amp; králíci</div></div>
+          <div class="slot"><div class="t">11:00</div><div class="n">Hatha s králíčky</div></div>
+        </div>
+        <div class="day reveal">
+          <h4>Neděle</h4>
+          <div class="slot"><div class="t">19:30</div><div class="n">Soumrak &amp; restorativní</div></div>
+          <div class="slot empty"><div class="t">—</div><div class="n">volno</div></div>
+        </div>
+        <div class="day reveal" style="display:flex;flex-direction:column;justify-content:center">
+          <h4 style="color:var(--carrot)">Soukromě?</h4>
+          <p style="font-size:var(--step--1);color:color-mix(in srgb,var(--paper) 70%,transparent)">Narozeniny, týmovka nebo rozlučka se svobodou — sál i králíky si můžete pronajmout kdykoliv.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ KRÁLÍČCI ============ -->
+  <section id="kralicci">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Seznamte se</span>
+        <h2>Lektoři, kteří nikdy nespěchají.</h2>
+        <p>Každý králík má jméno, povahu i svůj oblíbený kout sálu. Tady jsou čtyři z party.</p>
+      </div>
+      <div class="buns">
+        <article class="bun-card reveal">
+          <div class="pic" style="background:#E7EBDD">
+            <svg width="86" height="100" viewBox="0 0 100 120"><ellipse cx="38" cy="28" rx="8" ry="22" fill="#FAFBF6" stroke="#D6DAC7" transform="rotate(-12 38 28)"/><ellipse cx="60" cy="26" rx="8" ry="22" fill="#FAFBF6" stroke="#D6DAC7" transform="rotate(12 60 26)"/><ellipse cx="38" cy="30" rx="3.5" ry="13" fill="#E8C9C2" transform="rotate(-12 38 30)"/><circle cx="50" cy="74" r="29" fill="#FAFBF6" stroke="#D6DAC7"/><circle cx="41" cy="71" r="2.3" fill="#2A2E24"/><circle cx="59" cy="71" r="2.3" fill="#2A2E24"/><path d="M50 77c2 0 3 1.6 0 3.5-3-1.9-2-3.5 0-3.5z" fill="#E08A4B"/></svg>
+          </div>
+          <h3>Brokolice</h3>
+          <div class="role">Hlavní lektorka</div>
+          <p class="bio">Nejstarší a nejklidnější. Pokud si lehne vedle vás, znamená to, že děláte savasanu správně.</p>
+        </article>
+        <article class="bun-card reveal">
+          <div class="pic" style="background:#F3E3DF">
+            <svg width="86" height="100" viewBox="0 0 100 120"><ellipse cx="40" cy="24" rx="7" ry="20" fill="#E8C9C2" stroke="#D6DAC7" transform="rotate(-18 40 24)"/><ellipse cx="62" cy="30" rx="7" ry="20" fill="#E8C9C2" stroke="#D6DAC7" transform="rotate(22 62 30)"/><circle cx="50" cy="74" r="29" fill="#EFD9D4" stroke="#D6DAC7"/><circle cx="41" cy="71" r="2.3" fill="#2A2E24"/><circle cx="59" cy="71" r="2.3" fill="#2A2E24"/><path d="M50 77c2 0 3 1.6 0 3.5-3-1.9-2-3.5 0-3.5z" fill="#E08A4B"/></svg>
+          </div>
+          <h3>Pepa</h3>
+          <div class="role">Specialista na klín</div>
+          <p class="bio">Floppy ouška, nulové zábrany. Najde si nejpohodlnější klín v sále a zůstane do konce lekce.</p>
+        </article>
+        <article class="bun-card reveal">
+          <div class="pic" style="background:#E2E8D6">
+            <svg width="86" height="100" viewBox="0 0 100 120"><ellipse cx="36" cy="26" rx="7" ry="22" fill="#D8DFC8" stroke="#C7CFB3" transform="rotate(-8 36 26)"/><ellipse cx="58" cy="24" rx="7" ry="22" fill="#D8DFC8" stroke="#C7CFB3" transform="rotate(8 58 24)"/><circle cx="48" cy="74" r="29" fill="#DCE3CD" stroke="#C7CFB3"/><circle cx="39" cy="71" r="2.3" fill="#2A2E24"/><circle cx="57" cy="71" r="2.3" fill="#2A2E24"/><path d="M48 77c2 0 3 1.6 0 3.5-3-1.9-2-3.5 0-3.5z" fill="#E08A4B"/></svg>
+          </div>
+          <h3>Tofu</h3>
+          <div class="role">Energie lekce</div>
+          <p class="bio">Mladý a hopsavý. Zahřeje atmosféru ještě dřív než vy svaly. Děti ho milují.</p>
+        </article>
+        <article class="bun-card reveal">
+          <div class="pic" style="background:#E7EBDD">
+            <svg width="86" height="100" viewBox="0 0 100 120"><ellipse cx="38" cy="28" rx="8" ry="22" fill="#3A4031" stroke="#2A2E24" transform="rotate(-12 38 28)"/><ellipse cx="60" cy="26" rx="8" ry="22" fill="#3A4031" stroke="#2A2E24" transform="rotate(12 60 26)"/><circle cx="50" cy="74" r="29" fill="#454C3A" stroke="#2A2E24"/><circle cx="41" cy="71" r="2.3" fill="#FAFBF6"/><circle cx="59" cy="71" r="2.3" fill="#FAFBF6"/><path d="M50 77c2 0 3 1.6 0 3.5-3-1.9-2-3.5 0-3.5z" fill="#E08A4B"/></svg>
+          </div>
+          <h3>Mín­ka</h3>
+          <div class="role">Mistryně klidu</div>
+          <p class="bio">Tmavá kožešina, sametový pohyb. Objeví se jako stín během restorativní lekce a zase zmizí.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CENÍK ============ -->
+  <section class="pricing" id="cenik">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Ceník</span>
+        <h2>Plaťte za klid, ne za závazek.</h2>
+        <p>Žádné dlouhé smlouvy. Vyberte si jednorázovku, nebo si klid předplaťte na celý měsíc.</p>
+      </div>
+      <div class="plans">
+        <div class="plan reveal">
+          <h3>První lekce</h3>
+          <div class="price">290&nbsp;Kč <small>/ jednorázově</small></div>
+          <ul>
+            <li>Jakákoliv lekce z rozvrhu</li>
+            <li>Zapůjčení podložky i dečky</li>
+            <li>Čaj a klid po lekci</li>
+            <li>Bez nutnosti rezervovat dál</li>
+          </ul>
+          <a class="btn btn-ghost" href="#rezervace">Zkusit poprvé</a>
+        </div>
+        <div class="plan featured reveal">
+          <span class="badge">Nejlepší poměr</span>
+          <h3>Měsíční klid</h3>
+          <div class="price">1&nbsp;490&nbsp;Kč <small>/ měsíc</small></div>
+          <ul>
+            <li>Neomezený počet lekcí</li>
+            <li>Přednostní rezervace míst</li>
+            <li>10&nbsp;% sleva na soukromé akce</li>
+            <li>Možnost kdykoliv zrušit</li>
+          </ul>
+          <a class="btn btn-primary" href="#rezervace">Předplatit měsíc</a>
+        </div>
+        <div class="plan reveal">
+          <h3>Permanentka 10</h3>
+          <div class="price">2&nbsp;590&nbsp;Kč <small>/ 10 vstupů</small></div>
+          <ul>
+            <li>10 lekcí dle libosti</li>
+            <li>Platnost 4 měsíce</li>
+            <li>Přenosná na kamaráda</li>
+            <li>Zapůjčení vybavení v ceně</li>
+          </ul>
+          <a class="btn btn-ghost" href="#rezervace">Koupit permanentku</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FAQ ============ -->
+  <section id="faq">
+    <div class="wrap" style="max-width:880px">
+      <div class="section-head reveal" style="max-width:none">
+        <span class="eyebrow">Časté dotazy</span>
+        <h2>Než přijdete poprvé</h2>
+      </div>
+      <div class="faq-list reveal">
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Musím už něco umět?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="#6E8A4E" stroke-width="2"><path d="M11 4v14M4 11h14"/></svg></button>
+          <div class="faq-a"><div>Vůbec ne. Většina hostů přichází úplně bez zkušeností. Lektorka vše ukáže a nabídne jednodušší variantu každé polohy. Jde nám o klid, ne o dokonalý tvar.</div></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Nevyruší mě králíci od cvičení?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="#6E8A4E" stroke-width="2"><path d="M11 4v14M4 11h14"/></svg></button>
+          <div class="faq-a"><div>To je celý smysl. Králíci vás přirozeně zpomalí a vrátí do přítomnosti — žádná aplikace s meditací to nedokáže líp. Pokud se k vám zrovna žádný nepřiblíží, nevadí, je to jejich volba.</div></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Co když mám alergii na zvířata?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="#6E8A4E" stroke-width="2"><path d="M11 4v14M4 11h14"/></svg></button>
+          <div class="faq-a"><div>Sál pečlivě větráme a čistíme, přesto při alergii na srst doporučujeme lekci zvážit nebo se poradit s lékařem. Rádi vám pomůžeme vybrat méně kontaktní termín.</div></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Co si mám vzít s sebou?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="#6E8A4E" stroke-width="2"><path d="M11 4v14M4 11h14"/></svg></button>
+          <div class="faq-a"><div>Jen pohodlné oblečení a ponožky. Podložky, dečky i polštáře máme. Cvičíme bez bot a doporučujeme nepoužívat silné parfémy — králíci mají citlivý čich.</div></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Jsou králíci v pořádku?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="#6E8A4E" stroke-width="2"><path d="M11 4v14M4 11h14"/></svg></button>
+          <div class="faq-a"><div>Jejich pohoda je u nás na prvním místě. Mají vlastní klidové zóny, kam se kdykoliv mohou stáhnout, pravidelné pauzy a veterinární péči. Na lekci jdou jen odpočatí a dobrovolně.</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ REZERVACE / KONTAKT ============ -->
+  <section class="booking" id="rezervace">
+    <div class="wrap booking-grid">
+      <div class="reveal">
+        <span class="eyebrow">Rezervace</span>
+        <h2>Zarezervujte si místo i klín.</h2>
+        <p class="lead">Napište nám, kterou lekci byste si přáli, a my potvrdíme volné místo do 24&nbsp;hodin. První lekci máte za zvýhodněnou cenu 290&nbsp;Kč.</p>
+        <div class="contact-list">
+          <a href="mailto:ahoj@jogaskralicky.cz"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg> ahoj@jogaskralicky.cz</a>
+          <a href="tel:+420777123456"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg> +420 777 123 456</a>
+          <a href="https://maps.google.com" target="_blank" rel="noopener"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg> Údolní 12, Brno-střed</a>
+        </div>
+      </div>
+      <form class="form reveal" onsubmit="event.preventDefault(); this.querySelector('.note').textContent='Děkujeme! Ozveme se do 24 hodin.'; this.querySelector('.note').style.color='var(--clover-deep)';">
+        <div class="field">
+          <label for="jmeno">Jméno</label>
+          <input id="jmeno" name="jmeno" type="text" placeholder="Jak vás máme oslovovat?" required />
+        </div>
+        <div class="field">
+          <label for="email">E-mail</label>
+          <input id="email" name="email" type="email" placeholder="vas@email.cz" required />
+        </div>
+        <div class="field">
+          <label for="lekce">Která lekce vás láká?</label>
+          <select id="lekce" name="lekce">
+            <option>Ranní protažení</option>
+            <option selected>Hatha s králíčky</option>
+            <option>Děti &amp; králíci</option>
+            <option>Soumrak &amp; restorativní</option>
+            <option>Soukromá akce</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="zprava">Poznámka (nepovinné)</label>
+          <textarea id="zprava" name="zprava" rows="3" placeholder="Preferovaný den, počet míst, dotaz…"></textarea>
+        </div>
+        <button class="btn btn-primary" type="submit">Odeslat rezervaci <span class="arrow">→</span></button>
+        <p class="note">Místo potvrdíme e-mailem. Nic předem neplatíte.</p>
+      </form>
+    </div>
+  </section>
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <div>
+        <a class="brand" href="#top">
+          <img class="mark" src="assets/logo.svg" alt="" width="34" height="34" />
+          Jóga&nbsp;s&nbsp;králíčky
+        </a>
+        <p style="margin-top:.8rem;max-width:34ch">Studio klidu, kde tempo udávají králíci. Údolní 12, Brno-střed.</p>
+      </div>
+      <nav class="foot-links" aria-label="Patička">
+        <a href="#lekce">Lekce</a>
+        <a href="#rozvrh">Rozvrh</a>
+        <a href="#kralicci">Králíčci</a>
+        <a href="#cenik">Ceník</a>
+        <a href="#rezervace">Rezervace</a>
+        <a href="https://instagram.com" target="_blank" rel="noopener">Instagram</a>
+      </nav>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 Jóga s králíčky. Dýchejte pomalu.</span>
+      <span>Vyrobeno s klidem a mrkví.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // sticky nav border
+  const nav = document.getElementById('nav');
+  const onScroll = () => nav.classList.toggle('scrolled', window.scrollY > 12);
+  onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+
+  // mobile menu (simple anchor jump to nav links shown inline)
+  const toggle = document.getElementById('menuToggle');
+  toggle && toggle.addEventListener('click', () => {
+    document.querySelector('.nav-links').scrollIntoView();
+    location.hash = '#lekce';
+  });
+
+  // reveal on scroll
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.14 });
+  document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+
+  // breathing word sync with the 9s pulse animation
+  const word = document.getElementById('breathWord');
+  if (word && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const cycle = () => {
+      word.textContent = 'Nádech';
+      setTimeout(() => { word.textContent = 'Zadrž'; }, 4000);
+      setTimeout(() => { word.textContent = 'Výdech'; }, 5000);
+    };
+    cycle(); setInterval(cycle, 9000);
+  }
+
+  // FAQ accordion
+  document.querySelectorAll('.faq-q').forEach((q) => {
+    q.addEventListener('click', () => {
+      const open = q.getAttribute('aria-expanded') === 'true';
+      const panel = q.nextElementSibling;
+      q.setAttribute('aria-expanded', String(!open));
+      panel.style.maxHeight = open ? '0px' : panel.scrollHeight + 'px';
+    });
+  });
+</script>
+</body>
+</html>
