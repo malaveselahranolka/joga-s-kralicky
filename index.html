@@ -106,7 +106,14 @@
   .nav-links a:hover { color: var(--ink); }
   .nav-links a:hover::after { transform: scaleX(1); }
   .nav-cta { display: flex; align-items: center; gap: 1.25rem; }
-  .menu-toggle { display: none; background: none; border: 0; cursor: pointer; }
+  .menu-toggle { display: none; background: none; border: 0; cursor: pointer; width: 30px; height: 26px; position: relative; padding: 0; }
+  .menu-toggle .bar { position: absolute; left: 3px; right: 3px; height: 2px; border-radius: 2px; background: var(--ink); transition: transform .4s var(--ease), opacity .25s var(--ease); }
+  .menu-toggle .bar:nth-child(1) { top: 5px; }
+  .menu-toggle .bar:nth-child(2) { top: 12px; }
+  .menu-toggle .bar:nth-child(3) { top: 19px; }
+  header.nav.open .menu-toggle .bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  header.nav.open .menu-toggle .bar:nth-child(2) { opacity: 0; }
+  header.nav.open .menu-toggle .bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
   /* ---------- hero ---------- */
   .hero { position: relative; padding: clamp(3rem, 6vw, 6rem) 0 clamp(4rem, 7vw, 7rem); overflow: hidden; }
@@ -127,20 +134,14 @@
     border: 1px solid var(--line);
   }
   .hero-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .breath-badge {
-    position: absolute; left: 50%; bottom: 7%; transform: translateX(-50%); z-index: 2;
-    display: inline-flex; align-items: center; gap: .55rem; padding: .5em 1.05em; border-radius: 999px;
-    background: color-mix(in srgb, var(--cloud) 84%, transparent); backdrop-filter: blur(7px);
-    border: 1px solid color-mix(in srgb, var(--paper) 60%, transparent);
-    box-shadow: 0 10px 24px -14px rgba(42,46,36,.55);
-    font-family: "Fraunces"; font-style: italic; font-size: 1.05rem; color: var(--clover-deep); white-space: nowrap;
-  }
-  .breath-badge .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--clover); animation: breathe 9s var(--ease) infinite; }
-  @keyframes breathe {
-    0%, 100% { transform: scale(.7); opacity: .55; }
-    44.4%    { transform: scale(1.35); opacity: 1; } /* ~4s inhale */
-    55.5%    { transform: scale(1.35); opacity: 1; } /* hold */
-  }
+  /* animated orbit around the photo */
+  .orbit { position: absolute; inset: -5.5%; border-radius: 50%; border: 1.5px dashed color-mix(in srgb, var(--clover) 38%, transparent); animation: spin 30s linear infinite; }
+  .orbit-item { position: absolute; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; background: var(--cloud); box-shadow: 0 8px 18px -10px rgba(42,46,36,.5); }
+  .orbit-item.i1 { top: -22px; left: 50%; margin-left: -22px; }
+  .orbit-item.i2 { bottom: 8%; left: -22px; }
+  .orbit-item svg { width: 24px; height: 24px; animation: spin-rev 30s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes spin-rev { to { transform: rotate(-360deg); } }
   .breath .bun { position: absolute; bottom: 8%; right: 6%; width: 92px; animation: hop 4.5s var(--ease) infinite; transform-origin: bottom center; }
   @keyframes hop {
     0%, 70%, 100% { transform: translateY(0) rotate(0); }
@@ -148,7 +149,7 @@
     86% { transform: translateY(0) rotate(0); }
   }
   @media (prefers-reduced-motion: reduce) {
-    .breath-badge .dot, .breath .bun, .float { animation: none !important; }
+    .orbit, .orbit-item svg, .breath .bun, .float, .leaf-bg { animation: none !important; }
   }
 
   /* floating ambient leaves */
@@ -158,8 +159,18 @@
   .float.f3 { top: 22%; right: 3%; width: 38px; animation: drift 13s ease-in-out infinite; }
   @keyframes drift { 0%,100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-18px) rotate(6deg); } }
 
+  /* animated background leaves (injected per section) */
+  .leaf-bg { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+  .leaf-bg .lf { position: absolute; display: block; animation: sway var(--d, 16s) ease-in-out infinite; }
+  .leaf-bg .lf svg { width: 100%; height: auto; display: block; }
+  @keyframes sway {
+    0%, 100% { transform: translateY(0) rotate(-8deg); }
+    50% { transform: translateY(-22px) rotate(10deg); }
+  }
+
   /* ---------- generic section ---------- */
-  section { padding: clamp(4rem, 8vw, 7.5rem) 0; }
+  section { padding: clamp(4rem, 8vw, 7.5rem) 0; position: relative; overflow: hidden; }
+  .wrap { position: relative; z-index: 1; }
   .section-head { max-width: 56ch; }
   .section-head h2 { font-size: var(--step-2); margin-top: 1rem; font-weight: 400; }
   .section-head p { margin-top: 1.1rem; color: var(--ink-soft); }
@@ -291,11 +302,7 @@
     .nav-links a { font-size: 1.12rem; padding: .8rem 0; color: var(--ink); border-bottom: 1px solid color-mix(in srgb, var(--line) 65%, transparent); }
     .nav-links a:last-child { border-bottom: 0; }
     .nav-links a::after { display: none; }
-    .menu-toggle { display: inline-flex; }
-    .menu-toggle svg path { transition: opacity .3s var(--ease); }
-    header.nav.open .menu-toggle .ic-open { display: none; }
-    .menu-toggle .ic-close { display: none; }
-    header.nav.open .menu-toggle .ic-close { display: block; }
+    .menu-toggle { display: inline-block; }
     .stats { grid-template-columns: 1fr; }
   }
   @media (max-width: 560px) {
@@ -387,8 +394,9 @@
     <div class="nav-cta">
       <a class="btn btn-primary" href="#rezervace">Rezervovat lekci</a>
       <button class="menu-toggle" id="menuToggle" aria-label="Otevřít menu" aria-controls="navLinks" aria-expanded="false">
-        <svg class="ic-open" width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="#2A2E24" stroke-width="1.6"><path d="M3 7h20M3 13h20M3 19h20"/></svg>
-        <svg class="ic-close" width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="#2A2E24" stroke-width="1.8"><path d="M5 5l16 16M21 5L5 21"/></svg>
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
       </button>
     </div>
   </div>
@@ -413,11 +421,14 @@
         <p class="hero-note" style="margin-top:1.6rem"><b>4,9 ★</b> z 230 hodnocení · první lekce za zvýhodněnou cenu</p>
       </div>
 
-      <!-- SIGNATURE: photo in a soft circle + breathing badge -->
+      <!-- SIGNATURE: photo in a soft circle + orbiting accents -->
       <div class="breath">
+        <div class="orbit" aria-hidden="true">
+          <span class="orbit-item i1"><svg viewBox="0 0 24 24" fill="none"><path d="M9 21c-3-3-5-9 3-15 1 4 1 5 4 7 2.5 1.7 1.5 6-1 8" fill="#E08A4B"/><path d="M11 8c1 .6 2 1.6 2.6 2.8" stroke="#C5723A" stroke-width="1"/></svg></span>
+          <span class="orbit-item i2"><svg viewBox="0 0 24 24"><path d="M12 2C7 7 4 11 12 22 20 11 17 7 12 2z" fill="#6E8A4E"/><path d="M12 5v14" stroke="#50693A" stroke-width="1"/></svg></span>
+        </div>
         <div class="hero-frame">
           <img src="assets/hero.svg" alt="Žena medituje v tureckém sedu, vedle ní odpočívá králík" />
-          <span class="breath-badge" aria-hidden="true"><span class="dot"></span><span class="word" id="breathWord">Nádech</span></span>
         </div>
         <svg class="bun" viewBox="0 0 100 120" aria-hidden="true">
           <ellipse cx="38" cy="30" rx="9" ry="24" fill="#FAFBF6" stroke="#D6DAC7" transform="rotate(-14 38 30)"/>
@@ -862,17 +873,6 @@
   }, { threshold: 0.14 });
   document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
 
-  // breathing word sync with the 9s pulse animation
-  const word = document.getElementById('breathWord');
-  if (word && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    const cycle = () => {
-      word.textContent = 'Nádech';
-      setTimeout(() => { word.textContent = 'Zadrž'; }, 4000);
-      setTimeout(() => { word.textContent = 'Výdech'; }, 5000);
-    };
-    cycle(); setInterval(cycle, 9000);
-  }
-
   // FAQ accordion
   document.querySelectorAll('.faq-q').forEach((q) => {
     q.addEventListener('click', () => {
@@ -940,6 +940,37 @@
     updateVoucher();
   });
   updateVoucher();
+
+  // ambient background leaves per section (so sections don't feel empty)
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const leaf = 'M20 2C12 10 6 18 20 38 34 18 28 10 20 2z';
+    const targets = [
+      { sel: '#o-nas', n: 4, c: '#6E8A4E' },
+      { sel: '#lekce', n: 4, c: '#6E8A4E' },
+      { sel: '#kralicci', n: 4, c: '#6E8A4E' },
+      { sel: '#galerie', n: 3, c: '#6E8A4E' },
+      { sel: '.schedule', n: 5, c: '#ECEFE2' },
+      { sel: '#cenik', n: 4, c: '#6E8A4E' },
+      { sel: '.vouchers', n: 4, c: '#6E8A4E' },
+      { sel: '#faq', n: 4, c: '#6E8A4E' },
+      { sel: '.booking', n: 5, c: '#ECEFE2' }
+    ];
+    const rnd = (a, b) => a + Math.random() * (b - a);
+    targets.forEach((t) => {
+      const sec = document.querySelector(t.sel);
+      if (!sec) return;
+      const layer = document.createElement('div');
+      layer.className = 'leaf-bg';
+      let html = '';
+      for (let i = 0; i < t.n; i++) {
+        const size = rnd(24, 56).toFixed(0);
+        const style = `left:${rnd(2, 92).toFixed(1)}%;top:${rnd(4, 84).toFixed(1)}%;width:${size}px;opacity:${rnd(0.16, 0.4).toFixed(2)};--d:${rnd(13, 23).toFixed(1)}s;animation-delay:-${rnd(0, 14).toFixed(1)}s;`;
+        html += `<span class="lf" style="${style}"><svg viewBox="0 0 40 40" fill="${t.c}"><path d="${leaf}"/></svg></span>`;
+      }
+      layer.innerHTML = html;
+      sec.prepend(layer);
+    });
+  }
 </script>
 </body>
 </html>
