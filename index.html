@@ -159,13 +159,13 @@
   .float.f3 { top: 22%; right: 3%; width: 38px; animation: drift 13s ease-in-out infinite; }
   @keyframes drift { 0%,100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-18px) rotate(6deg); } }
 
-  /* animated background leaves (injected per section) */
+  /* animated background ferns (injected into section corners) */
   .leaf-bg { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
-  .leaf-bg .lf { position: absolute; display: block; animation: sway var(--d, 16s) ease-in-out infinite; }
-  .leaf-bg .lf svg { width: 100%; height: auto; display: block; }
+  .leaf-bg .lf { position: absolute; display: block; transform-origin: 50% 90%; animation: sway var(--d, 18s) ease-in-out infinite; }
+  .leaf-bg .lf svg { width: 100%; height: auto; display: block; transform: rotate(var(--rot, 0deg)); transform-origin: 50% 90%; }
   @keyframes sway {
-    0%, 100% { transform: translateY(0) rotate(-8deg); }
-    50% { transform: translateY(-22px) rotate(10deg); }
+    0%, 100% { transform: rotate(-3deg); }
+    50% { transform: rotate(3deg); }
   }
 
   /* ---------- generic section ---------- */
@@ -950,26 +950,41 @@
   });
   updateVoucher();
 
-  // ambient background leaves — anchored to section corners only, so they
+  // very subtle animated ferns — anchored to section corners only, so they
   // sit in the empty margins and never land behind the text
   if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    const leaf = 'M20 2C12 10 6 18 20 38 34 18 28 10 20 2z';
+    const fern = (c) => {
+      const N = 10;
+      let p = `<path d="M22 105 Q16 58 20 8" fill="none" stroke="${c}" stroke-width="1.5" stroke-linecap="round"/>`;
+      for (let i = 0; i < N; i++) {
+        const f = i / (N - 1);
+        const y = 103 - f * 92;
+        const L = 17 * (1 - f) + 4 * f;
+        const sx = 22 - (1 - f) * 2.5;
+        const lx = (sx - L * 0.42).toFixed(1), ly = (y - L * 0.16).toFixed(1);
+        const rx = (sx + L * 0.42).toFixed(1), ry = ly;
+        const rad = (L * 0.5).toFixed(1);
+        p += `<ellipse cx="${lx}" cy="${ly}" rx="${rad}" ry="2.2" transform="rotate(-32 ${lx} ${ly})" fill="${c}"/>`;
+        p += `<ellipse cx="${rx}" cy="${ry}" rx="${rad}" ry="2.2" transform="rotate(32 ${rx} ${ry})" fill="${c}"/>`;
+      }
+      return `<svg viewBox="0 0 44 112">${p}</svg>`;
+    };
     const corners = [
-      'top:-20px;left:-16px',
-      'top:-16px;right:-16px',
-      'bottom:-20px;left:-14px',
-      'bottom:-18px;right:-16px'
+      { pos: 'top:-26px;left:-20px', rot: 205 },
+      { pos: 'top:-24px;right:-20px', rot: 155 },
+      { pos: 'bottom:-28px;left:-18px', rot: -22 },
+      { pos: 'bottom:-26px;right:-18px', rot: 22 }
     ];
     const targets = [
       { sel: '#o-nas', n: 2, c: '#6E8A4E' },
       { sel: '#lekce', n: 2, c: '#6E8A4E' },
       { sel: '#kralicci', n: 2, c: '#6E8A4E' },
       { sel: '#galerie', n: 2, c: '#6E8A4E' },
-      { sel: '.schedule', n: 3, c: '#ECEFE2' },
+      { sel: '.schedule', n: 2, c: '#ECEFE2' },
       { sel: '#cenik', n: 2, c: '#6E8A4E' },
       { sel: '.vouchers', n: 2, c: '#6E8A4E' },
       { sel: '#faq', n: 2, c: '#6E8A4E' },
-      { sel: '.booking', n: 3, c: '#ECEFE2' }
+      { sel: '.booking', n: 2, c: '#ECEFE2' }
     ];
     const rnd = (a, b) => a + Math.random() * (b - a);
     targets.forEach((t) => {
@@ -978,10 +993,10 @@
       const pool = corners.slice().sort(() => Math.random() - 0.5).slice(0, t.n);
       const layer = document.createElement('div');
       layer.className = 'leaf-bg';
-      layer.innerHTML = pool.map((pos) => {
-        const size = rnd(54, 88).toFixed(0);
-        const style = `${pos};width:${size}px;opacity:${rnd(0.12, 0.2).toFixed(2)};--d:${rnd(15, 25).toFixed(1)}s;animation-delay:-${rnd(0, 12).toFixed(1)}s;`;
-        return `<span class="lf" style="${style}"><svg viewBox="0 0 40 40" fill="${t.c}"><path d="${leaf}"/></svg></span>`;
+      layer.innerHTML = pool.map((cn) => {
+        const size = rnd(64, 96).toFixed(0);
+        const style = `${cn.pos};width:${size}px;opacity:${rnd(0.07, 0.13).toFixed(3)};--rot:${cn.rot}deg;--d:${rnd(16, 26).toFixed(1)}s;animation-delay:-${rnd(0, 14).toFixed(1)}s;`;
+        return `<span class="lf" style="${style}">${fern(t.c)}</span>`;
       }).join('');
       sec.prepend(layer);
     });
