@@ -1,37 +1,32 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 600" width="480" height="600">
   <defs>
-    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#F4E4D0"/>
-      <stop offset="0.55" stop-color="#E8E1CD"/>
-      <stop offset="1" stop-color="#CBD8B4"/>
+    <linearGradient id="sky" x1="0" y1="0" x2="0.2" y2="1">
+      <stop offset="0" stop-color="#DDE2D0"/>
+      <stop offset="0.5" stop-color="#B7C49E"/>
+      <stop offset="1" stop-color="#8A9D6C"/>
     </linearGradient>
+    <radialGradient id="glow" cx="0.62" cy="0.32" r="0.6">
+      <stop offset="0" stop-color="#F0EAD8" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#F0EAD8" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="vig" cx="0.5" cy="0.42" r="0.75">
+      <stop offset="0.6" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#2A2E24" stop-opacity="0.28"/>
+    </radialGradient>
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>
   </defs>
-  <rect width="600" height="600" fill="url(#sky)"/>
-  <circle cx="438" cy="166" r="98" fill="#F6D9A8" opacity="0.7"/>
-  <circle cx="150" cy="120" r="6" fill="#E08A4B" opacity="0.5"/>
-  <circle cx="508" cy="320" r="5" fill="#6E8A4E" opacity="0.5"/>
-  <circle cx="96" cy="250" r="4" fill="#6E8A4E" opacity="0.45"/>
-  <!-- ground -->
-  <path d="M0 430 Q300 378 600 430 L600 600 L0 600 Z" fill="#6E8A4E"/>
-  <path d="M0 474 Q300 444 600 474 L600 600 L0 600 Z" fill="#50693A"/>
-  <!-- yoga mat -->
-  <ellipse cx="272" cy="456" rx="158" ry="21" fill="#E08A4B" opacity="0.9"/>
-  <!-- meditating figure -->
-  <g fill="#2A2E24">
-    <ellipse cx="198" cy="432" rx="23" ry="16"/>
-    <ellipse cx="346" cy="432" rx="23" ry="16"/>
-    <path d="M196 434 Q272 410 348 434 Q348 456 272 456 Q196 456 196 434 Z"/>
-    <path d="M242 326 Q272 318 302 326 L324 434 Q272 450 220 434 Z"/>
-    <ellipse cx="224" cy="392" rx="13" ry="42" transform="rotate(21 224 392)"/>
-    <ellipse cx="320" cy="392" rx="13" ry="42" transform="rotate(-21 320 392)"/>
-    <circle cx="272" cy="296" r="35"/>
+  <rect width="480" height="600" fill="url(#sky)"/>
+  <rect width="480" height="600" fill="url(#glow)"/>
+  <path d="M0 470 Q240 430 480 470 L480 600 L0 600 Z" fill="#74875A" opacity="0.55"/>
+  <g fill="#363E2C" opacity="0.92">
+    <ellipse cx="168" cy="470" rx="27" ry="18"/>
+    <ellipse cx="312" cy="470" rx="27" ry="18"/>
+    <path d="M166 472 Q240 442 314 472 Q314 498 240 498 Q166 498 166 472 Z"/>
+    <path d="M205 350 Q240 340 275 350 L300 474 Q240 492 180 474 Z"/>
+    <ellipse cx="192" cy="426" rx="15" ry="50" transform="rotate(20 192 426)"/>
+    <ellipse cx="288" cy="426" rx="15" ry="50" transform="rotate(-20 288 426)"/>
+    <circle cx="240" cy="312" r="41"/>
   </g>
-  <!-- bunny companion -->
-  <g fill="#F2EFE6" transform="translate(372,300) scale(0.92)">
-    <path d="M86 120 C 80 96 78 64 80 44 C 81 33 88 31 91 42 C 95 60 95 96 95 120 Z" transform="rotate(-7 88 80)"/>
-    <path d="M114 120 C 120 96 122 62 120 42 C 119 31 112 31 109 42 C 105 60 105 96 105 120 Z" transform="rotate(7 112 80)"/>
-    <ellipse cx="100" cy="98" rx="27" ry="29"/>
-    <ellipse cx="100" cy="146" rx="35" ry="38"/>
-    <ellipse cx="92" cy="92" rx="3" ry="11" fill="#E8C9C2" transform="rotate(-7 92 92)"/>
-  </g>
+  <rect width="480" height="600" fill="url(#vig)"/>
+  <rect width="480" height="600" filter="url(#grain)" opacity="0.12"/>
 </svg>
