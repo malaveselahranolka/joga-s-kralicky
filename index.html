@@ -97,7 +97,7 @@
   .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 76px; }
   .brand { display: inline-flex; align-items: center; gap: .65rem; font-family: "Fraunces"; font-size: 1.3rem; letter-spacing: -.02em; }
   .brand .mark { width: 34px; height: 34px; flex: none; }
-  .nav-links { display: flex; align-items: center; gap: 2rem; }
+  .nav-links { display: flex; align-items: center; gap: 1.55rem; }
   .nav-links a { font-size: .98rem; font-weight: 600; color: var(--ink-soft); position: relative; transition: color .3s var(--ease); }
   .nav-links a::after {
     content: ""; position: absolute; left: 0; bottom: -5px; height: 2px; width: 100%;
@@ -288,6 +288,68 @@
     .cards, .plans, .grid-days, .buns { grid-template-columns: 1fr; }
     .nav-cta .btn { display: none; }
   }
+
+  /* ---------- galerie ---------- */
+  .gallery { margin-top: 3rem; display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 200px; gap: 1rem; }
+  .ph { position: relative; overflow: hidden; border: 0; padding: 0; margin: 0; cursor: pointer; border-radius: var(--r-md); background: var(--cloud); display: block; }
+  .ph img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s var(--ease); }
+  .ph::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(42,46,36,.6), rgba(42,46,36,0) 55%); transition: opacity .4s var(--ease); }
+  .ph .cap { position: absolute; left: 1.1rem; bottom: .9rem; right: 1.1rem; z-index: 2; color: var(--paper); font-family: "Fraunces"; font-size: 1.05rem; letter-spacing: -.01em; transform: translateY(4px); opacity: .92; transition: transform .4s var(--ease); }
+  .ph .zoom { position: absolute; top: .9rem; right: .9rem; z-index: 2; width: 34px; height: 34px; border-radius: 50%; background: color-mix(in srgb, var(--paper) 22%, transparent); display: grid; place-items: center; opacity: 0; transform: scale(.8); transition: opacity .4s var(--ease), transform .4s var(--ease); }
+  .ph:hover img, .ph:focus-visible img { transform: scale(1.07); }
+  .ph:hover .cap { transform: translateY(0); }
+  .ph:hover .zoom, .ph:focus-visible .zoom { opacity: 1; transform: scale(1); }
+  .ph:focus-visible { outline: 2px solid var(--clover); outline-offset: 3px; }
+  .ph.big { grid-column: span 2; grid-row: span 2; }
+  .ph.wide { grid-column: span 2; }
+  .gallery-note { margin-top: 1.4rem; font-size: var(--step--1); color: var(--ink-soft); }
+
+  /* lightbox */
+  .lightbox { position: fixed; inset: 0; z-index: 100; display: none; place-items: center; padding: 1.5rem; background: color-mix(in srgb, var(--ink) 90%, transparent); backdrop-filter: blur(6px); }
+  .lightbox.open { display: grid; }
+  .lightbox img { max-width: min(92vw, 1080px); max-height: 84vh; border-radius: var(--r-md); box-shadow: 0 40px 90px -25px rgba(0,0,0,.65); }
+  .lightbox .lb-cap { position: absolute; left: 0; right: 0; bottom: 1.6rem; text-align: center; color: var(--paper); font-family: "Fraunces"; font-style: italic; font-size: 1.15rem; }
+  .lightbox .lb-close { position: absolute; top: 1.2rem; right: 1.4rem; width: 46px; height: 46px; border-radius: 50%; border: 0; cursor: pointer; background: color-mix(in srgb, var(--paper) 16%, transparent); color: var(--paper); display: grid; place-items: center; transition: background-color .3s var(--ease); }
+  .lightbox .lb-close:hover { background: color-mix(in srgb, var(--paper) 30%, transparent); }
+  .lightbox .lb-close:focus-visible { outline: 2px solid var(--paper); outline-offset: 3px; }
+
+  /* ---------- poukazy ---------- */
+  .vouchers { background: var(--cloud); border-block: 1px solid var(--line); }
+  .voucher-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 5vw, 4.5rem); align-items: center; margin-top: 3rem; }
+  .chips { display: flex; flex-wrap: wrap; gap: .65rem; margin: 1.6rem 0 .4rem; }
+  .chip { font-family: inherit; font-size: 1rem; font-weight: 600; padding: .58em 1.15em; border-radius: 999px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); cursor: pointer; transition: transform .3s var(--ease), background-color .3s var(--ease), border-color .3s var(--ease), color .3s var(--ease); }
+  .chip:hover { transform: translateY(-2px); border-color: var(--clover); }
+  .chip[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .chip:focus-visible { outline: 2px solid var(--clover); outline-offset: 3px; }
+  .custom-amount { margin: 1rem 0 .4rem; max-width: 240px; }
+  .custom-amount label { display: block; font-size: var(--step--1); font-weight: 700; margin-bottom: .4rem; }
+  .custom-amount input { width: 100%; font-family: inherit; font-size: var(--step-0); color: var(--ink); padding: .7em 1em; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
+  .custom-amount input:focus { outline: none; border-color: var(--clover); box-shadow: 0 0 0 3px color-mix(in srgb, var(--clover) 22%, transparent); }
+  .vouchers .v-actions { margin-top: 1.8rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
+  .vouchers .v-note { margin-top: 1.2rem; font-size: var(--step--1); color: var(--ink-soft); max-width: 40ch; }
+
+  /* the gift ticket */
+  .ticket { position: relative; background: linear-gradient(135deg, var(--clover) 0%, var(--clover-deep) 100%); color: var(--paper); border-radius: var(--r-lg); padding: clamp(1.8rem, 3vw, 2.6rem); box-shadow: 0 30px 60px -28px rgba(42,46,36,.6); overflow: hidden; }
+  .ticket::before, .ticket::after { content: ""; position: absolute; top: 50%; width: 34px; height: 34px; background: var(--cloud); border-radius: 50%; transform: translateY(-50%); }
+  .ticket::before { left: -17px; } .ticket::after { right: -17px; }
+  .ticket .t-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .ticket .t-top .eyebrow { color: color-mix(in srgb, var(--paper) 88%, transparent); }
+  .ticket .t-top .eyebrow::before { background: var(--paper); opacity: .6; }
+  .ticket .t-logo { width: 46px; height: 46px; background: color-mix(in srgb, var(--paper) 16%, transparent); border-radius: 50%; padding: 6px; }
+  .ticket .t-amount { font-family: "Fraunces"; font-size: clamp(2.6rem, 2rem + 3vw, 3.6rem); line-height: 1; margin: 1.4rem 0 .3rem; font-weight: 400; }
+  .ticket .t-for { border-top: 1px dashed color-mix(in srgb, var(--paper) 45%, transparent); margin-top: 1.6rem; padding-top: 1.1rem; display: flex; justify-content: space-between; gap: 1rem; font-size: var(--step--1); color: color-mix(in srgb, var(--paper) 82%, transparent); }
+  .ticket .t-for b { display: block; color: var(--paper); font-family: "Fraunces"; font-size: 1rem; letter-spacing: .04em; }
+
+  @media (max-width: 900px) {
+    .gallery { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 180px; }
+    .ph.big { grid-row: span 1; }
+    .voucher-grid { grid-template-columns: 1fr; }
+    .ticket { order: -1; }
+  }
+  @media (max-width: 560px) {
+    .gallery { grid-template-columns: 1fr; }
+    .ph.big, .ph.wide { grid-column: span 1; }
+  }
 </style>
 </head>
 <body>
@@ -303,7 +365,9 @@
       <a href="#lekce">Lekce</a>
       <a href="#rozvrh">Rozvrh</a>
       <a href="#kralicci">Králíčci</a>
+      <a href="#galerie">Galerie</a>
       <a href="#cenik">Ceník</a>
+      <a href="#poukazy">Poukazy</a>
       <a href="#faq">Dotazy</a>
     </nav>
     <div class="nav-cta">
@@ -512,6 +576,50 @@
     </div>
   </section>
 
+  <!-- ============ GALERIE ============ -->
+  <section id="galerie">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Galerie</span>
+        <h2>Nahlédněte do studia.</h2>
+        <p>Klidný sál, ranní světlo a samozřejmě naši chlupatí učitelé. Klikněte na fotku pro zvětšení.</p>
+      </div>
+      <div class="gallery reveal">
+        <button class="ph big" data-full="assets/gallery/01-hatha.svg" data-cap="Hatha s králíčky — savasana v ranním světle">
+          <img src="assets/gallery/01-hatha.svg" alt="Lekce hatha jógy v sále studia" loading="lazy" />
+          <span class="zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F2EFE6" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span>
+          <span class="cap">Savasana v ranním světle</span>
+        </button>
+        <button class="ph wide" data-full="assets/gallery/02-studio.svg" data-cap="Náš klidný sál v centru Brna">
+          <img src="assets/gallery/02-studio.svg" alt="Interiér studia s podložkami" loading="lazy" />
+          <span class="zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F2EFE6" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span>
+          <span class="cap">Klidný sál v centru Brna</span>
+        </button>
+        <button class="ph" data-full="assets/gallery/05-brokolice.svg" data-cap="Brokolice — naše hlavní lektorka">
+          <img src="assets/gallery/05-brokolice.svg" alt="Králík Brokolice" loading="lazy" />
+          <span class="zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2A2E24" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span>
+          <span class="cap">Brokolice odpočívá</span>
+        </button>
+        <button class="ph" data-full="assets/gallery/06-tofu.svg" data-cap="Tofu na ranním průzkumu podložek">
+          <img src="assets/gallery/06-tofu.svg" alt="Králík Tofu" loading="lazy" />
+          <span class="zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2A2E24" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span>
+          <span class="cap">Tofu na průzkumu</span>
+        </button>
+        <button class="ph wide" data-full="assets/gallery/03-po-lekci.svg" data-cap="Čaj a klid po lekci">
+          <img src="assets/gallery/03-po-lekci.svg" alt="Čajový kout po lekci" loading="lazy" />
+          <span class="zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F2EFE6" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span>
+          <span class="cap">Čaj a klid po lekci</span>
+        </button>
+        <button class="ph wide" data-full="assets/gallery/04-deti.svg" data-cap="Sobotní lekce Děti & králíci">
+          <img src="assets/gallery/04-deti.svg" alt="Dětská lekce s králíky" loading="lazy" />
+          <span class="zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2A2E24" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span>
+          <span class="cap">Sobota: Děti &amp; králíci</span>
+        </button>
+      </div>
+      <p class="gallery-note reveal">Obrázky jsou zatím ilustrační — jakmile budete mít vlastní fotky, stačí přepsat soubory ve složce <code>assets/gallery</code>.</p>
+    </div>
+  </section>
+
   <!-- ============ CENÍK ============ -->
   <section class="pricing" id="cenik">
     <div class="wrap">
@@ -554,6 +662,47 @@
             <li>Zapůjčení vybavení v ceně</li>
           </ul>
           <a class="btn btn-ghost" href="#rezervace">Koupit permanentku</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ POUKAZY ============ -->
+  <section class="vouchers" id="poukazy">
+    <div class="wrap voucher-grid">
+      <div class="reveal">
+        <span class="eyebrow">Dárkové poukazy</span>
+        <h2 class="section-head" style="font-size:var(--step-2);font-weight:400;margin-top:1rem">Darujte někomu klid.</h2>
+        <p style="margin-top:1.1rem;color:var(--ink-soft);max-width:44ch">Nejhezčí dárek pro uspěchané duše. Poukaz platí na jakoukoliv lekci po dobu 12 měsíců — obdarovaný si termín vybere, kdy bude mít čas zpomalit.</p>
+
+        <div class="chips" role="group" aria-label="Hodnota poukazu">
+          <button class="chip" type="button" data-amount="290">290 Kč</button>
+          <button class="chip" type="button" data-amount="690" aria-pressed="true">690 Kč</button>
+          <button class="chip" type="button" data-amount="1490">1 490 Kč</button>
+          <button class="chip" type="button" data-custom>Vlastní</button>
+        </div>
+        <div class="custom-amount" id="customWrap" hidden>
+          <label for="customInput">Vlastní hodnota (Kč)</label>
+          <input id="customInput" type="number" min="100" step="50" value="1000" inputmode="numeric" />
+        </div>
+
+        <div class="v-actions">
+          <a class="btn btn-primary" id="vBuy" href="mailto:ahoj@jogaskralicky.cz">Koupit poukaz <span class="arrow">→</span></a>
+          <a class="btn btn-ghost" href="#rezervace">Mám dotaz</a>
+        </div>
+        <p class="v-note">Po objednávce vám poukaz pošleme do 24&nbsp;hodin e-mailem k vytištění, nebo jako tištěnou kartičku poštou.</p>
+      </div>
+
+      <div class="ticket reveal" aria-hidden="true">
+        <div class="t-top">
+          <span class="eyebrow">Dárkový poukaz</span>
+          <img class="t-logo" src="assets/logo.svg" alt="" width="46" height="46" />
+        </div>
+        <div class="t-amount" id="vAmount">690 Kč</div>
+        <div style="font-size:var(--step--1);color:color-mix(in srgb,var(--paper) 82%,transparent)">na lekce Jógy s králíčky · platnost 12 měsíců</div>
+        <div class="t-for">
+          <span>Pro<b>. . . . . . . . . . . . . . .</b></span>
+          <span style="text-align:right">Kód<b>JSK&nbsp;·&nbsp;0001</b></span>
         </div>
       </div>
     </div>
@@ -634,6 +783,15 @@
   </section>
 </main>
 
+<!-- ============ LIGHTBOX ============ -->
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Náhled fotky">
+  <button class="lb-close" id="lbClose" aria-label="Zavřít náhled">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+  </button>
+  <img id="lbImg" src="" alt="" />
+  <p class="lb-cap" id="lbCap"></p>
+</div>
+
 <!-- ============ FOOTER ============ -->
 <footer class="foot">
   <div class="wrap">
@@ -647,9 +805,10 @@
       </div>
       <nav class="foot-links" aria-label="Patička">
         <a href="#lekce">Lekce</a>
-        <a href="#rozvrh">Rozvrh</a>
         <a href="#kralicci">Králíčci</a>
+        <a href="#galerie">Galerie</a>
         <a href="#cenik">Ceník</a>
+        <a href="#poukazy">Poukazy</a>
         <a href="#rezervace">Rezervace</a>
         <a href="https://instagram.com" target="_blank" rel="noopener">Instagram</a>
       </nav>
@@ -700,6 +859,64 @@
       panel.style.maxHeight = open ? '0px' : panel.scrollHeight + 'px';
     });
   });
+
+  // gallery lightbox
+  const lb = document.getElementById('lightbox');
+  const lbImg = document.getElementById('lbImg');
+  const lbCap = document.getElementById('lbCap');
+  let lastFocused = null;
+  function openLb(btn) {
+    lastFocused = btn;
+    lbImg.src = btn.dataset.full;
+    lbImg.alt = btn.dataset.cap || '';
+    lbCap.textContent = btn.dataset.cap || '';
+    lb.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('lbClose').focus();
+  }
+  function closeLb() {
+    lb.classList.remove('open');
+    document.body.style.overflow = '';
+    lbImg.src = '';
+    if (lastFocused) lastFocused.focus();
+  }
+  document.querySelectorAll('.gallery .ph').forEach((btn) => btn.addEventListener('click', () => openLb(btn)));
+  document.getElementById('lbClose').addEventListener('click', closeLb);
+  lb.addEventListener('click', (e) => { if (e.target === lb) closeLb(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && lb.classList.contains('open')) closeLb(); });
+
+  // gift voucher amount picker
+  const vAmount = document.getElementById('vAmount');
+  const vBuy = document.getElementById('vBuy');
+  const customWrap = document.getElementById('customWrap');
+  const customInput = document.getElementById('customInput');
+  let amount = 690;
+  const fmt = (n) => n.toLocaleString('cs-CZ') + ' Kč';
+  function updateVoucher() {
+    vAmount.textContent = fmt(amount);
+    const body = 'Dobrý den,\nmám zájem o dárkový poukaz na Jógu s králíčky v hodnotě ' + fmt(amount) + '.\n\nJméno:\nDoručení (e-mail / poštou):\nVěnování (nepovinné):\n\nDěkuji!';
+    vBuy.href = 'mailto:ahoj@jogaskralicky.cz?subject=' + encodeURIComponent('Objednávka dárkového poukazu — ' + fmt(amount)) + '&body=' + encodeURIComponent(body);
+  }
+  document.querySelectorAll('.chip').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
+      chip.setAttribute('aria-pressed', 'true');
+      if (chip.hasAttribute('data-custom')) {
+        customWrap.hidden = false;
+        amount = parseInt(customInput.value || '0', 10) || 0;
+        customInput.focus();
+      } else {
+        customWrap.hidden = true;
+        amount = parseInt(chip.dataset.amount, 10);
+      }
+      updateVoucher();
+    });
+  });
+  customInput && customInput.addEventListener('input', () => {
+    amount = Math.max(0, parseInt(customInput.value || '0', 10) || 0);
+    updateVoucher();
+  });
+  updateVoucher();
 </script>
 </body>
 </html>
