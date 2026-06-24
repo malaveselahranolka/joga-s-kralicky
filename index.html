@@ -164,12 +164,12 @@
   .leaf-bg .lf { position: absolute; display: block; transform-origin: 50% 92%; animation: sway var(--d, 14s) ease-in-out infinite; }
   .leaf-bg .lf svg { width: 100%; height: auto; display: block; transform: rotate(var(--rot, 0deg)); transform-origin: 50% 92%; animation: frond-breathe var(--d2, 7s) ease-in-out infinite; }
   @keyframes sway {
-    0%, 100% { transform: rotate(-8deg); }
-    50% { transform: rotate(8deg); }
+    0%, 100% { transform: rotate(-12deg); }
+    50% { transform: rotate(12deg); }
   }
   @keyframes frond-breathe {
     0%, 100% { transform: rotate(var(--rot, 0deg)) scaleY(1); }
-    50% { transform: rotate(var(--rot, 0deg)) scaleY(1.05); }
+    50% { transform: rotate(var(--rot, 0deg)) scaleY(1.09); }
   }
 
   /* ---------- generic section ---------- */
@@ -973,33 +973,31 @@
       }
       return `<svg viewBox="0 0 44 112">${p}</svg>`;
     };
-    const corners = [
-      { pos: 'top:-26px;left:-20px', rot: 205 },
-      { pos: 'top:-24px;right:-20px', rot: 155 },
-      { pos: 'bottom:-28px;left:-18px', rot: -22 },
-      { pos: 'bottom:-26px;right:-18px', rot: 22 }
-    ];
+    // fixed corner spots (no random) — TR = top-right draping, BL/BR = up from bottom
+    const TR = { pos: 'top:-24px;right:-20px', rot: 158 };
+    const BL = { pos: 'bottom:-28px;left:-18px', rot: -20 };
+    const BR = { pos: 'bottom:-26px;right:-18px', rot: 20 };
     const targets = [
-      { sel: '#o-nas', n: 2, c: '#6E8A4E' },
-      { sel: '#lekce', n: 2, c: '#6E8A4E' },
-      { sel: '#kralicci', n: 2, c: '#6E8A4E' },
-      { sel: '#galerie', n: 2, c: '#6E8A4E' },
-      { sel: '.schedule', n: 2, c: '#ECEFE2' },
-      { sel: '#cenik', n: 2, c: '#6E8A4E' },
-      { sel: '.vouchers', n: 2, c: '#6E8A4E' },
-      { sel: '#faq', n: 2, c: '#6E8A4E' },
-      { sel: '.booking', n: 2, c: '#ECEFE2' }
+      { sel: '#o-nas', c: '#6E8A4E', spots: [TR, BL] },
+      { sel: '#lekce', c: '#6E8A4E', spots: [TR, BL] },
+      // "Seznamte se" — left fern lifted up the left edge (top), plus one bottom-right
+      { sel: '#kralicci', c: '#6E8A4E', spots: [{ pos: 'top:6%;left:-22px', rot: 16 }, BR] },
+      { sel: '#galerie', c: '#6E8A4E', spots: [TR, BL] },
+      { sel: '.schedule', c: '#ECEFE2', spots: [TR, BL] },
+      { sel: '#cenik', c: '#6E8A4E', spots: [TR, BL] },
+      { sel: '.vouchers', c: '#6E8A4E', spots: [TR, BR] },
+      { sel: '#faq', c: '#6E8A4E', spots: [TR, BL] },
+      { sel: '.booking', c: '#ECEFE2', spots: [TR, BL] }
     ];
     const rnd = (a, b) => a + Math.random() * (b - a);
     targets.forEach((t) => {
       const sec = document.querySelector(t.sel);
       if (!sec) return;
-      const pool = corners.slice().sort(() => Math.random() - 0.5).slice(0, t.n);
       const layer = document.createElement('div');
       layer.className = 'leaf-bg';
-      layer.innerHTML = pool.map((cn) => {
-        const size = rnd(64, 96).toFixed(0);
-        const style = `${cn.pos};width:${size}px;opacity:${rnd(0.12, 0.2).toFixed(3)};--rot:${cn.rot}deg;--d:${rnd(9, 14).toFixed(1)}s;--d2:${rnd(5, 8).toFixed(1)}s;animation-delay:-${rnd(0, 10).toFixed(1)}s;`;
+      layer.innerHTML = t.spots.map((cn) => {
+        const size = rnd(66, 96).toFixed(0);
+        const style = `${cn.pos};width:${size}px;opacity:${rnd(0.13, 0.21).toFixed(3)};--rot:${cn.rot}deg;--d:${rnd(8, 12).toFixed(1)}s;--d2:${rnd(4.5, 7).toFixed(1)}s;animation-delay:-${rnd(0, 9).toFixed(1)}s;`;
         return `<span class="lf" style="${style}">${fern(t.c)}</span>`;
       }).join('');
       sec.prepend(layer);
