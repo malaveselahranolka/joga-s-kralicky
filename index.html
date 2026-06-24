@@ -121,25 +121,26 @@
 
   /* breathing pacer — signature element */
   .breath { position: relative; aspect-ratio: 1; width: min(100%, 420px); margin-inline: auto; display: grid; place-items: center; }
-  .breath-ring {
-    position: absolute; inset: 0; border-radius: 50%;
-    background: radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--clover) 22%, var(--paper)), var(--paper) 70%);
+  .hero-frame {
+    position: absolute; inset: 0; border-radius: 50%; overflow: hidden;
+    box-shadow: 0 34px 64px -28px rgba(42,46,36,.5), inset 0 0 0 9px color-mix(in srgb, var(--cloud) 70%, transparent);
     border: 1px solid var(--line);
   }
-  .breath-pulse {
-    position: absolute; width: 64%; aspect-ratio: 1; border-radius: 50%;
-    background: radial-gradient(circle at 50% 40%, #fff8, var(--blush) 60%, transparent 78%);
-    border: 1.5px solid color-mix(in srgb, var(--clover) 40%, transparent);
-    animation: breathe 9s var(--ease) infinite;
+  .hero-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .breath-badge {
+    position: absolute; left: 50%; bottom: 7%; transform: translateX(-50%); z-index: 2;
+    display: inline-flex; align-items: center; gap: .55rem; padding: .5em 1.05em; border-radius: 999px;
+    background: color-mix(in srgb, var(--cloud) 84%, transparent); backdrop-filter: blur(7px);
+    border: 1px solid color-mix(in srgb, var(--paper) 60%, transparent);
+    box-shadow: 0 10px 24px -14px rgba(42,46,36,.55);
+    font-family: "Fraunces"; font-style: italic; font-size: 1.05rem; color: var(--clover-deep); white-space: nowrap;
   }
+  .breath-badge .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--clover); animation: breathe 9s var(--ease) infinite; }
   @keyframes breathe {
-    0%, 100% { transform: scale(.7); }
-    44.4%    { transform: scale(1.06); } /* ~4s inhale */
-    55.5%    { transform: scale(1.06); } /* hold */
+    0%, 100% { transform: scale(.7); opacity: .55; }
+    44.4%    { transform: scale(1.35); opacity: 1; } /* ~4s inhale */
+    55.5%    { transform: scale(1.35); opacity: 1; } /* hold */
   }
-  .breath-label { position: relative; z-index: 2; text-align: center; }
-  .breath-label .word { font-family: "Fraunces"; font-size: 1.6rem; font-style: italic; color: var(--clover-deep); }
-  .breath-label small { display: block; font-size: var(--step--1); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-soft); margin-top: .35rem; }
   .breath .bun { position: absolute; bottom: 8%; right: 6%; width: 92px; animation: hop 4.5s var(--ease) infinite; transform-origin: bottom center; }
   @keyframes hop {
     0%, 70%, 100% { transform: translateY(0) rotate(0); }
@@ -147,7 +148,7 @@
     86% { transform: translateY(0) rotate(0); }
   }
   @media (prefers-reduced-motion: reduce) {
-    .breath-pulse, .breath .bun, .float { animation: none !important; }
+    .breath-badge .dot, .breath .bun, .float { animation: none !important; }
   }
 
   /* floating ambient leaves */
@@ -280,8 +281,21 @@
     .breath { order: -1; width: min(78%, 340px); }
     .cards, .plans, .grid-days, .buns { grid-template-columns: 1fr 1fr; }
     .booking .booking-grid { grid-template-columns: 1fr; }
-    .nav-links { display: none; }
+    .nav-links {
+      display: none; position: absolute; top: 100%; left: 0; right: 0;
+      flex-direction: column; align-items: stretch; gap: 0;
+      background: var(--cloud); border-bottom: 1px solid var(--line);
+      padding: .4rem 1.3rem 1rem; box-shadow: 0 26px 44px -28px rgba(42,46,36,.55);
+    }
+    header.nav.open .nav-links { display: flex; }
+    .nav-links a { font-size: 1.12rem; padding: .8rem 0; color: var(--ink); border-bottom: 1px solid color-mix(in srgb, var(--line) 65%, transparent); }
+    .nav-links a:last-child { border-bottom: 0; }
+    .nav-links a::after { display: none; }
     .menu-toggle { display: inline-flex; }
+    .menu-toggle svg path { transition: opacity .3s var(--ease); }
+    header.nav.open .menu-toggle .ic-open { display: none; }
+    .menu-toggle .ic-close { display: none; }
+    header.nav.open .menu-toggle .ic-close { display: block; }
     .stats { grid-template-columns: 1fr; }
   }
   @media (max-width: 560px) {
@@ -361,7 +375,7 @@
       <img class="mark" src="assets/logo.svg" alt="" width="34" height="34" />
       Jóga&nbsp;s&nbsp;králíčky
     </a>
-    <nav class="nav-links" aria-label="Hlavní">
+    <nav class="nav-links" id="navLinks" aria-label="Hlavní">
       <a href="#lekce">Lekce</a>
       <a href="#rozvrh">Rozvrh</a>
       <a href="#kralicci">Králíčci</a>
@@ -372,8 +386,9 @@
     </nav>
     <div class="nav-cta">
       <a class="btn btn-primary" href="#rezervace">Rezervovat lekci</a>
-      <button class="menu-toggle" id="menuToggle" aria-label="Otevřít menu">
-        <svg width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="#2A2E24" stroke-width="1.6"><path d="M3 7h20M3 13h20M3 19h20"/></svg>
+      <button class="menu-toggle" id="menuToggle" aria-label="Otevřít menu" aria-controls="navLinks" aria-expanded="false">
+        <svg class="ic-open" width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="#2A2E24" stroke-width="1.6"><path d="M3 7h20M3 13h20M3 19h20"/></svg>
+        <svg class="ic-close" width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="#2A2E24" stroke-width="1.8"><path d="M5 5l16 16M21 5L5 21"/></svg>
       </button>
     </div>
   </div>
@@ -398,15 +413,13 @@
         <p class="hero-note" style="margin-top:1.6rem"><b>4,9 ★</b> z 230 hodnocení · první lekce za zvýhodněnou cenu</p>
       </div>
 
-      <!-- SIGNATURE: breathing pacer -->
-      <div class="breath" aria-hidden="true">
-        <div class="breath-ring"></div>
-        <div class="breath-pulse"></div>
-        <div class="breath-label">
-          <span class="word" id="breathWord">Nádech</span>
-          <small>dýchejte s&nbsp;námi</small>
+      <!-- SIGNATURE: photo in a soft circle + breathing badge -->
+      <div class="breath">
+        <div class="hero-frame">
+          <img src="assets/hero.svg" alt="Žena medituje v tureckém sedu, vedle ní odpočívá králík" />
+          <span class="breath-badge" aria-hidden="true"><span class="dot"></span><span class="word" id="breathWord">Nádech</span></span>
         </div>
-        <svg class="bun" viewBox="0 0 100 120">
+        <svg class="bun" viewBox="0 0 100 120" aria-hidden="true">
           <ellipse cx="38" cy="30" rx="9" ry="24" fill="#FAFBF6" stroke="#D6DAC7" transform="rotate(-14 38 30)"/>
           <ellipse cx="60" cy="28" rx="9" ry="24" fill="#FAFBF6" stroke="#D6DAC7" transform="rotate(12 60 28)"/>
           <ellipse cx="38" cy="32" rx="4" ry="15" fill="#E8C9C2" transform="rotate(-14 38 32)"/>
@@ -826,12 +839,22 @@
   const onScroll = () => nav.classList.toggle('scrolled', window.scrollY > 12);
   onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
 
-  // mobile menu (simple anchor jump to nav links shown inline)
+  // mobile menu
   const toggle = document.getElementById('menuToggle');
-  toggle && toggle.addEventListener('click', () => {
-    document.querySelector('.nav-links').scrollIntoView();
-    location.hash = '#lekce';
-  });
+  if (toggle) {
+    toggle.addEventListener('click', () => {
+      const open = nav.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute('aria-label', open ? 'Zavřít menu' : 'Otevřít menu');
+    });
+    document.querySelectorAll('.nav-links a').forEach((a) =>
+      a.addEventListener('click', () => {
+        nav.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.setAttribute('aria-label', 'Otevřít menu');
+      })
+    );
+  }
 
   // reveal on scroll
   const io = new IntersectionObserver((entries) => {
