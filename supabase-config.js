@@ -21,6 +21,6 @@ window.SUPABASE_ANON_KEY = 'sb_publishable_fSK0f_Mv-WFaKnvxwTu5BA_NxYV-U9_';
 //  Dokud zůstanou zástupné hodnoty, rezervace fungují normálně,
 //  jen se neodešle potvrzovací e-mail.
 // =====================================================================
-window.EMAILJS_PUBLIC_KEY  = 'TVUJ_EMAILJS_PUBLIC_KEY';
-window.EMAILJS_SERVICE_ID  = 'TVUJ_EMAILJS_SERVICE_ID';
-window.EMAILJS_TEMPLATE_ID = 'TVUJ_EMAILJS_TEMPLATE_ID';
+window.EMAILJS_PUBLIC_KEY  = 'vLh3HLiqUbRBLKmNN';
+window.EMAILJS_SERVICE_ID  = 'service_9n1wtnv';
+window.EMAILJS_TEMPLATE_ID = 'template_iblqvg1';
