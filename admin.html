@@ -52,15 +52,16 @@
   .config-warn { background: color-mix(in srgb, var(--carrot) 14%, var(--cloud)); border: 1px solid color-mix(in srgb, var(--carrot) 40%, var(--line)); border-radius: var(--r-md); padding: 1rem 1.1rem; font-size: .88rem; margin-bottom: 1.4rem; color: var(--ink); }
 
   /* ---------- app shell ---------- */
-  .topbar { background: var(--ink); color: var(--paper); }
+  .topbar { background: var(--ink); color: var(--paper); position: sticky; top: 0; z-index: 40; }
   .topbar .wrap { display: flex; align-items: center; justify-content: space-between; height: 66px; }
+  .topbar .who #whoEmail { max-width: 230px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .topbar .brand { display: flex; align-items: center; gap: .55rem; font-family: "Fraunces"; font-size: 1.18rem; }
   .topbar .brand img { width: 30px; height: 30px; }
   .topbar .who { display: flex; align-items: center; gap: 1rem; font-size: .85rem; color: color-mix(in srgb, var(--paper) 75%, transparent); }
   .topbar .btn-ghost { color: var(--paper); border-color: color-mix(in srgb, var(--paper) 30%, transparent); }
   .topbar .btn-ghost:hover { background: color-mix(in srgb, var(--paper) 12%, transparent); border-color: var(--paper); }
 
-  .tabs { display: flex; gap: .3rem; border-bottom: 1px solid var(--line); margin: 1.8rem 0 2rem; flex-wrap: wrap; }
+  .tabs { display: flex; gap: .3rem; border-bottom: 1px solid var(--line); margin: 1.8rem 0 2rem; flex-wrap: wrap; position: sticky; top: 66px; background: var(--paper); z-index: 30; }
   .tab { background: none; border: 0; border-bottom: 2px solid transparent; padding: .7rem 1.1rem; font-family: inherit; font-size: 1rem; font-weight: 600; color: var(--ink-soft); cursor: pointer; transition: color .2s var(--ease), border-color .2s var(--ease); margin-bottom: -1px; }
   .tab:hover { color: var(--ink); }
   .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--clover); }
@@ -128,9 +129,44 @@
   .toast.show { transform: translateX(-50%) translateY(0); }
 
   @media (max-width: 720px) {
-    .stat-row { grid-template-columns: 1fr; }
+    .wrap { width: min(100% - 1.4rem, 1080px); }
+    .topbar .wrap { height: 58px; }
+    .topbar .brand { font-size: 1.05rem; }
+    .topbar .brand img { width: 26px; height: 26px; }
+    .topbar .who { gap: .55rem; }
+    .topbar .who #whoEmail { display: none; }
+    .tabs { top: 58px; margin: 1.1rem 0 1.3rem; gap: 0; }
+    .tab { flex: 1; padding: .75rem .3rem; font-size: .92rem; }
+    .panel { padding-bottom: 3rem; }
+    .panel-head { margin-bottom: 1.1rem; }
+    .panel-head h2 { font-size: 1.45rem; }
+    .panel-head > div, .panel-head > .btn { width: 100%; }
+    .panel-head > div { display: grid !important; grid-template-columns: 1fr; }
+    .panel-head .btn { width: 100%; }
+    .stat-row { grid-template-columns: 1fr 1fr; gap: .7rem; }
+    .stat { padding: .9rem 1rem; }
+    .stat .n { font-size: 1.7rem; }
+    .dash-item { grid-template-columns: 1fr auto; }
     .form-grid { grid-template-columns: 1fr 1fr; }
     .form-grid .field-wide { grid-column: 1 / -1; }
+    .form-actions .btn { flex: 1; }
+    /* řádky se skládají na výšku, akce do mřížky přes celou šířku */
+    .row { flex-direction: column; align-items: stretch; gap: .7rem; }
+    .row .acts { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; width: 100%; }
+    .row .acts .btn { width: 100%; }
+    .att-item { flex-direction: column; align-items: stretch; gap: .55rem; }
+    .att-item .acts { display: grid; grid-template-columns: 1fr; gap: .4rem; width: 100%; }
+    .att-item .acts .btn { width: 100%; }
+    .toolbar { width: 100%; }
+    .toolbar select { flex: 1; min-width: 0; width: auto; }
+    .btn-sm { padding: .6em 1em; font-size: .9rem; }
+  }
+  @media (max-width: 430px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .stat-row { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 360px) {
+    .row .acts { grid-template-columns: 1fr; }
   }
 </style>
 </head>
