@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex" />
+<title>Správa rezervací — Jóga s králíčky</title>
+<link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600&family=Nunito+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #ECEFE2; --cloud: #FAFBF6; --ink: #2A2E24; --ink-soft: #5A6150;
+    --clover: #6E8A4E; --clover-deep: #50693A; --carrot: #E08A4B; --blush: #E8C9C2;
+    --line: #D6DAC7; --r-lg: 24px; --r-md: 14px; --ease: cubic-bezier(.22,.61,.36,1);
+  }
+  * , *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; font-family: "Nunito Sans", system-ui, sans-serif; color: var(--ink); background: var(--paper); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  h1, h2, h3, h4 { font-family: "Fraunces", Georgia, serif; font-weight: 400; line-height: 1.1; letter-spacing: -.02em; margin: 0; }
+  p { margin: 0; }
+  a { color: var(--clover-deep); }
+  .wrap { width: min(100% - 2rem, 1080px); margin-inline: auto; }
+  .eyebrow { font-size: .78rem; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--clover); }
+
+  /* buttons */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; font-family: inherit; font-size: .95rem; font-weight: 600; padding: .7em 1.3em; border-radius: 999px; border: 1px solid transparent; cursor: pointer; transition: transform .25s var(--ease), background-color .25s var(--ease), border-color .25s var(--ease); }
+  .btn:focus-visible { outline: 2px solid var(--clover); outline-offset: 3px; }
+  .btn-primary { background: var(--ink); color: var(--paper); }
+  .btn-primary:hover { transform: translateY(-2px); background: var(--clover-deep); }
+  .btn-ghost { background: transparent; border-color: var(--line); color: var(--ink); }
+  .btn-ghost:hover { transform: translateY(-2px); border-color: var(--clover); background: var(--cloud); }
+  .btn-sm { padding: .42em .9em; font-size: .85rem; }
+  .btn-danger { color: var(--carrot); border-color: color-mix(in srgb, var(--carrot) 45%, var(--line)); background: transparent; }
+  .btn-danger:hover { background: color-mix(in srgb, var(--carrot) 12%, transparent); border-color: var(--carrot); }
+
+  /* inputs */
+  label { display: block; font-size: .82rem; font-weight: 700; margin-bottom: .35rem; }
+  input, select, textarea { width: 100%; font-family: inherit; font-size: .98rem; color: var(--ink); padding: .65em .85em; border: 1px solid var(--line); border-radius: 11px; background: var(--cloud); transition: border-color .25s var(--ease), box-shadow .25s var(--ease); }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--clover); box-shadow: 0 0 0 3px color-mix(in srgb, var(--clover) 22%, transparent); }
+
+  /* ---------- login ---------- */
+  .login-screen { min-height: 100vh; display: grid; place-items: center; padding: 1.5rem; }
+  .login-card { width: min(100%, 400px); background: var(--cloud); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 2.4rem; box-shadow: 0 30px 60px -34px rgba(42,46,36,.5); }
+  .login-card .brand { display: flex; align-items: center; gap: .6rem; font-family: "Fraunces"; font-size: 1.25rem; margin-bottom: 1.6rem; }
+  .login-card .brand img { width: 34px; height: 34px; }
+  .login-card h1 { font-size: 1.7rem; margin-bottom: .4rem; }
+  .login-card .sub { color: var(--ink-soft); font-size: .92rem; margin-bottom: 1.6rem; }
+  .login-card .field { margin-bottom: 1rem; }
+  .login-card .btn { width: 100%; margin-top: .6rem; }
+  .auth-err { color: var(--carrot); font-size: .88rem; font-weight: 700; margin-top: 1rem; min-height: 1.2em; }
+  .config-warn { background: color-mix(in srgb, var(--carrot) 14%, var(--cloud)); border: 1px solid color-mix(in srgb, var(--carrot) 40%, var(--line)); border-radius: var(--r-md); padding: 1rem 1.1rem; font-size: .88rem; margin-bottom: 1.4rem; color: var(--ink); }
+
+  /* ---------- app shell ---------- */
+  .topbar { background: var(--ink); color: var(--paper); }
+  .topbar .wrap { display: flex; align-items: center; justify-content: space-between; height: 66px; }
+  .topbar .brand { display: flex; align-items: center; gap: .55rem; font-family: "Fraunces"; font-size: 1.18rem; }
+  .topbar .brand img { width: 30px; height: 30px; }
+  .topbar .who { display: flex; align-items: center; gap: 1rem; font-size: .85rem; color: color-mix(in srgb, var(--paper) 75%, transparent); }
+  .topbar .btn-ghost { color: var(--paper); border-color: color-mix(in srgb, var(--paper) 30%, transparent); }
+  .topbar .btn-ghost:hover { background: color-mix(in srgb, var(--paper) 12%, transparent); border-color: var(--paper); }
+
+  .tabs { display: flex; gap: .3rem; border-bottom: 1px solid var(--line); margin: 1.8rem 0 2rem; flex-wrap: wrap; }
+  .tab { background: none; border: 0; border-bottom: 2px solid transparent; padding: .7rem 1.1rem; font-family: inherit; font-size: 1rem; font-weight: 600; color: var(--ink-soft); cursor: pointer; transition: color .2s var(--ease), border-color .2s var(--ease); margin-bottom: -1px; }
+  .tab:hover { color: var(--ink); }
+  .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--clover); }
+  .panel { display: none; padding-bottom: 4rem; }
+  .panel.active { display: block; }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.4rem; }
+  .panel-head h2 { font-size: 1.7rem; }
+
+  .card { background: var(--cloud); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 1.4rem 1.5rem; }
+  .muted { color: var(--ink-soft); }
+  .empty { text-align: center; color: var(--ink-soft); padding: 2.5rem 1rem; border: 1px dashed var(--line); border-radius: var(--r-lg); }
+
+  /* dashboard */
+  .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.8rem; }
+  .stat { background: var(--cloud); border: 1px solid var(--line); border-radius: var(--r-md); padding: 1.1rem 1.3rem; }
+  .stat .n { font-family: "Fraunces"; font-size: 2rem; line-height: 1; }
+  .stat .l { font-size: .82rem; color: var(--ink-soft); margin-top: .35rem; }
+  .dash-list { display: grid; gap: .8rem; }
+  .dash-item { background: var(--cloud); border: 1px solid var(--line); border-radius: var(--r-md); padding: 1rem 1.2rem; display: grid; grid-template-columns: 1fr auto; gap: .5rem 1rem; align-items: center; }
+  .dash-item .when { font-size: .85rem; color: var(--ink-soft); }
+  .dash-item .ttl { font-family: "Fraunces"; font-size: 1.15rem; }
+  .fill { grid-column: 1 / -1; }
+  .fill-bar { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; }
+  .fill-bar > span { display: block; height: 100%; background: var(--clover); border-radius: 99px; transition: width .4s var(--ease); }
+  .fill-lbl { font-size: .8rem; color: var(--ink-soft); margin-top: .3rem; display: flex; justify-content: space-between; }
+  .full .fill-bar > span { background: var(--carrot); }
+
+  /* lists / rows */
+  .rows { display: grid; gap: .6rem; }
+  .row { background: var(--cloud); border: 1px solid var(--line); border-radius: var(--r-md); padding: .9rem 1.1rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+  .row .main { flex: 1 1 240px; min-width: 0; }
+  .row .ttl { font-family: "Fraunces"; font-size: 1.12rem; }
+  .row .sub { font-size: .85rem; color: var(--ink-soft); }
+  .row .acts { display: flex; gap: .4rem; flex-wrap: wrap; }
+  .pill { display: inline-block; font-size: .72rem; font-weight: 700; letter-spacing: .04em; padding: .2em .7em; border-radius: 99px; }
+  .pill-ok { background: color-mix(in srgb, var(--clover) 20%, var(--cloud)); color: var(--clover-deep); }
+  .pill-full { background: color-mix(in srgb, var(--carrot) 22%, var(--cloud)); color: #9a5a23; }
+  .pill-cancel { background: color-mix(in srgb, var(--ink) 12%, var(--cloud)); color: var(--ink-soft); }
+  .row.is-cancelled { opacity: .6; }
+  .row.is-cancelled .ttl { text-decoration: line-through; }
+
+  /* form grid */
+  .form-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: .9rem; align-items: end; }
+  .form-grid .field-wide { grid-column: 1 / -1; }
+  .form-actions { display: flex; gap: .6rem; margin-top: 1rem; flex-wrap: wrap; }
+  .collapse { max-height: 0; overflow: hidden; transition: max-height .4s var(--ease); }
+  .collapse.open { max-height: 600px; }
+  .toolbar { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; margin-bottom: 1.2rem; }
+  .toolbar select { width: auto; min-width: 200px; }
+  .toast { position: fixed; left: 50%; bottom: 1.5rem; transform: translateX(-50%) translateY(120%); background: var(--ink); color: var(--paper); padding: .8em 1.3em; border-radius: 999px; font-size: .9rem; font-weight: 600; box-shadow: 0 16px 40px -16px rgba(0,0,0,.5); transition: transform .4s var(--ease); z-index: 100; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 720px) {
+    .stat-row { grid-template-columns: 1fr; }
+    .form-grid { grid-template-columns: 1fr 1fr; }
+    .form-grid .field-wide { grid-column: 1 / -1; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="brand"><img src="assets/logo.svg" alt="" /> Jóga s králíčky</div>
+    <div class="config-warn" id="configWarn" hidden>
+      Aplikace zatím není propojená s databází. Otevři soubor <strong>supabase-config.js</strong> a vlož URL a klíč ze Supabase. Návod je v <strong>NASTAVENI.md</strong>.
+    </div>
+    <h1>Správa rezervací</h1>
+    <p class="sub">Přihlaste se účtem majitelky studia.</p>
+    <form id="loginForm">
+      <div class="field"><label for="lg-email">E-mail</label><input id="lg-email" type="email" autocomplete="username" required /></div>
+      <div class="field"><label for="lg-pass">Heslo</label><input id="lg-pass" type="password" autocomplete="current-password" required /></div>
+      <button class="btn btn-primary" type="submit" id="lgBtn">Přihlásit se</button>
+      <p class="auth-err" id="authErr" role="alert"></p>
+    </form>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app" hidden>
+  <div class="topbar">
+    <div class="wrap">
+      <div class="brand"><img src="assets/logo.svg" alt="" /> Správa studia</div>
+      <div class="who"><span id="whoEmail"></span><button class="btn btn-ghost btn-sm" id="logoutBtn">Odhlásit</button></div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true" data-tab="dash">Přehled</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="lessons">Lekce</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="bookings">Rezervace</button>
+    </div>
+
+    <!-- DASHBOARD -->
+    <section class="panel active" id="panel-dash" role="tabpanel">
+      <div class="panel-head"><h2>Přehled</h2><button class="btn btn-ghost btn-sm" id="refreshDash">Obnovit</button></div>
+      <div class="stat-row" id="statRow"></div>
+      <h3 style="margin-bottom:.9rem">Nejbližší lekce</h3>
+      <div class="dash-list" id="dashList"></div>
+    </section>
+
+    <!-- LESSONS -->
+    <section class="panel" id="panel-lessons" role="tabpanel">
+      <div class="panel-head">
+        <h2>Lekce</h2>
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" id="genWeekBtn">Vygenerovat příští týden z rozvrhu</button>
+          <button class="btn btn-primary btn-sm" id="newLessonBtn">+ Přidat lekci</button>
+        </div>
+      </div>
+
+      <div class="card collapse" id="lessonFormWrap" style="margin-bottom:1.4rem">
+        <h3 id="lessonFormTitle" style="margin-bottom:1rem">Nová lekce</h3>
+        <form id="lessonForm">
+          <div class="form-grid">
+            <div class="field-wide"><label for="lf-title">Název lekce</label><input id="lf-title" list="titleOptions" required placeholder="např. Hatha s králíčky" /></div>
+            <datalist id="titleOptions">
+              <option>Ranní protažení</option><option>Hatha s králíčky</option>
+              <option>Děti &amp; králíci</option><option>Soumrak &amp; restorativní</option>
+            </datalist>
+            <div><label for="lf-date">Datum</label><input id="lf-date" type="date" required /></div>
+            <div><label for="lf-time">Čas</label><input id="lf-time" type="time" required /></div>
+            <div><label for="lf-dur">Délka (min)</label><input id="lf-dur" type="number" min="15" step="5" value="60" required /></div>
+            <div><label for="lf-cap">Kapacita</label><input id="lf-cap" type="number" min="1" max="40" value="12" required /></div>
+            <div class="field-wide"><label for="lf-note">Poznámka (nepovinné)</label><input id="lf-note" placeholder="např. jen pro začátečníky" /></div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary" type="submit" id="lessonSubmit">Uložit lekci</button>
+            <button class="btn btn-ghost" type="button" id="lessonCancel">Zrušit</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="toolbar">
+        <label style="margin:0">Zobrazit:</label>
+        <select id="lessonFilter">
+          <option value="upcoming">Nadcházející</option>
+          <option value="all">Všechny</option>
+          <option value="past">Proběhlé</option>
+        </select>
+      </div>
+      <div class="rows" id="lessonRows"></div>
+    </section>
+
+    <!-- BOOKINGS -->
+    <section class="panel" id="panel-bookings" role="tabpanel">
+      <div class="panel-head">
+        <h2>Rezervace</h2>
+        <button class="btn btn-primary btn-sm" id="newBookingBtn">+ Ruční rezervace</button>
+      </div>
+
+      <div class="card collapse" id="bookingFormWrap" style="margin-bottom:1.4rem">
+        <h3 style="margin-bottom:1rem">Ruční rezervace (telefon / walk-in)</h3>
+        <form id="bookingForm">
+          <div class="form-grid">
+            <div class="field-wide"><label for="bf-lesson">Lekce</label><select id="bf-lesson" required></select></div>
+            <div class="field-wide"><label for="bf-name">Jméno</label><input id="bf-name" required /></div>
+            <div><label for="bf-email">E-mail</label><input id="bf-email" type="email" placeholder="nepovinné" /></div>
+            <div><label for="bf-phone">Telefon</label><input id="bf-phone" placeholder="nepovinné" /></div>
+            <div><label for="bf-spots">Míst</label><input id="bf-spots" type="number" min="1" max="8" value="1" required /></div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary" type="submit">Přidat rezervaci</button>
+            <button class="btn btn-ghost" type="button" id="bookingCancel">Zrušit</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="toolbar">
+        <label style="margin:0">Lekce:</label>
+        <select id="bookingFilter"><option value="all">Všechny nadcházející</option></select>
+      </div>
+      <div class="rows" id="bookingRows"></div>
+    </section>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script>
+(function () {
+  const CONFIGURED = /^https:\/\/.+\.supabase\.co/.test(window.SUPABASE_URL || '') &&
+    !!window.SUPABASE_ANON_KEY && window.SUPABASE_ANON_KEY !== 'TVUJ_ANON_KLIC' &&
+    window.SUPABASE_ANON_KEY.length > 20 && typeof window.supabase !== 'undefined';
+  const sb = CONFIGURED ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY) : null;
+
+  const $ = (id) => document.getElementById(id);
+  const loginScreen = $('loginScreen'), app = $('app');
+  let lessons = [], bookings = [], editingId = null;
+
+  // helpers ------------------------------------------------------------
+  const cap = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+  const fmtDT = (iso) => cap(new Date(iso).toLocaleString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' }));
+  const esc = (s) => (s == null ? '' : String(s)).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2600); }
+  function bookedFor(lessonId) { return bookings.filter((b) => b.lesson_id === lessonId && b.status !== 'cancelled').reduce((s, b) => s + b.spots, 0); }
+
+  // auth ---------------------------------------------------------------
+  $('configWarn').hidden = CONFIGURED;
+  if (!CONFIGURED) { $('lgBtn').disabled = true; }
+
+  $('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!CONFIGURED) return;
+    $('authErr').textContent = ''; $('lgBtn').disabled = true; $('lgBtn').textContent = 'Přihlašuji…';
+    const { error } = await sb.auth.signInWithPassword({ email: $('lg-email').value.trim(), password: $('lg-pass').value });
+    $('lgBtn').disabled = false; $('lgBtn').textContent = 'Přihlásit se';
+    if (error) { $('authErr').textContent = 'Přihlášení se nezdařilo. Zkontrolujte e-mail a heslo.'; }
+  });
+
+  $('logoutBtn').addEventListener('click', async () => { await sb.auth.signOut(); });
+
+  if (CONFIGURED) {
+    sb.auth.getSession().then(({ data }) => applySession(data.session));
+    sb.auth.onAuthStateChange((_e, session) => applySession(session));
+  }
+  function applySession(session) {
+    if (session) {
+      loginScreen.style.display = 'none'; app.hidden = false;
+      $('whoEmail').textContent = session.user.email;
+      loadAll();
+    } else {
+      app.hidden = true; loginScreen.style.display = 'grid';
+    }
+  }
+
+  // data ---------------------------------------------------------------
+  async function loadAll() {
+    const [lr, br] = await Promise.all([
+      sb.from('lessons').select('*').order('starts_at', { ascending: true }),
+      sb.from('bookings').select('*').order('created_at', { ascending: false })
+    ]);
+    if (lr.error || br.error) { toast('Načtení dat selhalo'); return; }
+    lessons = lr.data || []; bookings = br.data || [];
+    renderDash(); renderLessons(); renderBookings(); fillLessonSelects();
+  }
+
+  // tabs ---------------------------------------------------------------
+  document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach((x) => x.setAttribute('aria-selected', 'false'));
+    t.setAttribute('aria-selected', 'true');
+    document.querySelectorAll('.panel').forEach((p) => p.classList.remove('active'));
+    $('panel-' + t.dataset.tab).classList.add('active');
+  }));
+
+  // dashboard ----------------------------------------------------------
+  $('refreshDash').addEventListener('click', loadAll);
+  function renderDash() {
+    const now = Date.now();
+    const upcoming = lessons.filter((l) => l.status === 'active' && new Date(l.starts_at).getTime() > now);
+    const totalCap = upcoming.reduce((s, l) => s + l.capacity, 0);
+    const totalBooked = upcoming.reduce((s, l) => s + bookedFor(l.id), 0);
+    const activeBookings = bookings.filter((b) => b.status !== 'cancelled' && new Date((lessons.find((l) => l.id === b.lesson_id) || {}).starts_at || 0).getTime() > now);
+    $('statRow').innerHTML =
+      stat(upcoming.length, 'nadcházejících lekcí') +
+      stat(totalBooked + ' / ' + totalCap, 'obsazených míst') +
+      stat(activeBookings.reduce((s, b) => s + b.spots, 0), 'míst rezervováno');
+    $('dashList').innerHTML = upcoming.length ? upcoming.slice(0, 12).map((l) => {
+      const b = bookedFor(l.id), pct = l.capacity ? Math.round(b / l.capacity * 100) : 0, full = b >= l.capacity;
+      return '<div class="dash-item' + (full ? ' full' : '') + '">' +
+        '<div><div class="ttl">' + esc(l.title) + '</div><div class="when">' + fmtDT(l.starts_at) + '</div></div>' +
+        '<div>' + (full ? '<span class="pill pill-full">Plno</span>' : '<span class="pill pill-ok">' + (l.capacity - b) + ' volných</span>') + '</div>' +
+        '<div class="fill"><div class="fill-bar"><span style="width:' + Math.min(pct, 100) + '%"></span></div>' +
+        '<div class="fill-lbl"><span>' + b + ' z ' + l.capacity + ' míst</span><span>' + pct + ' %</span></div></div>' +
+        '</div>';
+    }).join('') : '<div class="empty">Zatím žádné nadcházející lekce. Přidejte je v záložce <strong>Lekce</strong>.</div>';
+  }
+  function stat(n, l) { return '<div class="stat"><div class="n">' + n + '</div><div class="l">' + l + '</div></div>'; }
+
+  // lessons ------------------------------------------------------------
+  const lessonWrap = $('lessonFormWrap');
+  $('newLessonBtn').addEventListener('click', () => { editingId = null; $('lessonFormTitle').textContent = 'Nová lekce'; $('lessonForm').reset(); $('lf-dur').value = 60; $('lf-cap').value = 12; lessonWrap.classList.add('open'); $('lf-title').focus(); });
+  $('lessonCancel').addEventListener('click', () => lessonWrap.classList.remove('open'));
+  $('lessonFilter').addEventListener('change', renderLessons);
+
+  $('lessonForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const [y, m, d] = $('lf-date').value.split('-').map(Number);
+    const [hh, mm] = $('lf-time').value.split(':').map(Number);
+    const starts = new Date(y, m - 1, d, hh, mm);
+    if (isNaN(starts)) { toast('Doplňte datum a čas'); return; }
+    const payload = {
+      title: $('lf-title').value.trim(), starts_at: starts.toISOString(),
+      duration_min: parseInt($('lf-dur').value, 10), capacity: parseInt($('lf-cap').value, 10),
+      note: $('lf-note').value.trim() || null
+    };
+    const res = editingId
+      ? await sb.from('lessons').update(payload).eq('id', editingId)
+      : await sb.from('lessons').insert(payload);
+    if (res.error) { toast('Uložení selhalo'); return; }
+    toast(editingId ? 'Lekce upravena' : 'Lekce přidána');
+    lessonWrap.classList.remove('open'); editingId = null;
+    await loadAll();
+  });
+
+  function renderLessons() {
+    const now = Date.now(), f = $('lessonFilter').value;
+    let list = lessons.slice();
+    if (f === 'upcoming') list = list.filter((l) => new Date(l.starts_at).getTime() > now);
+    else if (f === 'past') list = list.filter((l) => new Date(l.starts_at).getTime() <= now).reverse();
+    $('lessonRows').innerHTML = list.length ? list.map((l) => {
+      const b = bookedFor(l.id), full = b >= l.capacity, cancelled = l.status === 'cancelled';
+      const pill = cancelled ? '<span class="pill pill-cancel">Zrušená</span>'
+        : full ? '<span class="pill pill-full">Plno</span>'
+        : '<span class="pill pill-ok">' + (l.capacity - b) + ' volných</span>';
+      return '<div class="row' + (cancelled ? ' is-cancelled' : '') + '">' +
+        '<div class="main"><div class="ttl">' + esc(l.title) + ' ' + pill + '</div>' +
+        '<div class="sub">' + fmtDT(l.starts_at) + ' · ' + l.duration_min + ' min · ' + b + '/' + l.capacity + ' míst' + (l.note ? ' · ' + esc(l.note) : '') + '</div></div>' +
+        '<div class="acts">' +
+          '<button class="btn btn-ghost btn-sm" data-edit="' + l.id + '">Upravit</button>' +
+          (cancelled
+            ? '<button class="btn btn-ghost btn-sm" data-reopen="' + l.id + '">Obnovit</button>'
+            : '<button class="btn btn-danger btn-sm" data-cancel="' + l.id + '">Zrušit lekci</button>') +
+          '<button class="btn btn-danger btn-sm" data-del="' + l.id + '">Smazat</button>' +
+        '</div></div>';
+    }).join('') : '<div class="empty">Žádné lekce v tomto zobrazení.</div>';
+  }
+
+  $('lessonRows').addEventListener('click', async (e) => {
+    const btn = e.target.closest('button'); if (!btn) return;
+    const id = btn.dataset.edit || btn.dataset.cancel || btn.dataset.reopen || btn.dataset.del;
+    const l = lessons.find((x) => x.id === id); if (!l) return;
+    if (btn.dataset.edit) {
+      editingId = id; $('lessonFormTitle').textContent = 'Upravit lekci';
+      const dt = new Date(l.starts_at);
+      $('lf-title').value = l.title;
+      $('lf-date').value = dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0');
+      $('lf-time').value = String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
+      $('lf-dur').value = l.duration_min; $('lf-cap').value = l.capacity; $('lf-note').value = l.note || '';
+      lessonWrap.classList.add('open'); lessonWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else if (btn.dataset.cancel) {
+      const b = bookedFor(id);
+      if (!confirm('Zrušit lekci „' + l.title + '“ (' + fmtDT(l.starts_at) + ')?' + (b ? '\n\nMá ' + b + ' rezervovaných míst — nezapomeňte hosty informovat.' : ''))) return;
+      const { error } = await sb.from('lessons').update({ status: 'cancelled' }).eq('id', id);
+      if (error) { toast('Nepodařilo se zrušit'); return; }
+      toast('Lekce zrušena'); await loadAll();
+    } else if (btn.dataset.reopen) {
+      const { error } = await sb.from('lessons').update({ status: 'active' }).eq('id', id);
+      if (error) { toast('Akce selhala'); return; }
+      toast('Lekce obnovena'); await loadAll();
+    } else if (btn.dataset.del) {
+      if (!confirm('Trvale smazat lekci „' + l.title + '“ i s jejími rezervacemi? Tuto akci nelze vrátit.')) return;
+      const { error } = await sb.from('lessons').delete().eq('id', id);
+      if (error) { toast('Mazání selhalo'); return; }
+      toast('Lekce smazána'); await loadAll();
+    }
+  });
+
+  // generování týdne z rozvrhu ----------------------------------------
+  const WEEKLY = [
+    { d: 1, t: '07:30', title: 'Ranní protažení', dur: 60, cap: 12 },
+    { d: 2, t: '18:00', title: 'Hatha s králíčky', dur: 75, cap: 12 },
+    { d: 2, t: '19:45', title: 'Hatha s králíčky', dur: 75, cap: 12 },
+    { d: 3, t: '07:30', title: 'Ranní protažení', dur: 60, cap: 12 },
+    { d: 4, t: '18:00', title: 'Hatha s králíčky', dur: 75, cap: 12 },
+    { d: 5, t: '07:30', title: 'Ranní protažení', dur: 60, cap: 12 },
+    { d: 5, t: '17:30', title: 'Soumrak & restorativní', dur: 60, cap: 12 },
+    { d: 6, t: '09:30', title: 'Děti & králíci', dur: 45, cap: 10 },
+    { d: 6, t: '11:00', title: 'Hatha s králíčky', dur: 75, cap: 12 },
+    { d: 0, t: '19:30', title: 'Soumrak & restorativní', dur: 60, cap: 12 }
+  ];
+  $('genWeekBtn').addEventListener('click', async () => {
+    // následujících 7 dní počínaje zítřkem
+    const rows = [];
+    for (let i = 1; i <= 7; i++) {
+      const day = new Date(); day.setHours(0, 0, 0, 0); day.setDate(day.getDate() + i);
+      WEEKLY.filter((w) => w.d === day.getDay()).forEach((w) => {
+        const [hh, mm] = w.t.split(':').map(Number);
+        const dt = new Date(day); dt.setHours(hh, mm, 0, 0);
+        const iso = dt.toISOString();
+        const exists = lessons.some((l) => l.title === w.title && Math.abs(new Date(l.starts_at) - dt) < 60000);
+        if (!exists) rows.push({ title: w.title, starts_at: iso, duration_min: w.dur, capacity: w.cap });
+      });
+    }
+    if (!rows.length) { toast('Příští týden už je vygenerovaný'); return; }
+    if (!confirm('Vytvořit ' + rows.length + ' lekcí podle standardního rozvrhu na příštích 7 dní?')) return;
+    const { error } = await sb.from('lessons').insert(rows);
+    if (error) { toast('Generování selhalo'); return; }
+    toast(rows.length + ' lekcí přidáno'); await loadAll();
+  });
+
+  // bookings -----------------------------------------------------------
+  const bookingWrap = $('bookingFormWrap');
+  $('newBookingBtn').addEventListener('click', () => { $('bookingForm').reset(); $('bf-spots').value = 1; bookingWrap.classList.add('open'); $('bf-lesson').focus(); });
+  $('bookingCancel').addEventListener('click', () => bookingWrap.classList.remove('open'));
+  $('bookingFilter').addEventListener('change', renderBookings);
+
+  function fillLessonSelects() {
+    const now = Date.now();
+    const upcoming = lessons.filter((l) => l.status === 'active' && new Date(l.starts_at).getTime() > now);
+    const opts = upcoming.map((l) => '<option value="' + l.id + '">' + esc(l.title) + ' — ' + fmtDT(l.starts_at) + ' (' + (l.capacity - bookedFor(l.id)) + ' volných)</option>').join('');
+    $('bf-lesson').innerHTML = opts || '<option value="">Nejdřív vytvořte lekci</option>';
+    const cur = $('bookingFilter').value;
+    $('bookingFilter').innerHTML = '<option value="all">Všechny nadcházející</option>' + upcoming.map((l) => '<option value="' + l.id + '">' + esc(l.title) + ' — ' + fmtDT(l.starts_at) + '</option>').join('');
+    $('bookingFilter').value = [...$('bookingFilter').options].some((o) => o.value === cur) ? cur : 'all';
+  }
+
+  $('bookingForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const lessonId = $('bf-lesson').value; if (!lessonId) { toast('Vyberte lekci'); return; }
+    const payload = {
+      lesson_id: lessonId, name: $('bf-name').value.trim(),
+      email: $('bf-email').value.trim() || 'rucne@studio', phone: $('bf-phone').value.trim() || null,
+      spots: parseInt($('bf-spots').value, 10) || 1, status: 'confirmed'
+    };
+    const { error } = await sb.from('bookings').insert(payload);
+    if (error) { toast('Uložení selhalo'); return; }
+    toast('Rezervace přidána'); bookingWrap.classList.remove('open'); await loadAll();
+  });
+
+  function renderBookings() {
+    const now = Date.now();
+    const filter = $('bookingFilter').value;
+    const lessonById = (id) => lessons.find((l) => l.id === id);
+    let list = bookings.filter((b) => { const l = lessonById(b.lesson_id); return l && new Date(l.starts_at).getTime() > now; });
+    if (filter !== 'all') list = list.filter((b) => b.lesson_id === filter);
+    // seřaď podle času lekce
+    list.sort((a, b) => new Date(lessonById(a.lesson_id).starts_at) - new Date(lessonById(b.lesson_id).starts_at));
+    $('bookingRows').innerHTML = list.length ? list.map((b) => {
+      const l = lessonById(b.lesson_id), cancelled = b.status === 'cancelled';
+      return '<div class="row' + (cancelled ? ' is-cancelled' : '') + '">' +
+        '<div class="main"><div class="ttl">' + esc(b.name) + ' · ' + b.spots + ' míst' +
+          (cancelled ? ' <span class="pill pill-cancel">Zrušeno</span>' : '') + '</div>' +
+        '<div class="sub">' + esc(l.title) + ' · ' + fmtDT(l.starts_at) + ' · ' +
+          esc(b.email) + (b.phone ? ' · ' + esc(b.phone) : '') + '</div></div>' +
+        '<div class="acts">' +
+          (cancelled
+            ? '<button class="btn btn-ghost btn-sm" data-restore="' + b.id + '">Obnovit</button>'
+            : '<button class="btn btn-danger btn-sm" data-cancelb="' + b.id + '">Zrušit</button>') +
+          '<button class="btn btn-danger btn-sm" data-delb="' + b.id + '">Smazat</button>' +
+        '</div></div>';
+    }).join('') : '<div class="empty">Pro tento výběr nejsou žádné rezervace.</div>';
+  }
+
+  $('bookingRows').addEventListener('click', async (e) => {
+    const btn = e.target.closest('button'); if (!btn) return;
+    const id = btn.dataset.cancelb || btn.dataset.restore || btn.dataset.delb;
+    if (btn.dataset.cancelb) {
+      if (!confirm('Zrušit tuto rezervaci? Místa se vrátí do volné kapacity.')) return;
+      const { error } = await sb.from('bookings').update({ status: 'cancelled' }).eq('id', id);
+      if (error) { toast('Akce selhala'); return; } toast('Rezervace zrušena'); await loadAll();
+    } else if (btn.dataset.restore) {
+      const { error } = await sb.from('bookings').update({ status: 'confirmed' }).eq('id', id);
+      if (error) { toast('Akce selhala'); return; } toast('Rezervace obnovena'); await loadAll();
+    } else if (btn.dataset.delb) {
+      if (!confirm('Trvale smazat tuto rezervaci?')) return;
+      const { error } = await sb.from('bookings').delete().eq('id', id);
+      if (error) { toast('Mazání selhalo'); return; } toast('Rezervace smazána'); await loadAll();
+    }
+  });
+})();
+</script>
+</body>
+</html>

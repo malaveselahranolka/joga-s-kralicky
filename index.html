@@ -381,6 +381,92 @@
     .gallery { grid-template-columns: 1fr; }
     .ph.big, .ph.wide { grid-column: span 1; }
   }
+
+  /* ---------- rezervace (booking flow) ---------- */
+  .booking .booking-grid { align-items: start; margin-top: 3rem; }
+  .book { background: var(--cloud); color: var(--ink); border-radius: var(--r-lg); padding: clamp(1.7rem, 3vw, 2.5rem); box-shadow: 0 30px 60px -30px rgba(0,0,0,.45); }
+  .book-step { border: 0; margin: 0; padding: 0; min-width: 0; }
+  .book-step + .book-step { margin-top: 1.8rem; padding-top: 1.8rem; border-top: 1px solid var(--line); }
+  .book-step legend { display: block; width: 100%; padding: 0; margin-bottom: 1.1rem; }
+  .legw { display: flex; align-items: center; gap: .7rem; font-family: "Fraunces"; font-size: var(--step-1); color: var(--ink); line-height: 1.1; }
+  .step-no { flex: none; width: 1.9rem; height: 1.9rem; border-radius: 50%; background: var(--ink); color: var(--paper); font-family: "Nunito Sans"; font-size: .92rem; font-weight: 700; display: grid; place-items: center; }
+
+  .lesson-chips { display: flex; flex-wrap: wrap; gap: .55rem; }
+  .lchip { font-family: inherit; font-size: .95rem; font-weight: 600; padding: .5em 1.05em; border-radius: 999px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); cursor: pointer; transition: transform .3s var(--ease), background-color .3s var(--ease), border-color .3s var(--ease), color .3s var(--ease); }
+  .lchip:hover { transform: translateY(-2px); border-color: var(--clover); }
+  .lchip[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .lchip:focus-visible { outline: 2px solid var(--clover); outline-offset: 3px; }
+
+  .slot-list { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
+  .slot-btn { text-align: left; font-family: inherit; cursor: pointer; background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: .8rem .95rem; display: flex; flex-direction: column; gap: .2rem; transition: transform .3s var(--ease), border-color .3s var(--ease), background-color .3s var(--ease), box-shadow .3s var(--ease); }
+  .slot-btn:hover:not(:disabled) { transform: translateY(-2px); border-color: var(--clover); }
+  .slot-btn .sb-day { font-weight: 700; font-size: .96rem; color: var(--ink); }
+  .slot-btn .sb-meta { font-size: var(--step--1); color: var(--ink-soft); display: flex; align-items: center; gap: .45rem; }
+  .slot-btn .free { font-weight: 700; color: var(--clover-deep); }
+  .slot-btn[aria-pressed="true"] { border-color: var(--clover); background: color-mix(in srgb, var(--clover) 12%, var(--paper)); box-shadow: 0 0 0 1px var(--clover); }
+  .slot-btn:disabled { cursor: not-allowed; opacity: .55; }
+  .slot-btn:disabled .free { color: var(--carrot); }
+  .slot-btn:focus-visible { outline: 2px solid var(--clover); outline-offset: 2px; }
+
+  .spots-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.3rem; }
+  .spots-row .lbl { font-weight: 700; }
+  .stepper { display: inline-flex; align-items: center; gap: .35rem; border: 1px solid var(--line); border-radius: 999px; padding: .25rem; background: var(--paper); }
+  .stepper button { width: 2.1rem; height: 2.1rem; border-radius: 50%; border: 0; background: var(--ink); color: var(--paper); font-size: 1.25rem; line-height: 1; cursor: pointer; display: grid; place-items: center; transition: background-color .3s var(--ease), transform .2s var(--ease); }
+  .stepper button:hover:not(:disabled) { background: var(--clover-deep); }
+  .stepper button:active:not(:disabled) { transform: scale(.92); }
+  .stepper button:disabled { opacity: .3; cursor: not-allowed; }
+  .stepper .val { min-width: 2rem; text-align: center; font-family: "Fraunces"; font-size: 1.25rem; }
+
+  .book label { display: block; font-size: var(--step--1); font-weight: 700; margin-bottom: .4rem; }
+  .book .opt { font-weight: 400; color: var(--ink-soft); }
+  .book input { width: 100%; font-family: inherit; font-size: var(--step-0); color: var(--ink); padding: .8em 1em; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); transition: border-color .3s var(--ease), box-shadow .3s var(--ease); }
+  .book input:focus { outline: none; border-color: var(--clover); box-shadow: 0 0 0 3px color-mix(in srgb, var(--clover) 22%, transparent); }
+  .book .field + .field, .book .spots-row + .field, .book .field + .field-row { margin-top: 1.1rem; }
+  .book .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .book .err { display: none; color: var(--carrot); font-size: var(--step--1); font-weight: 700; margin-top: .4rem; }
+  .book.show-errors .field.invalid .err { display: block; }
+  .book .field.invalid input { border-color: var(--carrot); }
+  #slotErr { margin-top: .8rem; }
+  .book .book-body > .btn-primary { width: 100%; justify-content: center; margin-top: 1.7rem; }
+  .book .note { font-size: var(--step--1); color: var(--ink-soft); margin-top: .9rem; text-align: center; }
+
+  /* success state */
+  .book-success { text-align: center; padding: 1rem 0; }
+  .bs-check { width: 64px; height: 64px; margin: 0 auto 1.2rem; border-radius: 50%; background: color-mix(in srgb, var(--clover) 18%, var(--paper)); color: var(--clover-deep); display: grid; place-items: center; }
+  .bs-check svg { width: 30px; height: 30px; }
+  .book-success h3 { font-family: "Fraunces"; font-size: var(--step-2); font-weight: 400; }
+  .bs-summary { margin-top: .9rem; font-size: var(--step-1); font-family: "Fraunces"; color: var(--ink); }
+  .bs-mail { margin-top: .7rem; color: var(--ink-soft); max-width: 40ch; margin-inline: auto; }
+  .bs-actions { margin-top: 1.8rem; display: flex; gap: .8rem; justify-content: center; flex-wrap: wrap; }
+
+  /* loading / empty / error state */
+  .book-state { text-align: center; padding: 1.6rem 0; }
+  .bs-check.info { background: color-mix(in srgb, var(--ink) 7%, var(--paper)); color: var(--ink-soft); }
+  .book-state h3 { font-family: "Fraunces"; font-size: var(--step-1); font-weight: 400; color: var(--ink); }
+  .book-state .bs-mail { margin-top: .6rem; }
+
+  /* live reservation ticket */
+  .book-side { display: flex; flex-direction: column; gap: 1.5rem; }
+  .rticket { position: relative; background: linear-gradient(140deg, var(--clover) 0%, var(--clover-deep) 100%); color: var(--paper); border-radius: var(--r-lg); padding: clamp(1.7rem, 3vw, 2.3rem); box-shadow: 0 30px 60px -28px rgba(0,0,0,.5); overflow: hidden; }
+  .rt-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .rt-top .eyebrow { color: color-mix(in srgb, var(--paper) 90%, transparent); }
+  .rt-top .eyebrow::before { background: var(--paper); opacity: .6; }
+  .rticket .t-logo { width: 44px; height: 44px; background: color-mix(in srgb, var(--paper) 16%, transparent); border-radius: 50%; padding: 6px; }
+  .rt-name { font-family: "Fraunces"; font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.1rem); line-height: 1.05; margin: 1.3rem 0 .35rem; }
+  .rt-when { color: color-mix(in srgb, var(--paper) 86%, transparent); font-size: var(--step-0); }
+  .rt-perf { border-top: 1px dashed color-mix(in srgb, var(--paper) 45%, transparent); margin: 1.4rem 0; }
+  .rt-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .rt-grid span, .rt-who span { display: block; font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; color: color-mix(in srgb, var(--paper) 70%, transparent); }
+  .rt-grid b, .rt-who b { font-family: "Fraunces"; font-weight: 400; font-size: 1.4rem; }
+  .rt-who { margin-top: 1.3rem; }
+  .rt-who b { font-size: 1.15rem; }
+  .rt-status { display: inline-flex; align-items: center; gap: .5rem; margin-top: 1.4rem; font-size: var(--step--1); font-weight: 700; padding: .4em .9em; border-radius: 999px; background: color-mix(in srgb, var(--paper) 16%, transparent); }
+  .rt-status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--carrot); }
+
+  @media (max-width: 560px) {
+    .slot-list { grid-template-columns: 1fr; }
+    .book .field-row { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
@@ -750,43 +836,107 @@
 
   <!-- ============ REZERVACE / KONTAKT ============ -->
   <section class="booking" id="rezervace">
-    <div class="wrap booking-grid">
-      <div class="reveal">
+    <div class="wrap">
+      <div class="section-head reveal" style="max-width:62ch">
         <span class="eyebrow">Rezervace</span>
-        <h2>Zarezervujte si místo i klín.</h2>
-        <p class="lead">Napište nám, kterou lekci byste si přáli, a my potvrdíme volné místo do 24&nbsp;hodin. První lekci máte za zvýhodněnou cenu 290&nbsp;Kč.</p>
-        <div class="contact-list">
-          <a href="mailto:ahoj@jogaskralicky.cz"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg> ahoj@jogaskralicky.cz</a>
-          <a href="tel:+420777123456"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg> +420 777 123 456</a>
-          <a href="https://maps.google.com" target="_blank" rel="noopener"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg> Údolní 12, Brno-střed</a>
-        </div>
+        <h2>Vyberte termín — místo i klín vám podržíme.</h2>
+        <p class="lead">Klikněte na lekci a volný termín z nejbližších dní, řekněte nám počet míst a kontakt. Místo potvrdíme e-mailem do 24&nbsp;hodin, první lekci máte za zvýhodněných 290&nbsp;Kč. Nic předem neplatíte.</p>
       </div>
-      <form class="form reveal" onsubmit="event.preventDefault(); this.querySelector('.note').textContent='Děkujeme! Ozveme se do 24 hodin.'; this.querySelector('.note').style.color='var(--clover-deep)';">
-        <div class="field">
-          <label for="jmeno">Jméno</label>
-          <input id="jmeno" name="jmeno" type="text" placeholder="Jak vás máme oslovovat?" required />
+
+      <div class="booking-grid">
+        <div class="book reveal">
+          <form class="book-body" id="bookForm" novalidate>
+            <fieldset class="book-step">
+              <legend><span class="legw"><span class="step-no">1</span> Která lekce vás láká?</span></legend>
+              <div class="lesson-chips" id="lessonChips" role="group" aria-label="Lekce"></div>
+            </fieldset>
+
+            <fieldset class="book-step">
+              <legend><span class="legw"><span class="step-no">2</span> Vyberte termín</span></legend>
+              <div class="slot-list" id="slotList" role="group" aria-label="Volné termíny"></div>
+              <p class="err" id="slotErr">Vyberte prosím jeden z termínů.</p>
+            </fieldset>
+
+            <fieldset class="book-step">
+              <legend><span class="legw"><span class="step-no">3</span> Počet míst a kontakt</span></legend>
+              <div class="spots-row">
+                <span class="lbl">Počet míst</span>
+                <div class="stepper" role="group" aria-label="Počet míst">
+                  <button type="button" id="spDec" aria-label="Ubrat místo">−</button>
+                  <span class="val" id="spVal" aria-live="polite">1</span>
+                  <button type="button" id="spInc" aria-label="Přidat místo">+</button>
+                </div>
+              </div>
+              <div class="field">
+                <label for="bk-name">Jméno</label>
+                <input id="bk-name" name="jmeno" type="text" autocomplete="name" placeholder="Jak vás máme oslovovat?" required />
+                <span class="err">Doplňte prosím jméno.</span>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="bk-email">E-mail</label>
+                  <input id="bk-email" name="email" type="email" autocomplete="email" placeholder="vas@email.cz" required />
+                  <span class="err">Zkontrolujte e-mail.</span>
+                </div>
+                <div class="field">
+                  <label for="bk-tel">Telefon <span class="opt">(nepovinné)</span></label>
+                  <input id="bk-tel" name="tel" type="tel" autocomplete="tel" placeholder="+420…" />
+                </div>
+              </div>
+
+              <button class="btn btn-primary" type="submit">Odeslat rezervaci <span class="arrow">→</span></button>
+              <p class="note">Rezervace se uloží a vybraná místa se hned odečtou z volné kapacity.</p>
+            </fieldset>
+          </form>
+
+          <div class="book-success" id="bookSuccess" hidden>
+            <div class="bs-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg></div>
+            <h3>Místo držíme pro vás</h3>
+            <p class="bs-summary" id="bsSummary"></p>
+            <p class="bs-mail" id="bsMail"></p>
+            <div class="bs-actions">
+              <a class="btn btn-primary" id="bsIcs" download="joga-s-kralicky.ics" href="#">Přidat do kalendáře <span class="arrow">→</span></a>
+              <button class="btn btn-ghost" type="button" id="bsAgain">Nová rezervace</button>
+            </div>
+          </div>
+
+          <div class="book-state" id="bookState" hidden>
+            <div class="bs-check info" id="bsStateIcon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+            </div>
+            <h3 id="bsStateTitle">Načítám termíny…</h3>
+            <p class="bs-mail" id="bsStateMsg"></p>
+            <div class="bs-actions" id="bsStateActions" hidden>
+              <button class="btn btn-ghost" type="button" id="bsStateRetry">Zkusit znovu</button>
+            </div>
+          </div>
         </div>
-        <div class="field">
-          <label for="email">E-mail</label>
-          <input id="email" name="email" type="email" placeholder="vas@email.cz" required />
-        </div>
-        <div class="field">
-          <label for="lekce">Která lekce vás láká?</label>
-          <select id="lekce" name="lekce">
-            <option>Ranní protažení</option>
-            <option selected>Hatha s králíčky</option>
-            <option>Děti &amp; králíci</option>
-            <option>Soumrak &amp; restorativní</option>
-            <option>Soukromá akce</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="zprava">Poznámka (nepovinné)</label>
-          <textarea id="zprava" name="zprava" rows="3" placeholder="Preferovaný den, počet míst, dotaz…"></textarea>
-        </div>
-        <button class="btn btn-primary" type="submit">Odeslat rezervaci <span class="arrow">→</span></button>
-        <p class="note">Místo potvrdíme e-mailem. Nic předem neplatíte.</p>
-      </form>
+
+        <aside class="book-side reveal">
+          <div class="rticket" id="rticket">
+            <div class="rt-top">
+              <span class="eyebrow">Rezervační lístek</span>
+              <img class="t-logo" src="assets/logo.svg" alt="" width="44" height="44" />
+            </div>
+            <div class="rt-name" id="rtName">Vaše lekce</div>
+            <div class="rt-when" id="rtWhen">Vyberte lekci a termín</div>
+            <div class="rt-perf"></div>
+            <div class="rt-grid">
+              <div><span>Vaše místa</span><b id="rtSpots">1</b></div>
+              <div><span>Délka</span><b id="rtDur">—</b></div>
+              <div><span>Volných</span><b id="rtFree">—</b></div>
+            </div>
+            <div class="rt-who"><span>Na jméno</span><b id="rtWho">. . . . . . . . .</b></div>
+            <span class="rt-status" id="rtStatus">Čeká na potvrzení</span>
+          </div>
+
+          <div class="contact-list">
+            <a href="mailto:ahoj@jogaskralicky.cz"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg> ahoj@jogaskralicky.cz</a>
+            <a href="tel:+420777123456"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg> +420 777 123 456</a>
+            <a href="https://maps.google.com" target="_blank" rel="noopener"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg> Údolní 12, Brno-střed</a>
+          </div>
+        </aside>
+      </div>
     </div>
   </section>
 </main>
@@ -828,6 +978,8 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
 <script>
   // sticky nav border
   const nav = document.getElementById('nav');
@@ -959,6 +1111,235 @@
       sec.prepend(layer);
     });
   }
+
+  // ============ REZERVAČNÍ FLOW (živá data ze Supabase) ============
+  (function () {
+    const MAX_PER = 4; // max míst na jednu rezervaci
+
+    const form = document.getElementById('bookForm');
+    if (!form) return;
+    const lessonChips = document.getElementById('lessonChips');
+    const slotList = document.getElementById('slotList');
+    const slotErr = document.getElementById('slotErr');
+    const success = document.getElementById('bookSuccess');
+    const state = document.getElementById('bookState');
+    const nameI = document.getElementById('bk-name');
+    const emailI = document.getElementById('bk-email');
+    const spVal = document.getElementById('spVal');
+    const spDec = document.getElementById('spDec');
+    const spInc = document.getElementById('spInc');
+
+    const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+    const fmtDay = (dt) => dt.toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' });
+    const fmtFull = (dt) => cap(fmtDay(dt));
+    const fmtTime = (dt) => dt.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+    function mista(n) { if (n === 1) return '1 volné místo'; if (n >= 2 && n <= 4) return n + ' volná místa'; return n + ' volných míst'; }
+    function mistaSel(n) { if (n === 1) return '1 místo'; if (n >= 2 && n <= 4) return n + ' místa'; return n + ' míst'; }
+
+    // --- připojení k Supabase ---
+    const CONFIGURED = /^https:\/\/.+\.supabase\.co/.test(window.SUPABASE_URL || '') &&
+      !!window.SUPABASE_ANON_KEY && window.SUPABASE_ANON_KEY !== 'TVUJ_ANON_KLIC' &&
+      window.SUPABASE_ANON_KEY.length > 20 && typeof window.supabase !== 'undefined';
+    const sb = CONFIGURED ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY) : null;
+
+    let lessons = [];     // řádky public_lessons (budoucí, aktivní)
+    let titles = [];      // pořadí unikátních názvů lekcí
+    let lessonKey = null; // vybraný název lekce
+    let chosen = null;    // vybraná lekce { id, title, dt, duration_min, capacity, remaining }
+    let spots = 1;
+
+    function showState(title, msg, retry) {
+      form.hidden = true; success.hidden = true; state.hidden = false;
+      document.getElementById('bsStateTitle').textContent = title;
+      document.getElementById('bsStateMsg').textContent = msg || '';
+      document.getElementById('bsStateActions').hidden = !retry;
+    }
+    function showForm() { state.hidden = true; success.hidden = true; form.hidden = false; }
+
+    function maxSpots() { return chosen ? Math.min(MAX_PER, chosen.remaining) : MAX_PER; }
+
+    function updateSpots() {
+      if (spots > maxSpots()) spots = Math.max(1, maxSpots());
+      if (spots < 1) spots = 1;
+      spVal.textContent = spots;
+      spDec.disabled = spots <= 1;
+      spInc.disabled = spots >= maxSpots();
+    }
+
+    function updateTicket() {
+      document.getElementById('rtName').textContent = lessonKey || 'Vaše lekce';
+      document.getElementById('rtSpots').textContent = spots;
+      document.getElementById('rtDur').textContent = chosen ? chosen.duration_min + ' min' : '—';
+      document.getElementById('rtFree').textContent = chosen ? Math.max(chosen.remaining - spots, 0) : '—';
+      document.getElementById('rtWhen').textContent = chosen
+        ? (fmtFull(chosen.dt) + ' · ' + fmtTime(chosen.dt))
+        : (lessonKey ? 'Vyberte termín' : 'Vyberte lekci a termín');
+      const nm = nameI.value.trim();
+      document.getElementById('rtWho').textContent = nm || '. . . . . . . . .';
+    }
+
+    function renderChips() {
+      lessonChips.innerHTML = titles.map((t, i) =>
+        '<button class="lchip" type="button" data-title="' + encodeURIComponent(t) + '"' +
+        (t === lessonKey ? ' aria-pressed="true"' : '') + '>' + escapeHtml(t) + '</button>'
+      ).join('');
+    }
+
+    function renderSlots() {
+      const list = lessons.filter((l) => l.title === lessonKey);
+      slotList._list = list;
+      chosen = null;
+      slotErr.style.display = 'none';
+      slotList.innerHTML = list.map((l, i) => {
+        const sold = l.remaining <= 0;
+        return '<button type="button" class="slot-btn" role="radio" aria-checked="false" aria-pressed="false" data-i="' + i + '"' +
+          (sold ? ' disabled aria-disabled="true"' : '') + '>' +
+          '<span class="sb-day">' + fmtFull(l.dt) + '</span>' +
+          '<span class="sb-meta"><span>' + fmtTime(l.dt) + '</span>·<span class="free">' + (sold ? 'Obsazeno' : mista(l.remaining)) + '</span></span>' +
+          '</button>';
+      }).join('');
+      updateSpots();
+      updateTicket();
+    }
+
+    function escapeHtml(s) { return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+    // --- načtení živých lekcí ---
+    async function load() {
+      if (!CONFIGURED) {
+        showState('Rezervace připravujeme', 'Online rezervace bude brzy spuštěná. Zatím nám napište na ahoj@jogaskralicky.cz nebo zavolejte na +420 777 123 456.', false);
+        return;
+      }
+      showState('Načítám termíny…', '', false);
+      const { data, error } = await sb.from('public_lessons').select('*').order('starts_at', { ascending: true });
+      if (error) {
+        showState('Termíny se nepodařilo načíst', 'Zkuste to prosím za chvíli znovu, nebo nám napište na ahoj@jogaskralicky.cz.', true);
+        return;
+      }
+      lessons = (data || []).map((l) => ({ ...l, dt: new Date(l.starts_at) }));
+      if (!lessons.length) {
+        showState('Zatím nejsou vypsané termíny', 'Sledujte nás, brzy přidáme nové lekce. Nebo nám napište na ahoj@jogaskralicky.cz a domluvíme se.', true);
+        return;
+      }
+      titles = [];
+      lessons.forEach((l) => { if (!titles.includes(l.title)) titles.push(l.title); });
+      if (!titles.includes(lessonKey)) lessonKey = titles[0];
+      showForm();
+      renderChips();
+      renderSlots();
+    }
+
+    // výběr lekce (delegace — chipy jsou generované)
+    lessonChips.addEventListener('click', (e) => {
+      const c = e.target.closest('.lchip');
+      if (!c) return;
+      lessonChips.querySelectorAll('.lchip').forEach((x) => x.setAttribute('aria-pressed', 'false'));
+      c.setAttribute('aria-pressed', 'true');
+      lessonKey = decodeURIComponent(c.dataset.title);
+      spots = 1;
+      renderSlots();
+    });
+
+    // výběr termínu
+    slotList.addEventListener('click', (e) => {
+      const btn = e.target.closest('.slot-btn');
+      if (!btn || btn.disabled) return;
+      slotList.querySelectorAll('.slot-btn').forEach((b) => { b.setAttribute('aria-pressed', 'false'); b.setAttribute('aria-checked', 'false'); });
+      btn.setAttribute('aria-pressed', 'true');
+      btn.setAttribute('aria-checked', 'true');
+      chosen = slotList._list[+btn.dataset.i];
+      slotErr.style.display = 'none';
+      updateSpots();
+      updateTicket();
+    });
+
+    // stepper
+    spDec.addEventListener('click', () => { if (spots > 1) { spots--; updateSpots(); updateTicket(); } });
+    spInc.addEventListener('click', () => { if (spots < maxSpots()) { spots++; updateSpots(); updateTicket(); } });
+    nameI.addEventListener('input', updateTicket);
+
+    // .ics soubor pro kalendář
+    const pad = (n) => String(n).padStart(2, '0');
+    const icsStamp = (dt) => dt.getFullYear() + pad(dt.getMonth() + 1) + pad(dt.getDate()) + 'T' + pad(dt.getHours()) + pad(dt.getMinutes()) + '00';
+    function buildIcs(title, start, durMin, n) {
+      const end = new Date(start.getTime() + durMin * 60000);
+      const lines = [
+        'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Joga s kralicky//CZ//', 'CALSCALE:GREGORIAN',
+        'BEGIN:VEVENT', 'UID:' + Date.now() + '@jogaskralicky', 'DTSTAMP:' + icsStamp(new Date()),
+        'DTSTART:' + icsStamp(start), 'DTEND:' + icsStamp(end),
+        'SUMMARY:' + title + ' — Jóga s králíčky',
+        'LOCATION:Údolní 12, Brno-střed',
+        'DESCRIPTION:Rezervace na ' + mistaSel(n) + '. Těšíme se na vás!',
+        'END:VEVENT', 'END:VCALENDAR'
+      ];
+      return 'data:text/calendar;charset=utf-8,' + encodeURIComponent(lines.join('\r\n'));
+    }
+
+    // odeslání rezervace
+    let sending = false;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (sending) return;
+      form.classList.add('show-errors');
+      let ok = true; let firstBad = null;
+      [[nameI, !nameI.value.trim()], [emailI, !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailI.value.trim())]].forEach(([f, bad]) => {
+        f.closest('.field').classList.toggle('invalid', bad);
+        if (bad) { ok = false; if (!firstBad) firstBad = f; }
+      });
+      if (!chosen) { slotErr.style.display = 'block'; ok = false; if (!firstBad) firstBad = slotList.querySelector('.slot-btn:not(:disabled)'); }
+      if (!ok) { if (firstBad) firstBad.focus(); return; }
+
+      sending = true; submitBtn.disabled = true; submitBtn.style.opacity = '.7';
+      const original = submitBtn.innerHTML; submitBtn.textContent = 'Odesílám…';
+
+      const { data, error } = await sb.rpc('create_booking', {
+        p_lesson_id: chosen.id, p_name: nameI.value.trim(), p_email: emailI.value.trim(),
+        p_phone: document.getElementById('bk-tel').value.trim(), p_spots: spots
+      });
+
+      sending = false; submitBtn.disabled = false; submitBtn.style.opacity = ''; submitBtn.innerHTML = original;
+
+      if (error || !data || !data.ok) {
+        const code = data && data.error;
+        if (code === 'full') {
+          alert('Mezitím se místa zaplnila — zbývá jen ' + (data.remaining || 0) + '. Vyberte prosím jiný termín nebo méně míst.');
+          await load();
+        } else if (code === 'unavailable') {
+          alert('Tento termín už není dostupný. Načítám aktuální nabídku…');
+          await load();
+        } else {
+          alert('Rezervaci se nepodařilo uložit. Zkuste to prosím znovu, nebo nám napište na ahoj@jogaskralicky.cz.');
+        }
+        return;
+      }
+
+      // úspěch
+      document.getElementById('bsSummary').textContent =
+        chosen.title + ' · ' + fmtFull(chosen.dt) + ' · ' + fmtTime(chosen.dt) + ' · ' + mistaSel(spots);
+      document.getElementById('bsMail').textContent =
+        'Potvrzení pošleme na ' + emailI.value.trim() + '. Místo už je pro vás zarezervované.';
+      document.getElementById('bsIcs').href = buildIcs(chosen.title, chosen.dt, chosen.duration_min, spots);
+      document.getElementById('rtStatus').textContent = 'Zarezervováno';
+      form.hidden = true;
+      success.hidden = false;
+      success.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    document.getElementById('bsAgain').addEventListener('click', async () => {
+      form.classList.remove('show-errors');
+      form.querySelectorAll('.field').forEach((f) => f.classList.remove('invalid'));
+      form.reset();
+      spots = 1;
+      document.getElementById('rtStatus').textContent = 'Čeká na potvrzení';
+      await load(); // znovu načti aktuální volná místa
+      form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    document.getElementById('bsStateRetry').addEventListener('click', load);
+
+    load();
+  })();
 </script>
 </body>
 </html>
