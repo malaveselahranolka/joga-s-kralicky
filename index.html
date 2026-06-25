@@ -4,36 +4,40 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Jóga s králíčky — klidné lekce v jejich společnosti</title>
-<meta name="description" content="Lekce jógy, kde se po studiu volně prochází domácí králíčci. Zpomalte, dýchejte a nechte se rozptýlit těmi nejroztomilejšími učiteli klidu." />
+<meta name="description" content="Lekce jógy, po kterých se volně prochází domácí králíčci. Zpomalte, dýchejte a nechte se rozptýlit těmi nejroztomilejšími učiteli klidu. Studio v Brně." />
 <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
 <meta property="og:title" content="Jóga s králíčky — klidné lekce v jejich společnosti" />
 <meta property="og:description" content="Hodina jógy, po které volně pobíhá deset chlupatých učitelů zpomalení." />
-<meta property="og:image" content="assets/logo.svg" />
+<meta property="og:image" content="assets/photos/yoga-1.jpg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Nunito+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;500;600;700&family=Schibsted+Grotesk:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 <style>
   :root {
-    --paper: #ECEFE2;
-    --cloud: #FAFBF6;
-    --ink: #2A2E24;
-    --ink-soft: #5A6150;
+    --paper: #F1EEE5;
+    --cream: #F7F4EC;
+    --surface: #FFFFFF;
+    --ink: #1E231C;
+    --ink-soft: #5C6357;
+    --forest: #2C3B2E;
+    --forest-deep: #1E2920;
     --clover: #6E8A4E;
-    --clover-deep: #50693A;
-    --carrot: #E08A4B;
-    --blush: #E8C9C2;
-    --line: #D6DAC7;
+    --carrot: #D2854A;
+    --line: #E3DFD3;
+    --line-soft: #ECE8DE;
 
-    --maxw: 1180px;
-    --r-lg: 32px;
-    --r-md: 20px;
+    --maxw: 1200px;
+    --r-xl: 30px;
+    --r-lg: 22px;
+    --r-md: 14px;
     --ease: cubic-bezier(.22,.61,.36,1);
 
-    --step--1: clamp(.82rem, .8rem + .15vw, .92rem);
-    --step-0: clamp(1rem, .96rem + .25vw, 1.12rem);
-    --step-1: clamp(1.4rem, 1.2rem + .9vw, 1.85rem);
-    --step-2: clamp(1.9rem, 1.5rem + 1.8vw, 2.9rem);
-    --step-3: clamp(2.6rem, 1.7rem + 4vw, 5rem);
+    --fs-eyebrow: .82rem;
+    --fs-body: clamp(1rem, .97rem + .18vw, 1.1rem);
+    --fs-h4: clamp(1.15rem, 1.05rem + .4vw, 1.4rem);
+    --fs-h3: clamp(1.4rem, 1.15rem + .9vw, 1.95rem);
+    --fs-h2: clamp(2.1rem, 1.4rem + 2.8vw, 3.7rem);
+    --fs-hero: clamp(2.7rem, 1.5rem + 4.7vw, 5.4rem);
   }
 
   *, *::before, *::after { box-sizing: border-box; }
@@ -42,797 +46,747 @@
 
   body {
     margin: 0;
-    font-family: "Nunito Sans", system-ui, sans-serif;
-    font-size: var(--step-0);
-    line-height: 1.7;
+    font-family: "Hanken Grotesk", system-ui, sans-serif;
+    font-size: var(--fs-body);
+    line-height: 1.6;
     color: var(--ink);
     background: var(--paper);
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
   }
-
-  h1, h2, h3 { font-family: "Fraunces", Georgia, serif; font-weight: 400; line-height: 1.05; letter-spacing: -.02em; margin: 0; }
+  h1, h2, h3, h4 { font-family: "Schibsted Grotesk", system-ui, sans-serif; font-weight: 600; line-height: 1.04; letter-spacing: -.025em; margin: 0; }
   p { margin: 0; }
   a { color: inherit; text-decoration: none; }
   img, svg { display: block; max-width: 100%; }
+  ::selection { background: var(--clover); color: #fff; }
 
-  .wrap { width: min(100% - 2.6rem, var(--maxw)); margin-inline: auto; }
+  .wrap { width: min(100% - 2.4rem, var(--maxw)); margin-inline: auto; }
+  section { padding: clamp(4.5rem, 8vw, 8rem) 0; position: relative; }
+
   .eyebrow {
-    font-size: var(--step--1); font-weight: 700; letter-spacing: .22em;
-    text-transform: uppercase; color: var(--clover);
-    display: inline-flex; align-items: center; gap: .6rem;
+    display: inline-flex; align-items: center; gap: .1rem;
+    font-size: var(--fs-eyebrow); font-weight: 600; letter-spacing: .04em;
+    color: var(--clover); text-transform: none;
   }
-  .eyebrow::before { content: ""; width: 26px; height: 1px; background: var(--clover); opacity: .6; }
+  .eyebrow::before { content: "/"; margin-right: .25rem; opacity: .7; }
 
-  /* ---------- focus + buttons ---------- */
-  a:focus-visible, button:focus-visible {
-    outline: 2px solid var(--clover); outline-offset: 3px; border-radius: 6px;
-  }
+  .lead { color: var(--ink-soft); font-size: clamp(1.05rem, 1rem + .35vw, 1.25rem); line-height: 1.55; }
+
+  .section-head { max-width: 60ch; }
+  .section-head.center { margin-inline: auto; text-align: center; }
+  .section-head h2 { font-size: var(--fs-h2); margin-top: 1rem; }
+  .section-head p { margin-top: 1.2rem; }
+
+  /* ---------- buttons ---------- */
   .btn {
-    display: inline-flex; align-items: center; gap: .55rem;
-    font-family: inherit; font-size: var(--step-0); font-weight: 600;
-    padding: .85em 1.5em; border-radius: 999px; border: 1px solid transparent;
-    cursor: pointer; transition: transform .35s var(--ease), background-color .35s var(--ease), box-shadow .35s var(--ease);
+    display: inline-flex; align-items: center; justify-content: center; gap: .55rem;
+    font-family: inherit; font-size: 1rem; font-weight: 600;
+    padding: .95em 1.7em; border-radius: 999px; border: 1px solid transparent;
+    cursor: pointer; transition: transform .3s var(--ease), background-color .3s var(--ease), border-color .3s var(--ease), color .3s var(--ease);
   }
-  .btn-primary {
-    background: var(--ink); color: var(--paper);
-    box-shadow: 0 10px 22px -12px rgba(42,46,36,.7);
-  }
-  .btn-primary:hover { transform: translateY(-2px); background: var(--clover-deep); }
+  a.btn:focus-visible, button:focus-visible { outline: 2px solid var(--clover); outline-offset: 3px; }
+  .btn-primary { background: var(--forest); color: var(--cream); }
+  .btn-primary:hover { transform: translateY(-2px); background: var(--forest-deep); }
   .btn-primary:active { transform: translateY(0); }
+  .btn-light { background: var(--cream); color: var(--ink); }
+  .btn-light:hover { transform: translateY(-2px); background: #fff; }
   .btn-ghost { background: transparent; border-color: var(--line); color: var(--ink); }
-  .btn-ghost:hover { transform: translateY(-2px); border-color: var(--clover); background: var(--cloud); }
-  .btn .arrow { transition: transform .35s var(--ease); }
+  .btn-ghost:hover { transform: translateY(-2px); border-color: var(--forest); background: var(--cream); }
+  .btn .arrow { transition: transform .3s var(--ease); }
   .btn:hover .arrow { transform: translateX(3px); }
+
+  /* split CTA: pill + circular arrow */
+  .cta-split { display: inline-flex; align-items: stretch; gap: .4rem; }
+  .cta-split .arrow-btn {
+    width: 3.2em; border-radius: 999px; flex: none; display: grid; place-items: center;
+    background: var(--forest); color: var(--cream); border: 0; cursor: pointer;
+    transition: transform .3s var(--ease), background-color .3s var(--ease);
+  }
+  .cta-split .arrow-btn:hover { transform: translateY(-2px) rotate(8deg); background: var(--forest-deep); }
+  .cta-split.on-photo .btn-light { background: var(--cream); }
+  .cta-split.on-photo .arrow-btn { background: var(--cream); color: var(--ink); }
 
   /* ---------- nav ---------- */
   header.nav {
-    position: sticky; top: 0; z-index: 50;
-    backdrop-filter: blur(10px);
-    background: color-mix(in srgb, var(--paper) 80%, transparent);
-    border-bottom: 1px solid transparent;
-    transition: border-color .4s var(--ease), background-color .4s var(--ease);
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    transition: background-color .4s var(--ease), box-shadow .4s var(--ease), color .35s var(--ease);
+    color: #fff;
   }
-  header.nav.scrolled { border-color: var(--line); }
-  .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 76px; }
-  .brand { display: inline-flex; align-items: center; gap: .65rem; font-family: "Fraunces"; font-size: 1.3rem; letter-spacing: -.02em; }
+  .nav-inner { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; height: 78px; gap: 1rem; }
+  .brand { display: inline-flex; align-items: center; gap: .6rem; font-family: "Schibsted Grotesk"; font-weight: 700; font-size: 1.22rem; letter-spacing: -.02em; justify-self: center; }
   .brand .mark { width: 34px; height: 34px; flex: none; }
-  .nav-links { display: flex; align-items: center; gap: 1.55rem; }
-  .nav-links a { font-size: .98rem; font-weight: 600; color: var(--ink-soft); position: relative; transition: color .3s var(--ease); }
-  .nav-links a::after {
-    content: ""; position: absolute; left: 0; bottom: -5px; height: 2px; width: 100%;
-    background: var(--clover); transform: scaleX(0); transform-origin: left; transition: transform .35s var(--ease);
-  }
-  .nav-links a:hover { color: var(--ink); }
+  .nav-links { display: flex; align-items: center; gap: 1.6rem; }
+  .nav-links a { font-size: .96rem; font-weight: 500; position: relative; opacity: .92; transition: opacity .3s var(--ease); }
+  .nav-links a::after { content: ""; position: absolute; left: 0; bottom: -5px; height: 1.5px; width: 100%; background: currentColor; transform: scaleX(0); transform-origin: left; transition: transform .35s var(--ease); }
+  .nav-links a:hover { opacity: 1; }
   .nav-links a:hover::after { transform: scaleX(1); }
-  .nav-links .nav-reserve { display: none; }
-  .nav-cta { display: flex; align-items: center; gap: 1.25rem; }
-  .menu-toggle { display: none; background: none; border: 0; cursor: pointer; width: 30px; height: 26px; position: relative; padding: 0; }
-  .menu-toggle .bar { position: absolute; left: 3px; right: 3px; height: 2px; border-radius: 2px; background: var(--ink); transition: transform .4s var(--ease), opacity .25s var(--ease); }
-  .menu-toggle .bar:nth-child(1) { top: 5px; }
-  .menu-toggle .bar:nth-child(2) { top: 12px; }
-  .menu-toggle .bar:nth-child(3) { top: 19px; }
+  .nav-right { display: flex; align-items: center; justify-content: flex-end; gap: 1rem; }
+  .nav-cta { padding: .62em 1.3em; font-size: .92rem; }
+
+  header.nav.scrolled { background: color-mix(in srgb, var(--paper) 88%, transparent); backdrop-filter: blur(12px); box-shadow: 0 1px 0 var(--line); color: var(--ink); }
+  header.nav.scrolled .nav-cta.btn-light { background: var(--forest); color: var(--cream); }
+  header.nav .nav-cta.btn-light { background: rgba(255,255,255,.16); color: #fff; border: 1px solid rgba(255,255,255,.3); backdrop-filter: blur(4px); }
+  header.nav .nav-cta.btn-light:hover { background: rgba(255,255,255,.28); }
+
+  .menu-toggle { display: none; background: none; border: 0; cursor: pointer; width: 30px; height: 26px; position: relative; padding: 0; color: inherit; }
+  .menu-toggle .bar { position: absolute; left: 3px; right: 3px; height: 2px; border-radius: 2px; background: currentColor; transition: transform .4s var(--ease), opacity .25s var(--ease); }
+  .menu-toggle .bar:nth-child(1) { top: 6px; }
+  .menu-toggle .bar:nth-child(2) { top: 13px; }
+  .menu-toggle .bar:nth-child(3) { top: 20px; }
   header.nav.open .menu-toggle .bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
   header.nav.open .menu-toggle .bar:nth-child(2) { opacity: 0; }
   header.nav.open .menu-toggle .bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
   /* ---------- hero ---------- */
-  .hero { position: relative; padding: clamp(3rem, 6vw, 6rem) 0 clamp(4rem, 7vw, 7rem); overflow: hidden; }
-  .hero-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: clamp(2rem, 5vw, 5rem); align-items: center; }
-  .hero h1 { font-size: var(--step-3); font-weight: 300; }
-  .hero h1 em { font-style: italic; color: var(--clover-deep); font-weight: 400; position: relative; white-space: nowrap; }
-  .hero h1 em::after { content: ""; position: absolute; left: 0; right: 0; bottom: .04em; height: .07em; background: var(--carrot); border-radius: 3px; transform: scaleX(0); transform-origin: left; animation: underline-in 1s var(--ease) .55s forwards; }
-  @keyframes underline-in { to { transform: scaleX(1); } }
-  @media (prefers-reduced-motion: reduce) { .hero h1 em::after { transform: scaleX(1); animation: none; } }
-  .hero .lede { margin-top: 1.5rem; max-width: 30ch; font-size: var(--step-1); line-height: 1.4; color: var(--ink); font-family: "Fraunces"; font-weight: 300; }
-  .hero .sub { margin-top: 1.2rem; max-width: 42ch; color: var(--ink-soft); }
-  .hero-actions { margin-top: 2.2rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
-  .hero-note { font-size: var(--step--1); color: var(--ink-soft); display: flex; align-items: center; gap: .5rem; }
-  .hero-note b { color: var(--ink); font-weight: 700; }
-
-  /* hero portrait image */
-  .breath { position: relative; aspect-ratio: 4 / 5; width: min(100%, 416px); margin-inline: auto; }
-  .hero-frame {
-    position: absolute; inset: 0; border-radius: 22px; overflow: hidden;
-    border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
-    box-shadow: 0 44px 84px -40px rgba(42,46,36,.58), 0 10px 28px -18px rgba(42,46,36,.4);
-  }
-  .hero-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .hero-cap {
-    position: absolute; left: 18px; bottom: 18px; z-index: 2;
-    display: inline-flex; align-items: center; gap: .55rem; padding: .55em .95em; border-radius: 11px;
-    background: color-mix(in srgb, var(--ink) 56%, transparent); backdrop-filter: blur(8px);
-    color: var(--paper); font-size: .7rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
-  }
-  .hero-cap .pip { width: 6px; height: 6px; border-radius: 50%; background: var(--carrot); }
-
-  /* fine film grain over the whole page for depth */
-  body::after {
-    content: ""; position: fixed; inset: 0; z-index: 3; pointer-events: none; opacity: .05; mix-blend-mode: multiply;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .leaf-bg .sh { animation: none !important; }
-  }
-
-  /* animated geometric background shapes (injected into section margins) */
-  .leaf-bg { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
-  .leaf-bg .sh { position: absolute; display: block; }
-  .leaf-bg .sh svg { width: 100%; height: auto; display: block; }
-  .sh.spin { animation: sh-spin var(--d, 70s) linear infinite; }
-  .sh.breathe { animation: sh-breathe var(--d, 11s) ease-in-out infinite; }
-  .sh.floaty { animation: sh-float var(--d, 16s) ease-in-out infinite; }
-  @keyframes sh-spin { to { transform: rotate(360deg); } }
-  @keyframes sh-breathe { 0%, 100% { transform: scale(1); opacity: var(--o, .12); } 50% { transform: scale(1.09); opacity: calc(var(--o, .12) * 1.5); } }
-  @keyframes sh-float { 0%, 100% { transform: translateY(0) rotate(-5deg); } 50% { transform: translateY(-16px) rotate(5deg); } }
-
-  /* ---------- generic section ---------- */
-  section { padding: clamp(4rem, 8vw, 7.5rem) 0; position: relative; overflow: hidden; }
-  .wrap { position: relative; z-index: 1; }
-  .section-head { max-width: 56ch; }
-  .section-head h2 { font-size: var(--step-2); margin-top: 1rem; font-weight: 400; }
-  .section-head p { margin-top: 1.1rem; color: var(--ink-soft); }
+  .hero { min-height: 100svh; display: flex; flex-direction: column; justify-content: flex-end; color: #fff; overflow: hidden; padding-top: 96px; }
+  .hero-bg { position: absolute; inset: 0; z-index: -2; }
+  .hero-bg img { width: 100%; height: 100%; object-fit: cover; }
+  .hero-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20,24,18,.55) 0%, rgba(20,24,18,.18) 32%, rgba(20,24,18,.42) 70%, rgba(20,24,18,.85) 100%); }
+  .hero .wrap { width: min(100% - 2.4rem, var(--maxw)); padding-bottom: clamp(2rem, 4vw, 3.5rem); }
+  .hero-eyebrow { color: #fff; opacity: .85; }
+  .hero-eyebrow::before { content: "/"; color: var(--carrot); opacity: 1; }
+  .hero h1 { font-size: var(--fs-hero); font-weight: 600; max-width: 16ch; margin-top: 1.1rem; }
+  .hero h1 .dash { color: var(--carrot); font-weight: 400; }
+  .hero .hero-sub { margin-top: 1.4rem; max-width: 46ch; font-size: clamp(1.05rem, 1rem + .35vw, 1.2rem); color: rgba(255,255,255,.88); }
+  .hero-actions { margin-top: 2.1rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
+  .hero-stats { margin-top: clamp(2.6rem, 5vw, 4rem); display: flex; flex-wrap: wrap; gap: clamp(1.4rem, 4vw, 3.5rem); border-top: 1px solid rgba(255,255,255,.22); padding-top: 1.6rem; }
+  .hstat .num { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: clamp(1.9rem, 1.3rem + 2vw, 3rem); line-height: 1; letter-spacing: -.02em; }
+  .hstat .lbl { margin-top: .35rem; font-size: .9rem; color: rgba(255,255,255,.78); }
 
   /* reveal */
-  .reveal { opacity: 0; transform: translateY(24px); transition: opacity .8s var(--ease), transform .8s var(--ease); }
+  .reveal { opacity: 0; transform: translateY(26px); transition: opacity .8s var(--ease), transform .8s var(--ease); }
   .reveal.in { opacity: 1; transform: none; }
   @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; } }
 
-  /* ---------- intro / stats ---------- */
-  .intro { background: var(--cloud); border-block: 1px solid var(--line); }
-  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(1.5rem, 3vw, 3rem); margin-top: 3rem; }
-  .stat { padding-top: 1.4rem; border-top: 2px solid var(--clover); }
-  .stat .num { font-family: "Fraunces"; font-size: var(--step-2); line-height: 1; color: var(--ink); }
-  .stat .num span { color: var(--carrot); }
-  .stat .lbl { margin-top: .5rem; color: var(--ink-soft); font-size: .98rem; }
+  /* ---------- "what we do" cards ---------- */
+  .offer { background: var(--paper); }
+  .offer .top { display: grid; gap: 1.4rem; place-items: center; text-align: center; max-width: 60ch; margin: 0 auto 3.4rem; }
+  .offer .top h2 { font-size: var(--fs-h2); }
+  .cards-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.3rem; align-items: end; }
+  .ocard { background: var(--surface); border-radius: var(--r-lg); overflow: hidden; border: 1px solid var(--line); transition: transform .45s var(--ease), box-shadow .45s var(--ease); }
+  .ocard:hover { transform: translateY(-6px); box-shadow: 0 30px 50px -32px rgba(30,40,30,.4); }
+  .ocard .pic { aspect-ratio: 4/5; overflow: hidden; }
+  .ocard .pic img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s var(--ease); }
+  .ocard:hover .pic img { transform: scale(1.05); }
+  .ocard .body { padding: 1.3rem 1.3rem 1.5rem; }
+  .ocard h3 { font-size: var(--fs-h4); }
+  .ocard p { margin-top: .5rem; font-size: .95rem; color: var(--ink-soft); }
+  .ocard .meta { margin-top: 1rem; font-size: .82rem; font-weight: 600; color: var(--clover); display: flex; gap: .8rem; flex-wrap: wrap; }
+  .cards-4 .ocard:nth-child(odd) { transform: translateY(22px); }
+  .cards-4 .ocard:nth-child(odd):hover { transform: translateY(16px); }
 
-  /* ---------- lekce ---------- */
-  .cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-top: 3rem; }
-  .card {
-    position: relative; background: var(--cloud); border: 1px solid var(--line);
-    border-radius: var(--r-lg); padding: 2.2rem; overflow: hidden;
-    transition: transform .45s var(--ease), box-shadow .45s var(--ease), border-color .45s var(--ease);
-  }
-  .card:hover { transform: translateY(-5px); border-color: color-mix(in srgb, var(--clover) 50%, var(--line)); box-shadow: 0 26px 50px -30px rgba(42,46,36,.45); }
-  .card .tag { font-size: var(--step--1); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--clover); }
-  .card h3 { font-size: var(--step-1); margin-top: .7rem; }
-  .card .desc { margin-top: .8rem; color: var(--ink-soft); }
-  .card .meta { margin-top: 1.5rem; display: flex; gap: 1.4rem; flex-wrap: wrap; font-size: var(--step--1); color: var(--ink-soft); }
-  .card .meta b { display: block; color: var(--ink); font-size: var(--step-0); font-family: "Fraunces"; }
-  .card .corner { position: absolute; top: -10px; right: -10px; width: 96px; opacity: .25; transition: opacity .45s var(--ease), transform .45s var(--ease); }
-  .card:hover .corner { opacity: .55; transform: rotate(-6deg) scale(1.05); }
+  /* ---------- why / features (dark photo) ---------- */
+  .why { color: #fff; overflow: hidden; }
+  .why-bg { position: absolute; inset: 0; z-index: -2; }
+  .why-bg img { width: 100%; height: 100%; object-fit: cover; }
+  .why-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(22,28,22,.78), rgba(22,28,22,.62)); }
+  .why-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 2rem; flex-wrap: wrap; }
+  .why-head .eyebrow { color: #fff; }
+  .why-head .eyebrow::before { color: var(--carrot); }
+  .why-head h2 { color: #fff; font-size: var(--fs-h2); max-width: 16ch; margin-top: 1rem; }
+  .why-head .lead { color: rgba(255,255,255,.85); max-width: 44ch; margin-top: 1.1rem; }
+  .feat-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.1rem; margin-top: 3rem; }
+  .fcard { background: rgba(255,255,255,.94); color: var(--ink); border-radius: var(--r-lg); padding: 1.5rem 1.4rem 1.6rem; transition: transform .4s var(--ease); }
+  .fcard:hover { transform: translateY(-5px); }
+  .fcard .ic { width: 46px; height: 46px; border-radius: 13px; background: var(--cream); display: grid; place-items: center; color: var(--forest); margin-bottom: 1.1rem; }
+  .fcard .ic svg { width: 24px; height: 24px; }
+  .fcard h4 { font-size: 1.12rem; }
+  .fcard p { margin-top: .5rem; font-size: .92rem; color: var(--ink-soft); }
 
-  /* ---------- rozvrh ---------- */
-  .schedule { background: var(--ink); color: var(--paper); }
-  .schedule .eyebrow { color: var(--blush); }
-  .schedule .eyebrow::before { background: var(--blush); }
-  .schedule h2 { color: var(--paper); }
-  .schedule .section-head p { color: color-mix(in srgb, var(--paper) 72%, transparent); }
-  .grid-days { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin-top: 3rem; background: color-mix(in srgb, var(--paper) 18%, transparent); border: 1px solid color-mix(in srgb, var(--paper) 18%, transparent); border-radius: var(--r-md); overflow: hidden; }
-  .day { background: var(--ink); padding: 1.6rem 1.4rem; }
-  .day h4 { font-family: "Fraunces"; font-size: 1.15rem; font-weight: 500; margin: 0 0 1rem; color: var(--blush); }
-  .slot { padding: .55rem 0; border-top: 1px solid color-mix(in srgb, var(--paper) 14%, transparent); }
+  /* ---------- schedule ---------- */
+  .schedule { background: var(--cream); }
+  .sched-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 1.5rem; flex-wrap: wrap; }
+  .grid-days { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 3rem; }
+  .day { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 1.4rem 1.3rem; }
+  .day h4 { font-family: "Schibsted Grotesk"; font-size: 1.05rem; font-weight: 600; margin: 0 0 1rem; color: var(--forest); }
+  .slot { padding: .55rem 0; border-top: 1px solid var(--line-soft); }
   .slot .t { font-weight: 700; }
-  .slot .n { font-size: var(--step--1); color: color-mix(in srgb, var(--paper) 65%, transparent); }
-  .slot.empty { color: color-mix(in srgb, var(--paper) 35%, transparent); }
+  .slot .n { font-size: .85rem; color: var(--ink-soft); }
+  .slot.empty { color: color-mix(in srgb, var(--ink) 30%, transparent); }
+  .day.special { background: var(--forest); color: var(--cream); display: flex; flex-direction: column; justify-content: center; }
+  .day.special h4 { color: var(--carrot); }
+  .day.special p { font-size: .9rem; color: rgba(255,255,255,.8); }
 
   /* ---------- bunnies ---------- */
-  .buns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-top: 3rem; }
-  .bun-card { text-align: center; background: var(--cloud); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 2rem 1.4rem; transition: transform .4s var(--ease); }
-  .bun-card:hover { transform: translateY(-6px) rotate(-1deg); }
-  .bun-card .pic { width: 116px; height: 116px; margin: 0 auto 1.3rem; border-radius: 50%; display: grid; place-items: center; position: relative; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 9%, transparent); }
-  .bun-card .pic::after { content: ""; position: absolute; inset: 8px; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--ink) 16%, transparent); }
-  .bun-card .mono { font-family: "Fraunces"; font-weight: 400; font-size: 2.7rem; line-height: 1; color: var(--ink); }
-  .bun-card h3 { font-size: 1.4rem; }
-  .bun-card .role { font-size: var(--step--1); letter-spacing: .14em; text-transform: uppercase; color: var(--clover); font-weight: 700; margin-top: .4rem; }
-  .bun-card .bio { margin-top: .8rem; font-size: .96rem; color: var(--ink-soft); }
+  .buns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.3rem; margin-top: 3rem; }
+  .bun { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; transition: transform .4s var(--ease); }
+  .bun:hover { transform: translateY(-6px); }
+  .bun .pic { aspect-ratio: 1/1; overflow: hidden; }
+  .bun .pic img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s var(--ease); }
+  .bun:hover .pic img { transform: scale(1.06); }
+  .bun .body { padding: 1.2rem 1.3rem 1.4rem; }
+  .bun h3 { font-size: 1.25rem; }
+  .bun .role { font-size: .78rem; font-weight: 600; color: var(--clover); margin-top: .25rem; }
+  .bun .bio { margin-top: .7rem; font-size: .9rem; color: var(--ink-soft); }
 
   /* ---------- pricing ---------- */
-  .pricing { background: var(--cloud); border-block: 1px solid var(--line); }
-  .plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 3rem; align-items: stretch; }
-  .plan { display: flex; flex-direction: column; background: var(--paper); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 2.2rem; transition: transform .4s var(--ease); }
-  .plan:hover { transform: translateY(-4px); }
-  .plan.featured { background: var(--ink); color: var(--paper); border-color: var(--ink); position: relative; }
-  .plan.featured .price, .plan.featured h3 { color: var(--paper); }
-  .plan.featured .badge { position: absolute; top: 1.4rem; right: 1.4rem; background: var(--carrot); color: var(--ink); font-size: .72rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: .35em .8em; border-radius: 999px; }
-  .plan h3 { font-size: var(--step-1); }
-  .plan .price { font-family: "Fraunces"; font-size: var(--step-2); margin-top: .8rem; line-height: 1; }
-  .plan .price small { font-family: "Nunito Sans"; font-size: .95rem; font-weight: 400; color: inherit; opacity: .65; }
-  .plan ul { list-style: none; padding: 0; margin: 1.6rem 0 2rem; display: grid; gap: .7rem; }
-  .plan li { position: relative; padding-left: 1.7rem; font-size: .98rem; }
-  .plan li::before { content: ""; position: absolute; left: 0; top: .55em; width: 9px; height: 9px; border-radius: 50%; background: var(--clover); }
+  .pricing { background: var(--paper); }
+  .plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.3rem; margin-top: 3rem; align-items: stretch; }
+  .plan { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 2.1rem; transition: transform .4s var(--ease); }
+  .plan:hover { transform: translateY(-5px); }
+  .plan.featured { background: var(--forest); color: var(--cream); border-color: var(--forest); position: relative; }
+  .plan .badge { position: absolute; top: 1.4rem; right: 1.4rem; background: var(--carrot); color: #fff; font-size: .7rem; font-weight: 700; letter-spacing: .04em; padding: .35em .8em; border-radius: 999px; }
+  .plan h3 { font-size: var(--fs-h4); }
+  .plan .price { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: clamp(2rem, 1.4rem + 1.6vw, 2.6rem); margin-top: .7rem; line-height: 1; }
+  .plan .price small { font-family: "Hanken Grotesk"; font-size: .9rem; font-weight: 400; opacity: .65; }
+  .plan ul { list-style: none; padding: 0; margin: 1.5rem 0 2rem; display: grid; gap: .7rem; }
+  .plan li { position: relative; padding-left: 1.7rem; font-size: .96rem; }
+  .plan li::before { content: ""; position: absolute; left: 0; top: .5em; width: 8px; height: 8px; border-radius: 50%; background: var(--clover); }
   .plan.featured li::before { background: var(--carrot); }
   .plan .btn { margin-top: auto; justify-content: center; }
-  .plan.featured .btn-primary { background: var(--carrot); color: var(--ink); box-shadow: none; }
-  .plan.featured .btn-primary:hover { background: var(--blush); }
+  .plan.featured .btn-primary { background: var(--cream); color: var(--forest); }
+  .plan.featured .btn-primary:hover { background: #fff; }
 
-  /* ---------- faq ---------- */
-  .faq-list { margin-top: 2.5rem; border-top: 1px solid var(--line); }
-  .faq-item { border-bottom: 1px solid var(--line); }
-  .faq-q { width: 100%; text-align: left; background: none; border: 0; cursor: pointer; font-family: "Fraunces"; font-size: var(--step-1); color: var(--ink); padding: 1.5rem 3rem 1.5rem 0; position: relative; display: flex; }
-  .faq-q .ic { position: absolute; right: 0; top: 50%; width: 22px; height: 22px; transition: transform .4s var(--ease); }
-  .faq-q[aria-expanded="true"] .ic { transform: rotate(45deg); }
-  .faq-a { overflow: hidden; max-height: 0; transition: max-height .5s var(--ease); }
-  .faq-a > div { padding-bottom: 1.6rem; color: var(--ink-soft); max-width: 70ch; }
-
-  /* ---------- booking / contact ---------- */
-  .booking { background: radial-gradient(120% 120% at 80% 0%, #3C4A2E 0%, #2A2E24 55%, #21261B 100%); color: var(--paper); }
-  .booking .booking-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 5vw, 4.5rem); align-items: center; }
-  .booking .eyebrow { color: var(--paper); }
-  .booking .eyebrow::before { background: var(--paper); opacity: .7; }
-  .booking h2 { font-size: var(--step-2); color: var(--paper); font-weight: 400; }
-  .booking p.lead { margin-top: 1.2rem; color: color-mix(in srgb, var(--paper) 85%, transparent); max-width: 42ch; }
-  .booking .contact-list { margin-top: 2rem; display: grid; gap: 1rem; }
-  .booking .contact-list a { display: inline-flex; align-items: center; gap: .7rem; font-weight: 600; transition: opacity .3s var(--ease); }
-  .booking .contact-list a:hover { opacity: .75; }
-  .form { background: var(--cloud); color: var(--ink); border-radius: var(--r-lg); padding: clamp(1.8rem, 3vw, 2.6rem); box-shadow: 0 30px 60px -30px rgba(42,46,36,.5); }
-  .form .field { margin-bottom: 1.1rem; }
-  .form label { display: block; font-size: var(--step--1); font-weight: 700; margin-bottom: .4rem; }
-  .form input, .form select, .form textarea {
-    width: 100%; font-family: inherit; font-size: var(--step-0); color: var(--ink);
-    padding: .8em 1em; border: 1px solid var(--line); border-radius: 12px; background: var(--paper);
-    transition: border-color .3s var(--ease), box-shadow .3s var(--ease);
-  }
-  .form input:focus, .form select:focus, .form textarea:focus { outline: none; border-color: var(--clover); box-shadow: 0 0 0 3px color-mix(in srgb, var(--clover) 22%, transparent); }
-  .form .btn { width: 100%; justify-content: center; margin-top: .4rem; }
-  .form .note { font-size: var(--step--1); color: var(--ink-soft); margin-top: .8rem; text-align: center; }
-
-  /* ---------- footer ---------- */
-  footer.foot { background: var(--ink); color: color-mix(in srgb, var(--paper) 70%, transparent); padding: 3.5rem 0 2.5rem; }
-  .foot-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 2rem; flex-wrap: wrap; }
-  .foot .brand { color: var(--paper); }
-  .foot-links { display: flex; gap: 2rem; flex-wrap: wrap; }
-  .foot-links a { transition: color .3s var(--ease); }
-  .foot-links a:hover { color: var(--paper); }
-  .foot-bottom { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid color-mix(in srgb, var(--paper) 16%, transparent); display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; font-size: var(--step--1); }
-
-  /* ---------- responsive ---------- */
-  @media (max-width: 900px) {
-    .hero-grid { grid-template-columns: 1fr; }
-    .breath { order: -1; width: min(78%, 340px); }
-    .cards, .plans, .grid-days, .buns { grid-template-columns: 1fr 1fr; }
-    .booking .booking-grid { grid-template-columns: 1fr; }
-    .nav-links {
-      display: flex; position: absolute; top: 100%; left: 50%; right: auto;
-      width: 100vw; margin-left: -50vw;
-      flex-direction: column; align-items: stretch; gap: 0;
-      background: var(--cloud); box-shadow: 0 26px 44px -28px rgba(42,46,36,.55);
-      overflow: hidden; max-height: 0; opacity: 0; visibility: hidden;
-      transform: translateY(-10px); padding: 0 1.3rem;
-      border-bottom: 1px solid transparent;
-      transition: max-height .42s var(--ease), opacity .28s var(--ease),
-                  transform .42s var(--ease), padding .42s var(--ease),
-                  visibility 0s linear .42s;
-    }
-    header.nav.open .nav-links {
-      max-height: 80vh; opacity: 1; visibility: visible; transform: translateY(0);
-      padding: .4rem 1.3rem 1rem; border-bottom-color: var(--line);
-      transition: max-height .42s var(--ease), opacity .28s var(--ease) .04s,
-                  transform .42s var(--ease), padding .42s var(--ease), visibility 0s;
-    }
-    .nav-links a { font-size: 1.12rem; padding: .8rem 0; color: var(--ink); border-bottom: 1px solid color-mix(in srgb, var(--line) 65%, transparent); }
-    .nav-links a:last-child { border-bottom: 0; }
-    .nav-links a::after { display: none; }
-    .menu-toggle { display: inline-block; }
-    .stats { grid-template-columns: 1fr; }
-  }
-  @media (max-width: 560px) {
-    .cards, .plans, .grid-days, .buns { grid-template-columns: 1fr; }
-    .nav-cta .btn { display: none; }
-    .nav-links .nav-reserve { display: block; color: var(--clover-deep); font-weight: 700; }
-  }
-
-  /* ---------- galerie ---------- */
-  .gallery { margin-top: 3rem; display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 200px; gap: 1rem; }
-  .ph { position: relative; overflow: hidden; border: 0; padding: 0; margin: 0; cursor: pointer; border-radius: var(--r-md); background: var(--cloud); display: block; }
+  /* ---------- gallery ---------- */
+  .gallery { margin-top: 3rem; display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 210px; gap: 1rem; }
+  .ph { position: relative; overflow: hidden; border: 0; padding: 0; margin: 0; cursor: pointer; border-radius: var(--r-md); background: var(--surface); display: block; }
   .ph img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s var(--ease); }
-  .ph::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(42,46,36,.6), rgba(42,46,36,0) 55%); transition: opacity .4s var(--ease); }
-  .ph .cap { position: absolute; left: 1.1rem; bottom: .9rem; right: 1.1rem; z-index: 2; color: var(--paper); font-family: "Fraunces"; font-size: 1.05rem; letter-spacing: -.01em; transform: translateY(4px); opacity: .92; transition: transform .4s var(--ease); }
-  .ph .zoom { position: absolute; top: .9rem; right: .9rem; z-index: 2; width: 34px; height: 34px; border-radius: 50%; background: color-mix(in srgb, var(--paper) 22%, transparent); display: grid; place-items: center; opacity: 0; transform: scale(.8); transition: opacity .4s var(--ease), transform .4s var(--ease); }
+  .ph::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(20,25,18,.55), rgba(20,25,18,0) 55%); opacity: .8; transition: opacity .4s var(--ease); }
+  .ph .cap { position: absolute; left: 1.1rem; bottom: .9rem; right: 1.1rem; z-index: 2; color: #fff; font-family: "Schibsted Grotesk"; font-weight: 500; font-size: 1.02rem; }
+  .ph .zoom { position: absolute; top: .9rem; right: .9rem; z-index: 2; width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,.25); backdrop-filter: blur(4px); display: grid; place-items: center; opacity: 0; transform: scale(.8); transition: opacity .4s var(--ease), transform .4s var(--ease); }
   .ph:hover img, .ph:focus-visible img { transform: scale(1.07); }
-  .ph:hover .cap { transform: translateY(0); }
   .ph:hover .zoom, .ph:focus-visible .zoom { opacity: 1; transform: scale(1); }
   .ph:focus-visible { outline: 2px solid var(--clover); outline-offset: 3px; }
   .ph.big { grid-column: span 2; grid-row: span 2; }
   .ph.wide { grid-column: span 2; }
-  .gallery-note { margin-top: 1.4rem; font-size: var(--step--1); color: var(--ink-soft); }
 
-  /* lightbox */
-  .lightbox { position: fixed; inset: 0; z-index: 100; display: none; place-items: center; padding: 1.5rem; background: color-mix(in srgb, var(--ink) 90%, transparent); backdrop-filter: blur(6px); }
+  .lightbox { position: fixed; inset: 0; z-index: 100; display: none; place-items: center; padding: 1.5rem; background: rgba(20,24,18,.92); backdrop-filter: blur(6px); }
   .lightbox.open { display: grid; }
   .lightbox img { max-width: min(92vw, 1080px); max-height: 84vh; border-radius: var(--r-md); box-shadow: 0 40px 90px -25px rgba(0,0,0,.65); }
-  .lightbox .lb-cap { position: absolute; left: 0; right: 0; bottom: 1.6rem; text-align: center; color: var(--paper); font-family: "Fraunces"; font-style: italic; font-size: 1.15rem; }
-  .lightbox .lb-close { position: absolute; top: 1.2rem; right: 1.4rem; width: 46px; height: 46px; border-radius: 50%; border: 0; cursor: pointer; background: color-mix(in srgb, var(--paper) 16%, transparent); color: var(--paper); display: grid; place-items: center; transition: background-color .3s var(--ease); }
-  .lightbox .lb-close:hover { background: color-mix(in srgb, var(--paper) 30%, transparent); }
-  .lightbox .lb-close:focus-visible { outline: 2px solid var(--paper); outline-offset: 3px; }
+  .lightbox .lb-cap { position: absolute; left: 0; right: 0; bottom: 1.6rem; text-align: center; color: #fff; font-family: "Schibsted Grotesk"; font-size: 1.1rem; }
+  .lightbox .lb-close { position: absolute; top: 1.2rem; right: 1.4rem; width: 46px; height: 46px; border-radius: 50%; border: 0; cursor: pointer; background: rgba(255,255,255,.16); color: #fff; display: grid; place-items: center; transition: background-color .3s var(--ease); }
+  .lightbox .lb-close:hover { background: rgba(255,255,255,.3); }
+  .lightbox .lb-close:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 
-  /* ---------- poukazy ---------- */
-  .vouchers { background: var(--cloud); border-block: 1px solid var(--line); }
-  .voucher-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 5vw, 4.5rem); align-items: center; margin-top: 3rem; }
-  .chips { display: flex; flex-wrap: wrap; gap: .65rem; margin: 1.6rem 0 .4rem; }
-  .chip { font-family: inherit; font-size: 1rem; font-weight: 600; padding: .58em 1.15em; border-radius: 999px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); cursor: pointer; transition: transform .3s var(--ease), background-color .3s var(--ease), border-color .3s var(--ease), color .3s var(--ease); }
-  .chip:hover { transform: translateY(-2px); border-color: var(--clover); }
-  .chip[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-  .chip:focus-visible { outline: 2px solid var(--clover); outline-offset: 3px; }
-  .custom-amount { margin: 1rem 0 .4rem; max-width: 240px; }
-  .custom-amount label { display: block; font-size: var(--step--1); font-weight: 700; margin-bottom: .4rem; }
-  .custom-amount input { width: 100%; font-family: inherit; font-size: var(--step-0); color: var(--ink); padding: .7em 1em; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
-  .custom-amount input:focus { outline: none; border-color: var(--clover); box-shadow: 0 0 0 3px color-mix(in srgb, var(--clover) 22%, transparent); }
-  .vouchers .v-actions { margin-top: 1.8rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
-  .vouchers .v-note { margin-top: 1.2rem; font-size: var(--step--1); color: var(--ink-soft); max-width: 40ch; }
+  /* ---------- testimonials ---------- */
+  .reference { background: var(--cream); overflow: hidden; }
+  .ref-head { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: end; }
+  .ref-head h2 { font-size: var(--fs-h2); }
+  .ref-head .lead { max-width: 42ch; }
+  .ref-nav { display: flex; gap: .6rem; margin-top: 1.4rem; }
+  .ref-nav button { width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); cursor: pointer; display: grid; place-items: center; color: var(--ink); transition: background-color .3s var(--ease), transform .2s var(--ease); }
+  .ref-nav button:hover { background: var(--forest); color: var(--cream); border-color: var(--forest); }
+  .ref-nav button:active { transform: scale(.94); }
+  .ref-viewport { margin-top: 2.6rem; overflow: hidden; }
+  .ref-track { display: flex; gap: 1.3rem; transition: transform .5s var(--ease); }
+  .tcard { flex: 0 0 calc((100% - 2.6rem) / 3); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; display: flex; flex-direction: column; }
+  .tcard .pic { aspect-ratio: 5/4; overflow: hidden; }
+  .tcard .pic img { width: 100%; height: 100%; object-fit: cover; }
+  .tcard .body { padding: 1.4rem 1.4rem 1.5rem; }
+  .tcard .quote { font-size: .98rem; line-height: 1.55; }
+  .tcard .who { margin-top: 1.1rem; font-weight: 700; }
+  .tcard .who span { display: block; font-weight: 400; font-size: .85rem; color: var(--ink-soft); }
+  .tcard.green { background: var(--forest); color: var(--cream); justify-content: center; padding: 2rem; }
+  .tcard.green .quote { font-family: "Schibsted Grotesk"; font-size: 1.4rem; line-height: 1.3; font-weight: 500; }
+  .tcard.green .who span { color: rgba(255,255,255,.75); }
+  .tcard.green .stars { color: var(--carrot); margin-bottom: 1rem; letter-spacing: .1em; }
 
-  /* the gift ticket */
-  .ticket { position: relative; background: linear-gradient(135deg, var(--clover) 0%, var(--clover-deep) 100%); color: var(--paper); border-radius: var(--r-lg); padding: clamp(1.8rem, 3vw, 2.6rem); box-shadow: 0 30px 60px -28px rgba(42,46,36,.6); overflow: hidden; }
-  .ticket::before, .ticket::after { content: ""; position: absolute; top: 50%; width: 34px; height: 34px; background: var(--cloud); border-radius: 50%; transform: translateY(-50%); }
-  .ticket::before { left: -17px; } .ticket::after { right: -17px; }
-  .ticket .t-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-  .ticket .t-top .eyebrow { color: color-mix(in srgb, var(--paper) 88%, transparent); }
-  .ticket .t-top .eyebrow::before { background: var(--paper); opacity: .6; }
-  .ticket .t-logo { width: 46px; height: 46px; background: color-mix(in srgb, var(--paper) 16%, transparent); border-radius: 50%; padding: 6px; }
-  .ticket .t-amount { font-family: "Fraunces"; font-size: clamp(2.6rem, 2rem + 3vw, 3.6rem); line-height: 1; margin: 1.4rem 0 .3rem; font-weight: 400; }
-  .ticket .t-for { border-top: 1px dashed color-mix(in srgb, var(--paper) 45%, transparent); margin-top: 1.6rem; padding-top: 1.1rem; display: flex; justify-content: space-between; gap: 1rem; font-size: var(--step--1); color: color-mix(in srgb, var(--paper) 82%, transparent); }
-  .ticket .t-for b { display: block; color: var(--paper); font-family: "Fraunces"; font-size: 1rem; letter-spacing: .04em; }
+  /* ---------- community (green) ---------- */
+  .community { background: var(--forest); color: var(--cream); text-align: center; overflow: hidden; }
+  .community::before, .community::after { content: ""; position: absolute; border-radius: 50%; border: 1px solid rgba(255,255,255,.08); pointer-events: none; }
+  .community::before { width: 760px; height: 760px; top: -300px; left: 50%; transform: translateX(-50%); box-shadow: 0 0 0 80px rgba(255,255,255,.04); }
+  .community .wrap { position: relative; z-index: 1; max-width: 60ch; }
+  .community .eyebrow { color: var(--cream); }
+  .community .eyebrow::before { color: var(--carrot); }
+  .community h2 { color: var(--cream); font-size: var(--fs-h2); margin-top: 1rem; }
+  .community p { margin-top: 1.2rem; color: rgba(255,255,255,.82); }
+  .community .btn-light { margin-top: 2rem; }
 
-  @media (max-width: 900px) {
-    .gallery { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 180px; }
-    .ph.big { grid-row: span 1; }
-    .voucher-grid { grid-template-columns: 1fr; }
-    .ticket { order: -1; }
-  }
-  @media (max-width: 560px) {
-    .gallery { grid-template-columns: 1fr; }
-    .ph.big, .ph.wide { grid-column: span 1; }
-  }
+  /* ---------- FAQ ---------- */
+  .faq { background: var(--paper); }
+  .faq-wrap { display: grid; grid-template-columns: .8fr 1.2fr; gap: clamp(2rem, 5vw, 4rem); align-items: start; }
+  .faq-list { border-top: 1px solid var(--line); }
+  .faq-item { border-bottom: 1px solid var(--line); }
+  .faq-q { width: 100%; text-align: left; background: none; border: 0; cursor: pointer; font-family: "Schibsted Grotesk"; font-weight: 500; font-size: clamp(1.05rem, 1rem + .35vw, 1.25rem); color: var(--ink); padding: 1.4rem 3rem 1.4rem 0; position: relative; display: flex; }
+  .faq-q .ic { position: absolute; right: 0; top: 50%; width: 22px; height: 22px; transition: transform .4s var(--ease); color: var(--clover); }
+  .faq-q[aria-expanded="true"] .ic { transform: rotate(45deg); }
+  .faq-a { overflow: hidden; max-height: 0; transition: max-height .5s var(--ease); }
+  .faq-a > div { padding-bottom: 1.5rem; color: var(--ink-soft); max-width: 60ch; }
 
-  /* ---------- rezervace (booking flow) ---------- */
-  .booking .booking-grid { align-items: start; margin-top: 3rem; }
-  .book { background: var(--cloud); color: var(--ink); border-radius: var(--r-lg); padding: clamp(1.7rem, 3vw, 2.5rem); box-shadow: 0 30px 60px -30px rgba(0,0,0,.45); }
+  /* ---------- booking ---------- */
+  .booking { background: var(--cream); }
+  .booking-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: clamp(1.6rem, 3vw, 2.6rem); align-items: start; margin-top: 3rem; }
+  .book { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: clamp(1.7rem, 3vw, 2.5rem); box-shadow: 0 30px 60px -38px rgba(30,40,30,.4); }
   .book-step { border: 0; margin: 0; padding: 0; min-width: 0; }
   .book-step + .book-step { margin-top: 1.8rem; padding-top: 1.8rem; border-top: 1px solid var(--line); }
   .book-step legend { display: block; width: 100%; padding: 0; margin-bottom: 1.1rem; }
-  .legw { display: flex; align-items: center; gap: .7rem; font-family: "Fraunces"; font-size: var(--step-1); color: var(--ink); line-height: 1.1; }
-  .step-no { flex: none; width: 1.9rem; height: 1.9rem; border-radius: 50%; background: var(--ink); color: var(--paper); font-family: "Nunito Sans"; font-size: .92rem; font-weight: 700; display: grid; place-items: center; }
+  .legw { display: flex; align-items: center; gap: .7rem; font-family: "Schibsted Grotesk"; font-weight: 600; font-size: var(--fs-h4); color: var(--ink); line-height: 1.1; }
+  .step-no { flex: none; width: 1.9rem; height: 1.9rem; border-radius: 50%; background: var(--forest); color: var(--cream); font-family: "Hanken Grotesk"; font-size: .92rem; font-weight: 700; display: grid; place-items: center; }
 
   .lesson-chips { display: flex; flex-wrap: wrap; gap: .55rem; }
-  .lchip { font-family: inherit; font-size: .95rem; font-weight: 600; padding: .5em 1.05em; border-radius: 999px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); cursor: pointer; transition: transform .3s var(--ease), background-color .3s var(--ease), border-color .3s var(--ease), color .3s var(--ease); }
-  .lchip:hover { transform: translateY(-2px); border-color: var(--clover); }
-  .lchip[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .lchip { font-family: inherit; font-size: .95rem; font-weight: 600; padding: .55em 1.1em; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; transition: transform .3s var(--ease), background-color .3s var(--ease), border-color .3s var(--ease), color .3s var(--ease); }
+  .lchip:hover { transform: translateY(-2px); border-color: var(--forest); }
+  .lchip[aria-pressed="true"] { background: var(--forest); color: var(--cream); border-color: var(--forest); }
   .lchip:focus-visible { outline: 2px solid var(--clover); outline-offset: 3px; }
 
   .slot-list { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
-  .slot-btn { text-align: left; font-family: inherit; cursor: pointer; background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: .8rem .95rem; display: flex; flex-direction: column; gap: .2rem; transition: transform .3s var(--ease), border-color .3s var(--ease), background-color .3s var(--ease), box-shadow .3s var(--ease); }
-  .slot-btn:hover:not(:disabled) { transform: translateY(-2px); border-color: var(--clover); }
-  .slot-btn .sb-day { font-weight: 700; font-size: .96rem; color: var(--ink); }
-  .slot-btn .sb-meta { font-size: var(--step--1); color: var(--ink-soft); display: flex; align-items: center; gap: .45rem; }
-  .slot-btn .free { font-weight: 700; color: var(--clover-deep); }
-  .slot-btn[aria-pressed="true"] { border-color: var(--clover); background: color-mix(in srgb, var(--clover) 12%, var(--paper)); box-shadow: 0 0 0 1px var(--clover); }
+  .slot-btn { text-align: left; font-family: inherit; cursor: pointer; background: var(--cream); border: 1px solid var(--line); border-radius: var(--r-md); padding: .8rem .95rem; display: flex; flex-direction: column; gap: .2rem; transition: transform .3s var(--ease), border-color .3s var(--ease), background-color .3s var(--ease), box-shadow .3s var(--ease); }
+  .slot-btn:hover:not(:disabled) { transform: translateY(-2px); border-color: var(--forest); }
+  .slot-btn .sb-day { font-weight: 700; font-size: .95rem; color: var(--ink); }
+  .slot-btn .sb-meta { font-size: .82rem; color: var(--ink-soft); display: flex; align-items: center; gap: .45rem; }
+  .slot-btn .free { font-weight: 700; color: var(--clover); }
+  .slot-btn[aria-pressed="true"] { border-color: var(--forest); background: color-mix(in srgb, var(--clover) 12%, var(--surface)); box-shadow: 0 0 0 1px var(--forest); }
   .slot-btn:disabled { cursor: not-allowed; opacity: .55; }
   .slot-btn:disabled .free { color: var(--carrot); }
   .slot-btn:focus-visible { outline: 2px solid var(--clover); outline-offset: 2px; }
 
   .spots-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.3rem; }
   .spots-row .lbl { font-weight: 700; }
-  .stepper { display: inline-flex; align-items: center; gap: .35rem; border: 1px solid var(--line); border-radius: 999px; padding: .25rem; background: var(--paper); }
-  .stepper button { width: 2.1rem; height: 2.1rem; border-radius: 50%; border: 0; background: var(--ink); color: var(--paper); font-size: 1.25rem; line-height: 1; cursor: pointer; display: grid; place-items: center; transition: background-color .3s var(--ease), transform .2s var(--ease); }
-  .stepper button:hover:not(:disabled) { background: var(--clover-deep); }
+  .stepper { display: inline-flex; align-items: center; gap: .35rem; border: 1px solid var(--line); border-radius: 999px; padding: .25rem; background: var(--cream); }
+  .stepper button { width: 2.1rem; height: 2.1rem; border-radius: 50%; border: 0; background: var(--forest); color: var(--cream); font-size: 1.25rem; line-height: 1; cursor: pointer; display: grid; place-items: center; transition: background-color .3s var(--ease), transform .2s var(--ease); }
+  .stepper button:hover:not(:disabled) { background: var(--forest-deep); }
   .stepper button:active:not(:disabled) { transform: scale(.92); }
   .stepper button:disabled { opacity: .3; cursor: not-allowed; }
-  .stepper .val { min-width: 2rem; text-align: center; font-family: "Fraunces"; font-size: 1.25rem; }
+  .stepper .val { min-width: 2rem; text-align: center; font-family: "Schibsted Grotesk"; font-weight: 600; font-size: 1.25rem; }
 
-  .book label { display: block; font-size: var(--step--1); font-weight: 700; margin-bottom: .4rem; }
+  .book label { display: block; font-size: .82rem; font-weight: 700; margin-bottom: .4rem; }
   .book .opt { font-weight: 400; color: var(--ink-soft); }
-  .book input { width: 100%; font-family: inherit; font-size: var(--step-0); color: var(--ink); padding: .8em 1em; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); transition: border-color .3s var(--ease), box-shadow .3s var(--ease); }
-  .book input:focus { outline: none; border-color: var(--clover); box-shadow: 0 0 0 3px color-mix(in srgb, var(--clover) 22%, transparent); }
+  .book input { width: 100%; font-family: inherit; font-size: 1rem; color: var(--ink); padding: .8em 1em; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--cream); transition: border-color .3s var(--ease), box-shadow .3s var(--ease); }
+  .book input:focus { outline: none; border-color: var(--forest); box-shadow: 0 0 0 3px color-mix(in srgb, var(--forest) 18%, transparent); }
   .book .field + .field, .book .spots-row + .field, .book .field + .field-row { margin-top: 1.1rem; }
   .book .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
   .book .field-row .field { margin-top: 0; }
-  .book .err { display: none; color: var(--carrot); font-size: var(--step--1); font-weight: 700; margin-top: .4rem; }
+  .book .err { display: none; color: var(--carrot); font-size: .82rem; font-weight: 700; margin-top: .4rem; }
   .book.show-errors .field.invalid .err { display: block; }
   .book .field.invalid input { border-color: var(--carrot); }
   #slotErr { margin-top: .8rem; }
   .book-body button[type="submit"] { width: 100%; justify-content: center; margin-top: 1.7rem; }
-  .book .note { font-size: var(--step--1); color: var(--ink-soft); margin-top: .9rem; text-align: center; }
+  .book .note { font-size: .82rem; color: var(--ink-soft); margin-top: .9rem; text-align: center; }
 
-  /* success state */
-  .book-success { text-align: center; padding: 1rem 0; }
-  .bs-check { width: 64px; height: 64px; margin: 0 auto 1.2rem; border-radius: 50%; background: color-mix(in srgb, var(--clover) 18%, var(--paper)); color: var(--clover-deep); display: grid; place-items: center; }
+  .book-success, .book-state { text-align: center; padding: 1rem 0; }
+  .bs-check { width: 64px; height: 64px; margin: 0 auto 1.2rem; border-radius: 50%; background: color-mix(in srgb, var(--clover) 18%, var(--surface)); color: var(--forest); display: grid; place-items: center; }
+  .bs-check.info { background: color-mix(in srgb, var(--ink) 7%, var(--surface)); color: var(--ink-soft); }
   .bs-check svg { width: 30px; height: 30px; }
-  .book-success h3 { font-family: "Fraunces"; font-size: var(--step-2); font-weight: 400; }
-  .bs-summary { margin-top: .9rem; font-size: var(--step-1); font-family: "Fraunces"; color: var(--ink); }
+  .book-success h3, .book-state h3 { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: var(--fs-h3); }
+  .bs-summary { margin-top: .9rem; font-size: clamp(1.1rem,1rem+.5vw,1.35rem); font-family: "Schibsted Grotesk"; font-weight: 500; color: var(--ink); }
   .bs-mail { margin-top: .7rem; color: var(--ink-soft); max-width: 40ch; margin-inline: auto; }
   .bs-actions { margin-top: 1.8rem; display: flex; gap: .8rem; justify-content: center; flex-wrap: wrap; }
 
-  /* loading / empty / error state */
-  .book-state { text-align: center; padding: 1.6rem 0; }
-  .bs-check.info { background: color-mix(in srgb, var(--ink) 7%, var(--paper)); color: var(--ink-soft); }
-  .book-state h3 { font-family: "Fraunces"; font-size: var(--step-1); font-weight: 400; color: var(--ink); }
-  .book-state .bs-mail { margin-top: .6rem; }
-
-  /* live reservation ticket */
-  .book-side { display: flex; flex-direction: column; gap: 1.5rem; }
-  .rticket { position: relative; background: linear-gradient(140deg, var(--clover) 0%, var(--clover-deep) 100%); color: var(--paper); border-radius: var(--r-lg); padding: clamp(1.7rem, 3vw, 2.3rem); box-shadow: 0 30px 60px -28px rgba(0,0,0,.5); overflow: hidden; }
+  .book-side { display: flex; flex-direction: column; gap: 1.5rem; position: sticky; top: 96px; }
+  .rticket { position: relative; background: linear-gradient(145deg, var(--forest) 0%, var(--forest-deep) 100%); color: var(--cream); border-radius: var(--r-lg); padding: clamp(1.7rem, 3vw, 2.3rem); box-shadow: 0 30px 60px -30px rgba(0,0,0,.5); overflow: hidden; }
   .rt-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-  .rt-top .eyebrow { color: color-mix(in srgb, var(--paper) 90%, transparent); }
-  .rt-top .eyebrow::before { background: var(--paper); opacity: .6; }
-  .rticket .t-logo { width: 44px; height: 44px; background: color-mix(in srgb, var(--paper) 16%, transparent); border-radius: 50%; padding: 6px; }
-  .rt-name { font-family: "Fraunces"; font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.1rem); line-height: 1.05; margin: 1.3rem 0 .35rem; }
-  .rt-when { color: color-mix(in srgb, var(--paper) 86%, transparent); font-size: var(--step-0); }
-  .rt-perf { border-top: 1px dashed color-mix(in srgb, var(--paper) 45%, transparent); margin: 1.4rem 0; }
+  .rt-top .eyebrow { color: rgba(255,255,255,.9); }
+  .rt-top .eyebrow::before { color: var(--carrot); }
+  .rticket .t-logo { width: 44px; height: 44px; background: rgba(255,255,255,.14); border-radius: 50%; padding: 6px; }
+  .rt-name { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.1rem); line-height: 1.05; margin: 1.3rem 0 .35rem; }
+  .rt-when { color: rgba(255,255,255,.86); font-size: 1rem; }
+  .rt-perf { border-top: 1px dashed rgba(255,255,255,.4); margin: 1.4rem 0; }
   .rt-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
-  .rt-grid span, .rt-who span { display: block; font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; color: color-mix(in srgb, var(--paper) 70%, transparent); }
-  .rt-grid b, .rt-who b { font-family: "Fraunces"; font-weight: 400; font-size: 1.4rem; }
+  .rt-grid span, .rt-who span { display: block; font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.65); }
+  .rt-grid b, .rt-who b { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: 1.4rem; }
   .rt-who { margin-top: 1.3rem; }
   .rt-who b { font-size: 1.15rem; }
-  .rt-status { display: inline-flex; align-items: center; gap: .5rem; margin-top: 1.4rem; font-size: var(--step--1); font-weight: 700; padding: .4em .9em; border-radius: 999px; background: color-mix(in srgb, var(--paper) 16%, transparent); }
+  .rt-status { display: inline-flex; align-items: center; gap: .5rem; margin-top: 1.4rem; font-size: .82rem; font-weight: 700; padding: .4em .9em; border-radius: 999px; background: rgba(255,255,255,.14); }
   .rt-status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--carrot); }
+  .contact-list { display: grid; gap: .9rem; }
+  .contact-list a { display: inline-flex; align-items: center; gap: .7rem; font-weight: 600; color: var(--ink); transition: color .3s var(--ease); }
+  .contact-list a:hover { color: var(--clover); }
+  .contact-list svg { color: var(--clover); }
 
+  /* ---------- footer ---------- */
+  footer.foot { background: var(--forest-deep); color: rgba(255,255,255,.7); padding: clamp(3.5rem, 6vw, 5rem) 0 2.5rem; }
+  .foot-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 2rem; }
+  .foot .brand { color: #fff; justify-self: start; }
+  .foot .ftag { margin-top: 1rem; max-width: 30ch; font-size: .92rem; }
+  .foot .socials { display: flex; gap: .6rem; margin-top: 1.3rem; }
+  .foot .socials a { width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,.2); display: grid; place-items: center; color: #fff; transition: background-color .3s var(--ease), transform .2s var(--ease); }
+  .foot .socials a:hover { background: rgba(255,255,255,.12); transform: translateY(-2px); }
+  .foot-col h5 { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: 1rem; color: #fff; margin: 0 0 1rem; }
+  .foot-col a { display: block; padding: .35rem 0; font-size: .92rem; transition: color .3s var(--ease); }
+  .foot-col a:hover { color: #fff; }
+  .foot-contact { color: #fff; font-family: "Schibsted Grotesk"; font-weight: 500; font-size: 1.05rem; }
+  .foot-bottom { margin-top: 3rem; padding-top: 1.6rem; border-top: 1px solid rgba(255,255,255,.14); display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; font-size: .85rem; }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 1000px) {
+    .cards-4 { grid-template-columns: repeat(2, 1fr); }
+    .cards-4 .ocard:nth-child(odd) { transform: none; }
+    .cards-4 .ocard:nth-child(odd):hover { transform: translateY(-6px); }
+    .feat-4 { grid-template-columns: repeat(2, 1fr); }
+    .grid-days { grid-template-columns: repeat(2, 1fr); }
+    .buns { grid-template-columns: repeat(2, 1fr); }
+    .plans { grid-template-columns: 1fr; max-width: 460px; margin-inline: auto; }
+    .booking-grid { grid-template-columns: 1fr; }
+    .book-side { position: static; order: -1; }
+    .faq-wrap { grid-template-columns: 1fr; }
+    .tcard { flex-basis: calc((100% - 1.3rem) / 2); }
+    .foot-grid { grid-template-columns: 1fr 1fr; }
+    .foot .brand-cell { grid-column: 1 / -1; }
+  }
+  @media (max-width: 880px) {
+    .nav-inner { grid-template-columns: auto 1fr auto; }
+    .brand { justify-self: start; order: 2; }
+    .menu-toggle { display: inline-block; order: 1; }
+    .nav-right { order: 3; }
+    .nav-links {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      flex-direction: column; align-items: flex-start; justify-content: center; gap: .4rem;
+      padding: 5rem 2rem 2rem; background: var(--paper); color: var(--ink);
+      transform: translateX(-100%); transition: transform .45s var(--ease); z-index: 40;
+    }
+    header.nav.open .nav-links { transform: translateX(0); }
+    .nav-links a { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: 1.8rem; opacity: 1; padding: .4rem 0; }
+    .nav-links a::after { display: none; }
+    .ref-head { grid-template-columns: 1fr; }
+  }
   @media (max-width: 560px) {
+    section { padding: clamp(3.5rem, 9vw, 5rem) 0; }
+    .cards-4, .feat-4, .grid-days, .buns { grid-template-columns: 1fr; }
+    .gallery { grid-template-columns: 1fr 1fr; grid-auto-rows: 160px; }
+    .ph.big { grid-row: span 1; }
+    .tcard { flex-basis: 100%; }
     .slot-list { grid-template-columns: 1fr; }
     .book .field-row { grid-template-columns: 1fr; }
+    .hero-actions .cta-split { width: 100%; }
+    .hero-actions .cta-split .btn-light { flex: 1; }
+    .foot-grid { grid-template-columns: 1fr; }
+    .foot-bottom { flex-direction: column; }
   }
 </style>
 </head>
-<body>
+<body id="top">
 
 <!-- ============ NAV ============ -->
 <header class="nav" id="nav">
   <div class="wrap nav-inner">
-    <a class="brand" href="#top" aria-label="Jóga s králíčky — domů">
-      <img class="mark" src="assets/logo.svg" alt="" width="34" height="34" />
-      Jóga&nbsp;s&nbsp;králíčky
-    </a>
+    <button class="menu-toggle" id="menuToggle" aria-label="Otevřít menu" aria-controls="navLinks" aria-expanded="false">
+      <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+    </button>
     <nav class="nav-links" id="navLinks" aria-label="Hlavní">
       <a href="#lekce">Lekce</a>
       <a href="#rozvrh">Rozvrh</a>
       <a href="#kralicci">Králíčci</a>
-      <a href="#galerie">Galerie</a>
       <a href="#cenik">Ceník</a>
-      <a href="#poukazy">Poukazy</a>
-      <a href="#faq">Dotazy</a>
-      <a href="#rezervace" class="nav-reserve">Rezervovat lekci</a>
+      <a href="#galerie">Galerie</a>
+      <a href="#reference">Reference</a>
     </nav>
-    <div class="nav-cta">
-      <a class="btn btn-primary" href="#rezervace">Rezervovat lekci</a>
-      <button class="menu-toggle" id="menuToggle" aria-label="Otevřít menu" aria-controls="navLinks" aria-expanded="false">
-        <span class="bar"></span>
-        <span class="bar"></span>
-        <span class="bar"></span>
-      </button>
+    <a class="brand" href="#top" aria-label="Jóga s králíčky — domů">
+      <img class="mark" src="assets/logo.svg" alt="" width="34" height="34" />
+      Jóga&nbsp;s&nbsp;králíčky
+    </a>
+    <div class="nav-right">
+      <a class="btn btn-light nav-cta" href="#rezervace">Rezervovat</a>
     </div>
   </div>
 </header>
 
-<main id="top">
+<main>
   <!-- ============ HERO ============ -->
-  <section class="hero">
-    <div class="wrap hero-grid">
-      <div class="reveal in">
-        <span class="eyebrow">Studio klidu · Brno</span>
-        <h1>Cvičte v&nbsp;klidu.<br /><em>Králíčci</em> se postarají<br />o&nbsp;ten zbytek.</h1>
-        <p class="lede">Hodina jógy, po které volně pobíhá deset chlupatých učitelů zpomalení.</p>
-        <p class="sub">Žádné výkony, žádné zrcadla. Jen měkká podložka, dech v rytmu a králík, který se vám možná uvelebí na koleni během savasany.</p>
-        <div class="hero-actions">
-          <a class="btn btn-primary" href="#rezervace">Rezervovat lekci <span class="arrow">→</span></a>
-          <a class="btn btn-ghost" href="#lekce">Prohlédnout lekce</a>
-        </div>
-        <p class="hero-note" style="margin-top:1.6rem"><b>4,9 ★</b> z 230 hodnocení · první lekce za zvýhodněnou cenu</p>
-      </div>
-
-      <!-- hero portrait -->
-      <div class="breath">
-        <div class="hero-frame">
-          <img src="assets/hero.svg" alt="Klidná lekce jógy v ranním světle studia" />
-          <span class="hero-cap"><span class="pip"></span>Ranní lekce · Brno</span>
+  <section class="hero" id="hero">
+    <div class="hero-bg">
+      <img src="assets/photos/yoga-1.jpg" alt="Žena medituje v sedu při západu slunce" fetchpriority="high" />
+    </div>
+    <div class="wrap">
+      <span class="eyebrow hero-eyebrow">Studio klidu · Brno</span>
+      <h1>Najděte klid <span class="dash">—</span> o&nbsp;zbytek se postarají králíčci</h1>
+      <p class="hero-sub">Hodina jemné jógy, po které volně pobíhá deset chlupatých učitelů zpomalení. Žádné výkony, žádná zrcadla — jen dech, podložka a králík, který se vám možná uvelebí na koleni.</p>
+      <div class="hero-actions">
+        <div class="cta-split on-photo">
+          <a class="btn btn-light" href="#rezervace">Rezervovat lekci</a>
+          <a class="arrow-btn" href="#rezervace" aria-label="Rezervovat lekci">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M9 7h8v8"/></svg>
+          </a>
         </div>
       </div>
+      <div class="hero-stats">
+        <div class="hstat"><div class="num">4,9★</div><div class="lbl">z 230 hodnocení</div></div>
+        <div class="hstat"><div class="num">10</div><div class="lbl">králíčků-lektorů</div></div>
+        <div class="hstat"><div class="num">75′</div><div class="lbl">délka jedné lekce</div></div>
+        <div class="hstat"><div class="num">max&nbsp;12</div><div class="lbl">míst v sále</div></div>
+      </div>
     </div>
   </section>
 
-  <!-- ============ INTRO + STATS ============ -->
-  <section class="intro" id="o-nas">
+  <!-- ============ WHAT WE DO / LESSONS ============ -->
+  <section class="offer" id="lekce">
     <div class="wrap">
-      <div class="section-head reveal">
-        <span class="eyebrow">Co to vlastně je</span>
-        <h2>Jemná jóga a živé zvíře, které vás nenechá spěchat.</h2>
-        <p>Lekce vede certifikovaná lektorka, ale tempo udávají králíci. Když si jeden lehne, zpomalíte. Když k vám přihopká, usmějete se. Je to pomalá, hatha a restorativní jóga — a kontaktní terapie zároveň. Výzkumy i naši hosté se shodují: dvacet minut s králíkem dělá s hladinou stresu zázraky.</p>
+      <div class="top reveal">
+        <span class="eyebrow">Co děláme</span>
+        <h2>Jemná jóga a živé zvíře, které vás nenechá spěchat</h2>
+        <p class="lead">Lekce vede certifikovaná lektorka, ale tempo udávají králíci. Když si jeden lehne, zpomalíte. Když k vám přihopká, usmějete se. Vyberte si rytmus — králíci přijdou ke všem.</p>
+        <a class="btn btn-primary" href="#rozvrh">Prohlédnout rozvrh <span class="arrow">→</span></a>
       </div>
-      <div class="stats">
-        <div class="stat reveal"><div class="num">10</div><div class="lbl">králíčků v péči studia, každý s vlastní povahou a oblíbeným místem</div></div>
-        <div class="stat reveal"><div class="num">75<span>′</span></div><div class="lbl">délka lekce — z toho posledních 20 minut čistého mazlení a klidu</div></div>
-        <div class="stat reveal"><div class="num">max&nbsp;12</div><div class="lbl">míst v sále, aby měl každý host i každý králík dost prostoru</div></div>
+      <div class="cards-4">
+        <article class="ocard reveal">
+          <div class="pic"><img src="assets/photos/yoga-7.jpg" alt="Ranní jóga v přírodě" loading="lazy" /></div>
+          <div class="body">
+            <h3>Ranní protažení</h3>
+            <p>Pomalá hatha, kterou rozhýbete tělo i den. Králíci jsou ráno nejzvědavější.</p>
+            <div class="meta"><span>60 min</span><span>Po · St · Pá</span></div>
+          </div>
+        </article>
+        <article class="ocard reveal">
+          <div class="pic"><img src="assets/photos/yoga-11.jpg" alt="Studiová jóga, detail pozice" loading="lazy" /></div>
+          <div class="body">
+            <h3>Hatha s králíčky</h3>
+            <p>Naše klasika. 55 minut pohybu a dechu, 20 minut savasany, kdy si vás králíci vybírají.</p>
+            <div class="meta"><span>75 min</span><span>Út · Čt · So</span></div>
+          </div>
+        </article>
+        <article class="ocard reveal">
+          <div class="pic"><img src="assets/photos/rabbit-6.jpg" alt="Dítě podává mrkev králíkovi" loading="lazy" /></div>
+          <div class="body">
+            <h3>Děti &amp; králíci</h3>
+            <p>Hravá lekce pro děti od 5 let s rodičem. Více her než ásan a spousta mazlení.</p>
+            <div class="meta"><span>45 min</span><span>Sobota</span></div>
+          </div>
+        </article>
+        <article class="ocard reveal">
+          <div class="pic"><img src="assets/photos/yoga-4.jpg" alt="Restorativní jóga ve ztlumeném světle" loading="lazy" /></div>
+          <div class="body">
+            <h3>Soumrak &amp; restorativní</h3>
+            <p>Téměř bez pohybu. Dlouhé držené polohy, dečky a králíci, kteří už taky usínají.</p>
+            <div class="meta"><span>60 min</span><span>Neděle</span></div>
+          </div>
+        </article>
       </div>
     </div>
   </section>
 
-  <!-- ============ LEKCE ============ -->
-  <section id="lekce">
+  <!-- ============ WHY US (dark photo) ============ -->
+  <section class="why">
+    <div class="why-bg"><img src="assets/photos/yoga-10.jpg" alt="Silueta jógy při západu slunce" loading="lazy" /></div>
     <div class="wrap">
-      <div class="section-head reveal">
-        <span class="eyebrow">Lekce</span>
-        <h2>Vyberte si tempo. Králíci přijdou ke všem.</h2>
-        <p>Každá lekce má jiný rytmus, ale stejný cíl — odejít lehčí, než jste přišli.</p>
+      <div class="why-head reveal">
+        <div>
+          <span class="eyebrow">Proč k nám</span>
+          <h2>Klid, který si jinde nekoupíte</h2>
+        </div>
+        <p class="lead">Dvacet minut s králíkem dělá s hladinou stresu zázraky — shodují se na tom výzkumy i naši hosté. U nás je to celá filozofie.</p>
       </div>
-      <div class="cards">
-        <article class="card reveal">
-          <svg class="corner" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="60" r="30" fill="#6E8A4E"/><ellipse cx="40" cy="22" rx="6" ry="18" fill="#6E8A4E" transform="rotate(-12 40 22)"/><ellipse cx="60" cy="20" rx="6" ry="18" fill="#6E8A4E" transform="rotate(12 60 20)"/></svg>
-          <span class="tag">Pro každého</span>
-          <h3>Ranní protažení</h3>
-          <p class="desc">Pomalá hatha jóga, kterou rozhýbete tělo i den. Králíci jsou ráno nejzvědavější — počítejte s návštěvami u podložky.</p>
-          <div class="meta"><span><b>60 min</b>úroveň: začátečník</span><span><b>Po · St · Pá</b>7:30</span></div>
-        </article>
-        <article class="card reveal">
-          <svg class="corner" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="60" r="30" fill="#E08A4B"/><ellipse cx="40" cy="22" rx="6" ry="18" fill="#E08A4B" transform="rotate(-12 40 22)"/><ellipse cx="60" cy="20" rx="6" ry="18" fill="#E08A4B" transform="rotate(12 60 20)"/></svg>
-          <span class="tag">Nejoblíbenější</span>
-          <h3>Hatha s králíčky</h3>
-          <p class="desc">Naše klasika. 55 minut pohybu a dechu, 20 minut savasany, kdy se mezi vámi králíci prochází a vybírají si klín.</p>
-          <div class="meta"><span><b>75 min</b>úroveň: všichni</span><span><b>Út · Čt</b>18:00</span></div>
-        </article>
-        <article class="card reveal">
-          <svg class="corner" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="60" r="30" fill="#E8C9C2"/><ellipse cx="40" cy="22" rx="6" ry="18" fill="#E8C9C2" transform="rotate(-12 40 22)"/><ellipse cx="60" cy="20" rx="6" ry="18" fill="#E8C9C2" transform="rotate(12 60 20)"/></svg>
-          <span class="tag">Rodiny</span>
-          <h3>Děti &amp; králíci</h3>
-          <p class="desc">Hravá lekce pro děti od 5 let s rodičem. Více her než ásan a spousta jemného seznamování se zvířátky.</p>
-          <div class="meta"><span><b>45 min</b>úroveň: děti 5+</span><span><b>Sobota</b>9:30</span></div>
-        </article>
-        <article class="card reveal">
-          <svg class="corner" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="60" r="30" fill="#2A2E24"/><ellipse cx="40" cy="22" rx="6" ry="18" fill="#2A2E24" transform="rotate(-12 40 22)"/><ellipse cx="60" cy="20" rx="6" ry="18" fill="#2A2E24" transform="rotate(12 60 20)"/></svg>
-          <span class="tag">Večerní klid</span>
-          <h3>Soumrak &amp; restorativní</h3>
-          <p class="desc">Téměř bez pohybu. Dlouhé držené polohy, dečky, ztlumené světlo a králíci, kteří už taky usínají. Ideální před spaním.</p>
-          <div class="meta"><span><b>60 min</b>úroveň: všichni</span><span><b>Neděle</b>19:30</span></div>
-        </article>
+      <div class="feat-4">
+        <div class="fcard reveal">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v18M3 12h18"/></svg></div>
+          <h4>Tempo na míru</h4>
+          <p>Od svižné ranní hathy po téměř nehybnou restorativní. Vyberete si podle nálady.</p>
+        </div>
+        <div class="fcard reveal">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <h4>I pro úplné začátečníky</h4>
+          <p>Lektorka vše ukáže a nabídne jednodušší variantu. Jde nám o klid, ne o dokonalý tvar.</p>
+        </div>
+        <div class="fcard reveal">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+          <h4>20 minut čistého mazlení</h4>
+          <p>Posledních dvacet minut každé lekce se mezi vámi králíci volně prochází a vybírají klín.</p>
+        </div>
+        <div class="fcard reveal">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/></svg></div>
+          <h4>Malé skupiny</h4>
+          <p>Maximálně 12 míst v sále, aby měl každý host i každý králík dost prostoru a klidu.</p>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- ============ ROZVRH ============ -->
+  <!-- ============ SCHEDULE ============ -->
   <section class="schedule" id="rozvrh">
     <div class="wrap">
-      <div class="section-head reveal">
-        <span class="eyebrow">Týdenní rozvrh</span>
-        <h2>Kdy přijít</h2>
-        <p>Rezervace míst se otvírají vždy týden dopředu. Kapacita je malá, proto se vyplatí být rychlí.</p>
+      <div class="sched-head reveal">
+        <div class="section-head">
+          <span class="eyebrow">Týdenní rozvrh</span>
+          <h2>Kdy přijít</h2>
+        </div>
+        <p class="lead" style="max-width:38ch">Rezervace se otvírají týden dopředu. Kapacita je malá, proto se vyplatí být rychlí.</p>
       </div>
       <div class="grid-days">
-        <div class="day reveal">
-          <h4>Pondělí</h4>
-          <div class="slot"><div class="t">7:30</div><div class="n">Ranní protažení</div></div>
-          <div class="slot empty"><div class="t">—</div><div class="n">volno</div></div>
-        </div>
-        <div class="day reveal">
-          <h4>Úterý</h4>
-          <div class="slot"><div class="t">18:00</div><div class="n">Hatha s králíčky</div></div>
-          <div class="slot"><div class="t">19:45</div><div class="n">Hatha s králíčky</div></div>
-        </div>
-        <div class="day reveal">
-          <h4>Středa</h4>
-          <div class="slot"><div class="t">7:30</div><div class="n">Ranní protažení</div></div>
-          <div class="slot empty"><div class="t">—</div><div class="n">volno</div></div>
-        </div>
-        <div class="day reveal">
-          <h4>Čtvrtek</h4>
-          <div class="slot"><div class="t">18:00</div><div class="n">Hatha s králíčky</div></div>
-          <div class="slot empty"><div class="t">—</div><div class="n">volno</div></div>
-        </div>
-        <div class="day reveal">
-          <h4>Pátek</h4>
-          <div class="slot"><div class="t">7:30</div><div class="n">Ranní protažení</div></div>
-          <div class="slot"><div class="t">17:30</div><div class="n">Soumrak &amp; restorativní</div></div>
-        </div>
-        <div class="day reveal">
-          <h4>Sobota</h4>
-          <div class="slot"><div class="t">9:30</div><div class="n">Děti &amp; králíci</div></div>
-          <div class="slot"><div class="t">11:00</div><div class="n">Hatha s králíčky</div></div>
-        </div>
-        <div class="day reveal">
-          <h4>Neděle</h4>
-          <div class="slot"><div class="t">19:30</div><div class="n">Soumrak &amp; restorativní</div></div>
-          <div class="slot empty"><div class="t">—</div><div class="n">volno</div></div>
-        </div>
-        <div class="day reveal" style="display:flex;flex-direction:column;justify-content:center">
-          <h4 style="color:var(--carrot)">Soukromě?</h4>
-          <p style="font-size:var(--step--1);color:color-mix(in srgb,var(--paper) 70%,transparent)">Narozeniny, týmovka nebo rozlučka se svobodou — sál i králíky si můžete pronajmout kdykoliv.</p>
-        </div>
+        <div class="day reveal"><h4>Pondělí</h4><div class="slot"><div class="t">7:30</div><div class="n">Ranní protažení</div></div><div class="slot empty"><div class="t">—</div><div class="n">volno</div></div></div>
+        <div class="day reveal"><h4>Úterý</h4><div class="slot"><div class="t">18:00</div><div class="n">Hatha s králíčky</div></div><div class="slot"><div class="t">19:45</div><div class="n">Hatha s králíčky</div></div></div>
+        <div class="day reveal"><h4>Středa</h4><div class="slot"><div class="t">7:30</div><div class="n">Ranní protažení</div></div><div class="slot empty"><div class="t">—</div><div class="n">volno</div></div></div>
+        <div class="day reveal"><h4>Čtvrtek</h4><div class="slot"><div class="t">18:00</div><div class="n">Hatha s králíčky</div></div><div class="slot empty"><div class="t">—</div><div class="n">volno</div></div></div>
+        <div class="day reveal"><h4>Pátek</h4><div class="slot"><div class="t">7:30</div><div class="n">Ranní protažení</div></div><div class="slot"><div class="t">17:30</div><div class="n">Soumrak &amp; restorativní</div></div></div>
+        <div class="day reveal"><h4>Sobota</h4><div class="slot"><div class="t">9:30</div><div class="n">Děti &amp; králíci</div></div><div class="slot"><div class="t">11:00</div><div class="n">Hatha s králíčky</div></div></div>
+        <div class="day reveal"><h4>Neděle</h4><div class="slot"><div class="t">19:30</div><div class="n">Soumrak &amp; restorativní</div></div><div class="slot empty"><div class="t">—</div><div class="n">volno</div></div></div>
+        <div class="day special reveal"><h4>Soukromě?</h4><p>Narozeniny, týmovka nebo rozlučka — sál i králíky si můžete pronajmout kdykoliv.</p></div>
       </div>
     </div>
   </section>
 
-  <!-- ============ KRÁLÍČCI ============ -->
+  <!-- ============ BUNNIES ============ -->
   <section id="kralicci">
     <div class="wrap">
       <div class="section-head reveal">
         <span class="eyebrow">Seznamte se</span>
-        <h2>Lektoři, kteří nikdy nespěchají.</h2>
-        <p>Každý králík má jméno, povahu i svůj oblíbený kout sálu. Tady jsou čtyři z party.</p>
+        <h2>Lektoři, kteří nikdy nespěchají</h2>
+        <p class="lead">Každý králík má jméno, povahu i svůj oblíbený kout sálu. Tady jsou čtyři z party.</p>
       </div>
       <div class="buns">
-        <article class="bun-card reveal">
-          <div class="pic" style="background:#DEE4D0"><span class="mono">B</span></div>
-          <h3>Brokolice</h3>
-          <div class="role">Hlavní lektorka</div>
-          <p class="bio">Nejstarší a nejklidnější. Pokud si lehne vedle vás, znamená to, že děláte savasanu správně.</p>
+        <article class="bun reveal">
+          <div class="pic"><img src="assets/photos/rabbit-1.jpg" alt="Bílý králík Brokolice" loading="lazy" /></div>
+          <div class="body"><h3>Brokolice</h3><div class="role">Hlavní lektorka</div><p class="bio">Nejstarší a nejklidnější. Když si lehne vedle vás, děláte savasanu správně.</p></div>
         </article>
-        <article class="bun-card reveal">
-          <div class="pic" style="background:#EBD6D0"><span class="mono">P</span></div>
-          <h3>Pepa</h3>
-          <div class="role">Specialista na klín</div>
-          <p class="bio">Floppy ouška, nulové zábrany. Najde si nejpohodlnější klín v sále a zůstane do konce lekce.</p>
+        <article class="bun reveal">
+          <div class="pic"><img src="assets/photos/rabbit-2.jpg" alt="Králík Pepa" loading="lazy" /></div>
+          <div class="body"><h3>Pepa</h3><div class="role">Specialista na klín</div><p class="bio">Floppy ouška, nulové zábrany. Najde si nejpohodlnější klín a zůstane do konce.</p></div>
         </article>
-        <article class="bun-card reveal">
-          <div class="pic" style="background:#D6DEC6"><span class="mono">T</span></div>
-          <h3>Tofu</h3>
-          <div class="role">Energie lekce</div>
-          <p class="bio">Mladý a hopsavý. Zahřeje atmosféru ještě dřív než vy svaly. Děti ho milují.</p>
+        <article class="bun reveal">
+          <div class="pic"><img src="assets/photos/rabbit-3.jpg" alt="Mladý králík Tofu" loading="lazy" /></div>
+          <div class="body"><h3>Tofu</h3><div class="role">Energie lekce</div><p class="bio">Mladý a hopsavý. Zahřeje atmosféru dřív než vy svaly. Děti ho milují.</p></div>
         </article>
-        <article class="bun-card reveal">
-          <div class="pic" style="background:#2F3527"><span class="mono" style="color:var(--paper)">M</span></div>
-          <h3>Mín­ka</h3>
-          <div class="role">Mistryně klidu</div>
-          <p class="bio">Tmavá kožešina, sametový pohyb. Objeví se jako stín během restorativní lekce a zase zmizí.</p>
+        <article class="bun reveal">
+          <div class="pic"><img src="assets/photos/rabbit-7.jpg" alt="Tmavý králík Mínka" loading="lazy" /></div>
+          <div class="body"><h3>Mínka</h3><div class="role">Mistryně klidu</div><p class="bio">Sametový pohyb. Objeví se jako stín během restorativní lekce a zase zmizí.</p></div>
         </article>
       </div>
     </div>
   </section>
 
-  <!-- ============ GALERIE ============ -->
-  <section id="galerie">
-    <div class="wrap">
-      <div class="section-head reveal">
-        <span class="eyebrow">Galerie</span>
-        <h2>Nahlédněte do studia.</h2>
-        <p>Klidný sál, ranní světlo a samozřejmě naši chlupatí učitelé. Klikněte na fotku pro zvětšení.</p>
-      </div>
-      <div class="gallery reveal">
-        <button class="ph big" data-full="assets/gallery/01-hatha.svg" data-cap="Hatha s králíčky — savasana v ranním světle">
-          <img src="assets/gallery/01-hatha.svg" alt="Lekce hatha jógy v sále studia" loading="lazy" />
-          <span class="zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F2EFE6" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span>
-          <span class="cap">Savasana v ranním světle</span>
-        </button>
-        <button class="ph wide" data-full="assets/gallery/02-studio.svg" data-cap="Náš klidný sál v centru Brna">
-          <img src="assets/gallery/02-studio.svg" alt="Interiér studia s podložkami" loading="lazy" />
-          <span class="zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F2EFE6" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span>
-          <span class="cap">Klidný sál v centru Brna</span>
-        </button>
-        <button class="ph" data-full="assets/gallery/05-brokolice.svg" data-cap="Brokolice — naše hlavní lektorka">
-          <img src="assets/gallery/05-brokolice.svg" alt="Králík Brokolice" loading="lazy" />
-          <span class="zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2A2E24" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span>
-          <span class="cap">Brokolice odpočívá</span>
-        </button>
-        <button class="ph" data-full="assets/gallery/06-tofu.svg" data-cap="Tofu na ranním průzkumu podložek">
-          <img src="assets/gallery/06-tofu.svg" alt="Králík Tofu" loading="lazy" />
-          <span class="zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2A2E24" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span>
-          <span class="cap">Tofu na průzkumu</span>
-        </button>
-        <button class="ph wide" data-full="assets/gallery/03-po-lekci.svg" data-cap="Čaj a klid po lekci">
-          <img src="assets/gallery/03-po-lekci.svg" alt="Čajový kout po lekci" loading="lazy" />
-          <span class="zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F2EFE6" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span>
-          <span class="cap">Čaj a klid po lekci</span>
-        </button>
-        <button class="ph wide" data-full="assets/gallery/04-deti.svg" data-cap="Sobotní lekce Děti & králíci">
-          <img src="assets/gallery/04-deti.svg" alt="Dětská lekce s králíky" loading="lazy" />
-          <span class="zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2A2E24" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span>
-          <span class="cap">Sobota: Děti &amp; králíci</span>
-        </button>
-      </div>
-      <p class="gallery-note reveal">Obrázky jsou zatím ilustrační — jakmile budete mít vlastní fotky, stačí přepsat soubory ve složce <code>assets/gallery</code>.</p>
-    </div>
-  </section>
-
-  <!-- ============ CENÍK ============ -->
+  <!-- ============ PRICING ============ -->
   <section class="pricing" id="cenik">
     <div class="wrap">
-      <div class="section-head reveal">
+      <div class="section-head center reveal">
         <span class="eyebrow">Ceník</span>
-        <h2>Plaťte za klid, ne za závazek.</h2>
-        <p>Žádné dlouhé smlouvy. Vyberte si jednorázovku, nebo si klid předplaťte na celý měsíc.</p>
+        <h2>Plaťte za klid, ne za závazek</h2>
+        <p class="lead">Žádné dlouhé smlouvy. Vyberte si jednorázovku, nebo si klid předplaťte na celý měsíc.</p>
       </div>
       <div class="plans">
         <div class="plan reveal">
           <h3>První lekce</h3>
           <div class="price">290&nbsp;Kč <small>/ jednorázově</small></div>
-          <ul>
-            <li>Jakákoliv lekce z rozvrhu</li>
-            <li>Zapůjčení podložky i dečky</li>
-            <li>Čaj a klid po lekci</li>
-            <li>Bez nutnosti rezervovat dál</li>
-          </ul>
+          <ul><li>Jakákoliv lekce z rozvrhu</li><li>Zapůjčení podložky i dečky</li><li>Čaj a klid po lekci</li><li>Bez nutnosti rezervovat dál</li></ul>
           <a class="btn btn-ghost" href="#rezervace">Zkusit poprvé</a>
         </div>
         <div class="plan featured reveal">
           <span class="badge">Nejlepší poměr</span>
           <h3>Měsíční klid</h3>
           <div class="price">1&nbsp;490&nbsp;Kč <small>/ měsíc</small></div>
-          <ul>
-            <li>Neomezený počet lekcí</li>
-            <li>Přednostní rezervace míst</li>
-            <li>10&nbsp;% sleva na soukromé akce</li>
-            <li>Možnost kdykoliv zrušit</li>
-          </ul>
+          <ul><li>Neomezený počet lekcí</li><li>Přednostní rezervace míst</li><li>10&nbsp;% sleva na soukromé akce</li><li>Možnost kdykoliv zrušit</li></ul>
           <a class="btn btn-primary" href="#rezervace">Předplatit měsíc</a>
         </div>
         <div class="plan reveal">
           <h3>Permanentka 10</h3>
           <div class="price">2&nbsp;590&nbsp;Kč <small>/ 10 vstupů</small></div>
-          <ul>
-            <li>10 lekcí dle libosti</li>
-            <li>Platnost 4 měsíce</li>
-            <li>Přenosná na kamaráda</li>
-            <li>Zapůjčení vybavení v ceně</li>
-          </ul>
+          <ul><li>10 lekcí dle libosti</li><li>Platnost 4 měsíce</li><li>Přenosná na kamaráda</li><li>Zapůjčení vybavení v ceně</li></ul>
           <a class="btn btn-ghost" href="#rezervace">Koupit permanentku</a>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ============ POUKAZY ============ -->
-  <section class="vouchers" id="poukazy">
-    <div class="wrap voucher-grid">
-      <div class="reveal">
-        <span class="eyebrow">Dárkové poukazy</span>
-        <h2 class="section-head" style="font-size:var(--step-2);font-weight:400;margin-top:1rem">Darujte někomu klid.</h2>
-        <p style="margin-top:1.1rem;color:var(--ink-soft);max-width:44ch">Nejhezčí dárek pro uspěchané duše. Poukaz platí na jakoukoliv lekci po dobu 12 měsíců — obdarovaný si termín vybere, kdy bude mít čas zpomalit.</p>
-
-        <div class="chips" role="group" aria-label="Hodnota poukazu">
-          <button class="chip" type="button" data-amount="290">290 Kč</button>
-          <button class="chip" type="button" data-amount="690" aria-pressed="true">690 Kč</button>
-          <button class="chip" type="button" data-amount="1490">1 490 Kč</button>
-          <button class="chip" type="button" data-custom>Vlastní</button>
-        </div>
-        <div class="custom-amount" id="customWrap" hidden>
-          <label for="customInput">Vlastní hodnota (Kč)</label>
-          <input id="customInput" type="number" min="100" step="50" value="1000" inputmode="numeric" />
-        </div>
-
-        <div class="v-actions">
-          <a class="btn btn-primary" id="vBuy" href="mailto:ahoj@jogaskralicky.cz">Koupit poukaz <span class="arrow">→</span></a>
-          <a class="btn btn-ghost" href="#rezervace">Mám dotaz</a>
-        </div>
-        <p class="v-note">Po objednávce vám poukaz pošleme do 24&nbsp;hodin e-mailem k vytištění, nebo jako tištěnou kartičku poštou.</p>
+  <!-- ============ GALLERY ============ -->
+  <section id="galerie">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Galerie</span>
+        <h2>Nahlédněte do studia</h2>
+        <p class="lead">Klidný sál, ranní světlo a samozřejmě naši chlupatí učitelé. Klikněte na fotku pro zvětšení.</p>
       </div>
+      <div class="gallery reveal">
+        <button class="ph big" data-full="assets/photos/yoga-1.jpg" data-cap="Savasana v ranním světle">
+          <img src="assets/photos/yoga-1.jpg" alt="Meditace při západu slunce" loading="lazy" />
+          <span class="zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span>
+          <span class="cap">Savasana v ranním světle</span>
+        </button>
+        <button class="ph wide" data-full="assets/photos/yoga-8.jpg" data-cap="Společná lekce pod širým nebem">
+          <img src="assets/photos/yoga-8.jpg" alt="Skupinová lekce jógy" loading="lazy" />
+          <span class="zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span>
+          <span class="cap">Společná lekce</span>
+        </button>
+        <button class="ph" data-full="assets/photos/rabbit-1.jpg" data-cap="Brokolice odpočívá">
+          <img src="assets/photos/rabbit-1.jpg" alt="Bílý králík" loading="lazy" />
+          <span class="zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span>
+          <span class="cap">Brokolice odpočívá</span>
+        </button>
+        <button class="ph" data-full="assets/photos/rabbit-4.jpg" data-cap="Tofu na ranním průzkumu">
+          <img src="assets/photos/rabbit-4.jpg" alt="Králík v trávě" loading="lazy" />
+          <span class="zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span>
+          <span class="cap">Tofu na průzkumu</span>
+        </button>
+        <button class="ph wide" data-full="assets/photos/yoga-11.jpg" data-cap="Detail pozice v sále">
+          <img src="assets/photos/yoga-11.jpg" alt="Studiová jóga" loading="lazy" />
+          <span class="zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span>
+          <span class="cap">Klidný sál</span>
+        </button>
+        <button class="ph wide" data-full="assets/photos/rabbit-6.jpg" data-cap="Sobota: Děti & králíci">
+          <img src="assets/photos/rabbit-6.jpg" alt="Krmení králíka" loading="lazy" />
+          <span class="zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span>
+          <span class="cap">Sobota: Děti &amp; králíci</span>
+        </button>
+      </div>
+    </div>
+  </section>
 
-      <div class="ticket reveal" aria-hidden="true">
-        <div class="t-top">
-          <span class="eyebrow">Dárkový poukaz</span>
-          <img class="t-logo" src="assets/logo.svg" alt="" width="46" height="46" />
+  <!-- ============ TESTIMONIALS ============ -->
+  <section class="reference" id="reference">
+    <div class="wrap">
+      <div class="ref-head reveal">
+        <div class="section-head" style="margin:0">
+          <span class="eyebrow">Reference</span>
+          <h2>Klid od naší komunity</h2>
         </div>
-        <div class="t-amount" id="vAmount">690 Kč</div>
-        <div style="font-size:var(--step--1);color:color-mix(in srgb,var(--paper) 82%,transparent)">na lekce Jógy s králíčky · platnost 12 měsíců</div>
-        <div class="t-for">
-          <span>Pro<b>. . . . . . . . . . . . . . .</b></span>
-          <span style="text-align:right">Kód<b>JSK&nbsp;·&nbsp;0001</b></span>
+        <div>
+          <p class="lead">Od úplných začátečníků po stálé hosty — jejich rána se s námi proměnila. A králíci na tom mají svůj podíl.</p>
+          <div class="ref-nav">
+            <button id="refPrev" aria-label="Předchozí reference"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18 9 12l6-6"/></svg></button>
+            <button id="refNext" aria-label="Další reference"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <div class="ref-viewport">
+        <div class="ref-track" id="refTrack">
+          <article class="tcard green">
+            <div class="stars">★★★★★</div>
+            <p class="quote">„Po první lekci jsem brečela štěstím. Pepa mi usnul na klíně během savasany a já jsem konečně vypnula.“</p>
+            <p class="who" style="margin-top:1.4rem">Sofie R.<span>chodí každý čtvrtek</span></p>
+          </article>
+          <article class="tcard">
+            <div class="pic"><img src="assets/photos/yoga-8.jpg" alt="Hosté na lekci" loading="lazy" /></div>
+            <div class="body"><p class="quote">„Nikdy jsem necvičila a bála jsem se, že budu za vola. Lektorka i králíci mě uklidnili během minuty.“</p><p class="who">Markéta H.<span>první lekce</span></p></div>
+          </article>
+          <article class="tcard">
+            <div class="pic"><img src="assets/photos/yoga-2.jpg" alt="Klidná lekce" loading="lazy" /></div>
+            <div class="body"><p class="quote">„Vodím sem dceru na sobotní Děti & králíci. Je to nejhezčí hodina našeho týdne.“</p><p class="who">Jana P.<span>maminka</span></p></div>
+          </article>
+          <article class="tcard">
+            <div class="pic"><img src="assets/photos/yoga-7.jpg" alt="Jóga v přírodě" loading="lazy" /></div>
+            <div class="body"><p class="quote">„Měsíční klid se mi vrátil mnohonásobně. Chodím i třikrát týdně a pokaždé odejdu lehčí.“</p><p class="who">Tomáš K.<span>předplatitel</span></p></div>
+          </article>
+          <article class="tcard">
+            <div class="pic"><img src="assets/photos/rabbit-3.jpg" alt="Králík" loading="lazy" /></div>
+            <div class="body"><p class="quote">„Brokolice je lepší terapeut než leckterá appka na meditaci. Vážně.“</p><p class="who">Eliška M.<span>chodí ráno</span></p></div>
+          </article>
         </div>
       </div>
     </div>
   </section>
 
+  <!-- ============ COMMUNITY ============ -->
+  <section class="community">
+    <div class="wrap">
+      <span class="eyebrow">Připojte se</span>
+      <h2>Zpomalte společně s námi</h2>
+      <p>Buďte součástí klidné komunity, kde tempo udávají králíci. První lekci máte za zvýhodněných 290&nbsp;Kč a nic předem neplatíte.</p>
+      <a class="btn btn-light" href="#rezervace">Rezervovat první lekci <span class="arrow">→</span></a>
+    </div>
+  </section>
+
   <!-- ============ FAQ ============ -->
-  <section id="faq">
-    <div class="wrap" style="max-width:880px">
+  <section class="faq">
+    <div class="wrap faq-wrap">
       <div class="section-head reveal" style="max-width:none">
         <span class="eyebrow">Časté dotazy</span>
         <h2>Než přijdete poprvé</h2>
+        <p class="lead">Nenašli jste odpověď? Napište nám na <a href="mailto:ahoj@jogaskralicky.cz" style="color:var(--clover);text-decoration:underline">ahoj@jogaskralicky.cz</a>.</p>
       </div>
       <div class="faq-list reveal">
         <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">Musím už něco umět?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="#6E8A4E" stroke-width="2"><path d="M11 4v14M4 11h14"/></svg></button>
+          <button class="faq-q" aria-expanded="false">Musím už něco umět?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4v14M4 11h14"/></svg></button>
           <div class="faq-a"><div>Vůbec ne. Většina hostů přichází úplně bez zkušeností. Lektorka vše ukáže a nabídne jednodušší variantu každé polohy. Jde nám o klid, ne o dokonalý tvar.</div></div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">Nevyruší mě králíci od cvičení?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="#6E8A4E" stroke-width="2"><path d="M11 4v14M4 11h14"/></svg></button>
+          <button class="faq-q" aria-expanded="false">Nevyruší mě králíci od cvičení?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4v14M4 11h14"/></svg></button>
           <div class="faq-a"><div>To je celý smysl. Králíci vás přirozeně zpomalí a vrátí do přítomnosti — žádná aplikace s meditací to nedokáže líp. Pokud se k vám zrovna žádný nepřiblíží, nevadí, je to jejich volba.</div></div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">Co když mám alergii na zvířata?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="#6E8A4E" stroke-width="2"><path d="M11 4v14M4 11h14"/></svg></button>
+          <button class="faq-q" aria-expanded="false">Co když mám alergii na zvířata?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4v14M4 11h14"/></svg></button>
           <div class="faq-a"><div>Sál pečlivě větráme a čistíme, přesto při alergii na srst doporučujeme lekci zvážit nebo se poradit s lékařem. Rádi vám pomůžeme vybrat méně kontaktní termín.</div></div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">Co si mám vzít s sebou?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="#6E8A4E" stroke-width="2"><path d="M11 4v14M4 11h14"/></svg></button>
+          <button class="faq-q" aria-expanded="false">Co si mám vzít s sebou?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4v14M4 11h14"/></svg></button>
           <div class="faq-a"><div>Jen pohodlné oblečení a ponožky. Podložky, dečky i polštáře máme. Cvičíme bez bot a doporučujeme nepoužívat silné parfémy — králíci mají citlivý čich.</div></div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">Jsou králíci v pořádku?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="#6E8A4E" stroke-width="2"><path d="M11 4v14M4 11h14"/></svg></button>
+          <button class="faq-q" aria-expanded="false">Jsou králíci v pořádku?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4v14M4 11h14"/></svg></button>
           <div class="faq-a"><div>Jejich pohoda je u nás na prvním místě. Mají vlastní klidové zóny, kam se kdykoliv mohou stáhnout, pravidelné pauzy a veterinární péči. Na lekci jdou jen odpočatí a dobrovolně.</div></div>
         </div>
       </div>
@@ -903,7 +857,7 @@
               <a class="btn btn-primary" id="bsCal" href="#" target="_blank" rel="noopener">Přidat do kalendáře <span class="arrow">→</span></a>
               <button class="btn btn-ghost" type="button" id="bsAgain">Nová rezervace</button>
             </div>
-            <p style="margin-top:.9rem;font-size:var(--step--1);color:var(--ink-soft)"><a id="bsIcs" download="joga-s-kralicky.ics" href="#" style="color:var(--clover-deep);text-decoration:underline">Mám Apple / Outlook kalendář — stáhnout .ics</a></p>
+            <p style="margin-top:.9rem;font-size:.82rem;color:var(--ink-soft)"><a id="bsIcs" download="joga-s-kralicky.ics" href="#" style="color:var(--clover);text-decoration:underline">Mám Apple / Outlook kalendář — stáhnout .ics</a></p>
           </div>
 
           <div class="book-state" id="bookState" hidden>
@@ -959,23 +913,35 @@
 <!-- ============ FOOTER ============ -->
 <footer class="foot">
   <div class="wrap">
-    <div class="foot-top">
-      <div>
-        <a class="brand" href="#top">
-          <img class="mark" src="assets/logo.svg" alt="" width="34" height="34" />
-          Jóga&nbsp;s&nbsp;králíčky
-        </a>
-        <p style="margin-top:.8rem;max-width:34ch">Studio klidu, kde tempo udávají králíci. Údolní 12, Brno-střed.</p>
+    <div class="foot-grid">
+      <div class="brand-cell">
+        <a class="brand" href="#top"><img class="mark" src="assets/logo.svg" alt="" width="34" height="34" /> Jóga&nbsp;s&nbsp;králíčky</a>
+        <p class="ftag">Studio klidu, kde tempo udávají králíci. Údolní 12, Brno-střed.</p>
+        <div class="socials">
+          <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+          <a href="https://facebook.com" target="_blank" rel="noopener" aria-label="Facebook"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 9V7c0-1 .5-2 2-2h2V2h-3c-2.5 0-4 1.5-4 4v3H8v3h3v8h3v-8h3l1-3z"/></svg></a>
+        </div>
       </div>
-      <nav class="foot-links" aria-label="Patička">
+      <nav class="foot-col" aria-label="Web">
+        <h5>Studio</h5>
         <a href="#lekce">Lekce</a>
+        <a href="#rozvrh">Rozvrh</a>
         <a href="#kralicci">Králíčci</a>
-        <a href="#galerie">Galerie</a>
         <a href="#cenik">Ceník</a>
-        <a href="#poukazy">Poukazy</a>
-        <a href="#rezervace">Rezervace</a>
-        <a href="https://instagram.com" target="_blank" rel="noopener">Instagram</a>
       </nav>
+      <nav class="foot-col" aria-label="Více">
+        <h5>Více</h5>
+        <a href="#galerie">Galerie</a>
+        <a href="#reference">Reference</a>
+        <a href="#rezervace">Rezervace</a>
+        <a href="admin.html">Správa (pro studio)</a>
+      </nav>
+      <div class="foot-col">
+        <h5>Ozvěte se</h5>
+        <a class="foot-contact" href="mailto:ahoj@jogaskralicky.cz">ahoj@jogaskralicky.cz</a>
+        <a class="foot-contact" href="tel:+420777123456" style="margin-top:.6rem">+420 777 123 456</a>
+        <a href="https://maps.google.com" target="_blank" rel="noopener" style="margin-top:.6rem">Údolní 12, Brno-střed</a>
+      </div>
     </div>
     <div class="foot-bottom">
       <span>© 2026 Jóga s králíčky. Dýchejte pomalu.</span>
@@ -988,9 +954,9 @@
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="supabase-config.js?v=2"></script>
 <script>
-  // sticky nav border
+  // sticky nav state
   const nav = document.getElementById('nav');
-  const onScroll = () => nav.classList.toggle('scrolled', window.scrollY > 12);
+  const onScroll = () => nav.classList.toggle('scrolled', window.scrollY > 40);
   onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
 
   // mobile menu
@@ -998,12 +964,14 @@
   if (toggle) {
     toggle.addEventListener('click', () => {
       const open = nav.classList.toggle('open');
+      document.body.style.overflow = open ? 'hidden' : '';
       toggle.setAttribute('aria-expanded', String(open));
       toggle.setAttribute('aria-label', open ? 'Zavřít menu' : 'Otevřít menu');
     });
     document.querySelectorAll('.nav-links a').forEach((a) =>
       a.addEventListener('click', () => {
         nav.classList.remove('open');
+        document.body.style.overflow = '';
         toggle.setAttribute('aria-expanded', 'false');
         toggle.setAttribute('aria-label', 'Otevřít menu');
       })
@@ -1013,7 +981,7 @@
   // reveal on scroll
   const io = new IntersectionObserver((entries) => {
     entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
-  }, { threshold: 0.14 });
+  }, { threshold: 0.12 });
   document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
 
   // FAQ accordion
@@ -1051,73 +1019,26 @@
   lb.addEventListener('click', (e) => { if (e.target === lb) closeLb(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && lb.classList.contains('open')) closeLb(); });
 
-  // gift voucher amount picker
-  const vAmount = document.getElementById('vAmount');
-  const vBuy = document.getElementById('vBuy');
-  const customWrap = document.getElementById('customWrap');
-  const customInput = document.getElementById('customInput');
-  let amount = 690;
-  const fmt = (n) => n.toLocaleString('cs-CZ') + ' Kč';
-  function updateVoucher() {
-    vAmount.textContent = fmt(amount);
-    const body = 'Dobrý den,\nmám zájem o dárkový poukaz na Jógu s králíčky v hodnotě ' + fmt(amount) + '.\n\nJméno:\nDoručení (e-mail / poštou):\nVěnování (nepovinné):\n\nDěkuji!';
-    vBuy.href = 'mailto:ahoj@jogaskralicky.cz?subject=' + encodeURIComponent('Objednávka dárkového poukazu — ' + fmt(amount)) + '&body=' + encodeURIComponent(body);
-  }
-  document.querySelectorAll('.chip').forEach((chip) => {
-    chip.addEventListener('click', () => {
-      document.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
-      chip.setAttribute('aria-pressed', 'true');
-      if (chip.hasAttribute('data-custom')) {
-        customWrap.hidden = false;
-        amount = parseInt(customInput.value || '0', 10) || 0;
-        customInput.focus();
-      } else {
-        customWrap.hidden = true;
-        amount = parseInt(chip.dataset.amount, 10);
-      }
-      updateVoucher();
-    });
-  });
-  customInput && customInput.addEventListener('input', () => {
-    amount = Math.max(0, parseInt(customInput.value || '0', 10) || 0);
-    updateVoucher();
-  });
-  updateVoucher();
-
-  // subtle geometric background shapes — placed in section margins, never behind text
-  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    const shapes = {
-      ring: (c) => `<svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="57" fill="none" stroke="${c}" stroke-width="1.3"/></svg>`,
-      arcs: (c) => `<svg viewBox="0 0 150 96"><g fill="none" stroke="${c}" stroke-width="1.4" stroke-linecap="round"><path d="M6 90a69 69 0 0 1 138 0"/><path d="M34 90a41 41 0 0 1 82 0"/><path d="M60 90a15 15 0 0 1 30 0"/></g></svg>`,
-      dots: (c) => { let d = ''; for (let y = 0; y < 5; y++) for (let x = 0; x < 5; x++) d += `<circle cx="${8 + x * 21}" cy="${8 + y * 21}" r="2.3" fill="${c}"/>`; return `<svg viewBox="0 0 100 100">${d}</svg>`; }
-    };
-    const G = '#6E8A4E';   // green for light sections
-    const L = '#ECEFE2';   // light for the dark sections (schedule, booking)
-    const conf = [
-      { sel: '.hero',     items: [{ t: 'arcs', c: G, pos: 'top:6%;right:-46px',     a: 'floaty',  s: 210, o: .14 }] },
-      { sel: '#o-nas',    items: [{ t: 'ring', c: G, pos: 'top:-44px;right:-34px',  a: 'breathe', s: 150, o: .14 }, { t: 'dots', c: G, pos: 'bottom:28px;left:16px', a: 'floaty', s: 92, o: .18 }] },
-      { sel: '#lekce',    items: [{ t: 'arcs', c: G, pos: 'top:-18px;right:-34px',  a: 'floaty',  s: 150, o: .13 }] },
-      { sel: '#kralicci', items: [{ t: 'ring', c: G, pos: 'top:8%;left:-54px',      a: 'breathe', s: 150, o: .13 }, { t: 'dots', c: G, pos: 'bottom:-6px;right:30px', a: 'floaty', s: 92, o: .16 }] },
-      { sel: '#galerie',  items: [{ t: 'arcs', c: G, pos: 'top:-12px;right:-34px',  a: 'floaty',  s: 140, o: .13 }] },
-      { sel: '.schedule', items: [{ t: 'ring', c: L, pos: 'bottom:-54px;left:-40px',a: 'spin',    s: 180, o: .12 }, { t: 'dots', c: L, pos: 'top:30px;right:22px', a: 'floaty', s: 96, o: .16 }] },
-      { sel: '#cenik',    items: [{ t: 'arcs', c: G, pos: 'top:-18px;left:-34px',   a: 'floaty',  s: 150, o: .13 }] },
-      { sel: '.vouchers', items: [{ t: 'ring', c: G, pos: 'top:-44px;right:-30px',  a: 'breathe', s: 150, o: .14 }] },
-      { sel: '#faq',      items: [{ t: 'dots', c: G, pos: 'top:8px;right:8px',      a: 'floaty',  s: 96, o: .15 }] },
-      { sel: '.booking',  items: [{ t: 'arcs', c: L, pos: 'bottom:-28px;left:-30px',a: 'floaty',  s: 180, o: .16 }, { t: 'ring', c: L, pos: 'top:-44px;right:-24px', a: 'breathe', s: 140, o: .14 }] }
-    ];
-    const rnd = (a, b) => a + Math.random() * (b - a);
-    conf.forEach((cf) => {
-      const sec = document.querySelector(cf.sel);
-      if (!sec) return;
-      const layer = document.createElement('div');
-      layer.className = 'leaf-bg';
-      layer.innerHTML = cf.items.map((it) => {
-        const style = `${it.pos};width:${it.s}px;opacity:${it.o};--o:${it.o};--d:${(it.a === 'spin' ? rnd(60, 80) : it.a === 'breathe' ? rnd(9, 13) : rnd(13, 20)).toFixed(1)}s;animation-delay:-${rnd(0, 8).toFixed(1)}s;`;
-        return `<span class="sh ${it.a}" style="${style}">${shapes[it.t](it.c)}</span>`;
-      }).join('');
-      sec.prepend(layer);
-    });
-  }
+  // testimonial carousel
+  (function () {
+    const track = document.getElementById('refTrack');
+    if (!track) return;
+    const prev = document.getElementById('refPrev');
+    const next = document.getElementById('refNext');
+    let index = 0;
+    function perView() { return window.innerWidth <= 560 ? 1 : window.innerWidth <= 1000 ? 2 : 3; }
+    function maxIndex() { return Math.max(0, track.children.length - perView()); }
+    function go() {
+      index = Math.max(0, Math.min(index, maxIndex()));
+      const card = track.children[0];
+      const step = card.getBoundingClientRect().width + 21; // gap 1.3rem ≈ 21px
+      track.style.transform = 'translateX(' + (-index * step) + 'px)';
+    }
+    prev.addEventListener('click', () => { index--; go(); });
+    next.addEventListener('click', () => { index++; go(); });
+    window.addEventListener('resize', go, { passive: true });
+    go();
+  })();
 
   // ============ REZERVAČNÍ FLOW (živá data ze Supabase) ============
   (function () {
@@ -1372,7 +1293,7 @@
       form.reset();
       spots = 1;
       document.getElementById('rtStatus').textContent = 'Čeká na potvrzení';
-      await load(); // znovu načti aktuální volná místa
+      await load();
       form.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
 
