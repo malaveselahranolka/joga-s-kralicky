@@ -108,6 +108,20 @@
   .form-actions { display: flex; gap: .6rem; margin-top: 1rem; flex-wrap: wrap; }
   .collapse { max-height: 0; overflow: hidden; transition: max-height .4s var(--ease); }
   .collapse.open { max-height: 600px; }
+  .attendees.collapse.open { max-height: 1200px; }
+
+  /* attendees (kdo je přihlášený na lekci) */
+  .lesson-block { margin-bottom: .6rem; }
+  .attendees { background: color-mix(in srgb, var(--ink) 4%, var(--cloud)); border-radius: 0 0 var(--r-md) var(--r-md); }
+  .att-head { font-size: .8rem; font-weight: 700; color: var(--ink-soft); padding: .8rem 1.1rem .2rem; }
+  .att-item { display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding: .65rem 1.1rem; border-top: 1px solid var(--line); flex-wrap: wrap; }
+  .att-item strong { font-size: 1rem; }
+  .att-contact { font-size: .82rem; color: var(--ink-soft); margin-top: .15rem; }
+  .att-contact a { color: var(--clover-deep); }
+  .att-item.is-cancelled { opacity: .55; }
+  .att-item.is-cancelled strong { text-decoration: line-through; }
+  .att-empty { padding: 1rem 1.1rem; color: var(--ink-soft); font-size: .9rem; }
+  [data-view][aria-expanded="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
   .toolbar { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; margin-bottom: 1.2rem; }
   .toolbar select { width: auto; min-width: 200px; }
   .toast { position: fixed; left: 50%; bottom: 1.5rem; transform: translateX(-50%) translateY(120%); background: var(--ink); color: var(--paper); padding: .8em 1.3em; border-radius: 999px; font-size: .9rem; font-weight: 600; box-shadow: 0 16px 40px -16px rgba(0,0,0,.5); transition: transform .4s var(--ease); z-index: 100; }
@@ -366,25 +380,56 @@
     if (f === 'upcoming') list = list.filter((l) => new Date(l.starts_at).getTime() > now);
     else if (f === 'past') list = list.filter((l) => new Date(l.starts_at).getTime() <= now).reverse();
     $('lessonRows').innerHTML = list.length ? list.map((l) => {
-      const b = bookedFor(l.id), full = b >= l.capacity, cancelled = l.status === 'cancelled';
+      const att = bookings.filter((x) => x.lesson_id === l.id);
+      const active = att.filter((x) => x.status !== 'cancelled');
+      const b = active.reduce((s, x) => s + x.spots, 0), full = b >= l.capacity, cancelled = l.status === 'cancelled';
       const pill = cancelled ? '<span class="pill pill-cancel">Zrušená</span>'
         : full ? '<span class="pill pill-full">Plno</span>'
         : '<span class="pill pill-ok">' + (l.capacity - b) + ' volných</span>';
-      return '<div class="row' + (cancelled ? ' is-cancelled' : '') + '">' +
+      return '<div class="lesson-block">' +
+        '<div class="row' + (cancelled ? ' is-cancelled' : '') + '">' +
         '<div class="main"><div class="ttl">' + esc(l.title) + ' ' + pill + '</div>' +
         '<div class="sub">' + fmtDT(l.starts_at) + ' · ' + l.duration_min + ' min · ' + b + '/' + l.capacity + ' míst' + (l.note ? ' · ' + esc(l.note) : '') + '</div></div>' +
         '<div class="acts">' +
+          '<button class="btn btn-ghost btn-sm" data-view="' + l.id + '" aria-expanded="false">Přihlášení (' + active.length + ')</button>' +
           '<button class="btn btn-ghost btn-sm" data-edit="' + l.id + '">Upravit</button>' +
           (cancelled
             ? '<button class="btn btn-ghost btn-sm" data-reopen="' + l.id + '">Obnovit</button>'
             : '<button class="btn btn-danger btn-sm" data-cancel="' + l.id + '">Zrušit lekci</button>') +
           '<button class="btn btn-danger btn-sm" data-del="' + l.id + '">Smazat</button>' +
-        '</div></div>';
+        '</div></div>' +
+        '<div class="attendees collapse" id="att-' + l.id + '">' + attendeesHtml(att) + '</div>' +
+        '</div>';
     }).join('') : '<div class="empty">Žádné lekce v tomto zobrazení.</div>';
+  }
+
+  function attendeesHtml(att) {
+    if (!att.length) return '<div class="att-empty">Zatím nikdo přihlášený.</div>';
+    // potvrzené nahoře, zrušené dole
+    const sorted = att.slice().sort((a, b) => (a.status === 'cancelled') - (b.status === 'cancelled'));
+    return '<div class="att-head">Přihlášení hosté</div>' + sorted.map((b) => {
+      const cancelled = b.status === 'cancelled';
+      return '<div class="att-item' + (cancelled ? ' is-cancelled' : '') + '">' +
+        '<div><strong>' + esc(b.name) + '</strong> · ' + b.spots + ' míst' +
+          (cancelled ? ' <span class="pill pill-cancel">Zrušeno</span>' : '') +
+          '<div class="att-contact"><a href="mailto:' + esc(b.email) + '">' + esc(b.email) + '</a>' +
+          (b.phone ? ' · <a href="tel:' + esc(b.phone) + '">' + esc(b.phone) + '</a>' : '') + '</div></div>' +
+        '<div class="acts">' + (cancelled
+          ? '<button class="btn btn-ghost btn-sm" data-restore="' + b.id + '">Obnovit</button>'
+          : '<button class="btn btn-danger btn-sm" data-cancelb="' + b.id + '">Zrušit</button>') + '</div>' +
+        '</div>';
+    }).join('');
   }
 
   $('lessonRows').addEventListener('click', async (e) => {
     const btn = e.target.closest('button'); if (!btn) return;
+    if (btn.dataset.view) {
+      const panel = $('att-' + btn.dataset.view);
+      const open = panel.classList.toggle('open');
+      btn.setAttribute('aria-expanded', String(open));
+      return;
+    }
+    if (await applyBookingAction(btn)) return;
     const id = btn.dataset.edit || btn.dataset.cancel || btn.dataset.reopen || btn.dataset.del;
     const l = lessons.find((x) => x.id === id); if (!l) return;
     if (btn.dataset.edit) {
@@ -499,22 +544,26 @@
     }).join('') : '<div class="empty">Pro tento výběr nejsou žádné rezervace.</div>';
   }
 
-  $('bookingRows').addEventListener('click', async (e) => {
-    const btn = e.target.closest('button'); if (!btn) return;
+  async function applyBookingAction(btn) {
     const id = btn.dataset.cancelb || btn.dataset.restore || btn.dataset.delb;
+    if (!id) return false;
     if (btn.dataset.cancelb) {
-      if (!confirm('Zrušit tuto rezervaci? Místa se vrátí do volné kapacity.')) return;
-      const { error } = await sb.from('bookings').update({ status: 'cancelled' }).eq('id', id);
-      if (error) { toast('Akce selhala'); return; } toast('Rezervace zrušena'); await loadAll();
+      if (confirm('Zrušit tuto rezervaci? Místa se vrátí do volné kapacity.')) {
+        const { error } = await sb.from('bookings').update({ status: 'cancelled' }).eq('id', id);
+        if (error) toast('Akce selhala'); else { toast('Rezervace zrušena'); await loadAll(); }
+      }
     } else if (btn.dataset.restore) {
       const { error } = await sb.from('bookings').update({ status: 'confirmed' }).eq('id', id);
-      if (error) { toast('Akce selhala'); return; } toast('Rezervace obnovena'); await loadAll();
+      if (error) toast('Akce selhala'); else { toast('Rezervace obnovena'); await loadAll(); }
     } else if (btn.dataset.delb) {
-      if (!confirm('Trvale smazat tuto rezervaci?')) return;
-      const { error } = await sb.from('bookings').delete().eq('id', id);
-      if (error) { toast('Mazání selhalo'); return; } toast('Rezervace smazána'); await loadAll();
+      if (confirm('Trvale smazat tuto rezervaci?')) {
+        const { error } = await sb.from('bookings').delete().eq('id', id);
+        if (error) toast('Mazání selhalo'); else { toast('Rezervace smazána'); await loadAll(); }
+      }
     }
-  });
+    return true;
+  }
+  $('bookingRows').addEventListener('click', (e) => { const btn = e.target.closest('button'); if (btn) applyBookingAction(btn); });
 })();
 </script>
 </body>

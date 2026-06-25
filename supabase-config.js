@@ -14,3 +14,13 @@
 
 window.SUPABASE_URL      = 'https://mglopjlgpfpturvqtjcj.supabase.co';
 window.SUPABASE_ANON_KEY = 'sb_publishable_fSK0f_Mv-WFaKnvxwTu5BA_NxYV-U9_';
+
+// =====================================================================
+//  Potvrzovací e-maily přes EmailJS  (návod: NASTAVENI.md, sekce E-maily)
+//  Vyplň po založení účtu na https://www.emailjs.com
+//  Dokud zůstanou zástupné hodnoty, rezervace fungují normálně,
+//  jen se neodešle potvrzovací e-mail.
+// =====================================================================
+window.EMAILJS_PUBLIC_KEY  = 'TVUJ_EMAILJS_PUBLIC_KEY';
+window.EMAILJS_SERVICE_ID  = 'TVUJ_EMAILJS_SERVICE_ID';
+window.EMAILJS_TEMPLATE_ID = 'TVUJ_EMAILJS_TEMPLATE_ID';

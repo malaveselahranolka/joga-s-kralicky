@@ -61,6 +61,45 @@ GitHub Pages se aktualizuje do pár minut.
 
 ---
 
+## 6) Potvrzovací e-maily (EmailJS) — nepovinné
+
+Aby hostovi po rezervaci přišel potvrzovací e-mail (a tobě kopie). Bez tohoto kroku rezervace fungují normálně, jen se e-mail neodešle.
+
+1. Založ si free účet na **https://www.emailjs.com** → **Sign Up**.
+2. **Email Services** → **Add New Service** → vyber **Gmail** (nebo jiný) a připoj svůj e-mail. Zapiš si **Service ID** (např. `service_ab12cd`).
+3. **Email Templates** → **Create New Template**. Nastav pole:
+   - **To Email:** `{{to_email}}`
+   - **From Name:** `Jóga s králíčky`
+   - **Bcc:** `kovacikovabarbora71@gmail.com`  *(sem chodí tvoje kopie — přehled o nových rezervacích)*
+   - **Subject:** `Potvrzení rezervace — Jóga s králíčky`
+   - **Content** (přepni na text a vlož):
+     ```
+     Dobrý den {{name}},
+
+     děkujeme za rezervaci! Vaše místo je potvrzené:
+
+     Lekce: {{lesson}}
+     Kdy: {{datetime}}
+     Počet míst: {{spots}}
+     Kde: {{location}}
+
+     Těšíme se na vás (a králíci taky).
+     Jóga s králíčky
+     ```
+   Ulož a zapiš si **Template ID** (např. `template_xy34`).
+4. **Account → General** (nebo **API Keys**) → zkopíruj **Public Key**.
+5. Vlož všechny tři hodnoty do **`supabase-config.js`**:
+   ```js
+   window.EMAILJS_PUBLIC_KEY  = 'sem-public-key';
+   window.EMAILJS_SERVICE_ID  = 'service_ab12cd';
+   window.EMAILJS_TEMPLATE_ID = 'template_xy34';
+   ```
+6. Ulož, commit + push. Hotovo — od teď chodí potvrzení hostovi i tobě.
+
+> Free tarif EmailJS: 200 e-mailů/měsíc. V EmailJS si můžeš v *Account → Security* přidat povolenou doménu webu pro vyšší bezpečnost.
+
+---
+
 ## Jak to používat
 
 ### Admin (`tvuj-web/admin.html`)

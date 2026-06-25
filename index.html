@@ -293,7 +293,8 @@
     .cards, .plans, .grid-days, .buns { grid-template-columns: 1fr 1fr; }
     .booking .booking-grid { grid-template-columns: 1fr; }
     .nav-links {
-      display: flex; position: absolute; top: 100%; left: 0; right: 0;
+      display: flex; position: absolute; top: 100%; left: 50%; right: auto;
+      width: 100vw; margin-left: -50vw;
       flex-direction: column; align-items: stretch; gap: 0;
       background: var(--cloud); box-shadow: 0 26px 44px -28px rgba(42,46,36,.55);
       overflow: hidden; max-height: 0; opacity: 0; visibility: hidden;
@@ -423,11 +424,12 @@
   .book input:focus { outline: none; border-color: var(--clover); box-shadow: 0 0 0 3px color-mix(in srgb, var(--clover) 22%, transparent); }
   .book .field + .field, .book .spots-row + .field, .book .field + .field-row { margin-top: 1.1rem; }
   .book .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .book .field-row .field { margin-top: 0; }
   .book .err { display: none; color: var(--carrot); font-size: var(--step--1); font-weight: 700; margin-top: .4rem; }
   .book.show-errors .field.invalid .err { display: block; }
   .book .field.invalid input { border-color: var(--carrot); }
   #slotErr { margin-top: .8rem; }
-  .book .book-body > .btn-primary { width: 100%; justify-content: center; margin-top: 1.7rem; }
+  .book-body button[type="submit"] { width: 100%; justify-content: center; margin-top: 1.7rem; }
   .book .note { font-size: var(--step--1); color: var(--ink-soft); margin-top: .9rem; text-align: center; }
 
   /* success state */
@@ -486,6 +488,7 @@
       <a href="#cenik">Ceník</a>
       <a href="#poukazy">Poukazy</a>
       <a href="#faq">Dotazy</a>
+      <a href="#rezervace">Rezervace</a>
     </nav>
     <div class="nav-cta">
       <a class="btn btn-primary" href="#rezervace">Rezervovat lekci</a>
@@ -979,6 +982,7 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="supabase-config.js"></script>
 <script>
   // sticky nav border
@@ -1142,11 +1146,26 @@
       window.SUPABASE_ANON_KEY.length > 20 && typeof window.supabase !== 'undefined';
     const sb = CONFIGURED ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY) : null;
 
+    // EmailJS — potvrzovací e-mail (nepovinné; bez vyplnění rezervace běží dál)
+    const EMAIL_CONFIGURED = !!(window.EMAILJS_PUBLIC_KEY && window.EMAILJS_SERVICE_ID && window.EMAILJS_TEMPLATE_ID &&
+      window.EMAILJS_PUBLIC_KEY.indexOf('TVUJ_') !== 0 && typeof window.emailjs !== 'undefined');
+    if (EMAIL_CONFIGURED) { try { window.emailjs.init({ publicKey: window.EMAILJS_PUBLIC_KEY }); } catch (e) {} }
+    async function sendConfirmation(detail) {
+      if (!EMAIL_CONFIGURED) return;
+      try {
+        await window.emailjs.send(window.EMAILJS_SERVICE_ID, window.EMAILJS_TEMPLATE_ID, {
+          to_email: detail.email, name: detail.name, lesson: detail.lesson,
+          datetime: detail.datetime, spots: detail.spots, location: 'Údolní 12, Brno-střed'
+        });
+      } catch (e) { /* selhání e-mailu nezablokuje potvrzenou rezervaci */ }
+    }
+
     let lessons = [];     // řádky public_lessons (budoucí, aktivní)
     let titles = [];      // pořadí unikátních názvů lekcí
     let lessonKey = null; // vybraný název lekce
     let chosen = null;    // vybraná lekce { id, title, dt, duration_min, capacity, remaining }
     let spots = 1;
+    let lastIcsUrl = null;
 
     function showState(title, msg, retry) {
       form.hidden = true; success.hidden = true; state.hidden = false;
@@ -1272,7 +1291,9 @@
         'DESCRIPTION:Rezervace na ' + mistaSel(n) + '. Těšíme se na vás!',
         'END:VEVENT', 'END:VCALENDAR'
       ];
-      return 'data:text/calendar;charset=utf-8,' + encodeURIComponent(lines.join('\r\n'));
+      if (lastIcsUrl) URL.revokeObjectURL(lastIcsUrl);
+      lastIcsUrl = URL.createObjectURL(new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' }));
+      return lastIcsUrl;
     }
 
     // odeslání rezervace
@@ -1315,15 +1336,19 @@
       }
 
       // úspěch
+      const email = emailI.value.trim();
       document.getElementById('bsSummary').textContent =
         chosen.title + ' · ' + fmtFull(chosen.dt) + ' · ' + fmtTime(chosen.dt) + ' · ' + mistaSel(spots);
-      document.getElementById('bsMail').textContent =
-        'Potvrzení pošleme na ' + emailI.value.trim() + '. Místo už je pro vás zarezervované.';
+      document.getElementById('bsMail').textContent = EMAIL_CONFIGURED
+        ? 'Potvrzení jsme poslali na ' + email + '. Místo už je pro vás zarezervované.'
+        : 'Místo je pro vás zarezervované. Těšíme se na vás!';
       document.getElementById('bsIcs').href = buildIcs(chosen.title, chosen.dt, chosen.duration_min, spots);
       document.getElementById('rtStatus').textContent = 'Zarezervováno';
       form.hidden = true;
       success.hidden = false;
       success.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      sendConfirmation({ email: email, name: nameI.value.trim(), lesson: chosen.title,
+        datetime: fmtFull(chosen.dt) + ' v ' + fmtTime(chosen.dt), spots: mistaSel(spots) });
     });
 
     document.getElementById('bsAgain').addEventListener('click', async () => {
