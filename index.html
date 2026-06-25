@@ -14,15 +14,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Nunito+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 <style>
   :root {
-    --paper: #ECEFE2;
-    --cloud: #FAFBF6;
-    --ink: #2A2E24;
-    --ink-soft: #5A6150;
-    --clover: #6E8A4E;
-    --clover-deep: #50693A;
-    --carrot: #E08A4B;
-    --blush: #E8C9C2;
-    --line: #D6DAC7;
+    --paper: #191D14;      /* page background (deep forest-charcoal) */
+    --cloud: #222719;      /* elevated section surface */
+    --card: #2A301F;       /* card surface */
+    --ink: #EAEDDD;        /* primary text (warm off-white) */
+    --ink-soft: #A7AE96;   /* muted text */
+    --clover: #A6C473;     /* green accent (lifted for dark bg) */
+    --clover-deep: #88AB58;
+    --carrot: #E8A05C;     /* warm accent */
+    --blush: #E0B6AC;      /* soft accent */
+    --line: #39402E;       /* borders / hairlines */
+    --ink-deep: #11140D;   /* deepest surface (nav, footer, overlays) */
 
     --maxw: 1180px;
     --r-lg: 32px;
@@ -76,7 +78,7 @@
   }
   .btn-primary {
     background: var(--ink); color: var(--paper);
-    box-shadow: 0 10px 22px -12px rgba(42,46,36,.7);
+    box-shadow: 0 10px 22px -12px rgba(0,0,0,.7);
   }
   .btn-primary:hover { transform: translateY(-2px); background: var(--clover-deep); }
   .btn-primary:active { transform: translateY(0); }
@@ -119,7 +121,10 @@
   .hero { position: relative; padding: clamp(3rem, 6vw, 6rem) 0 clamp(4rem, 7vw, 7rem); overflow: hidden; }
   .hero-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: clamp(2rem, 5vw, 5rem); align-items: center; }
   .hero h1 { font-size: var(--step-3); font-weight: 300; }
-  .hero h1 em { font-style: italic; color: var(--clover-deep); font-weight: 400; }
+  .hero h1 em { font-style: italic; color: var(--clover); font-weight: 400; position: relative; white-space: nowrap; }
+  .hero h1 em::after { content: ""; position: absolute; left: 0; right: 0; bottom: .04em; height: .07em; background: var(--carrot); border-radius: 3px; transform: scaleX(0); transform-origin: left; animation: underline-in 1s var(--ease) .55s forwards; }
+  @keyframes underline-in { to { transform: scaleX(1); } }
+  @media (prefers-reduced-motion: reduce) { .hero h1 em::after { transform: scaleX(1); animation: none; } }
   .hero .lede { margin-top: 1.5rem; max-width: 30ch; font-size: var(--step-1); line-height: 1.4; color: var(--ink); font-family: "Fraunces"; font-weight: 300; }
   .hero .sub { margin-top: 1.2rem; max-width: 42ch; color: var(--ink-soft); }
   .hero-actions { margin-top: 2.2rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
@@ -131,39 +136,38 @@
   .hero-frame {
     position: absolute; inset: 0; border-radius: 22px; overflow: hidden;
     border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
-    box-shadow: 0 44px 84px -40px rgba(42,46,36,.58), 0 10px 28px -18px rgba(42,46,36,.4);
+    box-shadow: 0 44px 84px -40px rgba(0,0,0,.58), 0 10px 28px -18px rgba(0,0,0,.4);
   }
   .hero-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .hero-cap {
     position: absolute; left: 18px; bottom: 18px; z-index: 2;
     display: inline-flex; align-items: center; gap: .55rem; padding: .55em .95em; border-radius: 11px;
-    background: color-mix(in srgb, var(--ink) 56%, transparent); backdrop-filter: blur(8px);
-    color: var(--paper); font-size: .7rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
+    background: color-mix(in srgb, var(--ink-deep) 60%, transparent); backdrop-filter: blur(8px);
+    border: 1px solid color-mix(in srgb, var(--ink) 16%, transparent);
+    color: var(--ink); font-size: .7rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
   }
   .hero-cap .pip { width: 6px; height: 6px; border-radius: 50%; background: var(--carrot); }
 
   /* fine film grain over the whole page for depth */
   body::after {
-    content: ""; position: fixed; inset: 0; z-index: 3; pointer-events: none; opacity: .05; mix-blend-mode: multiply;
+    content: ""; position: fixed; inset: 0; z-index: 3; pointer-events: none; opacity: .055; mix-blend-mode: overlay;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .leaf-bg .lf, .leaf-bg .lf svg { animation: none !important; }
+    .leaf-bg .sh { animation: none !important; }
   }
 
-  /* animated background ferns (injected into section corners) */
+  /* animated geometric background shapes (injected into section margins) */
   .leaf-bg { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
-  .leaf-bg .lf { position: absolute; display: block; transform-origin: 50% 92%; animation: sway var(--d, 14s) ease-in-out infinite; }
-  .leaf-bg .lf svg { width: 100%; height: auto; display: block; transform: rotate(var(--rot, 0deg)); transform-origin: 50% 92%; animation: frond-breathe var(--d2, 7s) ease-in-out infinite; }
-  @keyframes sway {
-    0%, 100% { transform: rotate(-12deg); }
-    50% { transform: rotate(12deg); }
-  }
-  @keyframes frond-breathe {
-    0%, 100% { transform: rotate(var(--rot, 0deg)) scaleY(1); }
-    50% { transform: rotate(var(--rot, 0deg)) scaleY(1.09); }
-  }
+  .leaf-bg .sh { position: absolute; display: block; }
+  .leaf-bg .sh svg { width: 100%; height: auto; display: block; }
+  .sh.spin { animation: sh-spin var(--d, 70s) linear infinite; }
+  .sh.breathe { animation: sh-breathe var(--d, 11s) ease-in-out infinite; }
+  .sh.floaty { animation: sh-float var(--d, 16s) ease-in-out infinite; }
+  @keyframes sh-spin { to { transform: rotate(360deg); } }
+  @keyframes sh-breathe { 0%, 100% { transform: scale(1); opacity: var(--o, .12); } 50% { transform: scale(1.09); opacity: calc(var(--o, .12) * 1.5); } }
+  @keyframes sh-float { 0%, 100% { transform: translateY(0) rotate(-5deg); } 50% { transform: translateY(-16px) rotate(5deg); } }
 
   /* ---------- generic section ---------- */
   section { padding: clamp(4rem, 8vw, 7.5rem) 0; position: relative; overflow: hidden; }
@@ -192,7 +196,7 @@
     border-radius: var(--r-lg); padding: 2.2rem; overflow: hidden;
     transition: transform .45s var(--ease), box-shadow .45s var(--ease), border-color .45s var(--ease);
   }
-  .card:hover { transform: translateY(-5px); border-color: color-mix(in srgb, var(--clover) 50%, var(--line)); box-shadow: 0 26px 50px -30px rgba(42,46,36,.45); }
+  .card:hover { transform: translateY(-5px); border-color: color-mix(in srgb, var(--clover) 50%, var(--line)); box-shadow: 0 26px 50px -30px rgba(0,0,0,.45); }
   .card .tag { font-size: var(--step--1); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--clover); }
   .card h3 { font-size: var(--step-1); margin-top: .7rem; }
   .card .desc { margin-top: .8rem; color: var(--ink-soft); }
@@ -202,18 +206,18 @@
   .card:hover .corner { opacity: .55; transform: rotate(-6deg) scale(1.05); }
 
   /* ---------- rozvrh ---------- */
-  .schedule { background: var(--ink); color: var(--paper); }
+  .schedule { background: var(--ink-deep); color: var(--ink); }
   .schedule .eyebrow { color: var(--blush); }
   .schedule .eyebrow::before { background: var(--blush); }
-  .schedule h2 { color: var(--paper); }
-  .schedule .section-head p { color: color-mix(in srgb, var(--paper) 72%, transparent); }
-  .grid-days { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin-top: 3rem; background: color-mix(in srgb, var(--paper) 18%, transparent); border: 1px solid color-mix(in srgb, var(--paper) 18%, transparent); border-radius: var(--r-md); overflow: hidden; }
-  .day { background: var(--ink); padding: 1.6rem 1.4rem; }
+  .schedule h2 { color: var(--ink); }
+  .schedule .section-head p { color: var(--ink-soft); }
+  .grid-days { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin-top: 3rem; background: var(--line); border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; }
+  .day { background: var(--cloud); padding: 1.6rem 1.4rem; }
   .day h4 { font-family: "Fraunces"; font-size: 1.15rem; font-weight: 500; margin: 0 0 1rem; color: var(--blush); }
-  .slot { padding: .55rem 0; border-top: 1px solid color-mix(in srgb, var(--paper) 14%, transparent); }
+  .slot { padding: .55rem 0; border-top: 1px solid var(--line); }
   .slot .t { font-weight: 700; }
-  .slot .n { font-size: var(--step--1); color: color-mix(in srgb, var(--paper) 65%, transparent); }
-  .slot.empty { color: color-mix(in srgb, var(--paper) 35%, transparent); }
+  .slot .n { font-size: var(--step--1); color: var(--ink-soft); }
+  .slot.empty { color: color-mix(in srgb, var(--ink) 32%, transparent); }
 
   /* ---------- bunnies ---------- */
   .buns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-top: 3rem; }
@@ -229,11 +233,10 @@
   /* ---------- pricing ---------- */
   .pricing { background: var(--cloud); border-block: 1px solid var(--line); }
   .plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 3rem; align-items: stretch; }
-  .plan { display: flex; flex-direction: column; background: var(--paper); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 2.2rem; transition: transform .4s var(--ease); }
-  .plan:hover { transform: translateY(-4px); }
-  .plan.featured { background: var(--ink); color: var(--paper); border-color: var(--ink); position: relative; }
-  .plan.featured .price, .plan.featured h3 { color: var(--paper); }
-  .plan.featured .badge { position: absolute; top: 1.4rem; right: 1.4rem; background: var(--carrot); color: var(--ink); font-size: .72rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: .35em .8em; border-radius: 999px; }
+  .plan { display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 2.2rem; transition: transform .4s var(--ease), border-color .4s var(--ease); }
+  .plan:hover { transform: translateY(-4px); border-color: color-mix(in srgb, var(--clover) 45%, var(--line)); }
+  .plan.featured { background: color-mix(in srgb, var(--clover) 14%, var(--card)); border-color: color-mix(in srgb, var(--clover) 55%, transparent); position: relative; }
+  .plan.featured .badge { position: absolute; top: 1.4rem; right: 1.4rem; background: var(--carrot); color: var(--ink-deep); font-size: .72rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: .35em .8em; border-radius: 999px; }
   .plan h3 { font-size: var(--step-1); }
   .plan .price { font-family: "Fraunces"; font-size: var(--step-2); margin-top: .8rem; line-height: 1; }
   .plan .price small { font-family: "Nunito Sans"; font-size: .95rem; font-weight: 400; color: inherit; opacity: .65; }
@@ -242,7 +245,7 @@
   .plan li::before { content: ""; position: absolute; left: 0; top: .55em; width: 9px; height: 9px; border-radius: 50%; background: var(--clover); }
   .plan.featured li::before { background: var(--carrot); }
   .plan .btn { margin-top: auto; justify-content: center; }
-  .plan.featured .btn-primary { background: var(--carrot); color: var(--ink); box-shadow: none; }
+  .plan.featured .btn-primary { background: var(--carrot); color: var(--ink-deep); box-shadow: none; }
   .plan.featured .btn-primary:hover { background: var(--blush); }
 
   /* ---------- faq ---------- */
@@ -255,16 +258,16 @@
   .faq-a > div { padding-bottom: 1.6rem; color: var(--ink-soft); max-width: 70ch; }
 
   /* ---------- booking / contact ---------- */
-  .booking { background: radial-gradient(120% 120% at 80% 0%, #3C4A2E 0%, #2A2E24 55%, #21261B 100%); color: var(--paper); }
+  .booking { background: radial-gradient(120% 120% at 80% 0%, #2C3622 0%, #1E2318 55%, #14180F 100%); color: var(--ink); }
   .booking .booking-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 5vw, 4.5rem); align-items: center; }
-  .booking .eyebrow { color: var(--paper); }
-  .booking .eyebrow::before { background: var(--paper); opacity: .7; }
-  .booking h2 { font-size: var(--step-2); color: var(--paper); font-weight: 400; }
-  .booking p.lead { margin-top: 1.2rem; color: color-mix(in srgb, var(--paper) 85%, transparent); max-width: 42ch; }
+  .booking .eyebrow { color: var(--clover); }
+  .booking .eyebrow::before { background: var(--clover); opacity: .7; }
+  .booking h2 { font-size: var(--step-2); color: var(--ink); font-weight: 400; }
+  .booking p.lead { margin-top: 1.2rem; color: var(--ink-soft); max-width: 42ch; }
   .booking .contact-list { margin-top: 2rem; display: grid; gap: 1rem; }
-  .booking .contact-list a { display: inline-flex; align-items: center; gap: .7rem; font-weight: 600; transition: opacity .3s var(--ease); }
-  .booking .contact-list a:hover { opacity: .75; }
-  .form { background: var(--cloud); color: var(--ink); border-radius: var(--r-lg); padding: clamp(1.8rem, 3vw, 2.6rem); box-shadow: 0 30px 60px -30px rgba(42,46,36,.5); }
+  .booking .contact-list a { display: inline-flex; align-items: center; gap: .7rem; font-weight: 600; transition: color .3s var(--ease); }
+  .booking .contact-list a:hover { color: var(--clover); }
+  .form { background: var(--card); color: var(--ink); border: 1px solid var(--line); border-radius: var(--r-lg); padding: clamp(1.8rem, 3vw, 2.6rem); box-shadow: 0 30px 60px -30px rgba(0,0,0,.5); }
   .form .field { margin-bottom: 1.1rem; }
   .form label { display: block; font-size: var(--step--1); font-weight: 700; margin-bottom: .4rem; }
   .form input, .form select, .form textarea {
@@ -277,13 +280,13 @@
   .form .note { font-size: var(--step--1); color: var(--ink-soft); margin-top: .8rem; text-align: center; }
 
   /* ---------- footer ---------- */
-  footer.foot { background: var(--ink); color: color-mix(in srgb, var(--paper) 70%, transparent); padding: 3.5rem 0 2.5rem; }
+  footer.foot { background: var(--ink-deep); color: var(--ink-soft); padding: 3.5rem 0 2.5rem; border-top: 1px solid var(--line); }
   .foot-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 2rem; flex-wrap: wrap; }
-  .foot .brand { color: var(--paper); }
+  .foot .brand { color: var(--ink); }
   .foot-links { display: flex; gap: 2rem; flex-wrap: wrap; }
   .foot-links a { transition: color .3s var(--ease); }
-  .foot-links a:hover { color: var(--paper); }
-  .foot-bottom { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid color-mix(in srgb, var(--paper) 16%, transparent); display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; font-size: var(--step--1); }
+  .foot-links a:hover { color: var(--clover); }
+  .foot-bottom { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; font-size: var(--step--1); }
 
   /* ---------- responsive ---------- */
   @media (max-width: 900px) {
@@ -294,7 +297,7 @@
     .nav-links {
       display: flex; position: absolute; top: 100%; left: 0; right: 0;
       flex-direction: column; align-items: stretch; gap: 0;
-      background: var(--cloud); box-shadow: 0 26px 44px -28px rgba(42,46,36,.55);
+      background: var(--cloud); box-shadow: 0 26px 44px -28px rgba(0,0,0,.55);
       overflow: hidden; max-height: 0; opacity: 0; visibility: hidden;
       transform: translateY(-10px); padding: 0 1.3rem;
       border-bottom: 1px solid transparent;
@@ -323,9 +326,9 @@
   .gallery { margin-top: 3rem; display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 200px; gap: 1rem; }
   .ph { position: relative; overflow: hidden; border: 0; padding: 0; margin: 0; cursor: pointer; border-radius: var(--r-md); background: var(--cloud); display: block; }
   .ph img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s var(--ease); }
-  .ph::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(42,46,36,.6), rgba(42,46,36,0) 55%); transition: opacity .4s var(--ease); }
-  .ph .cap { position: absolute; left: 1.1rem; bottom: .9rem; right: 1.1rem; z-index: 2; color: var(--paper); font-family: "Fraunces"; font-size: 1.05rem; letter-spacing: -.01em; transform: translateY(4px); opacity: .92; transition: transform .4s var(--ease); }
-  .ph .zoom { position: absolute; top: .9rem; right: .9rem; z-index: 2; width: 34px; height: 34px; border-radius: 50%; background: color-mix(in srgb, var(--paper) 22%, transparent); display: grid; place-items: center; opacity: 0; transform: scale(.8); transition: opacity .4s var(--ease), transform .4s var(--ease); }
+  .ph::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.72), rgba(0,0,0,0) 58%); transition: opacity .4s var(--ease); }
+  .ph .cap { position: absolute; left: 1.1rem; bottom: .9rem; right: 1.1rem; z-index: 2; color: #F3F1E6; font-family: "Fraunces"; font-size: 1.05rem; letter-spacing: -.01em; transform: translateY(4px); opacity: .95; transition: transform .4s var(--ease); }
+  .ph .zoom { position: absolute; top: .9rem; right: .9rem; z-index: 2; width: 34px; height: 34px; border-radius: 50%; background: rgba(17,20,13,.45); backdrop-filter: blur(4px); display: grid; place-items: center; opacity: 0; transform: scale(.8); transition: opacity .4s var(--ease), transform .4s var(--ease); }
   .ph:hover img, .ph:focus-visible img { transform: scale(1.07); }
   .ph:hover .cap { transform: translateY(0); }
   .ph:hover .zoom, .ph:focus-visible .zoom { opacity: 1; transform: scale(1); }
@@ -335,13 +338,13 @@
   .gallery-note { margin-top: 1.4rem; font-size: var(--step--1); color: var(--ink-soft); }
 
   /* lightbox */
-  .lightbox { position: fixed; inset: 0; z-index: 100; display: none; place-items: center; padding: 1.5rem; background: color-mix(in srgb, var(--ink) 90%, transparent); backdrop-filter: blur(6px); }
+  .lightbox { position: fixed; inset: 0; z-index: 100; display: none; place-items: center; padding: 1.5rem; background: color-mix(in srgb, var(--ink-deep) 92%, transparent); backdrop-filter: blur(6px); }
   .lightbox.open { display: grid; }
   .lightbox img { max-width: min(92vw, 1080px); max-height: 84vh; border-radius: var(--r-md); box-shadow: 0 40px 90px -25px rgba(0,0,0,.65); }
-  .lightbox .lb-cap { position: absolute; left: 0; right: 0; bottom: 1.6rem; text-align: center; color: var(--paper); font-family: "Fraunces"; font-style: italic; font-size: 1.15rem; }
-  .lightbox .lb-close { position: absolute; top: 1.2rem; right: 1.4rem; width: 46px; height: 46px; border-radius: 50%; border: 0; cursor: pointer; background: color-mix(in srgb, var(--paper) 16%, transparent); color: var(--paper); display: grid; place-items: center; transition: background-color .3s var(--ease); }
-  .lightbox .lb-close:hover { background: color-mix(in srgb, var(--paper) 30%, transparent); }
-  .lightbox .lb-close:focus-visible { outline: 2px solid var(--paper); outline-offset: 3px; }
+  .lightbox .lb-cap { position: absolute; left: 0; right: 0; bottom: 1.6rem; text-align: center; color: var(--ink); font-family: "Fraunces"; font-style: italic; font-size: 1.15rem; }
+  .lightbox .lb-close { position: absolute; top: 1.2rem; right: 1.4rem; width: 46px; height: 46px; border-radius: 50%; border: 0; cursor: pointer; background: color-mix(in srgb, var(--ink) 16%, transparent); color: var(--ink); display: grid; place-items: center; transition: background-color .3s var(--ease); }
+  .lightbox .lb-close:hover { background: color-mix(in srgb, var(--ink) 30%, transparent); }
+  .lightbox .lb-close:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 
   /* ---------- poukazy ---------- */
   .vouchers { background: var(--cloud); border-block: 1px solid var(--line); }
@@ -359,16 +362,16 @@
   .vouchers .v-note { margin-top: 1.2rem; font-size: var(--step--1); color: var(--ink-soft); max-width: 40ch; }
 
   /* the gift ticket */
-  .ticket { position: relative; background: linear-gradient(135deg, var(--clover) 0%, var(--clover-deep) 100%); color: var(--paper); border-radius: var(--r-lg); padding: clamp(1.8rem, 3vw, 2.6rem); box-shadow: 0 30px 60px -28px rgba(42,46,36,.6); overflow: hidden; }
-  .ticket::before, .ticket::after { content: ""; position: absolute; top: 50%; width: 34px; height: 34px; background: var(--cloud); border-radius: 50%; transform: translateY(-50%); }
-  .ticket::before { left: -17px; } .ticket::after { right: -17px; }
+  .ticket { position: relative; background: linear-gradient(150deg, #2E3722 0%, #20271A 100%); color: var(--ink); border: 1px solid color-mix(in srgb, var(--clover) 34%, var(--line)); border-radius: var(--r-lg); padding: clamp(1.8rem, 3vw, 2.6rem); box-shadow: 0 30px 60px -28px rgba(0,0,0,.6); overflow: hidden; }
+  .ticket::before, .ticket::after { content: ""; position: absolute; top: 50%; width: 34px; height: 34px; background: var(--cloud); border: 1px solid var(--line); border-radius: 50%; transform: translateY(-50%); }
+  .ticket::before { left: -18px; } .ticket::after { right: -18px; }
   .ticket .t-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-  .ticket .t-top .eyebrow { color: color-mix(in srgb, var(--paper) 88%, transparent); }
-  .ticket .t-top .eyebrow::before { background: var(--paper); opacity: .6; }
-  .ticket .t-logo { width: 46px; height: 46px; background: color-mix(in srgb, var(--paper) 16%, transparent); border-radius: 50%; padding: 6px; }
-  .ticket .t-amount { font-family: "Fraunces"; font-size: clamp(2.6rem, 2rem + 3vw, 3.6rem); line-height: 1; margin: 1.4rem 0 .3rem; font-weight: 400; }
-  .ticket .t-for { border-top: 1px dashed color-mix(in srgb, var(--paper) 45%, transparent); margin-top: 1.6rem; padding-top: 1.1rem; display: flex; justify-content: space-between; gap: 1rem; font-size: var(--step--1); color: color-mix(in srgb, var(--paper) 82%, transparent); }
-  .ticket .t-for b { display: block; color: var(--paper); font-family: "Fraunces"; font-size: 1rem; letter-spacing: .04em; }
+  .ticket .t-top .eyebrow { color: var(--clover); }
+  .ticket .t-top .eyebrow::before { background: var(--clover); opacity: .6; }
+  .ticket .t-logo { width: 46px; height: 46px; background: color-mix(in srgb, var(--ink) 10%, transparent); border-radius: 50%; padding: 6px; }
+  .ticket .t-amount { font-family: "Fraunces"; font-size: clamp(2.6rem, 2rem + 3vw, 3.6rem); line-height: 1; margin: 1.4rem 0 .3rem; font-weight: 400; color: var(--ink); }
+  .ticket .t-for { border-top: 1px dashed color-mix(in srgb, var(--ink) 28%, transparent); margin-top: 1.6rem; padding-top: 1.1rem; display: flex; justify-content: space-between; gap: 1rem; font-size: var(--step--1); color: var(--ink-soft); }
+  .ticket .t-for b { display: block; color: var(--ink); font-family: "Fraunces"; font-size: 1rem; letter-spacing: .04em; }
 
   @media (max-width: 900px) {
     .gallery { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 180px; }
@@ -463,7 +466,7 @@
       </div>
       <div class="cards">
         <article class="card reveal">
-          <svg class="corner" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="60" r="30" fill="#6E8A4E"/><ellipse cx="40" cy="22" rx="6" ry="18" fill="#6E8A4E" transform="rotate(-12 40 22)"/><ellipse cx="60" cy="20" rx="6" ry="18" fill="#6E8A4E" transform="rotate(12 60 20)"/></svg>
+          <svg class="corner" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="60" r="30" fill="#A6C473"/><ellipse cx="40" cy="22" rx="6" ry="18" fill="#A6C473" transform="rotate(-12 40 22)"/><ellipse cx="60" cy="20" rx="6" ry="18" fill="#A6C473" transform="rotate(12 60 20)"/></svg>
           <span class="tag">Pro každého</span>
           <h3>Ranní protažení</h3>
           <p class="desc">Pomalá hatha jóga, kterou rozhýbete tělo i den. Králíci jsou ráno nejzvědavější — počítejte s návštěvami u podložky.</p>
@@ -484,7 +487,7 @@
           <div class="meta"><span><b>45 min</b>úroveň: děti 5+</span><span><b>Sobota</b>9:30</span></div>
         </article>
         <article class="card reveal">
-          <svg class="corner" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="60" r="30" fill="#2A2E24"/><ellipse cx="40" cy="22" rx="6" ry="18" fill="#2A2E24" transform="rotate(-12 40 22)"/><ellipse cx="60" cy="20" rx="6" ry="18" fill="#2A2E24" transform="rotate(12 60 20)"/></svg>
+          <svg class="corner" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="60" r="30" fill="#5A6448"/><ellipse cx="40" cy="22" rx="6" ry="18" fill="#5A6448" transform="rotate(-12 40 22)"/><ellipse cx="60" cy="20" rx="6" ry="18" fill="#5A6448" transform="rotate(12 60 20)"/></svg>
           <span class="tag">Večerní klid</span>
           <h3>Soumrak &amp; restorativní</h3>
           <p class="desc">Téměř bez pohybu. Dlouhé držené polohy, dečky, ztlumené světlo a králíci, kteří už taky usínají. Ideální před spaním.</p>
@@ -540,7 +543,7 @@
         </div>
         <div class="day reveal" style="display:flex;flex-direction:column;justify-content:center">
           <h4 style="color:var(--carrot)">Soukromě?</h4>
-          <p style="font-size:var(--step--1);color:color-mix(in srgb,var(--paper) 70%,transparent)">Narozeniny, týmovka nebo rozlučka se svobodou — sál i králíky si můžete pronajmout kdykoliv.</p>
+          <p style="font-size:var(--step--1);color:var(--ink-soft)">Narozeniny, týmovka nebo rozlučka se svobodou — sál i králíky si můžete pronajmout kdykoliv.</p>
         </div>
       </div>
     </div>
@@ -556,25 +559,25 @@
       </div>
       <div class="buns">
         <article class="bun-card reveal">
-          <div class="pic" style="background:#DEE4D0"><span class="mono">B</span></div>
+          <div class="pic" style="background:#2C3322"><span class="mono">B</span></div>
           <h3>Brokolice</h3>
           <div class="role">Hlavní lektorka</div>
           <p class="bio">Nejstarší a nejklidnější. Pokud si lehne vedle vás, znamená to, že děláte savasanu správně.</p>
         </article>
         <article class="bun-card reveal">
-          <div class="pic" style="background:#EBD6D0"><span class="mono">P</span></div>
+          <div class="pic" style="background:#3A2E2B"><span class="mono">P</span></div>
           <h3>Pepa</h3>
           <div class="role">Specialista na klín</div>
           <p class="bio">Floppy ouška, nulové zábrany. Najde si nejpohodlnější klín v sále a zůstane do konce lekce.</p>
         </article>
         <article class="bun-card reveal">
-          <div class="pic" style="background:#D6DEC6"><span class="mono">T</span></div>
+          <div class="pic" style="background:#2D3525"><span class="mono">T</span></div>
           <h3>Tofu</h3>
           <div class="role">Energie lekce</div>
           <p class="bio">Mladý a hopsavý. Zahřeje atmosféru ještě dřív než vy svaly. Děti ho milují.</p>
         </article>
         <article class="bun-card reveal">
-          <div class="pic" style="background:#2F3527"><span class="mono" style="color:var(--paper)">M</span></div>
+          <div class="pic" style="background:#3A4030"><span class="mono" style="color:var(--ink)">M</span></div>
           <h3>Mín­ka</h3>
           <div class="role">Mistryně klidu</div>
           <p class="bio">Tmavá kožešina, sametový pohyb. Objeví se jako stín během restorativní lekce a zase zmizí.</p>
@@ -604,12 +607,12 @@
         </button>
         <button class="ph" data-full="assets/gallery/05-brokolice.svg" data-cap="Brokolice — naše hlavní lektorka">
           <img src="assets/gallery/05-brokolice.svg" alt="Králík Brokolice" loading="lazy" />
-          <span class="zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2A2E24" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span>
+          <span class="zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#EAEDDD" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span>
           <span class="cap">Brokolice odpočívá</span>
         </button>
         <button class="ph" data-full="assets/gallery/06-tofu.svg" data-cap="Tofu na ranním průzkumu podložek">
           <img src="assets/gallery/06-tofu.svg" alt="Králík Tofu" loading="lazy" />
-          <span class="zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2A2E24" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span>
+          <span class="zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#EAEDDD" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span>
           <span class="cap">Tofu na průzkumu</span>
         </button>
         <button class="ph wide" data-full="assets/gallery/03-po-lekci.svg" data-cap="Čaj a klid po lekci">
@@ -619,7 +622,7 @@
         </button>
         <button class="ph wide" data-full="assets/gallery/04-deti.svg" data-cap="Sobotní lekce Děti & králíci">
           <img src="assets/gallery/04-deti.svg" alt="Dětská lekce s králíky" loading="lazy" />
-          <span class="zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2A2E24" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span>
+          <span class="zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#EAEDDD" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span>
           <span class="cap">Sobota: Děti &amp; králíci</span>
         </button>
       </div>
@@ -706,7 +709,7 @@
           <img class="t-logo" src="assets/logo.svg" alt="" width="46" height="46" />
         </div>
         <div class="t-amount" id="vAmount">690 Kč</div>
-        <div style="font-size:var(--step--1);color:color-mix(in srgb,var(--paper) 82%,transparent)">na lekce Jógy s králíčky · platnost 12 měsíců</div>
+        <div style="font-size:var(--step--1);color:var(--ink-soft)">na lekce Jógy s králíčky · platnost 12 měsíců</div>
         <div class="t-for">
           <span>Pro<b>. . . . . . . . . . . . . . .</b></span>
           <span style="text-align:right">Kód<b>JSK&nbsp;·&nbsp;0001</b></span>
@@ -724,23 +727,23 @@
       </div>
       <div class="faq-list reveal">
         <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">Musím už něco umět?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="#6E8A4E" stroke-width="2"><path d="M11 4v14M4 11h14"/></svg></button>
+          <button class="faq-q" aria-expanded="false">Musím už něco umět?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="#A6C473" stroke-width="2"><path d="M11 4v14M4 11h14"/></svg></button>
           <div class="faq-a"><div>Vůbec ne. Většina hostů přichází úplně bez zkušeností. Lektorka vše ukáže a nabídne jednodušší variantu každé polohy. Jde nám o klid, ne o dokonalý tvar.</div></div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">Nevyruší mě králíci od cvičení?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="#6E8A4E" stroke-width="2"><path d="M11 4v14M4 11h14"/></svg></button>
+          <button class="faq-q" aria-expanded="false">Nevyruší mě králíci od cvičení?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="#A6C473" stroke-width="2"><path d="M11 4v14M4 11h14"/></svg></button>
           <div class="faq-a"><div>To je celý smysl. Králíci vás přirozeně zpomalí a vrátí do přítomnosti — žádná aplikace s meditací to nedokáže líp. Pokud se k vám zrovna žádný nepřiblíží, nevadí, je to jejich volba.</div></div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">Co když mám alergii na zvířata?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="#6E8A4E" stroke-width="2"><path d="M11 4v14M4 11h14"/></svg></button>
+          <button class="faq-q" aria-expanded="false">Co když mám alergii na zvířata?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="#A6C473" stroke-width="2"><path d="M11 4v14M4 11h14"/></svg></button>
           <div class="faq-a"><div>Sál pečlivě větráme a čistíme, přesto při alergii na srst doporučujeme lekci zvážit nebo se poradit s lékařem. Rádi vám pomůžeme vybrat méně kontaktní termín.</div></div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">Co si mám vzít s sebou?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="#6E8A4E" stroke-width="2"><path d="M11 4v14M4 11h14"/></svg></button>
+          <button class="faq-q" aria-expanded="false">Co si mám vzít s sebou?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="#A6C473" stroke-width="2"><path d="M11 4v14M4 11h14"/></svg></button>
           <div class="faq-a"><div>Jen pohodlné oblečení a ponožky. Podložky, dečky i polštáře máme. Cvičíme bez bot a doporučujeme nepoužívat silné parfémy — králíci mají citlivý čich.</div></div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">Jsou králíci v pořádku?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="#6E8A4E" stroke-width="2"><path d="M11 4v14M4 11h14"/></svg></button>
+          <button class="faq-q" aria-expanded="false">Jsou králíci v pořádku?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="#A6C473" stroke-width="2"><path d="M11 4v14M4 11h14"/></svg></button>
           <div class="faq-a"><div>Jejich pohoda je u nás na prvním místě. Mají vlastní klidové zóny, kam se kdykoliv mohou stáhnout, pravidelné pauzy a veterinární péči. Na lekci jdou jen odpočatí a dobrovolně.</div></div>
         </div>
       </div>
@@ -924,51 +927,35 @@
   });
   updateVoucher();
 
-  // very subtle animated ferns — anchored to section corners only, so they
-  // sit in the empty margins and never land behind the text
+  // subtle geometric background shapes — placed in section margins, never behind text
   if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    const fern = (c) => {
-      const N = 10;
-      let p = `<path d="M22 105 Q16 58 20 8" fill="none" stroke="${c}" stroke-width="1.5" stroke-linecap="round"/>`;
-      for (let i = 0; i < N; i++) {
-        const f = i / (N - 1);
-        const y = 103 - f * 92;
-        const L = 17 * (1 - f) + 4 * f;
-        const sx = 22 - (1 - f) * 2.5;
-        const lx = (sx - L * 0.42).toFixed(1), ly = (y - L * 0.16).toFixed(1);
-        const rx = (sx + L * 0.42).toFixed(1), ry = ly;
-        const rad = (L * 0.5).toFixed(1);
-        p += `<ellipse cx="${lx}" cy="${ly}" rx="${rad}" ry="2.2" transform="rotate(-32 ${lx} ${ly})" fill="${c}"/>`;
-        p += `<ellipse cx="${rx}" cy="${ry}" rx="${rad}" ry="2.2" transform="rotate(32 ${rx} ${ry})" fill="${c}"/>`;
-      }
-      return `<svg viewBox="0 0 44 112">${p}</svg>`;
+    const C = '#A6C473';
+    const shapes = {
+      ring: () => `<svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="57" fill="none" stroke="${C}" stroke-width="1.3"/></svg>`,
+      arcs: () => `<svg viewBox="0 0 150 96"><g fill="none" stroke="${C}" stroke-width="1.4" stroke-linecap="round"><path d="M6 90a69 69 0 0 1 138 0"/><path d="M34 90a41 41 0 0 1 82 0"/><path d="M60 90a15 15 0 0 1 30 0"/></g></svg>`,
+      dots: () => { let d = ''; for (let y = 0; y < 5; y++) for (let x = 0; x < 5; x++) d += `<circle cx="${8 + x * 21}" cy="${8 + y * 21}" r="2.3" fill="${C}"/>`; return `<svg viewBox="0 0 100 100">${d}</svg>`; }
     };
-    // fixed corner spots (no random) — TR = top-right draping, BL/BR = up from bottom
-    const TR = { pos: 'top:-24px;right:-20px', rot: 158 };
-    const BL = { pos: 'bottom:-28px;left:-18px', rot: -20 };
-    const BR = { pos: 'bottom:-26px;right:-18px', rot: 20 };
-    const targets = [
-      { sel: '#o-nas', c: '#6E8A4E', spots: [TR, BL] },
-      { sel: '#lekce', c: '#6E8A4E', spots: [TR, BL] },
-      // "Seznamte se" — left fern lifted up the left edge (top), plus one bottom-right
-      { sel: '#kralicci', c: '#6E8A4E', spots: [{ pos: 'top:6%;left:-22px', rot: 16 }, BR] },
-      { sel: '#galerie', c: '#6E8A4E', spots: [TR, BL] },
-      { sel: '.schedule', c: '#ECEFE2', spots: [TR, BL] },
-      { sel: '#cenik', c: '#6E8A4E', spots: [TR, BL] },
-      { sel: '.vouchers', c: '#6E8A4E', spots: [TR, BR] },
-      { sel: '#faq', c: '#6E8A4E', spots: [TR, BL] },
-      { sel: '.booking', c: '#ECEFE2', spots: [TR, BL] }
+    const conf = [
+      { sel: '.hero',     items: [{ t: 'arcs', pos: 'top:6%;right:-46px',     a: 'floaty',  s: 210, o: .09 }] },
+      { sel: '#o-nas',    items: [{ t: 'ring', pos: 'top:-44px;right:-34px',  a: 'breathe', s: 150, o: .10 }, { t: 'dots', pos: 'bottom:28px;left:16px', a: 'floaty', s: 92, o: .14 }] },
+      { sel: '#lekce',    items: [{ t: 'arcs', pos: 'top:-18px;right:-34px',  a: 'floaty',  s: 150, o: .10 }] },
+      { sel: '#kralicci', items: [{ t: 'ring', pos: 'top:8%;left:-54px',      a: 'breathe', s: 150, o: .10 }, { t: 'dots', pos: 'bottom:-6px;right:30px', a: 'floaty', s: 92, o: .13 }] },
+      { sel: '#galerie',  items: [{ t: 'arcs', pos: 'top:-12px;right:-34px',  a: 'floaty',  s: 140, o: .09 }] },
+      { sel: '.schedule', items: [{ t: 'ring', pos: 'bottom:-54px;left:-40px',a: 'spin',    s: 180, o: .12 }, { t: 'dots', pos: 'top:30px;right:22px', a: 'floaty', s: 96, o: .16 }] },
+      { sel: '#cenik',    items: [{ t: 'arcs', pos: 'top:-18px;left:-34px',   a: 'floaty',  s: 150, o: .10 }] },
+      { sel: '.vouchers', items: [{ t: 'ring', pos: 'top:-44px;right:-30px',  a: 'breathe', s: 150, o: .10 }] },
+      { sel: '#faq',      items: [{ t: 'dots', pos: 'top:8px;right:8px',      a: 'floaty',  s: 96, o: .12 }] },
+      { sel: '.booking',  items: [{ t: 'arcs', pos: 'bottom:-28px;left:-30px',a: 'floaty',  s: 180, o: .16 }, { t: 'ring', pos: 'top:-44px;right:-24px', a: 'breathe', s: 140, o: .13 }] }
     ];
     const rnd = (a, b) => a + Math.random() * (b - a);
-    targets.forEach((t) => {
-      const sec = document.querySelector(t.sel);
+    conf.forEach((cf) => {
+      const sec = document.querySelector(cf.sel);
       if (!sec) return;
       const layer = document.createElement('div');
       layer.className = 'leaf-bg';
-      layer.innerHTML = t.spots.map((cn) => {
-        const size = rnd(66, 96).toFixed(0);
-        const style = `${cn.pos};width:${size}px;opacity:${rnd(0.13, 0.21).toFixed(3)};--rot:${cn.rot}deg;--d:${rnd(8, 12).toFixed(1)}s;--d2:${rnd(4.5, 7).toFixed(1)}s;animation-delay:-${rnd(0, 9).toFixed(1)}s;`;
-        return `<span class="lf" style="${style}">${fern(t.c)}</span>`;
+      layer.innerHTML = cf.items.map((it) => {
+        const style = `${it.pos};width:${it.s}px;opacity:${it.o};--o:${it.o};--d:${(it.a === 'spin' ? rnd(60, 80) : it.a === 'breathe' ? rnd(9, 13) : rnd(13, 20)).toFixed(1)}s;animation-delay:-${rnd(0, 8).toFixed(1)}s;`;
+        return `<span class="sh ${it.a}" style="${style}">${shapes[it.t]()}</span>`;
       }).join('');
       sec.prepend(layer);
     });
