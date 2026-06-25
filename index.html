@@ -900,9 +900,10 @@
             <p class="bs-summary" id="bsSummary"></p>
             <p class="bs-mail" id="bsMail"></p>
             <div class="bs-actions">
-              <a class="btn btn-primary" id="bsIcs" download="joga-s-kralicky.ics" href="#">Přidat do kalendáře <span class="arrow">→</span></a>
+              <a class="btn btn-primary" id="bsCal" href="#" target="_blank" rel="noopener">Přidat do kalendáře <span class="arrow">→</span></a>
               <button class="btn btn-ghost" type="button" id="bsAgain">Nová rezervace</button>
             </div>
+            <p style="margin-top:.9rem;font-size:var(--step--1);color:var(--ink-soft)"><a id="bsIcs" download="joga-s-kralicky.ics" href="#" style="color:var(--clover-deep);text-decoration:underline">Mám Apple / Outlook kalendář — stáhnout .ics</a></p>
           </div>
 
           <div class="book-state" id="bookState" hidden>
@@ -985,7 +986,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script src="supabase-config.js"></script>
+<script src="supabase-config.js?v=2"></script>
 <script>
   // sticky nav border
   const nav = document.getElementById('nav');
@@ -1156,7 +1157,7 @@
       if (!EMAIL_CONFIGURED) return;
       try {
         await window.emailjs.send(window.EMAILJS_SERVICE_ID, window.EMAILJS_TEMPLATE_ID, {
-          to_email: detail.email, name: detail.name, lesson: detail.lesson,
+          email: detail.email, to_email: detail.email, name: detail.name, lesson: detail.lesson,
           datetime: detail.datetime, spots: detail.spots, location: 'Údolní 12, Brno-střed'
         });
       } catch (e) { /* selhání e-mailu nezablokuje potvrzenou rezervaci */ }
@@ -1297,6 +1298,17 @@
       lastIcsUrl = URL.createObjectURL(new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' }));
       return lastIcsUrl;
     }
+    function gcalUrl(title, start, durMin, n) {
+      const end = new Date(start.getTime() + durMin * 60000);
+      const f = (d) => d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + 'T' + pad(d.getHours()) + pad(d.getMinutes()) + '00';
+      const p = new URLSearchParams({
+        action: 'TEMPLATE', text: title + ' — Jóga s králíčky',
+        dates: f(start) + '/' + f(end),
+        details: 'Rezervace na ' + mistaSel(n) + '. Těšíme se na vás!',
+        location: 'Údolní 12, Brno-střed', ctz: 'Europe/Prague'
+      });
+      return 'https://calendar.google.com/calendar/render?' + p.toString();
+    }
 
     // odeslání rezervace
     let sending = false;
@@ -1344,6 +1356,7 @@
       document.getElementById('bsMail').textContent = EMAIL_CONFIGURED
         ? 'Potvrzení jsme poslali na ' + email + '. Místo už je pro vás zarezervované.'
         : 'Místo je pro vás zarezervované. Těšíme se na vás!';
+      document.getElementById('bsCal').href = gcalUrl(chosen.title, chosen.dt, chosen.duration_min, spots);
       document.getElementById('bsIcs').href = buildIcs(chosen.title, chosen.dt, chosen.duration_min, spots);
       document.getElementById('rtStatus').textContent = 'Zarezervováno';
       form.hidden = true;
