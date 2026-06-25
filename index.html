@@ -105,6 +105,7 @@
   }
   .nav-links a:hover { color: var(--ink); }
   .nav-links a:hover::after { transform: scaleX(1); }
+  .nav-links .nav-reserve { display: none; }
   .nav-cta { display: flex; align-items: center; gap: 1.25rem; }
   .menu-toggle { display: none; background: none; border: 0; cursor: pointer; width: 30px; height: 26px; position: relative; padding: 0; }
   .menu-toggle .bar { position: absolute; left: 3px; right: 3px; height: 2px; border-radius: 2px; background: var(--ink); transition: transform .4s var(--ease), opacity .25s var(--ease); }
@@ -319,6 +320,7 @@
   @media (max-width: 560px) {
     .cards, .plans, .grid-days, .buns { grid-template-columns: 1fr; }
     .nav-cta .btn { display: none; }
+    .nav-links .nav-reserve { display: block; color: var(--clover-deep); font-weight: 700; }
   }
 
   /* ---------- galerie ---------- */
@@ -488,7 +490,7 @@
       <a href="#cenik">Ceník</a>
       <a href="#poukazy">Poukazy</a>
       <a href="#faq">Dotazy</a>
-      <a href="#rezervace">Rezervace</a>
+      <a href="#rezervace" class="nav-reserve">Rezervovat lekci</a>
     </nav>
     <div class="nav-cta">
       <a class="btn btn-primary" href="#rezervace">Rezervovat lekci</a>
