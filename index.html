@@ -161,7 +161,7 @@
   /* ---------- hero ---------- */
   .hero { position: relative; min-height: 100svh; display: flex; flex-direction: column; justify-content: flex-end; color: #fff; overflow: hidden; padding-top: 96px; }
   .hero-bg { position: absolute; inset: 0; z-index: -2; overflow: hidden; }
-  .hero-bg img { width: 100%; height: 128%; object-fit: cover; position: relative; top: -14%; will-change: transform; }
+  .hero-bg img { width: 100%; height: 150%; object-fit: cover; position: relative; top: -25%; will-change: transform; }
   .hero-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20,24,18,.55) 0%, rgba(20,24,18,.18) 32%, rgba(20,24,18,.42) 70%, rgba(20,24,18,.85) 100%); }
   .hero .wrap { width: min(100% - 2.4rem, var(--maxw)); padding-bottom: clamp(2rem, 4vw, 3.5rem); }
   .hero-eyebrow { color: #fff; opacity: .85; }
@@ -217,7 +217,7 @@
   /* ---------- why / features (dark photo) ---------- */
   .why { position: relative; color: #fff; overflow: hidden; }
   .why-bg { position: absolute; inset: 0; z-index: -2; overflow: hidden; }
-  .why-bg img { width: 100%; height: 128%; object-fit: cover; position: relative; top: -14%; will-change: transform; }
+  .why-bg img { width: 100%; height: 140%; object-fit: cover; position: relative; top: -20%; will-change: transform; }
   .why-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(22,28,22,.78), rgba(22,28,22,.62)); }
   .why-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 2rem; flex-wrap: wrap; }
   .why-head .eyebrow { color: #fff; }
@@ -480,17 +480,10 @@
     .foot-bottom { flex-direction: column; }
   }
 
-  /* subtle depth so plain sections don't feel empty */
-  .offer, .pricing, .faq, #kralicci, #galerie {
-    background-color: var(--paper);
-    background-image:
-      radial-gradient(48% 42% at 90% 6%, color-mix(in srgb, var(--clover) 9%, transparent), transparent 70%),
-      radial-gradient(42% 38% at 3% 97%, color-mix(in srgb, var(--carrot) 6%, transparent), transparent 70%);
-  }
-  .schedule, .reference, .booking {
-    background-color: var(--cream);
-    background-image: radial-gradient(46% 40% at 93% 5%, color-mix(in srgb, var(--clover) 8%, transparent), transparent 72%);
-  }
+  /* plain sections transparent so the scroll-driven background fade shows through */
+  .offer, .pricing, .faq, #kralicci, #galerie, .schedule, .reference, .booking { background: transparent; }
+  /* fixed background layer — barva se mění se scrollem (nastavováno z JS) */
+  #bgfade { position: fixed; inset: 0; z-index: -10; background: var(--paper); }
   /* fine film grain for warmth */
   body::after {
     content: ""; position: fixed; inset: 0; z-index: 2; pointer-events: none;
@@ -500,6 +493,7 @@
 </style>
 </head>
 <body id="top">
+<div id="bgfade" aria-hidden="true"></div>
 
 <!-- ============ NAV ============ -->
 <header class="nav" id="nav">
@@ -1134,22 +1128,12 @@
     if (reduce) return;
 
     // inject scroll-reactive glow into plain sections
-    const conf = [
-      { sel: '#lekce',    color: '110,138,78',  pos: 'top:5%;right:-120px',  size: 380, speed: 0.05 },
-      { sel: '#cenik',    color: '210,133,74',  pos: 'top:22%;left:-140px',  size: 440, speed: -0.045 },
-      { sel: '#kralicci', color: '110,138,78',  pos: 'bottom:4%;left:-110px', size: 360, speed: 0.05 },
-      { sel: '#galerie',  color: '210,133,74',  pos: 'top:6%;right:-120px',  size: 360, speed: -0.05 },
-      { sel: '.faq',      color: '110,138,78',  pos: 'top:10%;right:-110px', size: 340, speed: 0.05 }
-    ];
-    const auroras = [];
-    conf.forEach((c) => {
-      const sec = document.querySelector(c.sel); if (!sec) return;
-      const el = document.createElement('div');
-      el.className = 'aurora';
-      el.style.cssText = c.pos + ';width:' + c.size + 'px;height:' + c.size + 'px;background:radial-gradient(circle, rgba(' + c.color + ',.5), rgba(' + c.color + ',0) 70%);';
-      sec.prepend(el);
-      auroras.push({ el: el, sec: sec, speed: c.speed });
-    });
+    // scroll-driven background color fade (mění barvu pozadí podle scrollu)
+    const bg = document.getElementById('bgfade');
+    const baseStops = [[244,241,233],[236,240,229],[245,237,229],[235,241,231],[244,240,232]];
+    const glowStops = [[209,224,190],[238,215,191],[214,229,205],[240,222,198],[210,225,194]];
+    const lerp = (a,b,t)=>Math.round(a+(b-a)*t);
+    function mix(stops,p){ const n=stops.length-1; const seg=Math.min(Math.floor(p*n),n-1); const t=p*n-seg; const a=stops[seg],b=stops[seg+1]; return lerp(a[0],b[0],t)+','+lerp(a[1],b[1],t)+','+lerp(a[2],b[2],t); }
 
     const heroImg = document.querySelector('.hero-bg img');
     const whyEl = document.querySelector('.why');
@@ -1158,13 +1142,11 @@
     let ticking = false;
     function update() {
       const y = window.scrollY, vh = window.innerHeight;
-      if (heroImg) heroImg.style.transform = 'translate3d(0,' + (y * 0.12).toFixed(1) + 'px,0)';
-      if (whyImg && whyEl) { const r = whyEl.getBoundingClientRect(); whyImg.style.transform = 'translate3d(0,' + (r.top * -0.08).toFixed(1) + 'px,0)'; }
-      for (let i = 0; i < auroras.length; i++) {
-        const a = auroras[i], r = a.sec.getBoundingClientRect();
-        const off = r.top + r.height / 2 - vh / 2;
-        a.el.style.transform = 'translate3d(0,' + (off * a.speed).toFixed(1) + 'px,0)';
-      }
+      const max = Math.max(document.documentElement.scrollHeight - vh, 1);
+      const p = Math.min(Math.max(y / max, 0), 1);
+      if (bg) bg.style.background = 'radial-gradient(125% 80% at 50% ' + (12 + p * 60).toFixed(1) + '%, rgb(' + mix(glowStops, p) + ') 0%, rgb(' + mix(baseStops, p) + ') 60%)';
+      if (heroImg) heroImg.style.transform = 'translate3d(0,' + (y * 0.2).toFixed(1) + 'px,0)';
+      if (whyImg && whyEl) { const r = whyEl.getBoundingClientRect(); whyImg.style.transform = 'translate3d(0,' + (r.top * -0.13).toFixed(1) + 'px,0)'; }
       ticking = false;
     }
     function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(update); } }
