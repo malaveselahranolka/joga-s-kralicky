@@ -60,7 +60,7 @@
   img, svg { display: block; max-width: 100%; }
   ::selection { background: var(--clover); color: #fff; }
 
-  .wrap { width: min(100% - 2.4rem, var(--maxw)); margin-inline: auto; }
+  .wrap { width: min(100% - 2.4rem, var(--maxw)); margin-inline: auto; position: relative; z-index: 1; }
   section { padding: clamp(4.5rem, 8vw, 8rem) 0; position: relative; }
 
   .eyebrow {
@@ -159,9 +159,9 @@
   header.nav.open .nav-quick, header.nav.open .nav-cta { opacity: 0; pointer-events: none; transition: opacity .25s var(--ease); }
 
   /* ---------- hero ---------- */
-  .hero { min-height: 100svh; display: flex; flex-direction: column; justify-content: flex-end; color: #fff; overflow: hidden; padding-top: 96px; }
-  .hero-bg { position: absolute; inset: 0; z-index: -2; }
-  .hero-bg img { width: 100%; height: 100%; object-fit: cover; }
+  .hero { position: relative; min-height: 100svh; display: flex; flex-direction: column; justify-content: flex-end; color: #fff; overflow: hidden; padding-top: 96px; }
+  .hero-bg { position: absolute; inset: 0; z-index: -2; overflow: hidden; }
+  .hero-bg img { width: 100%; height: 128%; object-fit: cover; position: relative; top: -14%; will-change: transform; }
   .hero-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20,24,18,.55) 0%, rgba(20,24,18,.18) 32%, rgba(20,24,18,.42) 70%, rgba(20,24,18,.85) 100%); }
   .hero .wrap { width: min(100% - 2.4rem, var(--maxw)); padding-bottom: clamp(2rem, 4vw, 3.5rem); }
   .hero-eyebrow { color: #fff; opacity: .85; }
@@ -178,6 +178,24 @@
   .reveal { opacity: 0; transform: translateY(26px); transition: opacity .8s var(--ease), transform .8s var(--ease); }
   .reveal.in { opacity: 1; transform: none; }
   @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; } }
+
+  /* hero load animation (staggered rise) */
+  @keyframes heroRise { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: none; } }
+  .hero-eyebrow, .hero h1, .hero .hero-sub, .hero-actions, .hero-stats { opacity: 0; animation: heroRise .9s var(--ease) both; }
+  .hero-eyebrow { animation-delay: .05s; }
+  .hero h1 { animation-delay: .16s; }
+  .hero .hero-sub { animation-delay: .34s; }
+  .hero-actions { animation-delay: .48s; }
+  .hero-stats { animation-delay: .62s; }
+
+  /* scroll-reactive glow */
+  .aurora { position: absolute; border-radius: 50%; filter: blur(64px); opacity: .42; pointer-events: none; z-index: 0; will-change: transform; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-eyebrow, .hero h1, .hero .hero-sub, .hero-actions, .hero-stats { opacity: 1; animation: none; }
+    .hero-bg img, .why-bg img { transform: none !important; }
+    .aurora { display: none; }
+  }
 
   /* ---------- "what we do" cards ---------- */
   .offer { background: var(--paper); }
@@ -197,9 +215,9 @@
   .cards-4 .ocard:nth-child(odd):hover { transform: translateY(16px); }
 
   /* ---------- why / features (dark photo) ---------- */
-  .why { color: #fff; overflow: hidden; }
-  .why-bg { position: absolute; inset: 0; z-index: -2; }
-  .why-bg img { width: 100%; height: 100%; object-fit: cover; }
+  .why { position: relative; color: #fff; overflow: hidden; }
+  .why-bg { position: absolute; inset: 0; z-index: -2; overflow: hidden; }
+  .why-bg img { width: 100%; height: 128%; object-fit: cover; position: relative; top: -14%; will-change: transform; }
   .why-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(22,28,22,.78), rgba(22,28,22,.62)); }
   .why-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 2rem; flex-wrap: wrap; }
   .why-head .eyebrow { color: #fff; }
@@ -1084,6 +1102,75 @@
     next.addEventListener('click', () => { index++; go(); });
     window.addEventListener('resize', go, { passive: true });
     go();
+  })();
+
+  // ============ MOTION: parallax + scroll glow + hero počítadlo ============
+  (function () {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // hero stat counters
+    function animateCount(el) {
+      const finalTxt = el.textContent.trim();
+      const m = finalTxt.match(/^([^\d]*)([\d]+(?:[.,][\d]+)?)(.*)$/);
+      if (!m) return;
+      const prefix = m[1], numStr = m[2], suffix = m[3];
+      const sep = numStr.indexOf(',') >= 0 ? ',' : '.';
+      const decimals = (numStr.split(/[.,]/)[1] || '').length;
+      const target = parseFloat(numStr.replace(',', '.'));
+      const dur = 1300, start = performance.now();
+      function tick(now) {
+        const p = Math.min((now - start) / dur, 1);
+        const eased = 1 - Math.pow(1 - p, 3);
+        const val = (target * eased).toFixed(decimals).replace('.', sep);
+        el.textContent = prefix + val + suffix;
+        if (p < 1) requestAnimationFrame(tick); else el.textContent = finalTxt;
+      }
+      requestAnimationFrame(tick);
+    }
+    if (!reduce) {
+      document.querySelectorAll('.hero-stats .num').forEach((el, i) => setTimeout(() => animateCount(el), 750 + i * 130));
+    }
+
+    if (reduce) return;
+
+    // inject scroll-reactive glow into plain sections
+    const conf = [
+      { sel: '#lekce',    color: '110,138,78',  pos: 'top:5%;right:-120px',  size: 380, speed: 0.05 },
+      { sel: '#cenik',    color: '210,133,74',  pos: 'top:22%;left:-140px',  size: 440, speed: -0.045 },
+      { sel: '#kralicci', color: '110,138,78',  pos: 'bottom:4%;left:-110px', size: 360, speed: 0.05 },
+      { sel: '#galerie',  color: '210,133,74',  pos: 'top:6%;right:-120px',  size: 360, speed: -0.05 },
+      { sel: '.faq',      color: '110,138,78',  pos: 'top:10%;right:-110px', size: 340, speed: 0.05 }
+    ];
+    const auroras = [];
+    conf.forEach((c) => {
+      const sec = document.querySelector(c.sel); if (!sec) return;
+      const el = document.createElement('div');
+      el.className = 'aurora';
+      el.style.cssText = c.pos + ';width:' + c.size + 'px;height:' + c.size + 'px;background:radial-gradient(circle, rgba(' + c.color + ',.5), rgba(' + c.color + ',0) 70%);';
+      sec.prepend(el);
+      auroras.push({ el: el, sec: sec, speed: c.speed });
+    });
+
+    const heroImg = document.querySelector('.hero-bg img');
+    const whyEl = document.querySelector('.why');
+    const whyImg = document.querySelector('.why-bg img');
+
+    let ticking = false;
+    function update() {
+      const y = window.scrollY, vh = window.innerHeight;
+      if (heroImg) heroImg.style.transform = 'translate3d(0,' + (y * 0.12).toFixed(1) + 'px,0)';
+      if (whyImg && whyEl) { const r = whyEl.getBoundingClientRect(); whyImg.style.transform = 'translate3d(0,' + (r.top * -0.08).toFixed(1) + 'px,0)'; }
+      for (let i = 0; i < auroras.length; i++) {
+        const a = auroras[i], r = a.sec.getBoundingClientRect();
+        const off = r.top + r.height / 2 - vh / 2;
+        a.el.style.transform = 'translate3d(0,' + (off * a.speed).toFixed(1) + 'px,0)';
+      }
+      ticking = false;
+    }
+    function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(update); } }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    update();
   })();
 
   // ============ REZERVAČNÍ FLOW (živá data ze Supabase) ============
