@@ -187,7 +187,7 @@
   .hstat .lbl { margin-top: .35rem; font-size: .9rem; color: rgba(255,255,255,.78); }
 
   /* reveal — calm "breath" entrances, varied per element (not just fade) */
-  .reveal { opacity: 0; transform: translateY(30px); filter: blur(6px); transition: opacity .9s var(--ease-breath), transform 1s var(--ease-breath), filter .9s var(--ease-breath); transition-delay: var(--rv-d, 0s); will-change: transform, opacity; }
+  .reveal { opacity: 0; transform: translateY(30px); filter: blur(6px); transition: opacity .9s var(--ease-breath), transform 1s var(--ease-breath), filter .9s var(--ease-breath); transition-delay: var(--rv-d, 0s); }
   .reveal.in { opacity: 1; transform: none; filter: blur(0); }
   /* variants */
   .reveal[data-rv="zoom"] { transform: scale(.93); }
@@ -235,6 +235,14 @@
     .hero h1 .wi { transform: none; animation: none; }
     .spotlight, #progress { display: none; }
   }
+
+  /* lite mode — slabší/mobilní zařízení: vypnout drahé efekty (animovaný blur, spotlight) */
+  html.lite .breathe { animation: none; }
+  html.lite .aurora { filter: blur(46px); opacity: .26; }
+  html.lite .spotlight { display: none; }
+  html.lite .reveal { filter: none; transition: opacity .7s var(--ease-breath), transform .8s var(--ease-breath); }
+  html.lite .reveal .pic img,
+  html.lite .reveal.in .pic img { transform: none; transition: none; }
 
   @media (prefers-reduced-motion: reduce) {
     .hero-eyebrow, .hero h1, .hero .hero-sub, .hero-actions, .hero-stats { opacity: 1; animation: none; }
@@ -1221,6 +1229,15 @@
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const finePointer = window.matchMedia('(pointer: fine)').matches;
 
+    // detect weaker hardware → "lite" mode (vypne drahé efekty: animovaný blur, spotlight, magnet)
+    const nav = navigator;
+    const lite = window.matchMedia('(any-pointer: fine)').matches === false
+      || window.matchMedia('(max-width: 760px)').matches
+      || (nav.deviceMemory && nav.deviceMemory <= 2)
+      || (nav.hardwareConcurrency && nav.hardwareConcurrency <= 2)
+      || (nav.connection && nav.connection.saveData);
+    if (lite) document.documentElement.classList.add('lite');
+
     // 1) headline: wrap each word in a mask so it rises line-by-word
     const h1 = document.querySelector('.hero h1');
     if (h1 && !reduce) {
@@ -1249,31 +1266,41 @@
       if (i > 0) el.style.setProperty('--rv-d', Math.min(i * 0.08, 0.5) + 's');
     });
 
-    if (reduce) return;
+    if (reduce || lite) return; // slabší zařízení: spotlight ani magnet neběží
 
-    // 3) pointer-follow spotlight on dark sections
+    // 3) pointer-follow spotlight on dark sections (rect cached on enter — žádný reflow per-move)
     document.querySelectorAll('.why, .community').forEach((sec) => {
-      const sp = sec.querySelector('.spotlight'); if (!sp || !finePointer) return;
+      const sp = sec.querySelector('.spotlight'); if (!sp) return;
+      let r = null, raf = false, lx = 0, ly = 0;
+      sec.addEventListener('pointerenter', () => { r = sec.getBoundingClientRect(); }, { passive: true });
       sec.addEventListener('pointermove', (e) => {
-        const r = sec.getBoundingClientRect();
-        sp.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100).toFixed(1) + '%');
-        sp.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100).toFixed(1) + '%');
+        if (!r) r = sec.getBoundingClientRect();
+        lx = e.clientX; ly = e.clientY;
+        if (!raf) { raf = true; requestAnimationFrame(() => {
+          sp.style.setProperty('--mx', ((lx - r.left) / r.width * 100).toFixed(1) + '%');
+          sp.style.setProperty('--my', ((ly - r.top) / r.height * 100).toFixed(1) + '%');
+          raf = false;
+        }); }
       }, { passive: true });
     });
 
-    // 4) magnetic pull on key buttons
-    if (finePointer) {
-      document.querySelectorAll('.btn-primary, .btn-light, .cta-split .arrow-btn, .nav-cta').forEach((btn) => {
-        const strength = 0.28;
-        btn.addEventListener('pointermove', (e) => {
-          const r = btn.getBoundingClientRect();
-          const x = (e.clientX - r.left - r.width / 2) * strength;
-          const y = (e.clientY - r.top - r.height / 2) * strength;
+    // 4) magnetic pull on key buttons (rect cached on enter, rAF-throttled)
+    document.querySelectorAll('.btn-primary, .btn-light, .cta-split .arrow-btn, .nav-cta').forEach((btn) => {
+      const strength = 0.28;
+      let r = null, raf = false, cx = 0, cy = 0;
+      btn.addEventListener('pointerenter', () => { r = btn.getBoundingClientRect(); }, { passive: true });
+      btn.addEventListener('pointermove', (e) => {
+        if (!r) r = btn.getBoundingClientRect();
+        cx = e.clientX; cy = e.clientY;
+        if (!raf) { raf = true; requestAnimationFrame(() => {
+          const x = (cx - r.left - r.width / 2) * strength;
+          const y = (cy - r.top - r.height / 2) * strength;
           btn.style.transform = 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px)';
-        }, { passive: true });
-        btn.addEventListener('pointerleave', () => { btn.style.transform = ''; });
-      });
-    }
+          raf = false;
+        }); }
+      }, { passive: true });
+      btn.addEventListener('pointerleave', () => { r = null; btn.style.transform = ''; });
+    });
 
     // 5) slim scroll-progress line
     const prog = document.getElementById('progress');
