@@ -51,6 +51,7 @@ Deno.serve(async (req) => {
       payment_status: "pending",
       payment_amount: priceHaler,
       payment_ref: r.transId,
+      payment_method: "online",
     }).eq("id", bk.id);
 
     return json({ ok: true, redirect: r.redirect, transId: r.transId });

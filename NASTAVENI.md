@@ -200,3 +200,46 @@ V Supabase → Table editor → `bookings` uvidíš `payment_status = paid`.
 
 > Ostrý provoz: v Comgate vypni testovací režim, dej `COMGATE_TEST=false`
 > (`supabase secrets set ...`) a v `comgate-config.js` `test: false`.
+
+---
+
+## Newsletter (odběr novinek)
+
+V patičce webu je políčko **„Odebírat"**, kam návštěvník zadá e-mail.
+Adresy se ukládají do databáze a vidíš je v adminu v záložce **Newsletter**.
+
+### Zapnutí
+1. V Supabase → **SQL Editor** → **New query** vlož obsah souboru
+   **`supabase/newsletter.sql`** a dej **Run**.
+2. Hotovo. Od teď se přihlášení z patičky ukládají.
+
+### Co umí admin (záložka Newsletter)
+- Počet odběratelů a přehled e-mailů (kdo a kdy se přihlásil).
+- **Stáhnout CSV** — seznam aktivních adres (oddělené `;`, s diakritikou).
+  Ten naimportuješ do svého nástroje na rozesílání (Ecomail, Mailchimp,
+  Brevo…) a odtud pošleš newsletter.
+- Odhlásit / znovu přihlásit / smazat jednotlivé adresy.
+
+> Samotné **rozesílání** e-mailů web nedělá (na to slouží specializované
+> služby). Web sbírá adresy a dá ti je exportem; rozesílání řešíš v té službě.
+> Kdyby sis přál rozesílání napojit přímo, dá se doplnit edge funkce.
+
+---
+
+## Platby ve správě rezervací
+
+Když spustíš **`supabase/comgate.sql`** (viz sekce *Platby přes Comgate*),
+přibude u každé rezervace v adminu **stav platby**:
+
+- **Zaplaceno online** — host zaplatil zálohu přes Comgate.
+- **Platba čeká** — platbu spustil, ale ještě nedokončil.
+- **Zaplatí na místě** — online neplatil (typicky ruční / telefonická rezervace).
+
+V záložce **Rezervace** navíc:
+- Tlačítko **„Označit zaplaceno"** u rezervace = host zaplatil na místě
+  (hotově/kartou na recepci). Zase to jde vrátit přes **„Zrušit platbu"**.
+- Filtr **Platba** (vše / zaplaceno / platba čeká / zaplatí na místě) a
+  krátký souhrn nad seznamem.
+
+> Tahle evidence funguje i **bez** zapnutého Comgate — stačí spustit
+> `supabase/comgate.sql` a platby na místě si odškrtáváš ručně.
