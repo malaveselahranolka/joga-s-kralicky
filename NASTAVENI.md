@@ -127,3 +127,76 @@ Zatím nejsou vypsané lekce — přidej je v adminu (záložka Lekce).
 
 **Chci jinou kapacitu sálu.**
 Nastav ji u každé lekce při zakládání (pole *Kapacita*). Výchozí je 12.
+
+---
+
+## Platby přes Comgate (volitelná záloha) — příprava
+
+Web umí **volitelnou online zálohu** přes platební bránu **Comgate**. Je to
+**vypnuté**, dokud to sám nezapneš — do té doby je rezervace zdarma jako teď.
+
+> Tajný klíč (secret) z Comgate **nikdy nedávej do `comgate-config.js` ani do
+> repozitáře**. Patří jen na server (Supabase Edge Functions, krok C níže).
+
+### Jak to funguje
+1. Zákazník dokončí rezervaci jako dosud (místo se hned drží).
+2. Na potvrzovací obrazovce se navíc objeví tlačítko **„Zaplatit zálohu online"**.
+3. Po kliknutí ho web pošle do Comgate; po zaplacení se vrátí zpět.
+4. Comgate pošle potvrzení na server (callback) a stav platby se uloží k rezervaci.
+
+Platba je **nepovinná** — rezervace platí i bez ní.
+
+### A) Účet a klíče
+1. Založ účet na **https://www.comgate.cz** a v administraci si najdi
+   **identifikátor e-shopu (merchant)** a **propojovací heslo (secret)**.
+2. Pro zkoušení zapni v Comgate **testovací režim**.
+
+### B) Databáze (jednorázově)
+V Supabase → **SQL Editor** → **New query** vlož obsah souboru
+**`supabase/comgate.sql`** a dej **Run**. Přidá k rezervacím sloupce o stavu platby.
+
+### C) Nasazení serverových funkcí (Supabase CLI)
+Potřebuješ [Supabase CLI](https://supabase.com/docs/guides/cli). V kořeni projektu:
+```bash
+supabase login
+supabase link --project-ref TVUJ_PROJECT_REF      # ref najdeš v Project Settings → General
+
+# tajné údaje (uloží se jen na serveru, ne do repa):
+supabase secrets set COMGATE_MERCHANT=123456
+supabase secrets set COMGATE_SECRET=tvuj_tajny_secret
+supabase secrets set COMGATE_TEST=true            # na ostro později false
+supabase secrets set COMGATE_DEPOSIT_CZK=290      # výše zálohy v Kč (hlídá server)
+
+# nasaď funkce:
+supabase functions deploy comgate-create
+supabase functions deploy comgate-callback
+supabase functions deploy comgate-status
+```
+Funkce poběží na `https://TVUJ_PROJECT_REF.functions.supabase.co/...`.
+
+### D) URL v Comgate portálu
+V nastavení e-shopu v Comgate vyplň:
+- **URL pro notifikaci (callback):** `https://TVUJ_PROJECT_REF.functions.supabase.co/comgate-callback`
+- **Návratová URL (po zaplacení):** `https://malaveselahranolka.github.io/joga-s-kralicky/#rezervace`
+
+### E) Zapnutí na webu
+Otevři **`comgate-config.js`** a nastav:
+```js
+window.COMGATE = {
+  enabled: true,
+  functionsUrl: 'https://TVUJ_PROJECT_REF.functions.supabase.co',
+  depositCzk: 290,
+  currency: 'CZK',
+  lang: 'cs',
+  test: true,            // na ostro dej false (a v Comgate vypni testovací režim)
+};
+```
+Commitni + pushni. Hotovo — po rezervaci se nabídne online záloha.
+
+### F) Test
+Udělej zkušební rezervaci a klikni na **Zaplatit zálohu**. V testovacím režimu
+Comgate nabídne testovací platbu. Po návratu se nahoře u Rezervace ukáže stav.
+V Supabase → Table editor → `bookings` uvidíš `payment_status = paid`.
+
+> Ostrý provoz: v Comgate vypni testovací režim, dej `COMGATE_TEST=false`
+> (`supabase secrets set ...`) a v `comgate-config.js` `test: false`.
