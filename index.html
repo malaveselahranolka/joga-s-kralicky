@@ -30,7 +30,19 @@
     --r-xl: 30px;
     --r-lg: 22px;
     --r-md: 14px;
+    --r-2xl: 38px;
+    /* subtly asymmetric, hand-cut radii — pebble, not box */
+    --r-pebble: 26px 30px 24px 32px;
+    --r-leaf: 22px 22px 22px 6px;
     --ease: cubic-bezier(.22,.61,.36,1);
+    --ease-spring: cubic-bezier(.34,1.4,.5,1);
+    --ease-breath: cubic-bezier(.37,0,.18,1);
+
+    /* layered, forest-tinted shadows + light edge (premium depth) */
+    --sh-1: 0 1px 2px rgba(30,40,30,.05), 0 3px 8px -2px rgba(30,40,30,.06);
+    --sh-2: 0 1px 0 rgba(255,255,255,.55) inset, 0 3px 6px -2px rgba(30,40,30,.06), 0 14px 26px -12px rgba(44,59,46,.20);
+    --sh-3: 0 1px 0 rgba(255,255,255,.6) inset, 0 6px 14px -8px rgba(30,40,30,.14), 0 26px 46px -22px rgba(44,59,46,.32);
+    --sh-float: 0 1px 0 rgba(255,255,255,.5) inset, 0 16px 28px -16px rgba(30,40,30,.20), 0 44px 74px -34px rgba(44,59,46,.46);
 
     --fs-eyebrow: .82rem;
     --fs-body: clamp(1rem, .97rem + .18vw, 1.1rem);
@@ -174,22 +186,55 @@
   .hstat .num { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: clamp(1.9rem, 1.3rem + 2vw, 3rem); line-height: 1; letter-spacing: -.02em; }
   .hstat .lbl { margin-top: .35rem; font-size: .9rem; color: rgba(255,255,255,.78); }
 
-  /* reveal */
-  .reveal { opacity: 0; transform: translateY(26px); transition: opacity .8s var(--ease), transform .8s var(--ease); }
-  .reveal.in { opacity: 1; transform: none; }
-  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; } }
+  /* reveal — calm "breath" entrances, varied per element (not just fade) */
+  .reveal { opacity: 0; transform: translateY(30px); filter: blur(6px); transition: opacity .9s var(--ease-breath), transform 1s var(--ease-breath), filter .9s var(--ease-breath); transition-delay: var(--rv-d, 0s); will-change: transform, opacity; }
+  .reveal.in { opacity: 1; transform: none; filter: blur(0); }
+  /* variants */
+  .reveal[data-rv="zoom"] { transform: scale(.93); }
+  .reveal[data-rv="left"] { transform: translateX(-44px); }
+  .reveal[data-rv="right"] { transform: translateX(44px); }
+  /* image inside a card eases in from a gentle over-scale */
+  .reveal .pic img { transform: scale(1.12); transition: transform 1.2s var(--ease-breath); transition-delay: var(--rv-d, 0s); }
+  .reveal.in .pic img { transform: scale(1); }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal, .reveal[data-rv] { opacity: 1; transform: none; filter: none; clip-path: none; }
+    .reveal .pic img { transform: none; }
+  }
 
   /* hero load animation (staggered rise) */
   @keyframes heroRise { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: none; } }
   .hero-eyebrow, .hero h1, .hero .hero-sub, .hero-actions, .hero-stats { opacity: 0; animation: heroRise .9s var(--ease) both; }
   .hero-eyebrow { animation-delay: .05s; }
   .hero h1 { animation-delay: .16s; }
-  .hero .hero-sub { animation-delay: .34s; }
-  .hero-actions { animation-delay: .48s; }
-  .hero-stats { animation-delay: .62s; }
+  .hero .hero-sub { animation-delay: .42s; }
+  .hero-actions { animation-delay: .56s; }
+  .hero-stats { animation-delay: .7s; }
 
-  /* scroll-reactive glow */
-  .aurora { position: absolute; border-radius: 50%; filter: blur(64px); opacity: .42; pointer-events: none; z-index: 0; will-change: transform; }
+  /* word-by-word mask rise for the headline (replaces simple fade once JS splits) */
+  .hero h1.split { opacity: 1; animation: none; }
+  /* padding+negative margin gives diacritics (á í č) headroom inside the clip mask */
+  .hero h1 .w { display: inline-block; overflow: hidden; vertical-align: top; padding: .2em .04em; margin: -.2em -.04em; }
+  .hero h1 .wi { display: inline-block; transform: translateY(108%); }
+  .hero h1.split .wi { animation: wordRise 1s var(--ease-breath) both; animation-delay: var(--wd, 0s); }
+  @keyframes wordRise { from { transform: translateY(108%); } to { transform: translateY(0); } }
+
+  /* scroll-reactive + breathing glow */
+  .aurora { position: absolute; border-radius: 50%; filter: blur(70px); opacity: .42; pointer-events: none; z-index: 0; will-change: transform; }
+  .breathe { animation: breathe 11s var(--ease-breath) infinite; }
+  @keyframes breathe { 0%,100% { transform: scale(.86); opacity: .30; } 45% { transform: scale(1.12); opacity: .5; } }
+
+  /* pointer-follow spotlight on dark photo sections (premium lighting) */
+  .spotlight { position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0; transition: opacity .6s var(--ease); background: radial-gradient(280px 280px at var(--mx,50%) var(--my,40%), rgba(255,247,232,.16), transparent 70%); mix-blend-mode: screen; }
+  .why:hover .spotlight, .community:hover .spotlight { opacity: 1; }
+
+  /* slim scroll-progress breath line */
+  #progress { position: fixed; top: 0; left: 0; height: 2px; width: 0; z-index: 60; background: linear-gradient(90deg, var(--clover), var(--carrot)); box-shadow: 0 0 10px rgba(210,133,74,.5); transition: width .12s linear; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .breathe { animation: none; }
+    .hero h1 .wi { transform: none; animation: none; }
+    .spotlight, #progress { display: none; }
+  }
 
   @media (prefers-reduced-motion: reduce) {
     .hero-eyebrow, .hero h1, .hero .hero-sub, .hero-actions, .hero-stats { opacity: 1; animation: none; }
@@ -202,8 +247,8 @@
   .offer .top { display: grid; gap: 1.4rem; place-items: center; text-align: center; max-width: 60ch; margin: 0 auto 3.4rem; }
   .offer .top h2 { font-size: var(--fs-h2); }
   .cards-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.3rem; align-items: end; }
-  .ocard { background: var(--surface); border-radius: var(--r-lg); overflow: hidden; border: 1px solid var(--line); transition: transform .45s var(--ease), box-shadow .45s var(--ease); }
-  .ocard:hover { transform: translateY(-6px); box-shadow: 0 30px 50px -32px rgba(30,40,30,.4); }
+  .ocard { background: var(--surface); border-radius: var(--r-lg); overflow: hidden; border: 1px solid var(--line); box-shadow: var(--sh-2); transition: transform .5s var(--ease-spring), box-shadow .5s var(--ease); }
+  .ocard:hover { transform: translateY(-8px); box-shadow: var(--sh-float); }
   .ocard .pic { aspect-ratio: 4/5; overflow: hidden; }
   .ocard .pic img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s var(--ease); }
   .ocard:hover .pic img { transform: scale(1.05); }
@@ -225,9 +270,12 @@
   .why-head h2 { color: #fff; font-size: var(--fs-h2); max-width: 16ch; margin-top: 1rem; }
   .why-head .lead { color: rgba(255,255,255,.85); max-width: 44ch; margin-top: 1.1rem; }
   .feat-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.1rem; margin-top: 3rem; }
-  .fcard { background: rgba(255,255,255,.94); color: var(--ink); border-radius: var(--r-lg); padding: 1.5rem 1.4rem 1.6rem; transition: transform .4s var(--ease); }
-  .fcard:hover { transform: translateY(-5px); }
-  .fcard .ic { width: 46px; height: 46px; border-radius: 13px; background: var(--cream); display: grid; place-items: center; color: var(--forest); margin-bottom: 1.1rem; }
+  .fcard { background: rgba(255,255,255,.94); color: var(--ink); border-radius: var(--r-lg); padding: 1.5rem 1.4rem 1.6rem; box-shadow: 0 1px 0 rgba(255,255,255,.6) inset, 0 20px 40px -26px rgba(0,0,0,.5); transition: transform .5s var(--ease-spring), box-shadow .5s var(--ease); }
+  .fcard:nth-child(2) { border-radius: var(--r-pebble); }
+  .fcard:nth-child(3) { border-radius: var(--r-leaf); }
+  .fcard:hover { transform: translateY(-6px); box-shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 30px 56px -28px rgba(0,0,0,.55); }
+  .fcard .ic { width: 46px; height: 46px; border-radius: 14px 16px 13px 17px; background: linear-gradient(150deg, var(--cream), #fff); box-shadow: 0 1px 0 rgba(255,255,255,.8) inset, 0 6px 12px -6px rgba(44,59,46,.3); display: grid; place-items: center; color: var(--forest); margin-bottom: 1.1rem; transition: transform .5s var(--ease-spring); }
+  .fcard:hover .ic { transform: translateY(-2px) rotate(-4deg); }
   .fcard .ic svg { width: 24px; height: 24px; }
   .fcard h4 { font-size: 1.12rem; }
   .fcard p { margin-top: .5rem; font-size: .92rem; color: var(--ink-soft); }
@@ -236,7 +284,8 @@
   .schedule { background: var(--cream); }
   .sched-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 1.5rem; flex-wrap: wrap; }
   .grid-days { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 3rem; }
-  .day { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 1.4rem 1.3rem; }
+  .day { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 1.4rem 1.3rem; box-shadow: var(--sh-1); transition: transform .45s var(--ease-spring), box-shadow .45s var(--ease); }
+  .day:hover { transform: translateY(-4px); box-shadow: var(--sh-3); }
   .day h4 { font-family: "Schibsted Grotesk"; font-size: 1.05rem; font-weight: 600; margin: 0 0 1rem; color: var(--forest); }
   .slot { padding: .55rem 0; border-top: 1px solid var(--line-soft); }
   .slot .t { font-weight: 700; }
@@ -248,8 +297,9 @@
 
   /* ---------- bunnies ---------- */
   .buns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.3rem; margin-top: 3rem; }
-  .bun { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; transition: transform .4s var(--ease); }
-  .bun:hover { transform: translateY(-6px); }
+  .bun { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-leaf); overflow: hidden; box-shadow: var(--sh-2); transition: transform .5s var(--ease-spring), box-shadow .5s var(--ease); }
+  .bun:nth-child(even) { border-radius: 6px 22px 22px 22px; }
+  .bun:hover { transform: translateY(-8px); box-shadow: var(--sh-float); }
   .bun .pic { aspect-ratio: 1/1; overflow: hidden; }
   .bun .pic img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s var(--ease); }
   .bun:hover .pic img { transform: scale(1.06); }
@@ -261,9 +311,11 @@
   /* ---------- pricing ---------- */
   .pricing { background: var(--paper); padding-block: clamp(3.5rem, 6vw, 5.5rem); }
   .plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 2.4rem; align-items: stretch; }
-  .plan { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 1.6rem 1.7rem; transition: transform .4s var(--ease); }
-  .plan:hover { transform: translateY(-5px); }
-  .plan.featured { background: var(--forest); color: var(--cream); border-color: var(--forest); position: relative; }
+  .plan { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 1.6rem 1.7rem; box-shadow: var(--sh-2); transition: transform .5s var(--ease-spring), box-shadow .5s var(--ease); }
+  .plan:hover { transform: translateY(-7px); box-shadow: var(--sh-float); }
+  .plan.featured { background: linear-gradient(160deg, var(--forest), var(--forest-deep)); color: var(--cream); border-color: var(--forest); position: relative; transform: translateY(-10px); box-shadow: 0 1px 0 rgba(255,255,255,.12) inset, 0 30px 60px -28px rgba(20,30,20,.7); }
+  .plan.featured:hover { transform: translateY(-16px); }
+  .plan.featured::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: radial-gradient(120% 60% at 50% -10%, rgba(210,133,74,.22), transparent 60%); }
   .plan .badge { position: absolute; top: 1.4rem; right: 1.4rem; background: var(--carrot); color: #fff; font-size: .7rem; font-weight: 700; letter-spacing: .04em; padding: .35em .8em; border-radius: 999px; }
   .plan h3 { font-size: 1.2rem; }
   .plan .price { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: clamp(1.75rem, 1.3rem + 1.1vw, 2.2rem); margin-top: .45rem; line-height: 1; }
@@ -280,7 +332,10 @@
   .gallery { margin-top: 3rem; display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 210px; gap: 1rem; }
   .ph { position: relative; overflow: hidden; border: 0; padding: 0; margin: 0; cursor: pointer; border-radius: var(--r-md); background: var(--surface); display: block; }
   .ph img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s var(--ease); }
+  .ph { box-shadow: var(--sh-1); }
   .ph::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(20,25,18,.55), rgba(20,25,18,0) 55%); opacity: .8; transition: opacity .4s var(--ease); }
+  .ph:nth-child(3) { border-radius: var(--r-leaf); }
+  .ph:nth-child(4) { border-radius: 6px 14px 14px 14px; }
   .ph .cap { position: absolute; left: 1.1rem; bottom: .9rem; right: 1.1rem; z-index: 2; color: #fff; font-family: "Schibsted Grotesk"; font-weight: 500; font-size: 1.02rem; }
   .ph .zoom { position: absolute; top: .9rem; right: .9rem; z-index: 2; width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,.25); backdrop-filter: blur(4px); display: grid; place-items: center; opacity: 0; transform: scale(.8); transition: opacity .4s var(--ease), transform .4s var(--ease); }
   .ph:hover img, .ph:focus-visible img { transform: scale(1.07); }
@@ -308,7 +363,7 @@
   .ref-nav button:active { transform: scale(.94); }
   .ref-viewport { margin-top: 2.6rem; overflow: hidden; }
   .ref-track { display: flex; gap: 1.3rem; transition: transform .5s var(--ease); }
-  .tcard { flex: 0 0 calc((100% - 2.6rem) / 3); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; display: flex; flex-direction: column; }
+  .tcard { flex: 0 0 calc((100% - 2.6rem) / 3); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--sh-2); }
   .tcard .pic { aspect-ratio: 5/4; overflow: hidden; }
   .tcard .pic img { width: 100%; height: 100%; object-fit: cover; }
   .tcard .body { padding: 1.4rem 1.4rem 1.5rem; }
@@ -494,6 +549,7 @@
 </head>
 <body id="top">
 <div id="bgfade" aria-hidden="true"></div>
+<div id="progress" aria-hidden="true"></div>
 
 <!-- ============ NAV ============ -->
 <header class="nav" id="nav">
@@ -534,6 +590,8 @@
     <div class="hero-bg">
       <img src="assets/photos/yoga-1.jpg" alt="Žena medituje v sedu při západu slunce" fetchpriority="high" />
     </div>
+    <div class="aurora breathe" aria-hidden="true" style="width:520px;height:520px;right:-120px;top:18%;background:radial-gradient(circle, rgba(210,133,74,.55), transparent 70%)"></div>
+    <div class="aurora breathe" aria-hidden="true" style="width:420px;height:420px;left:-100px;bottom:6%;background:radial-gradient(circle, rgba(110,138,78,.5), transparent 70%);animation-delay:-5.5s"></div>
     <div class="wrap">
       <span class="eyebrow hero-eyebrow">Studio klidu · Brno</span>
       <h1>Najděte klid <span class="dash">—</span> o&nbsp;zbytek se postarají králíčci</h1>
@@ -604,6 +662,7 @@
   <!-- ============ WHY US (dark photo) ============ -->
   <section class="why">
     <div class="why-bg"><img src="assets/photos/yoga-10.jpg" alt="Silueta jógy při západu slunce" loading="lazy" /></div>
+    <div class="spotlight" aria-hidden="true"></div>
     <div class="wrap">
       <div class="why-head reveal">
         <div>
@@ -729,33 +788,33 @@
         <h2>Nahlédněte do studia</h2>
         <p class="lead">Klidný sál, ranní světlo a samozřejmě naši chlupatí učitelé. Klikněte na fotku pro zvětšení.</p>
       </div>
-      <div class="gallery reveal">
-        <button class="ph big" data-full="assets/photos/yoga-1.jpg" data-cap="Savasana v ranním světle">
+      <div class="gallery">
+        <button class="ph reveal big" data-full="assets/photos/yoga-1.jpg" data-cap="Savasana v ranním světle">
           <img src="assets/photos/yoga-1.jpg" alt="Meditace při západu slunce" loading="lazy" />
           <span class="zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span>
           <span class="cap">Savasana v ranním světle</span>
         </button>
-        <button class="ph wide" data-full="assets/photos/yoga-8.jpg" data-cap="Společná lekce pod širým nebem">
+        <button class="ph reveal wide" data-full="assets/photos/yoga-8.jpg" data-cap="Společná lekce pod širým nebem">
           <img src="assets/photos/yoga-8.jpg" alt="Skupinová lekce jógy" loading="lazy" />
           <span class="zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span>
           <span class="cap">Společná lekce</span>
         </button>
-        <button class="ph" data-full="assets/photos/rabbit-1.jpg" data-cap="Brokolice odpočívá">
+        <button class="ph reveal" data-full="assets/photos/rabbit-1.jpg" data-cap="Brokolice odpočívá">
           <img src="assets/photos/rabbit-1.jpg" alt="Bílý králík" loading="lazy" />
           <span class="zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span>
           <span class="cap">Brokolice odpočívá</span>
         </button>
-        <button class="ph" data-full="assets/photos/rabbit-4.jpg" data-cap="Tofu na ranním průzkumu">
+        <button class="ph reveal" data-full="assets/photos/rabbit-4.jpg" data-cap="Tofu na ranním průzkumu">
           <img src="assets/photos/rabbit-4.jpg" alt="Králík v trávě" loading="lazy" />
           <span class="zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span>
           <span class="cap">Tofu na průzkumu</span>
         </button>
-        <button class="ph wide" data-full="assets/photos/yoga-11.jpg" data-cap="Detail pozice v sále">
+        <button class="ph reveal wide" data-full="assets/photos/yoga-11.jpg" data-cap="Detail pozice v sále">
           <img src="assets/photos/yoga-11.jpg" alt="Studiová jóga" loading="lazy" />
           <span class="zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span>
           <span class="cap">Klidný sál</span>
         </button>
-        <button class="ph wide" data-full="assets/photos/rabbit-6.jpg" data-cap="Sobota: Děti & králíci">
+        <button class="ph reveal wide" data-full="assets/photos/rabbit-6.jpg" data-cap="Sobota: Děti & králíci">
           <img src="assets/photos/rabbit-6.jpg" alt="Krmení králíka" loading="lazy" />
           <span class="zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></span>
           <span class="cap">Sobota: Děti &amp; králíci</span>
@@ -810,6 +869,8 @@
 
   <!-- ============ COMMUNITY ============ -->
   <section class="community">
+    <div class="spotlight" aria-hidden="true" style="z-index:0;mix-blend-mode:soft-light"></div>
+    <div class="aurora breathe" aria-hidden="true" style="width:480px;height:480px;left:50%;top:-160px;transform:translateX(-50%);background:radial-gradient(circle, rgba(110,138,78,.4), transparent 70%);z-index:0"></div>
     <div class="wrap">
       <span class="eyebrow">Připojte se</span>
       <h2>Zpomalte společně s námi</h2>
@@ -1153,6 +1214,79 @@
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll, { passive: true });
     update();
+  })();
+
+  // ============ MICRO-DETAILS: word reveal, stagger, spotlight, magnet, progress ============
+  (function () {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const finePointer = window.matchMedia('(pointer: fine)').matches;
+
+    // 1) headline: wrap each word in a mask so it rises line-by-word
+    const h1 = document.querySelector('.hero h1');
+    if (h1 && !reduce) {
+      const frag = document.createDocumentFragment();
+      let wi = 0;
+      const addWord = (node) => {
+        const w = document.createElement('span'); w.className = 'w';
+        const inner = document.createElement('span'); inner.className = 'wi';
+        inner.style.setProperty('--wd', (0.18 + wi * 0.07).toFixed(2) + 's');
+        if (typeof node === 'string') inner.textContent = node; else inner.appendChild(node);
+        w.appendChild(inner); frag.appendChild(w); frag.appendChild(document.createTextNode(' ')); wi++;
+      };
+      Array.from(h1.childNodes).forEach((n) => {
+        if (n.nodeType === 3) { n.textContent.split(' ').forEach((word) => { if (word.trim() !== '') addWord(word); }); }
+        else addWord(n.cloneNode(true));
+      });
+      h1.textContent = ''; h1.appendChild(frag); h1.classList.add('split');
+    }
+
+    // 2) stagger reveals that share a parent (cards cascade, not all at once)
+    const groups = new Map();
+    document.querySelectorAll('.reveal').forEach((el) => {
+      const p = el.parentElement;
+      if (!groups.has(p)) groups.set(p, 0);
+      const i = groups.get(p); groups.set(p, i + 1);
+      if (i > 0) el.style.setProperty('--rv-d', Math.min(i * 0.08, 0.5) + 's');
+    });
+
+    if (reduce) return;
+
+    // 3) pointer-follow spotlight on dark sections
+    document.querySelectorAll('.why, .community').forEach((sec) => {
+      const sp = sec.querySelector('.spotlight'); if (!sp || !finePointer) return;
+      sec.addEventListener('pointermove', (e) => {
+        const r = sec.getBoundingClientRect();
+        sp.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100).toFixed(1) + '%');
+        sp.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100).toFixed(1) + '%');
+      }, { passive: true });
+    });
+
+    // 4) magnetic pull on key buttons
+    if (finePointer) {
+      document.querySelectorAll('.btn-primary, .btn-light, .cta-split .arrow-btn, .nav-cta').forEach((btn) => {
+        const strength = 0.28;
+        btn.addEventListener('pointermove', (e) => {
+          const r = btn.getBoundingClientRect();
+          const x = (e.clientX - r.left - r.width / 2) * strength;
+          const y = (e.clientY - r.top - r.height / 2) * strength;
+          btn.style.transform = 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px)';
+        }, { passive: true });
+        btn.addEventListener('pointerleave', () => { btn.style.transform = ''; });
+      });
+    }
+
+    // 5) slim scroll-progress line
+    const prog = document.getElementById('progress');
+    if (prog) {
+      let raf = false;
+      const upd = () => {
+        const max = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
+        prog.style.width = Math.min(window.scrollY / max, 1) * 100 + '%';
+        raf = false;
+      };
+      window.addEventListener('scroll', () => { if (!raf) { raf = true; requestAnimationFrame(upd); } }, { passive: true });
+      upd();
+    }
   })();
 
   // ============ REZERVAČNÍ FLOW (živá data ze Supabase) ============
