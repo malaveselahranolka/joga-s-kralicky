@@ -13,6 +13,8 @@ alter table public.bookings add column if not exists payment_status text not nul
 alter table public.bookings add column if not exists payment_amount integer;          -- v haléřích (Kč × 100)
 alter table public.bookings add column if not exists payment_ref    text;             -- Comgate transId
 alter table public.bookings add column if not exists paid_at        timestamptz;
+alter table public.bookings add column if not exists payment_method text              -- jak se platilo
+  check (payment_method in ('online','cash'));
 
 create index if not exists bookings_payment_ref_idx on public.bookings (payment_ref);
 

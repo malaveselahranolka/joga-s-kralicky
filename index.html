@@ -498,7 +498,20 @@
   .foot-col a { display: block; padding: .35rem 0; font-size: .92rem; transition: color .3s var(--ease); }
   .foot-col a:hover { color: #fff; }
   .foot-contact { color: #fff; font-family: "Schibsted Grotesk"; font-weight: 500; font-size: 1.05rem; }
-  .foot-bottom { margin-top: 3rem; padding-top: 1.6rem; border-top: 1px solid rgba(255,255,255,.14); display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; font-size: .85rem; }
+  .foot-bottom { margin-top: 2rem; padding-top: 1.6rem; border-top: 1px solid rgba(255,255,255,.14); display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; font-size: .85rem; }
+
+  /* newsletter v patičce */
+  .foot-news { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4rem 2.4rem; align-items: center; margin-top: 2.8rem; padding-top: 2.2rem; border-top: 1px solid rgba(255,255,255,.14); }
+  .foot-news h5 { font-family: "Schibsted Grotesk", sans-serif; font-weight: 600; font-size: 1.18rem; color: #fff; margin: 0; letter-spacing: -.02em; }
+  .foot-news p { margin-top: .45rem; font-size: .9rem; color: rgba(255,255,255,.7); max-width: 40ch; }
+  .fn-field { display: flex; gap: .6rem; flex-wrap: wrap; }
+  .fn-field input { flex: 1 1 220px; min-width: 0; font-family: inherit; font-size: 1rem; color: var(--ink); padding: .9em 1.15em; border-radius: 999px; border: 1px solid rgba(255,255,255,.22); background: rgba(255,255,255,.96); transition: box-shadow .3s var(--ease), border-color .3s var(--ease); }
+  .fn-field input:focus { outline: none; border-color: var(--clover); box-shadow: 0 0 0 3px color-mix(in srgb, var(--clover) 42%, transparent); }
+  .fn-field .btn { flex: none; }
+  .fn-msg { flex-basis: 100%; margin: 0; font-size: .85rem; min-height: 1.1em; color: rgba(255,255,255,.85); }
+  .fn-msg.ok { color: #bcd79c; }
+  .fn-msg.err { color: var(--carrot); }
+  @media (max-width: 720px) { .foot-news { grid-template-columns: 1fr; gap: 1rem; } }
 
   /* ---------- responsive ---------- */
   @media (max-width: 1000px) {
@@ -1071,6 +1084,17 @@
         <a href="https://maps.google.com" target="_blank" rel="noopener" style="margin-top:.6rem">Údolní 12, Brno-střed</a>
       </div>
     </div>
+    <form class="foot-news" id="newsForm" novalidate>
+      <div class="fn-text">
+        <h5>Klidná pošta, žádný spam</h5>
+        <p>Občas pošleme nové termíny, akce a pár fotek králíků. Odhlásíte se jedním kliknutím.</p>
+      </div>
+      <div class="fn-field">
+        <input id="news-email" type="email" autocomplete="email" placeholder="vas@email.cz" aria-label="E-mail pro odběr novinek" required />
+        <button class="btn btn-light" type="submit" id="newsBtn">Odebírat <span class="arrow">→</span></button>
+        <p class="fn-msg" id="newsMsg" role="status" aria-live="polite"></p>
+      </div>
+    </form>
     <div class="foot-bottom">
       <span>© 2026 Jóga s králíčky. Dýchejte pomalu.</span>
       <span>Vyrobeno s klidem a mrkví.</span>
@@ -1651,6 +1675,34 @@
       wrap.insertBefore(el, wrap.firstChild);
       sec.scrollIntoView({ behavior: 'smooth' });
     }
+  })();
+
+  // ============ Newsletter (patička) ============
+  (function () {
+    const form = document.getElementById('newsForm');
+    if (!form) return;
+    const input = document.getElementById('news-email');
+    const btn = document.getElementById('newsBtn');
+    const msg = document.getElementById('newsMsg');
+    const CONFIGURED = /^https:\/\/.+\.supabase\.co/.test(window.SUPABASE_URL || '') &&
+      !!window.SUPABASE_ANON_KEY && window.SUPABASE_ANON_KEY.length > 20 && typeof window.supabase !== 'undefined';
+    const sb = CONFIGURED ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY) : null;
+    const setMsg = (t, cls) => { msg.textContent = t; msg.className = 'fn-msg' + (cls ? ' ' + cls : ''); };
+    let busy = false;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (busy) return;
+      const email = input.value.trim();
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { setMsg('Zkontrolujte prosím e-mail.', 'err'); input.focus(); return; }
+      if (!sb) { setMsg('Přihlášení teď nejde — napište nám na ahoj@jogaskralicky.cz.', 'err'); return; }
+      busy = true; btn.disabled = true; const label = btn.innerHTML; btn.textContent = 'Přihlašuji…';
+      try {
+        const { data, error } = await sb.rpc('subscribe_newsletter', { p_email: email, p_source: 'web-footer' });
+        if (error || !data || !data.ok) setMsg('Něco se nepovedlo. Zkuste to prosím znovu.', 'err');
+        else { setMsg('Hotovo — díky! Klid vám pošleme do schránky.', 'ok'); form.reset(); }
+      } catch (e2) { setMsg('Něco se nepovedlo. Zkuste to prosím znovu.', 'err'); }
+      busy = false; btn.disabled = false; btn.innerHTML = label;
+    });
   })();
 </script>
 </body>

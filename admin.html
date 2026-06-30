@@ -100,6 +100,9 @@
   .pill-ok { background: color-mix(in srgb, var(--clover) 20%, var(--cloud)); color: var(--clover-deep); }
   .pill-full { background: color-mix(in srgb, var(--carrot) 22%, var(--cloud)); color: #9a5a23; }
   .pill-cancel { background: color-mix(in srgb, var(--ink) 12%, var(--cloud)); color: var(--ink-soft); }
+  .pill-paid { background: color-mix(in srgb, var(--clover) 26%, var(--cloud)); color: var(--clover-deep); }
+  .pill-pending { background: color-mix(in srgb, var(--carrot) 24%, var(--cloud)); color: #9a5a23; }
+  .pill-onsite { background: color-mix(in srgb, #6f8fb0 24%, var(--cloud)); color: #3a526a; }
   .row.is-cancelled { opacity: .6; }
   .row.is-cancelled .ttl { text-decoration: line-through; }
 
@@ -204,6 +207,7 @@
       <button class="tab" role="tab" aria-selected="true" data-tab="dash">Přehled</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="lessons">Lekce</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="bookings">Rezervace</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="news">Newsletter</button>
     </div>
 
     <!-- DASHBOARD -->
@@ -284,8 +288,29 @@
       <div class="toolbar">
         <label style="margin:0">Lekce:</label>
         <select id="bookingFilter"><option value="all">Všechny nadcházející</option></select>
+        <label style="margin:0 0 0 .4rem">Platba:</label>
+        <select id="payFilter">
+          <option value="all">Všechny</option>
+          <option value="paid">Zaplaceno</option>
+          <option value="pending">Platba čeká</option>
+          <option value="onsite">Zaplatí na místě</option>
+        </select>
       </div>
+      <p class="muted" id="paySummary" style="margin:-.4rem 0 1rem;font-size:.86rem"></p>
       <div class="rows" id="bookingRows"></div>
+    </section>
+
+    <!-- NEWSLETTER -->
+    <section class="panel" id="panel-news" role="tabpanel">
+      <div class="panel-head">
+        <h2>Newsletter</h2>
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" id="refreshNews">Obnovit</button>
+          <button class="btn btn-primary btn-sm" id="exportNews">Stáhnout CSV</button>
+        </div>
+      </div>
+      <div class="stat-row" id="newsStats"></div>
+      <div class="rows" id="newsRows"></div>
     </section>
   </div>
 </div>
@@ -303,7 +328,7 @@
 
   const $ = (id) => document.getElementById(id);
   const loginScreen = $('loginScreen'), app = $('app');
-  let lessons = [], bookings = [], editingId = null;
+  let lessons = [], bookings = [], subscribers = [], editingId = null;
 
   // helpers ------------------------------------------------------------
   const cap = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
@@ -311,6 +336,26 @@
   const esc = (s) => (s == null ? '' : String(s)).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2600); }
   function bookedFor(lessonId) { return bookings.filter((b) => b.lesson_id === lessonId && b.status !== 'cancelled').reduce((s, b) => s + b.spots, 0); }
+
+  // platba: graceful i bez sloupců (dokud nespustíš comgate.sql) → bere se jako 'na místě'
+  function payCat(b) {
+    const st = b.payment_status || 'none';
+    if (st === 'paid') return 'paid';
+    if (st === 'pending') return 'pending';
+    if (st === 'failed' || st === 'cancelled') return 'onsite'; // platba neproběhla → zaplatí na místě
+    return 'onsite';
+  }
+  function payBadge(b) {
+    const cat = payCat(b);
+    if (cat === 'paid') return '<span class="pill pill-paid">' + (b.payment_method === 'cash' ? 'Zaplaceno na místě' : 'Zaplaceno online') + '</span>';
+    if (cat === 'pending') return '<span class="pill pill-pending">Platba čeká</span>';
+    return '<span class="pill pill-onsite">Zaplatí na místě</span>';
+  }
+  function payActionBtn(b) {
+    return payCat(b) === 'paid'
+      ? '<button class="btn btn-ghost btn-sm" data-unpaid="' + b.id + '">Zrušit platbu</button>'
+      : '<button class="btn btn-ghost btn-sm" data-paid="' + b.id + '">Označit zaplaceno</button>';
+  }
 
   // auth ---------------------------------------------------------------
   $('configWarn').hidden = CONFIGURED;
@@ -343,13 +388,16 @@
 
   // data ---------------------------------------------------------------
   async function loadAll() {
-    const [lr, br] = await Promise.all([
+    const [lr, br, nr] = await Promise.all([
       sb.from('lessons').select('*').order('starts_at', { ascending: true }),
-      sb.from('bookings').select('*').order('created_at', { ascending: false })
+      sb.from('bookings').select('*').order('created_at', { ascending: false }),
+      // newsletter je nepovinný — pokud tabulka ještě není (newsletter.sql nespuštěn), nevadí
+      sb.from('newsletter_subscribers').select('*').order('created_at', { ascending: false })
     ]);
     if (lr.error || br.error) { toast('Načtení dat selhalo'); return; }
     lessons = lr.data || []; bookings = br.data || [];
-    renderDash(); renderLessons(); renderBookings(); fillLessonSelects();
+    subscribers = nr && !nr.error ? (nr.data || []) : [];
+    renderDash(); renderLessons(); renderBookings(); fillLessonSelects(); renderNews();
   }
 
   // tabs ---------------------------------------------------------------
@@ -447,7 +495,7 @@
       const cancelled = b.status === 'cancelled';
       return '<div class="att-item' + (cancelled ? ' is-cancelled' : '') + '">' +
         '<div><strong>' + esc(b.name) + '</strong> · ' + b.spots + ' míst' +
-          (cancelled ? ' <span class="pill pill-cancel">Zrušeno</span>' : '') +
+          (cancelled ? ' <span class="pill pill-cancel">Zrušeno</span>' : ' ' + payBadge(b)) +
           '<div class="att-contact"><a href="mailto:' + esc(b.email) + '">' + esc(b.email) + '</a>' +
           (b.phone ? ' · <a href="tel:' + esc(b.phone) + '">' + esc(b.phone) + '</a>' : '') + '</div></div>' +
         '<div class="acts">' + (cancelled
@@ -532,6 +580,55 @@
   $('newBookingBtn').addEventListener('click', () => { $('bookingForm').reset(); $('bf-spots').value = 1; bookingWrap.classList.add('open'); $('bf-lesson').focus(); });
   $('bookingCancel').addEventListener('click', () => bookingWrap.classList.remove('open'));
   $('bookingFilter').addEventListener('change', renderBookings);
+  $('payFilter').addEventListener('change', renderBookings);
+
+  // newsletter ---------------------------------------------------------
+  $('refreshNews').addEventListener('click', loadAll);
+  function renderNews() {
+    const active = subscribers.filter((s) => !s.unsubscribed);
+    $('newsStats').innerHTML = stat(active.length, 'odběratelů') +
+      stat(subscribers.length, 'celkem zapsaných') +
+      stat(subscribers.filter((s) => s.unsubscribed).length, 'odhlášených');
+    if (!subscribers.length) {
+      $('newsRows').innerHTML = '<div class="empty">Zatím nikdo nepřihlášený. Až spustíš <strong>supabase/newsletter.sql</strong>, objeví se tu lidé z patičky webu.</div>';
+      return;
+    }
+    $('newsRows').innerHTML = subscribers.map((s) => {
+      const off = s.unsubscribed;
+      return '<div class="row' + (off ? ' is-cancelled' : '') + '">' +
+        '<div class="main"><div class="ttl" style="font-size:1rem"><a href="mailto:' + esc(s.email) + '">' + esc(s.email) + '</a>' +
+          (off ? ' <span class="pill pill-cancel">Odhlášen</span>' : '') + '</div>' +
+        '<div class="sub">' + fmtDT(s.created_at) + (s.source ? ' · ' + esc(s.source) : '') + '</div></div>' +
+        '<div class="acts">' + (off
+          ? '<button class="btn btn-ghost btn-sm" data-resub="' + s.id + '">Znovu přihlásit</button>'
+          : '<button class="btn btn-ghost btn-sm" data-unsub="' + s.id + '">Odhlásit</button>') +
+          '<button class="btn btn-danger btn-sm" data-delsub="' + s.id + '">Smazat</button>' +
+        '</div></div>';
+    }).join('');
+  }
+  $('exportNews').addEventListener('click', () => {
+    const active = subscribers.filter((s) => !s.unsubscribed);
+    if (!active.length) { toast('Žádní aktivní odběratelé'); return; }
+    const rows = [['email', 'prihlasen', 'zdroj']].concat(active.map((s) =>
+      [s.email, new Date(s.created_at).toLocaleString('cs-CZ'), s.source || '']));
+    const csv = '﻿' + rows.map((r) => r.map((c) => '"' + String(c).replace(/"/g, '""') + '"').join(';')).join('\r\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = 'newsletter-' + new Date().toISOString().slice(0, 10) + '.csv';
+    a.click(); URL.revokeObjectURL(url);
+  });
+  $('newsRows').addEventListener('click', async (e) => {
+    const btn = e.target.closest('button'); if (!btn) return;
+    const id = btn.dataset.unsub || btn.dataset.resub || btn.dataset.delsub; if (!id) return;
+    if (btn.dataset.delsub) {
+      if (!confirm('Smazat tento e-mail ze seznamu?')) return;
+      const { error } = await sb.from('newsletter_subscribers').delete().eq('id', id);
+      if (error) toast('Mazání selhalo'); else { toast('Smazáno'); await loadAll(); }
+    } else {
+      const { error } = await sb.from('newsletter_subscribers').update({ unsubscribed: !!btn.dataset.unsub }).eq('id', id);
+      if (error) toast('Akce selhala'); else { toast(btn.dataset.unsub ? 'Odhlášen' : 'Přihlášen'); await loadAll(); }
+    }
+  });
 
   function fillLessonSelects() {
     const now = Date.now();
@@ -559,30 +656,51 @@
   function renderBookings() {
     const now = Date.now();
     const filter = $('bookingFilter').value;
+    const payFilter = ($('payFilter') || {}).value || 'all';
     const lessonById = (id) => lessons.find((l) => l.id === id);
     let list = bookings.filter((b) => { const l = lessonById(b.lesson_id); return l && new Date(l.starts_at).getTime() > now; });
     if (filter !== 'all') list = list.filter((b) => b.lesson_id === filter);
+
+    // souhrn plateb (z aktivních rezervací ve výběru lekce, před filtrem platby)
+    const active = list.filter((b) => b.status !== 'cancelled');
+    const cnt = { paid: 0, pending: 0, onsite: 0 };
+    active.forEach((b) => { cnt[payCat(b)]++; });
+    $('paySummary').textContent = active.length
+      ? cnt.paid + '× zaplaceno · ' + cnt.onsite + '× zaplatí na místě' + (cnt.pending ? ' · ' + cnt.pending + '× platba čeká' : '')
+      : '';
+
+    if (payFilter !== 'all') list = list.filter((b) => b.status !== 'cancelled' && payCat(b) === payFilter);
     // seřaď podle času lekce
     list.sort((a, b) => new Date(lessonById(a.lesson_id).starts_at) - new Date(lessonById(b.lesson_id).starts_at));
     $('bookingRows').innerHTML = list.length ? list.map((b) => {
       const l = lessonById(b.lesson_id), cancelled = b.status === 'cancelled';
       return '<div class="row' + (cancelled ? ' is-cancelled' : '') + '">' +
         '<div class="main"><div class="ttl">' + esc(b.name) + ' · ' + b.spots + ' míst' +
-          (cancelled ? ' <span class="pill pill-cancel">Zrušeno</span>' : '') + '</div>' +
+          (cancelled ? ' <span class="pill pill-cancel">Zrušeno</span>' : ' ' + payBadge(b)) + '</div>' +
         '<div class="sub">' + esc(l.title) + ' · ' + fmtDT(l.starts_at) + ' · ' +
           esc(b.email) + (b.phone ? ' · ' + esc(b.phone) : '') + '</div></div>' +
         '<div class="acts">' +
           (cancelled
             ? '<button class="btn btn-ghost btn-sm" data-restore="' + b.id + '">Obnovit</button>'
-            : '<button class="btn btn-danger btn-sm" data-cancelb="' + b.id + '">Zrušit</button>') +
+            : payActionBtn(b) + '<button class="btn btn-danger btn-sm" data-cancelb="' + b.id + '">Zrušit</button>') +
           '<button class="btn btn-danger btn-sm" data-delb="' + b.id + '">Smazat</button>' +
         '</div></div>';
     }).join('') : '<div class="empty">Pro tento výběr nejsou žádné rezervace.</div>';
   }
 
   async function applyBookingAction(btn) {
-    const id = btn.dataset.cancelb || btn.dataset.restore || btn.dataset.delb;
+    const id = btn.dataset.cancelb || btn.dataset.restore || btn.dataset.delb || btn.dataset.paid || btn.dataset.unpaid;
     if (!id) return false;
+    if (btn.dataset.paid) {
+      const { error } = await sb.from('bookings').update({ payment_status: 'paid', payment_method: 'cash', paid_at: new Date().toISOString() }).eq('id', id);
+      if (error) toast('Nejdřív spusťte supabase/comgate.sql'); else { toast('Označeno jako zaplaceno'); await loadAll(); }
+      return true;
+    }
+    if (btn.dataset.unpaid) {
+      const { error } = await sb.from('bookings').update({ payment_status: 'none', payment_method: null, paid_at: null }).eq('id', id);
+      if (error) toast('Akce selhala'); else { toast('Platba zrušena'); await loadAll(); }
+      return true;
+    }
     if (btn.dataset.cancelb) {
       if (confirm('Zrušit tuto rezervaci? Místa se vrátí do volné kapacity.')) {
         const { error } = await sb.from('bookings').update({ status: 'cancelled' }).eq('id', id);
