@@ -1081,6 +1081,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="supabase-config.js?v=2"></script>
+<script src="comgate-config.js?v=1"></script>
 <script>
   // sticky nav state
   const nav = document.getElementById('nav');
@@ -1209,19 +1210,26 @@
     const whyEl = document.querySelector('.why');
     const whyImg = document.querySelector('.why-bg img');
 
-    let ticking = false;
+    let ticking = false, lastP = -1, whyTop = whyEl ? whyEl.offsetTop : 0;
+    function measure() { if (whyEl) whyTop = whyEl.offsetTop; }
     function update() {
       const y = window.scrollY, vh = window.innerHeight;
       const max = Math.max(document.documentElement.scrollHeight - vh, 1);
       const p = Math.min(Math.max(y / max, 0), 1);
-      if (bg) bg.style.background = 'radial-gradient(125% 80% at 50% ' + (12 + p * 60).toFixed(1) + '%, rgb(' + mix(glowStops, p) + ') 0%, rgb(' + mix(baseStops, p) + ') 60%)';
+      // bgfade: přebarvení celé obrazovky je drahé — měň jen při znatelné změně, ne každý snímek
+      if (bg && Math.abs(p - lastP) > 0.004) {
+        lastP = p;
+        bg.style.background = 'radial-gradient(125% 80% at 50% ' + (12 + p * 60).toFixed(1) + '%, rgb(' + mix(glowStops, p) + ') 0%, rgb(' + mix(baseStops, p) + ') 60%)';
+      }
       if (heroImg) heroImg.style.transform = 'translate3d(0,' + (y * 0.2).toFixed(1) + 'px,0)';
-      if (whyImg && whyEl) { const r = whyEl.getBoundingClientRect(); whyImg.style.transform = 'translate3d(0,' + (r.top * -0.13).toFixed(1) + 'px,0)'; }
+      // cachovaný offsetTop → žádný getBoundingClientRect (reflow) v každém snímku scrollu
+      if (whyImg) whyImg.style.transform = 'translate3d(0,' + ((whyTop - y) * -0.13).toFixed(1) + 'px,0)';
       ticking = false;
     }
     function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(update); } }
     window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll, { passive: true });
+    window.addEventListener('resize', () => { measure(); onScroll(); }, { passive: true });
+    window.addEventListener('load', measure);
     update();
   })();
 
@@ -1359,6 +1367,39 @@
           datetime: detail.datetime, spots: detail.spots, location: 'Údolní 12, Brno-střed'
         });
       } catch (e) { /* selhání e-mailu nezablokuje potvrzenou rezervaci */ }
+    }
+
+    // --- Comgate (volitelná záloha) — aktivní jen když je zapnuté v comgate-config.js ---
+    const PAY = window.COMGATE || {};
+    const PAY_ON = !!PAY.enabled && /^https:\/\/.+/.test(PAY.functionsUrl || '');
+    const payUrl = (fn) => PAY.functionsUrl.replace(/\/$/, '') + '/' + fn;
+    async function startPayment(bookingId, btn) {
+      const label = btn.innerHTML;
+      btn.disabled = true; btn.textContent = 'Přesměrovávám na platbu…';
+      try {
+        const res = await fetch(payUrl('comgate-create'), {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ booking_id: bookingId })
+        });
+        const d = await res.json();
+        if (d.ok && d.redirect) { window.location.href = d.redirect; return; }
+      } catch (e) { /* spadne do hlášky níže */ }
+      btn.disabled = false; btn.innerHTML = label;
+      alert('Platbu se teď nepodařilo spustit. Místo máte i tak zarezervované — zálohu můžete zaplatit na místě.');
+    }
+    function maybeOfferPayment(bookingId) {
+      if (!PAY_ON || !bookingId) return;
+      const actions = document.querySelector('#bookSuccess .bs-actions');
+      if (!actions || actions.querySelector('.pay-btn')) return;
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'btn btn-primary pay-btn';
+      b.innerHTML = 'Zaplatit zálohu ' + (PAY.depositCzk || 290) + ' Kč online <span class="arrow">→</span>';
+      b.addEventListener('click', () => startPayment(bookingId, b));
+      actions.insertBefore(b, actions.firstChild);
+      const note = document.createElement('p');
+      note.style.cssText = 'margin-top:.7rem;font-size:.82rem;color:var(--ink-soft)';
+      note.textContent = 'Záloha je nepovinná — místo máte zarezervované i bez ní.';
+      actions.parentNode.insertBefore(note, actions.nextSibling);
     }
 
     let lessons = [];     // řádky public_lessons (budoucí, aktivní)
@@ -1560,6 +1601,7 @@
       form.hidden = true;
       success.hidden = false;
       success.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      maybeOfferPayment(data.booking_id); // nabídne volitelnou zálohu, jen když je Comgate zapnutý
       sendConfirmation({ email: email, name: nameI.value.trim(), lesson: chosen.title,
         datetime: fmtFull(chosen.dt) + ' v ' + fmtTime(chosen.dt), spots: mistaSel(spots) });
     });
@@ -1577,6 +1619,38 @@
     document.getElementById('bsStateRetry').addEventListener('click', load);
 
     load();
+  })();
+
+  // ============ Comgate — návrat z platby (aktivní jen když je zapnuto) ============
+  (function () {
+    const PAY = window.COMGATE || {};
+    if (!PAY.enabled || !/^https:\/\/.+/.test(PAY.functionsUrl || '')) return;
+    const params = new URLSearchParams(location.search);
+    const ref = params.get('refId') || params.get('id') || params.get('transId');
+    if (!ref) return;
+    const byTrans = !params.get('refId');
+    const url = PAY.functionsUrl.replace(/\/$/, '') + '/comgate-status?' +
+      (byTrans ? 'transId=' : 'refId=') + encodeURIComponent(ref);
+    fetch(url).then((r) => r.json()).then((d) => showResult(d && d.status)).catch(() => {});
+
+    function showResult(status) {
+      const map = {
+        paid: ['Platba proběhla ✓', 'Děkujeme! Záloha je zaplacená a místo je vaše.'],
+        pending: ['Platba se zpracovává…', 'Jakmile ji banka potvrdí, dáme vědět e-mailem. Místo už držíme.'],
+        cancelled: ['Platba zrušena', 'Nevadí — místo máte zarezervované i tak, zálohu lze zaplatit na místě.'],
+        failed: ['Platba neproběhla', 'Zkuste to prosím znovu, nebo zaplaťte na místě. Místo je zarezervované.'],
+      };
+      const m = map[status]; if (!m) return;
+      const sec = document.getElementById('rezervace'); if (!sec) return;
+      const wrap = sec.querySelector('.wrap'); if (!wrap) return;
+      const el = document.createElement('div');
+      el.setAttribute('role', 'status');
+      el.style.cssText = 'max-width:62ch;margin:0 auto 1.6rem;padding:1.1rem 1.3rem;border-radius:var(--r-md);background:var(--surface);border:1px solid var(--line);box-shadow:var(--sh-2)';
+      el.innerHTML = '<strong style="font-family:\'Schibsted Grotesk\',sans-serif">' + m[0] +
+        '</strong><br><span style="color:var(--ink-soft)">' + m[1] + '</span>';
+      wrap.insertBefore(el, wrap.firstChild);
+      sec.scrollIntoView({ behavior: 'smooth' });
+    }
   })();
 </script>
 </body>
