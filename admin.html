@@ -313,7 +313,7 @@
 
       <div class="card" style="margin-bottom:1.4rem">
         <h3 style="margin-bottom:.4rem">Napsat a rozeslat newsletter</h3>
-        <p class="muted" style="font-size:.86rem;margin-bottom:1rem">Rozešle se všem aktivním odběratelům. Každý dostane vlastní e-mail s odhlašovacím odkazem. Vyžaduje nastavené Brevo (viz NASTAVENI.md).</p>
+        <p class="muted" style="font-size:.86rem;margin-bottom:1rem">Rozešle se všem aktivním odběratelům přímo z prohlížeče přes EmailJS. Každý dostane vlastní e-mail s odhlašovacím odkazem. Vyžaduje nastavenou EmailJS newsletter šablonu (viz NASTAVENI.md).</p>
         <form id="sendNewsForm">
           <div class="field" style="margin-bottom:1rem"><label for="nl-subject">Předmět</label><input id="nl-subject" required placeholder="např. Nové termíny na červenec 🐰" /></div>
           <div class="field"><label for="nl-body">Text zprávy</label><textarea id="nl-body" rows="7" required placeholder="Ahoj, tento týden přidáváme…" style="resize:vertical;line-height:1.6"></textarea></div>
@@ -332,6 +332,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="supabase-config.js?v=2"></script>
 <script>
 (function () {
@@ -646,30 +647,37 @@
     }
   });
 
-  // rozeslání newsletteru přes edge funkci (Brevo)
-  const FN_BASE = (window.SUPABASE_URL || '').replace(/\/$/, '') + '/functions/v1';
+  // rozeslání newsletteru přímo z adminu přes EmailJS
+  const SITE = 'https://malaveselahranolka.github.io/joga-s-kralicky/';
+  const EJS_OK = !!(window.EMAILJS_PUBLIC_KEY && window.EMAILJS_SERVICE_ID && window.EMAILJS_NEWSLETTER_TEMPLATE_ID &&
+    String(window.EMAILJS_NEWSLETTER_TEMPLATE_ID).indexOf('TVUJ_') !== 0 && typeof window.emailjs !== 'undefined');
+  if (EJS_OK) { try { window.emailjs.init({ publicKey: window.EMAILJS_PUBLIC_KEY }); } catch (e) {} }
+
   $('sendNewsForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const subject = $('nl-subject').value.trim(), message = $('nl-body').value.trim();
     if (!subject || !message) { toast('Doplňte předmět i text'); return; }
-    const active = subscribers.filter((s) => !s.unsubscribed).length;
-    if (!active) { toast('Nemáš žádné aktivní odběratele'); return; }
-    if (!confirm('Rozeslat newsletter „' + subject + '“ na ' + active + ' odběratelů?')) return;
-    const btn = $('nlSendBtn'); btn.disabled = true; const label = btn.textContent; btn.textContent = 'Odesílám…';
-    try {
-      const { data: { session } } = await sb.auth.getSession();
-      const res = await fetch(FN_BASE + '/newsletter-send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (session ? session.access_token : '') },
-        body: JSON.stringify({ subject, message })
-      });
-      const d = await res.json().catch(() => ({}));
-      if (d.ok) { toast('Odesláno: ' + d.sent + ' e-mailů'); $('sendNewsForm').reset(); renderNews(); }
-      else if (d.error === 'brevo_not_configured') toast('Nejdřív nastav Brevo — viz NASTAVENI.md');
-      else if (d.error === 'forbidden' || d.error === 'unauthorized') toast('Nemáte oprávnění k odeslání');
-      else toast('Odeslání selhalo. Je nasazená funkce newsletter-send?');
-    } catch (e2) { toast('Odeslání selhalo — nasadili jste funkci newsletter-send?'); }
+    if (!EJS_OK) { toast('Nejdřív nastav EmailJS newsletter šablonu (viz NASTAVENI.md)'); return; }
+    const list = subscribers.filter((s) => !s.unsubscribed);
+    if (!list.length) { toast('Nemáš žádné aktivní odběratele'); return; }
+    if (!confirm('Rozeslat newsletter „' + subject + '“ na ' + list.length + ' odběratelů?')) return;
+
+    const btn = $('nlSendBtn'); btn.disabled = true; const label = btn.textContent;
+    let sent = 0, failed = 0;
+    for (const s of list) {
+      btn.textContent = 'Odesílám ' + (sent + failed + 1) + '/' + list.length + '…';
+      try {
+        await window.emailjs.send(window.EMAILJS_SERVICE_ID, window.EMAILJS_NEWSLETTER_TEMPLATE_ID, {
+          to_email: s.email, email: s.email, subject: subject, message: message,
+          unsubscribe_url: SITE + '?unsub=' + encodeURIComponent(s.email)
+        });
+        sent++;
+      } catch (err) { failed++; }
+      await new Promise((r) => setTimeout(r, 700)); // šetrně kvůli limitům EmailJS
+    }
     btn.disabled = false; btn.textContent = label;
+    toast('Odesláno: ' + sent + (failed ? (' · nepovedlo se: ' + failed) : ''));
+    if (sent) $('sendNewsForm').reset();
   });
 
   function fillLessonSelects() {

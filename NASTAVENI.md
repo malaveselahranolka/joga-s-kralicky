@@ -240,36 +240,52 @@ V záložce **Rezervace** navíc:
 
 ---
 
-## Rozesílání newsletteru přímo z adminu (Brevo)
+## Rozesílání newsletteru přímo z adminu (EmailJS)
 
-Sbírání adres funguje samo. Tohle přidá **odesílání**: v adminu napíšeš
-zprávu a rozešle se všem odběratelům. Posílá se přes **Brevo** (free tarif
-~300 e-mailů/den). Bez nastavení Brevo tlačítko jen řekne „nastav Brevo".
+Napíšeš zprávu ve **správě** a rozešle se všem odběratelům rovnou z
+prohlížeče přes **EmailJS** (co už používáš na potvrzení rezervací).
+Žádné další služby ani nasazování.
 
-### A) Účet a ověřený odesílatel
-1. Založ účet na **https://www.brevo.com**.
-2. **Senders, Domains & Dedicated IPs → Senders** → přidej a **ověř**
-   adresu, ze které budeš posílat (např. `ahoj@jogaskralicky.cz`).
-3. **SMTP & API → API Keys** → **Generate a new API key**, zkopíruj si ho.
+### A) Vytvoř newsletter šablonu v EmailJS
+1. Přihlas se na **https://dashboard.emailjs.com** → **Email Templates** → **Create New Template**.
+2. Nastav pole:
+   - **To Email:** `{{to_email}}`
+   - **Subject:** `{{subject}}`
+   - **Content (tělo):** vlož `{{message}}` a dole klidně přidej řádek s odhlášením:
+     `Odhlásit odběr: {{unsubscribe_url}}`
+3. Ulož a zkopíruj **Template ID** (např. `template_abc123`).
 
-### B) Doplň odhlašovací funkci do DB
-Spusť **znovu** `supabase/newsletter.sql` (přibyla funkce
-`unsubscribe_newsletter` pro odkaz „Odhlásit" v e-mailu). Je to bezpečné.
-
-### C) Nasazení + tajné údaje (Supabase CLI)
-```bash
-supabase secrets set BREVO_API_KEY=xkeysib-...tvuj-klic...
-supabase secrets set NEWSLETTER_FROM_EMAIL=ahoj@jogaskralicky.cz   # ověřený odesílatel
-supabase secrets set NEWSLETTER_FROM_NAME="Jóga s králíčky"
-supabase secrets set SITE_URL=https://malaveselahranolka.github.io/joga-s-kralicky/
-
-supabase functions deploy newsletter-send
+### B) Doplň ID do configu
+V souboru **`supabase-config.js`** nastav:
+```js
+window.EMAILJS_NEWSLETTER_TEMPLATE_ID = 'template_abc123';
 ```
+Commitni + pushni. (PUBLIC_KEY a SERVICE_ID už tam máš z rezervací.)
 
-### D) Rozeslání
+### C) Rozeslání
 V adminu → **Newsletter** → **Napsat a rozeslat newsletter**: vyplň
-předmět a text, klikni **Rozeslat odběratelům**. Každý dostane vlastní
-e-mail (adresy se navzájem nevidí) i s odkazem **Odhlásit odběr**.
+předmět a text, **Rozeslat odběratelům**. Posílá po jednom (tlačítko
+ukazuje průběh), každý dostane vlastní e-mail i s odhlašovacím odkazem.
 
-> Poznámka: rozesílat smí jen přihlášená majitelka — funkce si ověří účet.
-> Odhlášení přes odkaz v e-mailu funguje automaticky (nastaví `unsubscribed`).
+> Pozor na limity EmailJS (free tarif ~200 e-mailů/měsíc). Na malý seznam
+> pohodlně stačí; u většího zvaž službu na hromadné rozesílání (Ecomail…)
+> a použij **Stáhnout CSV**.
+> Odhlášení přes odkaz v e-mailu funguje automaticky (`?unsub=` na webu).
+
+---
+
+## Kdo vidí data ve správě (vlastník)
+
+Admin ukazuje rezervace, odběratele atd. **jen účtu vlastníka** —
+definovaný v `supabase/schema.sql` funkcí `is_owner()`. Když se přihlásíš
+jiným e-mailem, RLS ti data **schová** (uvidíš prázdno, i když v databázi
+jsou). Chceš-li povolit víc účtů, spusť v SQL editoru:
+```sql
+create or replace function public.is_owner() returns boolean
+language sql stable as $$
+  select coalesce(auth.jwt() ->> 'email', '') in (
+    'kovacikovabarbora71@gmail.com',   -- majitelka
+    'adamekfilip12@gmail.com'          -- správce webu
+  )
+$$;
+```
