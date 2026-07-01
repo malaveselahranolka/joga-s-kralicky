@@ -1688,6 +1688,17 @@
       !!window.SUPABASE_ANON_KEY && window.SUPABASE_ANON_KEY.length > 20 && typeof window.supabase !== 'undefined';
     const sb = CONFIGURED ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY) : null;
     const setMsg = (t, cls) => { msg.textContent = t; msg.className = 'fn-msg' + (cls ? ' ' + cls : ''); };
+
+    // odhlášení z odkazu v e-mailu (?unsub=email)
+    (function () {
+      const p = new URLSearchParams(location.search).get('unsub');
+      if (!p || !sb) return;
+      sb.rpc('unsubscribe_newsletter', { p_email: p }).then(() => {
+        setMsg('Odhlásili jsme vás z odběru novinek. Kdykoliv se můžete přihlásit znovu.', 'ok');
+        form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }).catch(() => {});
+    })();
+
     let busy = false;
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
