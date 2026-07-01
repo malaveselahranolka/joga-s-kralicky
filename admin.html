@@ -208,6 +208,7 @@
       <button class="tab" role="tab" aria-selected="false" data-tab="lessons">Lekce</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="bookings">Rezervace</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="news">Newsletter</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="vouchers">Poukazy</button>
     </div>
 
     <!-- DASHBOARD -->
@@ -326,6 +327,24 @@
 
       <div class="rows" id="newsRows"></div>
     </section>
+
+    <!-- POUKAZY -->
+    <section class="panel" id="panel-vouchers" role="tabpanel">
+      <div class="panel-head">
+        <h2>Dárkové poukazy</h2>
+        <button class="btn btn-ghost btn-sm" id="refreshVouchers">Obnovit</button>
+      </div>
+      <div class="stat-row" id="voucherStats"></div>
+      <div class="toolbar">
+        <label style="margin:0">Zobrazit:</label>
+        <select id="voucherFilter">
+          <option value="active">Neuplatněné</option>
+          <option value="all">Všechny</option>
+          <option value="redeemed">Uplatněné</option>
+        </select>
+      </div>
+      <div class="rows" id="voucherRows"></div>
+    </section>
   </div>
 </div>
 
@@ -343,7 +362,7 @@
 
   const $ = (id) => document.getElementById(id);
   const loginScreen = $('loginScreen'), app = $('app');
-  let lessons = [], bookings = [], subscribers = [], editingId = null;
+  let lessons = [], bookings = [], subscribers = [], vouchers = [], editingId = null;
 
   // helpers ------------------------------------------------------------
   const cap = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
@@ -403,16 +422,18 @@
 
   // data ---------------------------------------------------------------
   async function loadAll() {
-    const [lr, br, nr] = await Promise.all([
+    const [lr, br, nr, vr] = await Promise.all([
       sb.from('lessons').select('*').order('starts_at', { ascending: true }),
       sb.from('bookings').select('*').order('created_at', { ascending: false }),
-      // newsletter je nepovinný — pokud tabulka ještě není (newsletter.sql nespuštěn), nevadí
-      sb.from('newsletter_subscribers').select('*').order('created_at', { ascending: false })
+      // newsletter/poukazy jsou nepovinné — pokud tabulka ještě není, nevadí
+      sb.from('newsletter_subscribers').select('*').order('created_at', { ascending: false }),
+      sb.from('vouchers').select('*').order('created_at', { ascending: false })
     ]);
     if (lr.error || br.error) { toast('Načtení dat selhalo'); return; }
     lessons = lr.data || []; bookings = br.data || [];
     subscribers = nr && !nr.error ? (nr.data || []) : [];
-    renderDash(); renderLessons(); renderBookings(); fillLessonSelects(); renderNews();
+    vouchers = vr && !vr.error ? (vr.data || []) : [];
+    renderDash(); renderLessons(); renderBookings(); fillLessonSelects(); renderNews(); renderVouchers();
   }
 
   // tabs ---------------------------------------------------------------
@@ -678,6 +699,42 @@
     btn.disabled = false; btn.textContent = label;
     toast('Odesláno: ' + sent + (failed ? (' · nepovedlo se: ' + failed) : ''));
     if (sent) $('sendNewsForm').reset();
+  });
+
+  // poukazy -----------------------------------------------------------
+  $('refreshVouchers').addEventListener('click', loadAll);
+  $('voucherFilter').addEventListener('change', renderVouchers);
+  function renderVouchers() {
+    const active = vouchers.filter((v) => !v.redeemed);
+    $('voucherStats').innerHTML = stat(active.length, 'neuplatněných') +
+      stat(vouchers.filter((v) => v.redeemed).length, 'uplatněných') +
+      stat(vouchers.length, 'celkem prodáno');
+    const f = $('voucherFilter').value;
+    let list = vouchers.slice();
+    if (f === 'active') list = list.filter((v) => !v.redeemed);
+    else if (f === 'redeemed') list = list.filter((v) => v.redeemed);
+    if (!vouchers.length) {
+      $('voucherRows').innerHTML = '<div class="empty">Zatím žádné prodané poukazy. Až spustíš <strong>supabase/vouchers.sql</strong> a někdo koupí poukaz, objeví se tu.</div>';
+      return;
+    }
+    $('voucherRows').innerHTML = list.length ? list.map((v) => {
+      const kc = v.amount ? (v.amount / 100 | 0) + ' Kč' : '';
+      return '<div class="row' + (v.redeemed ? ' is-cancelled' : '') + '">' +
+        '<div class="main"><div class="ttl" style="font-family:monospace;letter-spacing:.04em">' + esc(v.code) +
+          (v.redeemed ? ' <span class="pill pill-cancel">Uplatněno</span>' : ' <span class="pill pill-ok">Platný</span>') + '</div>' +
+        '<div class="sub">' + (v.email ? esc(v.email) + ' · ' : '') + (kc ? kc + ' · ' : '') + fmtDT(v.created_at) + '</div></div>' +
+        '<div class="acts">' + (v.redeemed
+          ? '<button class="btn btn-ghost btn-sm" data-unredeem="' + v.id + '">Vrátit platnost</button>'
+          : '<button class="btn btn-primary btn-sm" data-redeem="' + v.id + '">Označit uplatněno</button>') +
+        '</div></div>';
+    }).join('') : '<div class="empty">Pro tento výběr nejsou žádné poukazy.</div>';
+  }
+  $('voucherRows').addEventListener('click', async (e) => {
+    const btn = e.target.closest('button'); if (!btn) return;
+    const id = btn.dataset.redeem || btn.dataset.unredeem; if (!id) return;
+    const redeemed = !!btn.dataset.redeem;
+    const { error } = await sb.from('vouchers').update({ redeemed, redeemed_at: redeemed ? new Date().toISOString() : null }).eq('id', id);
+    if (error) toast('Akce selhala'); else { toast(redeemed ? 'Označeno uplatněno' : 'Platnost vrácena'); await loadAll(); }
   });
 
   function fillLessonSelects() {

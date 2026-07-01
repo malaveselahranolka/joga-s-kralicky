@@ -158,14 +158,18 @@ V Supabase → **SQL Editor** → **New query** vlož obsah souboru
 **Edge Functions → Secrets** nastav:
 ```
 STRIPE_SECRET_KEY      = sk_test_...
-PAYMENT_DEPOSIT_CZK    = 290
+PAYMENT_DEPOSIT_CZK    = 499
+PAYMENT_VOUCHER_CZK    = 499
 SITE_URL               = https://malaveselahranolka.github.io/joga-s-kralicky/
 STRIPE_WEBHOOK_SECRET  = whsec_...   (doplníš v kroku D)
 ```
 Pak **Edge Functions → Deploy a new function → Via Editor** a nahraj (jméno přesně):
 - `stripe-create`  — vlož obsah `supabase/functions/stripe-create/index.ts`
+- `stripe-voucher` — vlož obsah `supabase/functions/stripe-voucher/index.ts` (dárkové poukazy)
 - `stripe-webhook` — vlož obsah `supabase/functions/stripe-webhook/index.ts`;
   u téhle funkce **vypni „Verify JWT"** (Stripe neposílá Supabase token).
+
+Taky spusť v SQL editoru **`supabase/vouchers.sql`** (tabulka poukazů).
 
 *(SUPABASE_URL a SERVICE_ROLE_KEY doplňovat netřeba — funkce je mají automaticky.)*
 
@@ -182,18 +186,27 @@ window.PAYMENTS = {
   provider: 'stripe',
   enabled: true,
   functionsUrl: 'https://TVUJ_PROJECT_REF.functions.supabase.co',
-  depositCzk: 290,
+  depositCzk: 499,
+  voucherCzk: 499,
 };
 ```
-Commitni + pushni. Hotovo — po rezervaci se nabídne online záloha.
+Commitni + pushni. Hotovo — po rezervaci se nabídne platba a objeví se karta
+na koupi dárkového poukazu.
 
-### F) Test
-Rezervuj zkušebně a klikni **Zaplatit zálohu**. Ve Stripe **Test mode** zaplať
-testovací kartou `4242 4242 4242 4242` (libovolné budoucí datum a CVC). Po návratu
-se nahoře u Rezervace ukáže stav a v Supabase → `bookings` bude `payment_status = paid`.
+### F) Dárkový poukaz + e-mail s kódem (EmailJS)
+Poukaz se zaplatí přes Stripe, po zaplacení web ukáže **kód** a pošle ho e-mailem.
+1. V EmailJS vytvoř šablonu (pole: `to_email`, `code`, `amount`), zkopíruj Template ID.
+2. Do `supabase-config.js`: `window.EMAILJS_VOUCHER_TEMPLATE_ID = 'template_…';`
+3. Prodané poukazy vidíš v adminu → záložka **Poukazy** (odškrtneš „uplatněno").
 
-> Ostrý provoz: přepni Stripe do **Live mode**, použij `sk_live_...` a `whsec_...`
-> z živého webhooku (jinak stejný postup).
+### G) Test
+Rezervuj/kup poukaz zkušebně. Ve Stripe **Test mode** zaplať kartou
+`4242 4242 4242 4242` (libovolné budoucí datum a CVC). Rezervace → v Supabase
+`bookings.payment_status = paid`; poukaz → záložka Poukazy + e-mail s kódem.
+
+> **Doporučení:** nejdřív otestuj celé v **Test mode**. Teprve až vše sedí,
+> přepni Stripe na **Live mode**, dej `sk_live_...` a `whsec_...` z živého
+> webhooku (jinak stejný postup). V live jde o skutečné peníze.
 
 ---
 

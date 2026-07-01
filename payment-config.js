@@ -18,6 +18,10 @@ window.PAYMENTS = {
   // (Project URL má tvar https://REF.supabase.co → sem dej https://REF.functions.supabase.co)
   functionsUrl: '',
 
-  // Výše zálohy v Kč (skutečnou částku hlídá i server, tohle je jen popisek v UI).
-  depositCzk: 290,
+  // Cena jednorázového vstupu v Kč (skutečnou částku hlídá i server, tohle je popisek v UI).
+  depositCzk: 499,
+
+  // Odkaz na Stripe platbu za dárkový poukaz (vytvoří se ve Stripe; vyplní se po nastavení).
+  voucherUrl: '',
+  voucherCzk: 499,
 };

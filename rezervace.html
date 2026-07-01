@@ -135,6 +135,21 @@
   .hidden { display: none !important; }
   .empty { text-align: center; color: var(--ink-soft); padding: 3rem 1rem; border: 1px dashed var(--line); border-radius: var(--r-xl); }
 
+  /* dárkový poukaz */
+  .voucher-card { margin-top: 2rem; background: linear-gradient(155deg, var(--forest), var(--forest-deep)); color: var(--cream); border-radius: var(--r-xl); padding: clamp(1.5rem,3vw,2.3rem); display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.3rem 2.2rem; align-items: center; box-shadow: var(--sh-3); }
+  .voucher-card h2 { color: #fff; font-size: clamp(1.3rem,1.1rem+.8vw,1.7rem); }
+  .voucher-card p { margin-top: .6rem; color: rgba(255,255,255,.82); font-size: .95rem; line-height: 1.6; }
+  .voucher-card b { color: var(--carrot); font-weight: 700; }
+  .vc-buy { display: flex; flex-direction: column; gap: .7rem; }
+  .vc-buy input { width: 100%; font-family: inherit; font-size: 1rem; padding: .9em 1.1em; border-radius: 999px; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.96); color: var(--ink); transition: box-shadow .3s var(--ease); }
+  .vc-buy input:focus { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--clover) 45%, transparent); }
+  .vc-buy .btn-primary { background: var(--cream); color: var(--forest); }
+  .vc-buy .btn-primary:hover { background: #fff; }
+  .vc-msg { margin: 0; font-size: .82rem; min-height: 1em; color: rgba(255,255,255,.85); }
+  .vc-msg.err { color: #f0c2a0; }
+  .code-box { font-family: "Schibsted Grotesk", sans-serif; font-weight: 700; font-size: clamp(1.6rem,1.2rem+1.6vw,2.3rem); letter-spacing: .06em; color: var(--forest); background: var(--cream); border: 2px dashed var(--clover); border-radius: var(--r-md); padding: .7em 1em; display: inline-block; margin: 1rem 0; }
+  @media (max-width: 720px) { .voucher-card { grid-template-columns: 1fr; } }
+
   @media (max-width: 720px) {
     .slot { grid-template-columns: 1fr; gap: .9rem; }
     .slot .time { flex-direction: row; align-items: center; }
@@ -171,6 +186,18 @@
         <p>Vyberte si termín a rezervujte místo. Kapacita je malá, tak se vyplatí být rychlí.</p>
       </div>
       <div id="dayList"></div>
+
+      <div id="voucherCard" class="voucher-card hidden">
+        <div class="vc-info">
+          <h2>Darujte klid 🐰</h2>
+          <p>Dárkový poukaz na jednu lekci jógy s králíčky za <b>499&nbsp;Kč</b>. Kód přijde e-mailem, obdarovaný ho uplatní přímo ve studiu.</p>
+        </div>
+        <div class="vc-buy">
+          <input id="voucherEmail" type="email" autocomplete="email" placeholder="E-mail pro zaslání poukazu" aria-label="E-mail pro zaslání poukazu" />
+          <button class="btn btn-primary" id="voucherBtn" type="button">Koupit poukaz 499&nbsp;Kč <span class="arrow">→</span></button>
+          <p class="vc-msg" id="voucherMsg" role="status"></p>
+        </div>
+      </div>
     </section>
 
     <!-- STEP 2: formulář -->
@@ -436,15 +463,56 @@
     });
   });
 
-  // návrat z platby
+  // ---- dárkový poukaz ----
+  const VOUCHER_TPL = window.EMAILJS_VOUCHER_TEMPLATE_ID;
+  const VOUCHER_EMAIL_OK = EMAIL_OK && VOUCHER_TPL && String(VOUCHER_TPL).indexOf('TVUJ_') !== 0;
+  const voucherCode = (sid) => 'DK-' + String(sid).replace(/[^A-Za-z0-9]/g, '').slice(-8).toUpperCase();
+
+  if (PAY_ON) {
+    $('voucherCard').classList.remove('hidden');
+    $('voucherBtn').addEventListener('click', async () => {
+      const em = $('voucherEmail').value.trim(), msg = $('voucherMsg');
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { msg.textContent = 'Zadejte prosím e-mail, kam poukaz poslat.'; msg.className = 'vc-msg err'; return; }
+      const btn = $('voucherBtn'); btn.disabled = true; const label = btn.innerHTML; btn.textContent = 'Přesměrovávám na platbu…';
+      try {
+        localStorage.setItem('voucherEmail', em);
+        const res = await fetch(PAY.functionsUrl.replace(/\/$/, '') + '/stripe-voucher', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': window.SUPABASE_ANON_KEY || '', 'Authorization': 'Bearer ' + (window.SUPABASE_ANON_KEY || '') },
+          body: JSON.stringify({ email: em })
+        });
+        const d = await res.json();
+        if (d.ok && d.url) { window.location.href = d.url; return; }
+      } catch (e) {}
+      btn.disabled = false; btn.innerHTML = label;
+      msg.textContent = 'Platbu se teď nepodařilo spustit. Zkuste to prosím znovu.'; msg.className = 'vc-msg err';
+    });
+  }
+
+  // ---- návrat z platby / poukazu ----
   (function () {
-    const platba = new URLSearchParams(location.search).get('platba');
-    if (!platba) return;
-    if (platba === 'ok') stateBox('ok', 'Platba přijata ✓', '<p>Děkujeme! Záloha je zaplacená a místo je vaše. Potvrzení dorazí e-mailem.</p>', '<a class="btn btn-ghost" href="rezervace.html">Zpět na termíny</a>');
+    const q = new URLSearchParams(location.search);
+    const platba = q.get('platba'), voucher = q.get('voucher');
+    if (platba === 'ok') stateBox('ok', 'Platba přijata ✓', '<p>Děkujeme! Platba proběhla a místo je vaše. Potvrzení dorazí e-mailem.</p>', '<a class="btn btn-ghost" href="rezervace.html">Zpět na termíny</a>');
     else if (platba === 'zrus') stateBox('info', 'Platba nedokončena', '<p>Nevadí — místo máte zarezervované i tak, zaplatit můžete na místě.</p>', '<a class="btn btn-ghost" href="rezervace.html">Zpět na termíny</a>');
+    else if (voucher === 'ok') {
+      const code = voucherCode(q.get('session_id') || '');
+      const em = localStorage.getItem('voucherEmail') || '';
+      stateBox('ok', 'Poukaz je zaplacený 🐰',
+        '<p>Děkujeme! Tady je kód dárkového poukazu — obdarovaný ho uplatní přímo ve studiu:</p>' +
+        '<div class="code-box">' + code + '</div>' +
+        '<p>' + (VOUCHER_EMAIL_OK && em ? ('Poslali jsme ho i na ' + esc(em) + '.') : 'Uložte si ho prosím (opište nebo udělejte screenshot).') + '</p>',
+        '<a class="btn btn-ghost" href="rezervace.html">Zpět na termíny</a>');
+      if (VOUCHER_EMAIL_OK && em) {
+        try { window.emailjs.send(window.EMAILJS_SERVICE_ID, VOUCHER_TPL, { email: em, to_email: em, code: code, amount: (PAY.voucherCzk || 499) + ' Kč' }); } catch (e) {}
+      }
+      localStorage.removeItem('voucherEmail');
+    }
+    else if (voucher === 'zrus') stateBox('info', 'Nákup poukazu zrušen', '<p>Poukaz jsi nekoupil — nic se nestrhlo. Klidně to zkus znovu.</p>', '<a class="btn btn-ghost" href="rezervace.html">Zpět na termíny</a>');
   })();
 
-  if (!new URLSearchParams(location.search).get('platba')) load();
+  const qs = new URLSearchParams(location.search);
+  if (!qs.has('platba') && !qs.has('voucher')) load();
 })();
 </script>
 </body>
