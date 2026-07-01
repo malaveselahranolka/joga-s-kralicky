@@ -243,3 +243,39 @@ V záložce **Rezervace** navíc:
 
 > Tahle evidence funguje i **bez** zapnutého Comgate — stačí spustit
 > `supabase/comgate.sql` a platby na místě si odškrtáváš ručně.
+
+---
+
+## Rozesílání newsletteru přímo z adminu (Brevo)
+
+Sbírání adres funguje samo. Tohle přidá **odesílání**: v adminu napíšeš
+zprávu a rozešle se všem odběratelům. Posílá se přes **Brevo** (free tarif
+~300 e-mailů/den). Bez nastavení Brevo tlačítko jen řekne „nastav Brevo".
+
+### A) Účet a ověřený odesílatel
+1. Založ účet na **https://www.brevo.com**.
+2. **Senders, Domains & Dedicated IPs → Senders** → přidej a **ověř**
+   adresu, ze které budeš posílat (např. `ahoj@jogaskralicky.cz`).
+3. **SMTP & API → API Keys** → **Generate a new API key**, zkopíruj si ho.
+
+### B) Doplň odhlašovací funkci do DB
+Spusť **znovu** `supabase/newsletter.sql` (přibyla funkce
+`unsubscribe_newsletter` pro odkaz „Odhlásit" v e-mailu). Je to bezpečné.
+
+### C) Nasazení + tajné údaje (Supabase CLI)
+```bash
+supabase secrets set BREVO_API_KEY=xkeysib-...tvuj-klic...
+supabase secrets set NEWSLETTER_FROM_EMAIL=ahoj@jogaskralicky.cz   # ověřený odesílatel
+supabase secrets set NEWSLETTER_FROM_NAME="Jóga s králíčky"
+supabase secrets set SITE_URL=https://malaveselahranolka.github.io/joga-s-kralicky/
+
+supabase functions deploy newsletter-send
+```
+
+### D) Rozeslání
+V adminu → **Newsletter** → **Napsat a rozeslat newsletter**: vyplň
+předmět a text, klikni **Rozeslat odběratelům**. Každý dostane vlastní
+e-mail (adresy se navzájem nevidí) i s odkazem **Odhlásit odběr**.
+
+> Poznámka: rozesílat smí jen přihlášená majitelka — funkce si ověří účet.
+> Odhlášení přes odkaz v e-mailu funguje automaticky (nastaví `unsubscribed`).

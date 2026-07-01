@@ -55,4 +55,21 @@ $$;
 
 grant execute on function public.subscribe_newsletter(text, text) to anon, authenticated;
 
+-- 4) Odhlášení odběru (volá web z odkazu v e-mailu) -------------------
+create or replace function public.unsubscribe_newsletter(p_email text)
+returns json
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.newsletter_subscribers
+    set unsubscribed = true
+  where lower(email) = lower(btrim(coalesce(p_email, '')));
+  return json_build_object('ok', true);
+end;
+$$;
+
+grant execute on function public.unsubscribe_newsletter(text) to anon, authenticated;
+
 -- Hotovo. E-maily nikdo cizí nepřečte — jen majitelka přes admin.
