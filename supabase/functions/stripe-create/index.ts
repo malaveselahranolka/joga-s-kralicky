@@ -60,8 +60,8 @@ Deno.serve(async (req) => {
       }],
       metadata: { booking_id: String(bk.id) },
       payment_intent_data: { metadata: { booking_id: String(bk.id) } },
-      success_url: `${base}/?platba=ok#rezervace`,
-      cancel_url: `${base}/?platba=zrus#rezervace`,
+      success_url: `${base}/rezervace.html?platba=ok`,
+      cancel_url: `${base}/rezervace.html?platba=zrus`,
     });
 
     await admin.from("bookings").update({

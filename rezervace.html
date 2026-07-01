@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rezervace — Jóga s králíčky</title>
+<meta name="description" content="Vyberte si termín lekce jógy s králíčky a rezervujte si místo. Studio klidu, Brno." />
+<link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #F1EEE5; --cream: #F7F4EC; --surface: #FFFFFF;
+    --ink: #1E231C; --ink-soft: #5C6357;
+    --forest: #2C3B2E; --forest-deep: #1E2920; --clover: #6E8A4E; --carrot: #D2854A;
+    --line: #E3DFD3; --line-soft: #ECE8DE;
+    --r-xl: 30px; --r-lg: 22px; --r-md: 14px;
+    --ease: cubic-bezier(.22,.61,.36,1); --ease-spring: cubic-bezier(.34,1.4,.5,1);
+    --sh-1: 0 1px 2px rgba(30,40,30,.05), 0 3px 8px -2px rgba(30,40,30,.06);
+    --sh-2: 0 1px 0 rgba(255,255,255,.55) inset, 0 3px 6px -2px rgba(30,40,30,.06), 0 14px 26px -12px rgba(44,59,46,.20);
+    --sh-3: 0 1px 0 rgba(255,255,255,.6) inset, 0 6px 14px -8px rgba(30,40,30,.14), 0 26px 46px -22px rgba(44,59,46,.32);
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; font-family: "Hanken Grotesk", system-ui, sans-serif; color: var(--ink); background: var(--paper); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  h1, h2, h3, h4 { font-family: "Schibsted Grotesk", system-ui, sans-serif; font-weight: 600; line-height: 1.05; letter-spacing: -.025em; margin: 0; }
+  p { margin: 0; }
+  a { color: inherit; text-decoration: none; }
+  img, svg { display: block; max-width: 100%; }
+  ::selection { background: var(--clover); color: #fff; }
+  .wrap { width: min(100% - 2.4rem, 960px); margin-inline: auto; }
+
+  /* film grain */
+  body::after { content: ""; position: fixed; inset: 0; z-index: 2; pointer-events: none; opacity: .03; mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+  /* top bar */
+  header.bar { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--paper) 90%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+  .bar-inner { display: flex; align-items: center; justify-content: space-between; height: 68px; }
+  .brand { display: inline-flex; align-items: center; gap: .55rem; font-family: "Schibsted Grotesk"; font-weight: 700; font-size: 1.12rem; letter-spacing: -.02em; }
+  .brand img { width: 32px; height: 32px; }
+  .home-link { display: inline-flex; align-items: center; gap: .45rem; font-weight: 600; font-size: .95rem; color: var(--ink-soft); transition: color .3s var(--ease); }
+  .home-link:hover { color: var(--forest); }
+
+  main { padding: clamp(2.4rem, 5vw, 4rem) 0 5rem; }
+  .page-head { text-align: center; max-width: 44ch; margin: 0 auto clamp(2rem, 4vw, 3rem); }
+  .eyebrow { display: inline-block; font-size: .82rem; font-weight: 600; letter-spacing: .04em; color: var(--clover); margin-bottom: .8rem; }
+  .eyebrow::before { content: "/ "; opacity: .7; }
+  .page-head h1 { font-size: clamp(2rem, 1.4rem + 2.4vw, 3.2rem); }
+  .page-head p { margin-top: 1rem; color: var(--ink-soft); font-size: clamp(1.02rem, 1rem + .3vw, 1.15rem); }
+
+  /* ---------- step 1: termíny ---------- */
+  .day-group { background: color-mix(in srgb, var(--forest) 6%, var(--cream)); border: 1px solid var(--line); border-radius: var(--r-xl); padding: clamp(1.2rem, 3vw, 2rem); margin-bottom: 1.4rem; }
+  .day-head { text-align: center; margin-bottom: 1.2rem; display: flex; align-items: center; justify-content: center; gap: .7rem; flex-wrap: wrap; }
+  .day-head .date { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: clamp(1.2rem, 1rem + .8vw, 1.5rem); color: var(--forest); }
+  .day-head .dow { font-size: .8rem; font-weight: 600; color: var(--ink-soft); background: var(--surface); border: 1px solid var(--line); padding: .2em .7em; border-radius: 999px; text-transform: lowercase; }
+
+  .slot { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--sh-1); padding: 1rem 1.2rem; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 1.2rem; transition: transform .4s var(--ease-spring), box-shadow .4s var(--ease); }
+  .slot + .slot { margin-top: .9rem; }
+  .slot:hover { transform: translateY(-3px); box-shadow: var(--sh-3); }
+  .slot .time { display: flex; flex-direction: column; gap: .4rem; align-items: flex-start; }
+  .slot .time .rng { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: 1.08rem; color: var(--ink); background: var(--cream); border: 1px solid var(--line); border-radius: var(--r-md); padding: .55rem .8rem; white-space: nowrap; }
+  .slot .time .dur { font-size: .74rem; font-weight: 600; color: var(--ink-soft); border: 1px solid var(--line); border-radius: 999px; padding: .18em .7em; }
+  .slot .info { display: flex; align-items: center; gap: 1rem; min-width: 0; }
+  .slot .thumb { width: 58px; height: 58px; border-radius: 14px; object-fit: cover; flex: none; border: 1px solid var(--line); }
+  .slot .meta { min-width: 0; }
+  .slot .meta .lbl { font-size: .72rem; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-soft); }
+  .slot .meta .val { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: 1.02rem; color: var(--ink); }
+  .slot .meta .place { margin-top: .4rem; }
+  .slot .meta .place .val { font-family: "Hanken Grotesk"; font-weight: 500; font-size: .92rem; color: var(--ink-soft); }
+  .slot .book { text-align: center; }
+  .slot .cap { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: 1.05rem; color: var(--clover); margin-bottom: .5rem; }
+  .slot .cap b { font-size: 1.35rem; }
+  .slot.full .cap { color: var(--carrot); }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; font-family: inherit; font-size: 1rem; font-weight: 600; padding: .8em 1.5em; border-radius: 999px; border: 1px solid transparent; cursor: pointer; transition: transform .3s var(--ease), background-color .3s var(--ease), box-shadow .3s var(--ease); }
+  .btn:focus-visible { outline: 2px solid var(--clover); outline-offset: 3px; }
+  .btn-primary { background: var(--forest); color: var(--cream); }
+  .btn-primary:hover { transform: translateY(-2px); background: var(--forest-deep); box-shadow: 0 12px 22px -12px rgba(44,59,46,.6); }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+  .btn-ghost { background: transparent; border-color: var(--line); color: var(--ink); }
+  .btn-ghost:hover { transform: translateY(-2px); border-color: var(--forest); background: var(--cream); }
+  .btn .arrow { transition: transform .3s var(--ease); }
+  .btn:hover .arrow { transform: translateX(3px); }
+  .slot .book .btn { padding: .6em 1.3em; }
+
+  /* ---------- step 2: form ---------- */
+  .back { display: inline-flex; align-items: center; gap: .5rem; font-weight: 600; color: var(--carrot); margin-bottom: 1.4rem; transition: gap .3s var(--ease); }
+  .back:hover { gap: .8rem; }
+  .summary { display: flex; align-items: center; gap: clamp(1rem, 3vw, 2.4rem); flex-wrap: wrap; justify-content: center; text-align: left; margin: 0 auto 2rem; max-width: 760px; }
+  .summary .blk .lbl { font-size: .72rem; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-soft); }
+  .summary .blk .big { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: 1.2rem; color: var(--forest); }
+  .summary .blk .sub { font-weight: 500; color: var(--ink); }
+  .summary .thumb { width: 66px; height: 66px; border-radius: 16px; object-fit: cover; border: 1px solid var(--line); }
+
+  .form-card { background: color-mix(in srgb, var(--forest) 6%, var(--cream)); border: 1px solid var(--line); border-radius: var(--r-xl); padding: clamp(1.4rem, 4vw, 2.6rem); max-width: 760px; margin-inline: auto; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; }
+  .field label { display: block; font-size: .82rem; font-weight: 700; margin-bottom: .4rem; }
+  .field input { width: 100%; font-family: inherit; font-size: 1rem; color: var(--ink); padding: .85em 1.05em; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface); transition: border-color .3s var(--ease), box-shadow .3s var(--ease); }
+  .field input:focus { outline: none; border-color: var(--forest); box-shadow: 0 0 0 3px color-mix(in srgb, var(--forest) 18%, transparent); }
+  .field.invalid input { border-color: var(--carrot); }
+  .field .err { display: none; color: var(--carrot); font-size: .8rem; font-weight: 700; margin-top: .35rem; }
+  .show-errors .field.invalid .err { display: block; }
+
+  .rowline { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin: 1.6rem 0; padding: 1.3rem 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .rowline .lbl { font-size: .82rem; font-weight: 700; color: var(--ink-soft); }
+  .stepper { display: inline-flex; align-items: center; gap: .4rem; border: 1px solid var(--line); border-radius: 999px; padding: .25rem; background: var(--surface); }
+  .stepper button { width: 2.2rem; height: 2.2rem; border-radius: 50%; border: 0; background: var(--forest); color: var(--cream); font-size: 1.3rem; line-height: 1; cursor: pointer; display: grid; place-items: center; transition: background-color .3s var(--ease), transform .2s var(--ease); }
+  .stepper button:hover:not(:disabled) { background: var(--forest-deep); }
+  .stepper button:active:not(:disabled) { transform: scale(.92); }
+  .stepper button:disabled { opacity: .3; cursor: not-allowed; }
+  .stepper .val { min-width: 2rem; text-align: center; font-family: "Schibsted Grotesk"; font-weight: 600; font-size: 1.25rem; }
+  .price .lbl { font-size: .82rem; font-weight: 700; color: var(--ink-soft); text-align: right; }
+  .price .amt { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.1rem); color: var(--forest); line-height: 1; margin-top: .2rem; }
+
+  .consent { display: flex; align-items: flex-start; gap: .6rem; font-size: .92rem; color: var(--ink-soft); margin-bottom: 1.4rem; }
+  .consent input { margin-top: .25rem; width: 18px; height: 18px; accent-color: var(--forest); flex: none; }
+  .consent a { color: var(--clover); text-decoration: underline; }
+  .submit-wrap { text-align: center; }
+  .submit-wrap .btn { width: 100%; max-width: 380px; justify-content: center; font-size: 1.05rem; padding: 1em 1.6em; }
+  .note { margin-top: .9rem; font-size: .85rem; color: var(--ink-soft); text-align: center; }
+  .pay-logos { margin: 2rem auto 0; display: flex; align-items: center; justify-content: center; gap: 1.4rem; flex-wrap: wrap; opacity: .8; }
+  .pay-logos span { font-size: .78rem; font-weight: 700; color: var(--ink-soft); letter-spacing: .02em; }
+
+  /* state / success */
+  .state { text-align: center; max-width: 620px; margin: 0 auto; padding: clamp(2rem,5vw,3.5rem); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-xl); box-shadow: var(--sh-2); }
+  .state .icon { width: 68px; height: 68px; margin: 0 auto 1.3rem; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--clover) 18%, var(--surface)); color: var(--forest); }
+  .state .icon.info { background: color-mix(in srgb, var(--ink) 7%, var(--surface)); color: var(--ink-soft); }
+  .state .icon svg { width: 32px; height: 32px; }
+  .state h2 { font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem); }
+  .state p { margin-top: .9rem; color: var(--ink-soft); }
+  .state .big { margin-top: 1rem; font-family: "Schibsted Grotesk"; font-weight: 600; font-size: 1.2rem; color: var(--ink); }
+  .state .acts { margin-top: 1.8rem; display: flex; gap: .8rem; justify-content: center; flex-wrap: wrap; }
+  .hidden { display: none !important; }
+  .empty { text-align: center; color: var(--ink-soft); padding: 3rem 1rem; border: 1px dashed var(--line); border-radius: var(--r-xl); }
+
+  @media (max-width: 720px) {
+    .slot { grid-template-columns: 1fr; gap: .9rem; }
+    .slot .time { flex-direction: row; align-items: center; }
+    .slot .book { display: flex; align-items: center; justify-content: space-between; gap: 1rem; border-top: 1px solid var(--line-soft); padding-top: .9rem; }
+    .slot .book .cap { margin-bottom: 0; }
+    .slot .book .btn { flex: 1; max-width: 200px; }
+    .grid2 { grid-template-columns: 1fr; }
+    .summary { justify-content: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap bar-inner">
+    <a class="brand" href="index.html" aria-label="Jóga s králíčky — domů">
+      <img src="assets/logo.svg" alt="" width="32" height="32" /> Jóga&nbsp;s&nbsp;králíčky
+    </a>
+    <a class="home-link" href="index.html">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18 9 12l6-6"/></svg>
+      Zpět na web
+    </a>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+
+    <!-- STEP 1: výběr termínu -->
+    <section id="stepPick">
+      <div class="page-head">
+        <span class="eyebrow">Rezervace</span>
+        <h1>Aktuální termíny</h1>
+        <p>Vyberte si termín a rezervujte místo. Kapacita je malá, tak se vyplatí být rychlí.</p>
+      </div>
+      <div id="dayList"></div>
+    </section>
+
+    <!-- STEP 2: formulář -->
+    <section id="stepForm" class="hidden">
+      <a class="back" id="backLink" href="#">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18 9 12l6-6"/></svg>
+        Zpět na výběr termínu
+      </a>
+      <div class="page-head" style="margin-bottom:1.6rem"><h1>Rezervace</h1></div>
+
+      <div class="summary" id="summary"></div>
+
+      <form class="form-card" id="bookForm" novalidate>
+        <div class="grid2">
+          <div class="field"><label for="f-first">Vaše jméno</label><input id="f-first" autocomplete="given-name" placeholder="Jméno" required /><span class="err">Doplňte jméno.</span></div>
+          <div class="field"><label for="f-last">Vaše příjmení</label><input id="f-last" autocomplete="family-name" placeholder="Příjmení" required /><span class="err">Doplňte příjmení.</span></div>
+          <div class="field"><label for="f-tel">Váš telefon <span style="font-weight:400;color:var(--ink-soft)">(nepovinné)</span></label><input id="f-tel" type="tel" autocomplete="tel" placeholder="777 888 999" /></div>
+          <div class="field"><label for="f-email">Váš email</label><input id="f-email" type="email" autocomplete="email" placeholder="vas@email.cz" required /><span class="err">Zkontrolujte e-mail.</span></div>
+        </div>
+
+        <div class="rowline">
+          <div>
+            <div class="lbl">Počet účastníků</div>
+            <div class="stepper" role="group" aria-label="Počet účastníků" style="margin-top:.5rem">
+              <button type="button" id="spDec" aria-label="Ubrat">−</button>
+              <span class="val" id="spVal" aria-live="polite">1</span>
+              <button type="button" id="spInc" aria-label="Přidat">+</button>
+            </div>
+          </div>
+          <div class="price">
+            <div class="lbl">Cena celkem</div>
+            <div class="amt" id="priceTotal">—</div>
+          </div>
+        </div>
+
+        <label class="consent"><input type="checkbox" id="f-consent" required />
+          <span>Souhlasím se <a href="index.html#faq">zpracováním osobních údajů</a> za účelem rezervace.</span></label>
+
+        <div class="submit-wrap">
+          <button class="btn btn-primary" type="submit" id="submitBtn">Rezervovat <span class="arrow">→</span></button>
+          <p class="note" id="submitNote">Místo potvrdíme e-mailem. Zaplatit můžete online nebo na místě.</p>
+        </div>
+      </form>
+
+      <div class="pay-logos">
+        <span>ZABEZPEČENÁ PLATBA</span><span>· Visa</span><span>· Mastercard</span><span>· Apple&nbsp;Pay</span><span>· Google&nbsp;Pay</span>
+      </div>
+    </section>
+
+    <!-- STEP 3: stav / úspěch -->
+    <section id="stepDone" class="hidden">
+      <div class="state" id="stateBox"></div>
+    </section>
+
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js?v=2"></script>
+<script src="payment-config.js?v=1"></script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const PLACE = 'Studio klidu, Údolní 12, Brno-střed';
+  const THUMB = 'assets/photos/rabbit-1.webp';
+  const thumbFor = (title) => {
+    const t = (title || '').toLowerCase();
+    if (t.includes('ranní')) return 'assets/photos/yoga-7.webp';
+    if (t.includes('děti')) return 'assets/photos/rabbit-6.webp';
+    if (t.includes('soumrak') || t.includes('restorativ')) return 'assets/photos/yoga-4.webp';
+    if (t.includes('hatha')) return 'assets/photos/yoga-11.webp';
+    return THUMB;
+  };
+
+  const PAY = window.PAYMENTS || {};
+  const PAY_ON = !!PAY.enabled && /^https:\/\/.+/.test(PAY.functionsUrl || '');
+  const PRICE = Number(PAY.depositCzk || 290); // cena za účastníka (Kč)
+
+  const CONFIGURED = /^https:\/\/.+\.supabase\.co/.test(window.SUPABASE_URL || '') &&
+    !!window.SUPABASE_ANON_KEY && window.SUPABASE_ANON_KEY.length > 20 && typeof window.supabase !== 'undefined';
+  const sb = CONFIGURED ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY) : null;
+
+  const cap = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+  const esc = (s) => (s == null ? '' : String(s)).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const two = (n) => String(n).padStart(2, '0');
+  const fmtTime = (dt) => two(dt.getHours()) + ':' + two(dt.getMinutes());
+  const fmtDate = (dt) => two(dt.getDate()) + '. ' + two(dt.getMonth() + 1) + '. ' + dt.getFullYear();
+  const fmtDow = (dt) => dt.toLocaleDateString('cs-CZ', { weekday: 'long' });
+  const MAX_PER = 4;
+
+  let lessons = [], chosen = null, spots = 1, lastBookingId = null;
+
+  function showStep(which) {
+    $('stepPick').classList.toggle('hidden', which !== 'pick');
+    $('stepForm').classList.toggle('hidden', which !== 'form');
+    $('stepDone').classList.toggle('hidden', which !== 'done');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function stateBox(icon, title, html, acts) {
+    $('stateBox').innerHTML =
+      '<div class="icon ' + (icon === 'ok' ? '' : 'info') + '">' +
+        (icon === 'ok'
+          ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>'
+          : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>') +
+      '</div><h2>' + esc(title) + '</h2>' + (html || '') + (acts ? '<div class="acts">' + acts + '</div>' : '');
+    showStep('done');
+  }
+
+  // ---- načtení termínů ----
+  async function load() {
+    if (!CONFIGURED) {
+      $('dayList').innerHTML = '<div class="empty">Online rezervace se připravuje. Zatím nám napište na <a href="mailto:ahoj@jogaskralicky.cz" style="color:var(--clover)">ahoj@jogaskralicky.cz</a> nebo zavolejte na +420 777 123 456.</div>';
+      return;
+    }
+    $('dayList').innerHTML = '<div class="empty">Načítám termíny…</div>';
+    const { data, error } = await sb.from('public_lessons').select('*').order('starts_at', { ascending: true });
+    if (error) { $('dayList').innerHTML = '<div class="empty">Termíny se nepodařilo načíst. Zkuste to prosím za chvíli znovu.</div>'; return; }
+    lessons = (data || []).map((l) => ({ ...l, dt: new Date(l.starts_at) }));
+    if (!lessons.length) { $('dayList').innerHTML = '<div class="empty">Zatím nejsou vypsané žádné termíny. Sledujte nás, brzy přidáme nové lekce.</div>'; return; }
+    renderDays();
+  }
+
+  function renderDays() {
+    const groups = new Map();
+    lessons.forEach((l) => {
+      const key = l.dt.toDateString();
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(l);
+    });
+    let html = '';
+    for (const [, items] of groups) {
+      const d0 = items[0].dt;
+      html += '<div class="day-group"><div class="day-head"><span class="date">' + fmtDate(d0) + '</span><span class="dow">' + fmtDow(d0) + '</span></div>';
+      html += items.map((l) => {
+        const end = new Date(l.dt.getTime() + l.duration_min * 60000);
+        const full = l.remaining <= 0;
+        return '<div class="slot' + (full ? ' full' : '') + '">' +
+          '<div class="time"><span class="rng">' + fmtTime(l.dt) + ' – ' + fmtTime(end) + '</span><span class="dur">' + l.duration_min + ' min</span></div>' +
+          '<div class="info"><img class="thumb" src="' + thumbFor(l.title) + '" alt="" loading="lazy" />' +
+            '<div class="meta"><div class="lbl">Lekce</div><div class="val">' + esc(l.title) + '</div>' +
+            '<div class="place"><div class="lbl">Místo</div><div class="val">' + PLACE + '</div></div></div></div>' +
+          '<div class="book"><div class="cap"><b>' + Math.max(l.remaining, 0) + '</b>/' + l.capacity + '</div>' +
+            (full ? '<button class="btn btn-ghost" disabled>Obsazeno</button>'
+                  : '<button class="btn btn-primary" data-id="' + l.id + '">Rezervovat</button>') +
+          '</div></div>';
+      }).join('');
+      html += '</div>';
+    }
+    $('dayList').innerHTML = html;
+  }
+
+  $('dayList').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-id]'); if (!btn) return;
+    chosen = lessons.find((l) => l.id === btn.dataset.id); if (!chosen) return;
+    spots = 1;
+    openForm();
+  });
+
+  // ---- formulář ----
+  function maxSpots() { return chosen ? Math.min(MAX_PER, chosen.remaining) : MAX_PER; }
+  function updateSpots() {
+    if (spots > maxSpots()) spots = Math.max(1, maxSpots());
+    if (spots < 1) spots = 1;
+    $('spVal').textContent = spots;
+    $('spDec').disabled = spots <= 1;
+    $('spInc').disabled = spots >= maxSpots();
+    $('priceTotal').textContent = (PRICE * spots).toLocaleString('cs-CZ') + ' Kč';
+  }
+  function openForm() {
+    const end = new Date(chosen.dt.getTime() + chosen.duration_min * 60000);
+    $('summary').innerHTML =
+      '<div class="blk"><div class="lbl">Termín</div><div class="big">' + fmtDate(chosen.dt) + '</div>' +
+        '<div class="sub">' + cap(fmtDow(chosen.dt)) + ' · ' + fmtTime(chosen.dt) + ' – ' + fmtTime(end) + '</div></div>' +
+      '<img class="thumb" src="' + thumbFor(chosen.title) + '" alt="" />' +
+      '<div class="blk"><div class="lbl">Lekce</div><div class="big">' + esc(chosen.title) + '</div>' +
+        '<div class="sub" style="color:var(--ink-soft)">' + PLACE + '</div></div>';
+    updateSpots();
+    $('bookForm').classList.remove('show-errors');
+    $('bookForm').querySelectorAll('.field').forEach((f) => f.classList.remove('invalid'));
+    showStep('form');
+  }
+
+  $('backLink').addEventListener('click', (e) => { e.preventDefault(); showStep('pick'); });
+  $('spDec').addEventListener('click', () => { if (spots > 1) { spots--; updateSpots(); } });
+  $('spInc').addEventListener('click', () => { if (spots < maxSpots()) { spots++; updateSpots(); } });
+
+  async function startPayment(bookingId, btn) {
+    const label = btn.innerHTML; btn.disabled = true; btn.textContent = 'Přesměrovávám na platbu…';
+    try {
+      const res = await fetch(PAY.functionsUrl.replace(/\/$/, '') + '/stripe-create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': window.SUPABASE_ANON_KEY || '', 'Authorization': 'Bearer ' + (window.SUPABASE_ANON_KEY || '') },
+        body: JSON.stringify({ booking_id: bookingId })
+      });
+      const d = await res.json();
+      if (d.ok && d.url) { window.location.href = d.url; return; }
+    } catch (e) {}
+    btn.disabled = false; btn.innerHTML = label;
+    alert('Platbu se teď nepodařilo spustit. Místo máte i tak zarezervované — zaplatit můžete na místě.');
+  }
+
+  let sending = false;
+  $('bookForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (sending) return;
+    const form = $('bookForm');
+    form.classList.add('show-errors');
+    const first = $('f-first'), last = $('f-last'), email = $('f-email'), consent = $('f-consent');
+    let ok = true, firstBad = null;
+    [[first, !first.value.trim()], [last, !last.value.trim()], [email, !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.value.trim())]]
+      .forEach(([f, bad]) => { f.closest('.field').classList.toggle('invalid', bad); if (bad && !firstBad) { firstBad = f; ok = false; } });
+    if (!consent.checked) { ok = false; if (!firstBad) firstBad = consent; }
+    if (!ok) { if (firstBad) firstBad.focus(); return; }
+
+    sending = true;
+    const btn = $('submitBtn'); btn.disabled = true; const label = btn.innerHTML; btn.textContent = 'Odesílám…';
+    const { data, error } = await sb.rpc('create_booking', {
+      p_lesson_id: chosen.id,
+      p_name: (first.value.trim() + ' ' + last.value.trim()).trim(),
+      p_email: email.value.trim(),
+      p_phone: $('f-tel').value.trim(),
+      p_spots: spots
+    });
+    sending = false; btn.disabled = false; btn.innerHTML = label;
+
+    if (error || !data || !data.ok) {
+      const code = data && data.error;
+      if (code === 'full') { alert('Mezitím se místa zaplnila. Vyberte prosím jiný termín nebo méně míst.'); await load(); showStep('pick'); }
+      else if (code === 'unavailable') { alert('Tento termín už není dostupný. Načítám aktuální nabídku…'); await load(); showStep('pick'); }
+      else alert('Rezervaci se nepodařilo uložit. Zkuste to prosím znovu, nebo nám napište na ahoj@jogaskralicky.cz.');
+      return;
+    }
+
+    lastBookingId = data.booking_id;
+    const end = new Date(chosen.dt.getTime() + chosen.duration_min * 60000);
+    const summaryTxt = esc(chosen.title) + ' · ' + fmtDate(chosen.dt) + ' · ' + fmtTime(chosen.dt) + '–' + fmtTime(end) +
+      ' · ' + spots + (spots === 1 ? ' místo' : (spots < 5 ? ' místa' : ' míst'));
+    let acts = '<a class="btn btn-ghost" href="rezervace.html">Nová rezervace</a>';
+    if (PAY_ON) acts = '<button class="btn btn-primary" id="payBtn">Zaplatit ' + (PRICE * spots).toLocaleString('cs-CZ') + ' Kč online <span class="arrow">→</span></button>' + acts;
+    stateBox('ok', 'Místo držíme pro vás', '<p class="big">' + summaryTxt + '</p><p>Potvrzení pošleme e-mailem. Zaplatit můžete online, nebo na místě před lekcí — rezervace platí i tak.</p>', acts);
+    if (PAY_ON) { const pb = $('payBtn'); if (pb) pb.addEventListener('click', () => startPayment(lastBookingId, pb)); }
+  });
+
+  // návrat z platby
+  (function () {
+    const platba = new URLSearchParams(location.search).get('platba');
+    if (!platba) return;
+    if (platba === 'ok') stateBox('ok', 'Platba přijata ✓', '<p>Děkujeme! Záloha je zaplacená a místo je vaše. Potvrzení dorazí e-mailem.</p>', '<a class="btn btn-ghost" href="rezervace.html">Zpět na termíny</a>');
+    else if (platba === 'zrus') stateBox('info', 'Platba nedokončena', '<p>Nevadí — místo máte zarezervované i tak, zaplatit můžete na místě.</p>', '<a class="btn btn-ghost" href="rezervace.html">Zpět na termíny</a>');
+  })();
+
+  if (!new URLSearchParams(location.search).get('platba')) load();
+})();
+</script>
+</body>
+</html>
