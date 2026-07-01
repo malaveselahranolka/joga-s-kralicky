@@ -735,7 +735,7 @@
     if (!id) return false;
     if (btn.dataset.paid) {
       const { error } = await sb.from('bookings').update({ payment_status: 'paid', payment_method: 'cash', paid_at: new Date().toISOString() }).eq('id', id);
-      if (error) toast('Nejdřív spusťte supabase/comgate.sql'); else { toast('Označeno jako zaplaceno'); await loadAll(); }
+      if (error) toast('Nejdřív spusťte supabase/payments.sql'); else { toast('Označeno jako zaplaceno'); await loadAll(); }
       return true;
     }
     if (btn.dataset.unpaid) {
