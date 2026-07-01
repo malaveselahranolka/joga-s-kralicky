@@ -35,6 +35,7 @@ Deno.serve(async (req) => {
   const admin = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"));
   const obj = event.data.object as any;
   const bookingId = obj?.metadata?.booking_id;
+  const isVoucher = obj?.metadata?.type === "voucher";
 
   if (bookingId) {
     if (event.type === "checkout.session.completed") {
@@ -46,6 +47,14 @@ Deno.serve(async (req) => {
     } else if (event.type === "checkout.session.expired" || event.type === "checkout.session.async_payment_failed") {
       await admin.from("bookings").update({ payment_status: "failed" }).eq("id", bookingId);
     }
+  } else if (isVoucher && event.type === "checkout.session.completed") {
+    // dárkový poukaz zaplacen → vygeneruj kód a ulož (kód je deterministický ze session id)
+    const code = "DK-" + String(obj.id).replace(/[^A-Za-z0-9]/g, "").slice(-8).toUpperCase();
+    const email = obj?.customer_details?.email || obj?.customer_email || null;
+    const amount = obj?.amount_total ?? null;
+    await admin.from("vouchers").upsert({
+      code, email, amount, session_id: obj.id, redeemed: false,
+    }, { onConflict: "code" });
   }
 
   return new Response(JSON.stringify({ received: true }), {

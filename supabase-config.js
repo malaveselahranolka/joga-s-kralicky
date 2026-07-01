@@ -26,3 +26,5 @@ window.EMAILJS_SERVICE_ID  = 'service_9n1wtnv';
 window.EMAILJS_TEMPLATE_ID = 'template_iblqvg1';   // potvrzení rezervace
 // Šablona pro rozesílání newsletteru z adminu (vytvoř v EmailJS, pole: subject, message, to_email, unsubscribe_url)
 window.EMAILJS_NEWSLETTER_TEMPLATE_ID = 'template_0biilyq';
+// Šablona pro dárkový poukaz (vytvoř v EmailJS, pole: to_email, code, amount)
+window.EMAILJS_VOUCHER_TEMPLATE_ID = 'TVUJ_VOUCHER_TEMPLATE';
