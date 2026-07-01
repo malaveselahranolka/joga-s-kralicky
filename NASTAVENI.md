@@ -130,76 +130,70 @@ Nastav ji u každé lekce při zakládání (pole *Kapacita*). Výchozí je 12.
 
 ---
 
-## Platby přes Comgate (volitelná záloha) — příprava
+## Platby přes Stripe (volitelná záloha)
 
-Web umí **volitelnou online zálohu** přes platební bránu **Comgate**. Je to
+Web umí **volitelnou online zálohu** přes **Stripe Checkout**. Je to
 **vypnuté**, dokud to sám nezapneš — do té doby je rezervace zdarma jako teď.
 
-> Tajný klíč (secret) z Comgate **nikdy nedávej do `comgate-config.js` ani do
+> Tajný klíč Stripe (`sk_...`) **nikdy nedávej do `payment-config.js` ani do
 > repozitáře**. Patří jen na server (Supabase Edge Functions, krok C níže).
 
 ### Jak to funguje
 1. Zákazník dokončí rezervaci jako dosud (místo se hned drží).
 2. Na potvrzovací obrazovce se navíc objeví tlačítko **„Zaplatit zálohu online"**.
-3. Po kliknutí ho web pošle do Comgate; po zaplacení se vrátí zpět.
-4. Comgate pošle potvrzení na server (callback) a stav platby se uloží k rezervaci.
+3. Po kliknutí ho web pošle na **Stripe Checkout**; po zaplacení se vrátí zpět.
+4. Stripe pošle potvrzení na server (webhook) a stav platby se uloží k rezervaci.
 
 Platba je **nepovinná** — rezervace platí i bez ní.
 
 ### A) Účet a klíče
-1. Založ účet na **https://www.comgate.cz** a v administraci si najdi
-   **identifikátor e-shopu (merchant)** a **propojovací heslo (secret)**.
-2. Pro zkoušení zapni v Comgate **testovací režim**.
+1. Založ účet na **https://stripe.com**. Pro zkoušení nech účet v **Test mode**.
+2. **Developers → API keys** → zkopíruj **Secret key** (`sk_test_...`).
 
 ### B) Databáze (jednorázově)
 V Supabase → **SQL Editor** → **New query** vlož obsah souboru
-**`supabase/comgate.sql`** a dej **Run**. Přidá k rezervacím sloupce o stavu platby.
+**`supabase/payments.sql`** a dej **Run**. Přidá k rezervacím sloupce o stavu platby.
 
-### C) Nasazení serverových funkcí (Supabase CLI)
-Potřebuješ [Supabase CLI](https://supabase.com/docs/guides/cli). V kořeni projektu:
-```bash
-supabase login
-supabase link --project-ref TVUJ_PROJECT_REF      # ref najdeš v Project Settings → General
-
-# tajné údaje (uloží se jen na serveru, ne do repa):
-supabase secrets set COMGATE_MERCHANT=123456
-supabase secrets set COMGATE_SECRET=tvuj_tajny_secret
-supabase secrets set COMGATE_TEST=true            # na ostro později false
-supabase secrets set COMGATE_DEPOSIT_CZK=290      # výše zálohy v Kč (hlídá server)
-
-# nasaď funkce:
-supabase functions deploy comgate-create
-supabase functions deploy comgate-callback
-supabase functions deploy comgate-status
+### C) Nasazení funkcí + tajné klíče (Supabase Dashboard, bez CLI)
+**Edge Functions → Secrets** nastav:
 ```
-Funkce poběží na `https://TVUJ_PROJECT_REF.functions.supabase.co/...`.
+STRIPE_SECRET_KEY      = sk_test_...
+PAYMENT_DEPOSIT_CZK    = 290
+SITE_URL               = https://malaveselahranolka.github.io/joga-s-kralicky/
+STRIPE_WEBHOOK_SECRET  = whsec_...   (doplníš v kroku D)
+```
+Pak **Edge Functions → Deploy a new function → Via Editor** a nahraj (jméno přesně):
+- `stripe-create`  — vlož obsah `supabase/functions/stripe-create/index.ts`
+- `stripe-webhook` — vlož obsah `supabase/functions/stripe-webhook/index.ts`;
+  u téhle funkce **vypni „Verify JWT"** (Stripe neposílá Supabase token).
 
-### D) URL v Comgate portálu
-V nastavení e-shopu v Comgate vyplň:
-- **URL pro notifikaci (callback):** `https://TVUJ_PROJECT_REF.functions.supabase.co/comgate-callback`
-- **Návratová URL (po zaplacení):** `https://malaveselahranolka.github.io/joga-s-kralicky/#rezervace`
+*(SUPABASE_URL a SERVICE_ROLE_KEY doplňovat netřeba — funkce je mají automaticky.)*
+
+### D) Webhook ve Stripe
+Stripe **Developers → Webhooks → Add endpoint**:
+- **Endpoint URL:** `https://TVUJ_PROJECT_REF.functions.supabase.co/stripe-webhook`
+- **Events:** `checkout.session.completed`, `checkout.session.expired`, `checkout.session.async_payment_failed`
+- Zkopíruj **Signing secret** (`whsec_...`) a ulož jako `STRIPE_WEBHOOK_SECRET` (krok C).
 
 ### E) Zapnutí na webu
-Otevři **`comgate-config.js`** a nastav:
+Otevři **`payment-config.js`** a nastav:
 ```js
-window.COMGATE = {
+window.PAYMENTS = {
+  provider: 'stripe',
   enabled: true,
   functionsUrl: 'https://TVUJ_PROJECT_REF.functions.supabase.co',
   depositCzk: 290,
-  currency: 'CZK',
-  lang: 'cs',
-  test: true,            // na ostro dej false (a v Comgate vypni testovací režim)
 };
 ```
 Commitni + pushni. Hotovo — po rezervaci se nabídne online záloha.
 
 ### F) Test
-Udělej zkušební rezervaci a klikni na **Zaplatit zálohu**. V testovacím režimu
-Comgate nabídne testovací platbu. Po návratu se nahoře u Rezervace ukáže stav.
-V Supabase → Table editor → `bookings` uvidíš `payment_status = paid`.
+Rezervuj zkušebně a klikni **Zaplatit zálohu**. Ve Stripe **Test mode** zaplať
+testovací kartou `4242 4242 4242 4242` (libovolné budoucí datum a CVC). Po návratu
+se nahoře u Rezervace ukáže stav a v Supabase → `bookings` bude `payment_status = paid`.
 
-> Ostrý provoz: v Comgate vypni testovací režim, dej `COMGATE_TEST=false`
-> (`supabase secrets set ...`) a v `comgate-config.js` `test: false`.
+> Ostrý provoz: přepni Stripe do **Live mode**, použij `sk_live_...` a `whsec_...`
+> z živého webhooku (jinak stejný postup).
 
 ---
 
@@ -228,10 +222,10 @@ Adresy se ukládají do databáze a vidíš je v adminu v záložce **Newsletter
 
 ## Platby ve správě rezervací
 
-Když spustíš **`supabase/comgate.sql`** (viz sekce *Platby přes Comgate*),
+Když spustíš **`supabase/payments.sql`** (viz sekce *Platby přes Stripe*),
 přibude u každé rezervace v adminu **stav platby**:
 
-- **Zaplaceno online** — host zaplatil zálohu přes Comgate.
+- **Zaplaceno online** — host zaplatil zálohu online (Stripe).
 - **Platba čeká** — platbu spustil, ale ještě nedokončil.
 - **Zaplatí na místě** — online neplatil (typicky ruční / telefonická rezervace).
 
@@ -241,8 +235,8 @@ V záložce **Rezervace** navíc:
 - Filtr **Platba** (vše / zaplaceno / platba čeká / zaplatí na místě) a
   krátký souhrn nad seznamem.
 
-> Tahle evidence funguje i **bez** zapnutého Comgate — stačí spustit
-> `supabase/comgate.sql` a platby na místě si odškrtáváš ručně.
+> Tahle evidence funguje i **bez** zapnutých online plateb — stačí spustit
+> `supabase/payments.sql` a platby na místě si odškrtáváš ručně.
 
 ---
 

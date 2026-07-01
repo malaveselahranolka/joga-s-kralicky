@@ -1105,7 +1105,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="supabase-config.js?v=2"></script>
-<script src="comgate-config.js?v=1"></script>
+<script src="payment-config.js?v=1"></script>
 <script>
   // sticky nav state
   const nav = document.getElementById('nav');
@@ -1393,20 +1393,25 @@
       } catch (e) { /* selhání e-mailu nezablokuje potvrzenou rezervaci */ }
     }
 
-    // --- Comgate (volitelná záloha) — aktivní jen když je zapnuté v comgate-config.js ---
-    const PAY = window.COMGATE || {};
+    // --- Stripe (volitelná záloha) — aktivní jen když je zapnuté v payment-config.js ---
+    const PAY = window.PAYMENTS || {};
     const PAY_ON = !!PAY.enabled && /^https:\/\/.+/.test(PAY.functionsUrl || '');
     const payUrl = (fn) => PAY.functionsUrl.replace(/\/$/, '') + '/' + fn;
     async function startPayment(bookingId, btn) {
       const label = btn.innerHTML;
       btn.disabled = true; btn.textContent = 'Přesměrovávám na platbu…';
       try {
-        const res = await fetch(payUrl('comgate-create'), {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+        const res = await fetch(payUrl('stripe-create'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': window.SUPABASE_ANON_KEY || '',
+            'Authorization': 'Bearer ' + (window.SUPABASE_ANON_KEY || '')
+          },
           body: JSON.stringify({ booking_id: bookingId })
         });
         const d = await res.json();
-        if (d.ok && d.redirect) { window.location.href = d.redirect; return; }
+        if (d.ok && d.url) { window.location.href = d.url; return; }
       } catch (e) { /* spadne do hlášky níže */ }
       btn.disabled = false; btn.innerHTML = label;
       alert('Platbu se teď nepodařilo spustit. Místo máte i tak zarezervované — zálohu můžete zaplatit na místě.');
@@ -1645,26 +1650,18 @@
     load();
   })();
 
-  // ============ Comgate — návrat z platby (aktivní jen když je zapnuto) ============
+  // ============ Stripe — návrat z platby (aktivní jen když je zapnuto) ============
   (function () {
-    const PAY = window.COMGATE || {};
-    if (!PAY.enabled || !/^https:\/\/.+/.test(PAY.functionsUrl || '')) return;
     const params = new URLSearchParams(location.search);
-    const ref = params.get('refId') || params.get('id') || params.get('transId');
-    if (!ref) return;
-    const byTrans = !params.get('refId');
-    const url = PAY.functionsUrl.replace(/\/$/, '') + '/comgate-status?' +
-      (byTrans ? 'transId=' : 'refId=') + encodeURIComponent(ref);
-    fetch(url).then((r) => r.json()).then((d) => showResult(d && d.status)).catch(() => {});
+    const platba = params.get('platba');
+    if (!platba) return;
 
-    function showResult(status) {
-      const map = {
-        paid: ['Platba proběhla ✓', 'Děkujeme! Záloha je zaplacená a místo je vaše.'],
-        pending: ['Platba se zpracovává…', 'Jakmile ji banka potvrdí, dáme vědět e-mailem. Místo už držíme.'],
-        cancelled: ['Platba zrušena', 'Nevadí — místo máte zarezervované i tak, zálohu lze zaplatit na místě.'],
-        failed: ['Platba neproběhla', 'Zkuste to prosím znovu, nebo zaplaťte na místě. Místo je zarezervované.'],
-      };
-      const m = map[status]; if (!m) return;
+    const map = {
+      ok: ['Platba přijata ✓', 'Děkujeme! Záloha je zaplacená a místo je vaše. Potvrzení dorazí e-mailem.'],
+      zrus: ['Platba nedokončena', 'Nevadí — místo máte zarezervované i tak, zálohu lze zaplatit na místě.'],
+    };
+    const m = map[platba];
+    if (m) {
       const sec = document.getElementById('rezervace'); if (!sec) return;
       const wrap = sec.querySelector('.wrap'); if (!wrap) return;
       const el = document.createElement('div');
