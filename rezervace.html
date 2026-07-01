@@ -274,8 +274,11 @@
   };
 
   const PAY = window.PAYMENTS || {};
-  const PAY_ON = !!PAY.enabled && /^https:\/\/.+/.test(PAY.functionsUrl || '');
-  const PRICE = Number(PAY.depositCzk || 290); // cena za účastníka (Kč)
+  const ENTRY_URL = PAY.entryUrl || '';
+  const VOUCHER_URL = PAY.voucherUrl || '';
+  const PAY_ON = !!PAY.enabled && /^https:\/\/.+/.test(ENTRY_URL);
+  const VOUCHER_ON = !!PAY.enabled && /^https:\/\/.+/.test(VOUCHER_URL);
+  const PRICE = Number(PAY.depositCzk || 499); // cena za vstup (Kč)
 
   const CONFIGURED = /^https:\/\/.+\.supabase\.co/.test(window.SUPABASE_URL || '') &&
     !!window.SUPABASE_ANON_KEY && window.SUPABASE_ANON_KEY.length > 20 && typeof window.supabase !== 'undefined';
@@ -395,21 +398,6 @@
   $('spDec').addEventListener('click', () => { if (spots > 1) { spots--; updateSpots(); } });
   $('spInc').addEventListener('click', () => { if (spots < maxSpots()) { spots++; updateSpots(); } });
 
-  async function startPayment(bookingId, btn) {
-    const label = btn.innerHTML; btn.disabled = true; btn.textContent = 'Přesměrovávám na platbu…';
-    try {
-      const res = await fetch(PAY.functionsUrl.replace(/\/$/, '') + '/stripe-create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': window.SUPABASE_ANON_KEY || '', 'Authorization': 'Bearer ' + (window.SUPABASE_ANON_KEY || '') },
-        body: JSON.stringify({ booking_id: bookingId })
-      });
-      const d = await res.json();
-      if (d.ok && d.url) { window.location.href = d.url; return; }
-    } catch (e) {}
-    btn.disabled = false; btn.innerHTML = label;
-    alert('Platbu se teď nepodařilo spustit. Místo máte i tak zarezervované — zaplatit můžete na místě.');
-  }
-
   let sending = false;
   $('bookForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -447,9 +435,8 @@
     const summaryTxt = esc(chosen.title) + ' · ' + fmtDate(chosen.dt) + ' · ' + fmtTime(chosen.dt) + '–' + fmtTime(end) +
       ' · ' + spots + (spots === 1 ? ' místo' : (spots < 5 ? ' místa' : ' míst'));
     let acts = '<a class="btn btn-ghost" href="rezervace.html">Nová rezervace</a>';
-    if (PAY_ON) acts = '<button class="btn btn-primary" id="payBtn">Zaplatit ' + (PRICE * spots).toLocaleString('cs-CZ') + ' Kč online <span class="arrow">→</span></button>' + acts;
+    if (PAY_ON) acts = '<a class="btn btn-primary" href="' + ENTRY_URL + '">Zaplatit vstup (499&nbsp;Kč) online <span class="arrow">→</span></a>' + acts;
     stateBox('ok', 'Místo držíme pro vás', '<p class="big">' + summaryTxt + '</p><p>Potvrzení pošleme e-mailem. Zaplatit můžete online, nebo na místě před lekcí — rezervace platí i tak.</p>', acts);
-    if (PAY_ON) { const pb = $('payBtn'); if (pb) pb.addEventListener('click', () => startPayment(lastBookingId, pb)); }
 
     // potvrzovací e-mail
     const emailV = email.value.trim();
@@ -468,24 +455,13 @@
   const VOUCHER_EMAIL_OK = EMAIL_OK && VOUCHER_TPL && String(VOUCHER_TPL).indexOf('TVUJ_') !== 0;
   const voucherCode = (sid) => 'DK-' + String(sid).replace(/[^A-Za-z0-9]/g, '').slice(-8).toUpperCase();
 
-  if (PAY_ON) {
+  if (VOUCHER_ON) {
     $('voucherCard').classList.remove('hidden');
-    $('voucherBtn').addEventListener('click', async () => {
+    $('voucherBtn').addEventListener('click', () => {
       const em = $('voucherEmail').value.trim(), msg = $('voucherMsg');
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { msg.textContent = 'Zadejte prosím e-mail, kam poukaz poslat.'; msg.className = 'vc-msg err'; return; }
-      const btn = $('voucherBtn'); btn.disabled = true; const label = btn.innerHTML; btn.textContent = 'Přesměrovávám na platbu…';
-      try {
-        localStorage.setItem('voucherEmail', em);
-        const res = await fetch(PAY.functionsUrl.replace(/\/$/, '') + '/stripe-voucher', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'apikey': window.SUPABASE_ANON_KEY || '', 'Authorization': 'Bearer ' + (window.SUPABASE_ANON_KEY || '') },
-          body: JSON.stringify({ email: em })
-        });
-        const d = await res.json();
-        if (d.ok && d.url) { window.location.href = d.url; return; }
-      } catch (e) {}
-      btn.disabled = false; btn.innerHTML = label;
-      msg.textContent = 'Platbu se teď nepodařilo spustit. Zkuste to prosím znovu.'; msg.className = 'vc-msg err';
+      localStorage.setItem('voucherEmail', em); // po návratu z platby na něj pošleme kód
+      window.location.href = VOUCHER_URL + (VOUCHER_URL.includes('?') ? '&' : '?') + 'prefilled_email=' + encodeURIComponent(em);
     });
   }
 
