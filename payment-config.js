@@ -1,27 +1,20 @@
 // =====================================================================
 //  Platby přes Stripe — veřejná konfigurace (bezpečné mít v prohlížeči)
 // ---------------------------------------------------------------------
-//  TAJNÝ klíč (Stripe secret key sk_...) sem NIKDY nedávej! Ten patří jen
-//  na server (Supabase Edge Function – viz NASTAVENI.md, sekce „Platby").
+//  Používáme Stripe Payment Links (hotové platební odkazy z Stripe).
+//  Žádný tajný klíč tady není potřeba — odkazy jsou veřejné.
 //
-//  Dokud je enabled:false, web funguje úplně stejně jako teď —
-//  rezervace je zdarma a žádné platby se nenabízí.
+//  Dokud je enabled:false, web funguje bez plateb (rezervace zdarma).
 // =====================================================================
 window.PAYMENTS = {
   provider: 'stripe',
+  enabled: true,
 
-  // Zapni až když máš nasazené edge funkce a vyplněný functionsUrl níže.
-  enabled: false,
+  // Stripe Payment Links (vytvořeno ve Stripe, LIVE):
+  entryUrl:   'https://buy.stripe.com/4gM6oH8Hvg8l4G1agd1gs01', // jednorázový vstup 499 Kč
+  voucherUrl: 'https://buy.stripe.com/fZu28r7Dr6xLc8t1JH1gs00', // dárkový poukaz 499 Kč
 
-  // Adresa tvých Supabase Edge Functions, např.:
-  //   https://mglopjlgpfpturvqtjcj.functions.supabase.co
-  // (Project URL má tvar https://REF.supabase.co → sem dej https://REF.functions.supabase.co)
-  functionsUrl: '',
-
-  // Cena jednorázového vstupu v Kč (skutečnou částku hlídá i server, tohle je popisek v UI).
+  // Ceny (jen popisky v UI)
   depositCzk: 499,
-
-  // Odkaz na Stripe platbu za dárkový poukaz (vytvoří se ve Stripe; vyplní se po nastavení).
-  voucherUrl: '',
   voucherCzk: 499,
 };
