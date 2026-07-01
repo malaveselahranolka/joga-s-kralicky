@@ -23,4 +23,6 @@ window.SUPABASE_ANON_KEY = 'sb_publishable_fSK0f_Mv-WFaKnvxwTu5BA_NxYV-U9_';
 // =====================================================================
 window.EMAILJS_PUBLIC_KEY  = 'vLh3HLiqUbRBLKmNN';
 window.EMAILJS_SERVICE_ID  = 'service_9n1wtnv';
-window.EMAILJS_TEMPLATE_ID = 'template_iblqvg1';
+window.EMAILJS_TEMPLATE_ID = 'template_iblqvg1';   // potvrzení rezervace
+// Šablona pro rozesílání newsletteru z adminu (vytvoř v EmailJS, pole: subject, message, to_email, unsubscribe_url)
+window.EMAILJS_NEWSLETTER_TEMPLATE_ID = 'TVUJ_NEWSLETTER_TEMPLATE';
