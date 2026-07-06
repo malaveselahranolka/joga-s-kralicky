@@ -1102,7 +1102,12 @@
       document.querySelectorAll('.hero-stats .num').forEach((el, i) => setTimeout(() => animateCount(el), 750 + i * 130));
     }
 
-    if (reduce) return;
+    // weaker / mobile devices: skip the per-scroll background recolour + parallax (biggest scroll cost)
+    const liteDev = window.matchMedia('(any-pointer: fine)').matches === false
+      || window.matchMedia('(max-width: 760px)').matches
+      || (navigator.deviceMemory && navigator.deviceMemory <= 2)
+      || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2);
+    if (reduce || liteDev) return;
 
     // inject scroll-reactive glow into plain sections
     // scroll-driven background color fade (mění barvu pozadí podle scrollu)
@@ -1123,7 +1128,7 @@
       const max = Math.max(document.documentElement.scrollHeight - vh, 1);
       const p = Math.min(Math.max(y / max, 0), 1);
       // bgfade: přebarvení celé obrazovky je drahé — měň jen při znatelné změně, ne každý snímek
-      if (bg && Math.abs(p - lastP) > 0.004) {
+      if (bg && Math.abs(p - lastP) > 0.009) {
         lastP = p;
         bg.style.background = 'radial-gradient(125% 80% at 50% ' + (12 + p * 60).toFixed(1) + '%, rgb(' + mix(glowStops, p) + ') 0%, rgb(' + mix(baseStops, p) + ') 60%)';
       }
@@ -1303,21 +1308,16 @@
       aim();
     }
 
-    // smoothed draw: ease the drawn length toward the scroll position for a premium, trailing feel
+    // lightweight draw: only move the dash offset with scroll (eased a touch) — no getPointAtLength
     let targetP = 0, curP = 0, animating = false;
     function render() {
       const off = len * (1 - curP);
       line.style.strokeDashoffset = off;
       glow.style.strokeDashoffset = off;
-      if (head && !reduce) {
-        const pt = line.getPointAtLength(len * curP);
-        head.setAttribute('transform', 'translate(' + pt.x.toFixed(1) + ',' + pt.y.toFixed(1) + ')');
-        head.style.opacity = (curP > 0.004 && curP < 0.996) ? '1' : '0';
-      }
     }
     function tick() {
-      curP += (targetP - curP) * 0.12;
-      if (Math.abs(targetP - curP) < 0.0006) { curP = targetP; render(); animating = false; return; }
+      curP += (targetP - curP) * 0.14;
+      if (Math.abs(targetP - curP) < 0.001) { curP = targetP; render(); animating = false; return; }
       render();
       requestAnimationFrame(tick);
     }
@@ -1328,10 +1328,14 @@
       if (!animating) { animating = true; requestAnimationFrame(tick); }
     }
 
-    window.addEventListener('scroll', aim, { passive: true });
     let rt;
-    window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(build, 150); }, { passive: true });
+    const rebuild = () => { clearTimeout(rt); rt = setTimeout(build, 180); };
+    window.addEventListener('scroll', aim, { passive: true });
+    window.addEventListener('resize', rebuild, { passive: true });
     window.addEventListener('load', () => setTimeout(build, 60));
+    // page height keeps shifting on mobile (font swap, lazy images) → rebuild so the line never stops mid-page
+    if (window.ResizeObserver) { new ResizeObserver(rebuild).observe(document.body); }
+    if (document.fonts && document.fonts.ready) { document.fonts.ready.then(() => setTimeout(build, 30)); }
     build();
   })();
 
