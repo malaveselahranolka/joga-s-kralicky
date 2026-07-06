@@ -233,9 +233,9 @@
 
   /* "nit dechu" — a thread that winds down the page and draws itself as you scroll */
   #thread { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; overflow: visible; }
-  #thread .t-line { fill: none; stroke: url(#threadGrad); stroke-width: 5.8; stroke-linecap: round; stroke-linejoin: round; opacity: .82; }
-  #thread .t-glow { fill: none; stroke: var(--clover); stroke-width: 21; stroke-linecap: round; stroke-linejoin: round; opacity: .14; filter: blur(10px); }
-  #thread .t-head-glow { fill: var(--clover); opacity: .32; }
+  #thread .t-line { fill: none; stroke: url(#threadGrad); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; opacity: .85; }
+  #thread .t-glow { fill: none; stroke: var(--clover); stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; opacity: .1; filter: blur(7px); }
+  #thread .t-head-glow { fill: var(--clover); opacity: .22; }
   #thread .t-head-dot { fill: var(--clover); }
   #thread .thread-head { transform-box: fill-box; transform-origin: center; animation: threadPulse 3.6s var(--ease-breath) infinite; }
   @keyframes threadPulse { 0%,100% { transform: scale(.72); opacity: .9; } 50% { transform: scale(1.1); opacity: 1; } }
@@ -594,8 +594,8 @@
   <path class="t-line" d="" />
   <g id="threadHead" style="opacity:0">
     <g class="thread-head">
-      <circle class="t-head-glow" r="13" />
-      <circle class="t-head-dot" r="4.4" />
+      <circle class="t-head-glow" r="7" />
+      <circle class="t-head-dot" r="2.8" />
     </g>
   </g>
 </svg>
@@ -1253,34 +1253,19 @@
       const inSkip = (y) => skip.some((r) => y >= r[0] && y <= r[1]);
 
       const cx = W * 0.5;
-      const amp = Math.min(W * 0.13, 122);         // calm, wide side-to-side meander
-      const meander = 2.2;                          // gentle cycles across the drawable span
-      // a few deliberate loops, placed to miss the skipped photo band (.why ≈ t 0.27–0.39)
-      const loops = [
-        { tc: 0.10, r: Math.min(W * 0.155, 150), dir:  1 },
-        { tc: 0.52, r: Math.min(W * 0.175, 168), dir: -1 },
-        { tc: 0.86, r: Math.min(W * 0.135, 128), dir:  1 },
-      ];
-      const lw = 0.05;                              // half-width (in t) of a loop
+      // Lusion-style: one thin line flowing in smooth, organic S-curves (no loops).
+      // Two non-harmonic waves layered → a varied, non-repeating meander.
+      const a1 = Math.min(W * 0.20, 190), f1 = 1.7, ph1 = 0.4;
+      const a2 = Math.min(W * 0.08, 74),  f2 = 3.4, ph2 = 1.3;
       const steps = Math.max(420, Math.round(span / 6));
       let d = '', move = true;
       for (let i = 0; i <= steps; i++) {
         const t = i / steps;
         const yBase = startY + t * span;
         if (inSkip(yBase)) { move = true; continue; } // lift the pen over photo sections
-        const ends = Math.pow(Math.sin(Math.min(Math.max(t, 0), 1) * Math.PI), 0.6); // ease meander in/out
-        let x = cx + amp * ends * Math.sin(t * Math.PI * 2 * meander + 0.6);
-        let y = yBase;
-        for (const lp of loops) {
-          const dt = (t - lp.tc) / lw;               // -1..1 inside this loop's window
-          if (dt <= -1 || dt >= 1) continue;
-          const a = Math.abs(dt);
-          const win = a < 0.62 ? 1 : 0.5 + 0.5 * Math.cos((a - 0.62) / 0.38 * Math.PI); // flat-top, pinched ends
-          const ph = lp.dir * (dt + 1) * Math.PI;    // 0 → 2π: one clean turn
-          x += lp.r * win * Math.sin(ph);
-          y += lp.r * win * (1 - Math.cos(ph));       // prolate cycloid → a self-crossing loop
-        }
-        d += (move ? 'M' : 'L') + x.toFixed(1) + ' ' + y.toFixed(1) + ' ';
+        const ends = Math.pow(Math.sin(Math.min(Math.max(t, 0), 1) * Math.PI), 0.7); // ease the sway in/out
+        const x = cx + ends * (a1 * Math.sin(t * Math.PI * 2 * f1 + ph1) + a2 * Math.sin(t * Math.PI * 2 * f2 + ph2));
+        d += (move ? 'M' : 'L') + x.toFixed(1) + ' ' + yBase.toFixed(1) + ' ';
         move = false;
       }
       line.setAttribute('d', d);
