@@ -244,8 +244,8 @@
 
   /* "nit dechu" — a thread that winds down the page and draws itself as you scroll */
   #thread { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -3; pointer-events: none; overflow: visible; }
-  #thread .t-line { fill: none; stroke: url(#threadGrad); stroke-width: 12; stroke-linecap: round; stroke-linejoin: round; opacity: .88; }
-  #thread .t-glow { fill: none; stroke: var(--clover); stroke-width: 26; stroke-linecap: round; stroke-linejoin: round; opacity: .12; filter: blur(9px); }
+  #thread .t-line { fill: none; stroke: url(#threadGrad); stroke-width: 16; stroke-linecap: round; stroke-linejoin: round; opacity: .9; }
+  #thread .t-glow { fill: none; stroke: var(--clover); stroke-width: 32; stroke-linecap: round; stroke-linejoin: round; opacity: .12; filter: blur(10px); }
   #thread .t-head-glow { fill: var(--clover); opacity: .22; }
   #thread .t-head-dot { fill: var(--clover); }
   #thread #threadHead { display: none; }
@@ -1274,10 +1274,9 @@
       const amp = Math.min(W * 0.14, 132);
       const meander = 1.9;
       const loops = [
-        { tc: 0.13, r: Math.min(W * 0.20, 196), dir:  1, w: 0.055 },
-        { tc: 0.40, r: Math.min(W * 0.16, 150), dir: -1, w: 0.046 },
-        { tc: 0.63, r: Math.min(W * 0.22, 210), dir:  1, w: 0.060 },
-        { tc: 0.85, r: Math.min(W * 0.15, 142), dir: -1, w: 0.048 },
+        { tc: 0.20, r: Math.min(W * 0.18, 172), dir:  1, w: 0.055 },
+        { tc: 0.55, r: Math.min(W * 0.20, 190), dir: -1, w: 0.060 },
+        { tc: 0.85, r: Math.min(W * 0.16, 150), dir:  1, w: 0.050 },
       ];
       const steps = Math.max(460, Math.round(span / 5));
       let d = '', move = true;
