@@ -54,8 +54,19 @@
   }
 
   *, *::before, *::after { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--clover) var(--paper); }
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+  /* custom scrollbar — brand green thumb on cream track */
+  ::-webkit-scrollbar { width: 13px; height: 13px; }
+  ::-webkit-scrollbar-track { background: var(--paper); }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--clover), var(--forest));
+    border-radius: 999px; border: 3px solid var(--paper);
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, var(--forest), var(--forest-deep)); background-clip: padding-box; }
+  ::-webkit-scrollbar-thumb:active { background: var(--forest-deep); background-clip: padding-box; }
 
   body {
     margin: 0;
@@ -232,7 +243,7 @@
   #progress { position: fixed; top: 0; left: 0; height: 2px; width: 0; z-index: 60; background: linear-gradient(90deg, var(--clover), var(--carrot)); box-shadow: 0 0 10px rgba(210,133,74,.5); transition: width .12s linear; }
 
   /* "nit dechu" — a thread that winds down the page and draws itself as you scroll */
-  #thread { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; overflow: visible; }
+  #thread { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; overflow: visible; }
   #thread .t-line { fill: none; stroke: url(#threadGrad); stroke-width: 12; stroke-linecap: round; stroke-linejoin: round; opacity: .88; }
   #thread .t-glow { fill: none; stroke: var(--clover); stroke-width: 26; stroke-linecap: round; stroke-linejoin: round; opacity: .12; filter: blur(9px); }
   #thread .t-head-glow { fill: var(--clover); opacity: .22; }
