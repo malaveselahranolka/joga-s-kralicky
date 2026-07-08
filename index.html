@@ -26,6 +26,8 @@
     --carrot: #D2854A;
     --line: #E3DFD3;
     --line-soft: #ECE8DE;
+    /* hand-drawn bunny ears, used as an inline mask so it takes the eyebrow's colour */
+    --ears: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9.1 1.8c1.7-.2 2.6 2.9 2.7 7.3.1 3-.7 5.1-2.2 5.2-1.6.1-2.7-1.9-3-4.9C6.3 5 7.4 2 9.1 1.8Z'/%3E%3Cpath d='M15.2 1.9c1.7.1 2.5 3.2 2.3 7.6-.2 3-1.2 5-2.7 4.9-1.5-.1-2.4-2.2-2.4-5.2C12.4 4.8 13.5 1.8 15.2 1.9Z'/%3E%3C/svg%3E");
 
     --maxw: 1200px;
     --r-xl: 30px;
@@ -92,7 +94,13 @@
     font-size: var(--fs-eyebrow); font-weight: 600; letter-spacing: .04em;
     color: var(--clover); text-transform: none;
   }
-  .eyebrow::before { content: "/"; margin-right: .25rem; opacity: .7; }
+  /* hand-drawn bunny ears — the studio's quiet signature; inherits the eyebrow's colour via currentColor */
+  .eyebrow::before {
+    content: ""; width: 1.05em; height: 1.05em; margin-right: .45rem; flex: 0 0 auto;
+    background-color: currentColor;
+    -webkit-mask: var(--ears) center / contain no-repeat; mask: var(--ears) center / contain no-repeat;
+    opacity: .9;
+  }
 
   .lead { color: var(--ink-soft); font-size: clamp(1.05rem, 1rem + .35vw, 1.25rem); line-height: 1.55; }
 
@@ -575,8 +583,28 @@
   /* fine film grain for warmth */
   body::after {
     content: ""; position: fixed; inset: 0; z-index: 2; pointer-events: none;
-    opacity: .03; mix-blend-mode: multiply;
+    opacity: .05; mix-blend-mode: multiply;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* section rhythm — a faint sage wash on the "meet the rabbits" band plus hairline seams
+     so the cream stretch (offer → rabbits → gallery → reference) stops reading as one slab */
+  #kralicci { background: color-mix(in srgb, var(--clover) 6%, var(--cream)); }
+  #galerie  { background: var(--paper); border-top: 1px solid var(--line-soft); }
+  .reference { border-top: 1px solid var(--line-soft); }
+
+  /* community — tighter band + a row of the rabbit "members" so the green isn't mostly empty */
+  .community { padding-block: clamp(3.25rem, 5.5vw, 5rem); }
+  .community-faces { display: flex; justify-content: center; margin-top: 1.9rem; }
+  .community-faces img {
+    width: 48px; height: 48px; border-radius: 50%; object-fit: cover;
+    border: 2px solid var(--forest); margin-left: -12px;
+    box-shadow: 0 6px 14px -6px rgba(0,0,0,.55);
+  }
+  .community-faces img:first-child { margin-left: 0; }
+  .community-note {
+    margin-top: .95rem; font-size: .8rem; letter-spacing: .06em;
+    text-transform: uppercase; color: rgba(255,255,255,.68);
   }
 </style>
 </head>
@@ -651,7 +679,7 @@
         <span class="eyebrow">Co děláme</span>
         <h2>Jemná jóga a živé zvíře, které vás nenechá spěchat</h2>
         <p class="lead">Lekce vede certifikovaná lektorka, ale tempo udávají králíci. Když si jeden lehne, zpomalíte. Když k vám přihopká, usmějete se. Vyberte si rytmus — králíci přijdou ke všem.</p>
-        <a class="btn btn-primary" href="rezervace.html">Vybrat termín <span class="arrow">→</span></a>
+        <a class="btn btn-primary" href="rezervace.html">Rezervovat lekci <span class="arrow">→</span></a>
       </div>
       <div class="cards-4">
         <article class="ocard reveal">
@@ -857,7 +885,14 @@
       <span class="eyebrow">Připojte se</span>
       <h2>Zpomalte společně s námi</h2>
       <p>Buďte součástí klidné komunity, kde tempo udávají králíci. První lekci máte za zvýhodněných 290&nbsp;Kč a nic předem neplatíte.</p>
-      <a class="btn btn-light" href="rezervace.html">Rezervovat první lekci <span class="arrow">→</span></a>
+      <div class="community-faces" aria-hidden="true">
+        <img src="assets/photos/rabbit-1.webp" alt="" loading="lazy" decoding="async" width="48" height="48" />
+        <img src="assets/photos/rabbit-2.webp" alt="" loading="lazy" decoding="async" width="48" height="48" />
+        <img src="assets/photos/rabbit-3.webp" alt="" loading="lazy" decoding="async" width="48" height="48" />
+        <img src="assets/photos/rabbit-7.webp" alt="" loading="lazy" decoding="async" width="48" height="48" />
+      </div>
+      <p class="community-note">10 chlupatých lektorů · 230+ klidných hostů</p>
+      <a class="btn btn-light" href="rezervace.html">Rezervovat lekci <span class="arrow">→</span></a>
     </div>
   </section>
 
