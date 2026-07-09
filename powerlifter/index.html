@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ŽELEZO — plánovač silového tréninku</title>
+<title>Volum Powerlifting — plánovač tréninku</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='14' width='28' height='4' rx='1' fill='%23EDEBE3'/%3E%3Crect x='5' y='7' width='4' height='18' rx='1' fill='%23D0453C'/%3E%3Crect x='23' y='7' width='4' height='18' rx='1' fill='%23D0453C'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -159,26 +159,45 @@ label.f{display:block;font-family:'Barlow Condensed';text-transform:uppercase;le
 .week-tab.active{color:#fff;border-color:rgba(224,90,80,.55);background:rgba(201,66,58,.16);box-shadow:0 2px 12px rgba(201,66,58,.22)}
 .week-bar .spacer{flex:1}
 
-.days{display:grid;grid-template-columns:repeat(auto-fill,minmax(430px,1fr));gap:16px}
+.days{display:grid;grid-template-columns:repeat(auto-fill,minmax(390px,1fr));gap:16px}
 .day-card{padding:14px 14px 12px}
 .day-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
 .day-head input{font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:.06em;font-weight:600;
   font-size:16.5px;background:transparent;border-color:transparent;box-shadow:none;flex:1;padding:3px 7px}
 .day-head input:hover{border-color:var(--line)}
 .day-head input:focus{border-color:var(--red);background:var(--iron)}
-.ex-scroll{overflow-x:auto}
-.ex-table{min-width:420px}
-.ex-row,.ex-head{display:grid;grid-template-columns:minmax(78px,1.4fr) 56px 30px 30px 58px 42px 56px 18px 22px;gap:4px;align-items:center;padding:4px 0}
-.ex-head{font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:.08em;font-size:11.5px;color:var(--dim);border-bottom:1px solid var(--line-soft);padding-bottom:6px}
-.ex-row{border-bottom:1px solid var(--line-soft)}
-.ex-row:last-of-type{border-bottom:none}
-.ex-row input,.ex-row select{padding:5px 6px;font-size:12.5px}
-.ex-row select{padding-right:20px;background-position:right 6px center}
-.ex-row input[type=number]{text-align:right;font-family:'JetBrains Mono';font-size:12px;padding:5px 5px}
-.ex-row .wt{font-family:'JetBrains Mono';font-size:13.5px;font-weight:700;text-align:right;padding-right:2px;cursor:help}
-.ex-row .wt small{display:block;font-size:10px;font-weight:400;color:var(--dim);line-height:1.2}
-.ex-row.done .exname input{color:var(--dim);text-decoration:line-through}
-.chk{width:17px;height:17px;accent-color:var(--green);cursor:pointer}
+.ex-list{display:flex;flex-direction:column;gap:8px}
+.ex-item{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.055);border-radius:12px;padding:9px 11px 10px;transition:border-color .18s ease,opacity .18s ease}
+.ex-item:hover{border-color:rgba(255,255,255,.13)}
+.ex-item.done{opacity:.6}
+.ex-item.done .ex-name{text-decoration:line-through;color:var(--muted)}
+.ex-top{display:flex;gap:7px;align-items:center}
+.ex-name{flex:1 1 130px;min-width:0;font-weight:600;font-size:14.5px;background:transparent;border-color:transparent;box-shadow:none;padding:4px 7px}
+.ex-name:hover{border-color:var(--line)}
+.ex-name:focus{background:#15171B}
+.ex-top select{width:82px;flex:none;padding:5px 20px 5px 7px;background-position:right 6px center;font-size:12.5px}
+.ex-bottom{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:7px}
+.ex-sr{display:flex;align-items:center;gap:4px;color:var(--dim);font-family:'JetBrains Mono';font-size:12px}
+.ex-bottom input[type=number]{width:46px;text-align:center;font-family:'JetBrains Mono';font-size:12.5px;padding:5px 4px}
+.ex-bottom select{width:78px;padding:5px 20px 5px 8px;background-position:right 6px center;font-size:12.5px}
+.ex-weight{margin-left:auto;text-align:right;font-family:'JetBrains Mono';font-weight:700;font-size:15.5px;line-height:1.12;cursor:help;white-space:nowrap}
+.ex-weight small{display:block;font-family:'Barlow Condensed';font-weight:500;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--dim)}
+.chk{width:17px;height:17px;accent-color:var(--green);cursor:pointer;flex:none}
+.log-btn{display:inline-flex;align-items:center;gap:5px;background:none;border:1px solid transparent;border-radius:8px;color:var(--dim);
+  font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:.08em;font-size:12px;font-weight:600;padding:4px 9px;cursor:pointer;
+  transition:color .18s ease,border-color .18s ease}
+.log-btn:hover{color:var(--chalk);border-color:var(--line)}
+.log-btn svg{width:12px;height:12px}
+.ex-log{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-top:9px;padding-top:9px;border-top:1px dashed var(--line)}
+.ex-log .lf{display:flex;flex-direction:column;gap:3px}
+.ex-log .lf span{font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:.08em;font-size:10.5px;color:var(--dim)}
+.ex-log input{width:62px;text-align:center;font-family:'JetBrains Mono';font-size:12.5px;padding:5px 4px}
+.result-chip{display:inline-flex;gap:7px;align-items:center;font-family:'JetBrains Mono';font-size:11.5px;color:#8FC4A1;background:rgba(78,143,99,.13);border:1px solid rgba(78,143,99,.38);border-radius:99px;padding:3px 11px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.pr-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-bottom:18px}
+.pr-card{padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.pr-card .num{font-family:'JetBrains Mono';font-size:24px;font-weight:700;line-height:1.15;margin:3px 0 2px}
+.pr-card .num small{font-size:12px;color:var(--muted);font-weight:400}
+.pr-card .date{font-size:11.5px;color:var(--dim);font-family:'JetBrains Mono'}
 .day-foot{display:flex;justify-content:space-between;align-items:center;margin-top:9px}
 .empty{color:var(--dim);font-size:13.5px;padding:10px 2px}
 
@@ -264,6 +283,8 @@ label.f{display:block;font-family:'Barlow Condensed';text-transform:uppercase;le
   .calc-grid,.set-grid{grid-template-columns:1fr}
   .days{grid-template-columns:1fr}
   .brand h1{font-size:24px}
+  .ex-top{flex-wrap:wrap}
+  .ex-name{flex:1 1 100%}
 }
 @media (prefers-reduced-motion:reduce){
   *{transition:none!important;animation:none!important}
@@ -282,8 +303,8 @@ label.f{display:block;font-family:'Barlow Condensed';text-transform:uppercase;le
         <rect x="19.6" y="9.5" width="3" height="13" rx="1.1" fill="var(--blue)"/>
       </svg>
       <div>
-        <h1>Železo</h1>
-        <div class="sub">plánovač silového tréninku</div>
+        <h1>Volum</h1>
+        <div class="sub">powerlifting plánovač</div>
       </div>
     </div>
     <div class="max-chips" id="maxChips"></div>
@@ -296,7 +317,8 @@ label.f{display:block;font-family:'Barlow Condensed';text-transform:uppercase;le
 <script>
 "use strict";
 /* ============ data ============ */
-const LS_KEY = "zelezo-v1";
+const LS_KEY = "volum-v1";
+const LS_KEY_LEGACY = "zelezo-v1";
 const uid = () => Math.random().toString(36).slice(2, 10);
 
 const RPE_CHART = [100,97.8,95.5,93.9,92.2,90.7,89.2,87.8,86.3,85,83.7,82.4,81.1,79.9,78.6,77.4,76.2,75.1,73.9,72.3,70.7,69.4,68,66.7,65.3,64,62.6,61.3,59.9,58.6];
@@ -357,6 +379,7 @@ function defaultState(){
         ],
       }],
     }],
+    history: [],
     ui: { tab: "plan", blockId: null, weekIndex: 0 },
   };
 }
@@ -366,8 +389,11 @@ let state = load();
   if (qTab && ["plan","calc","stats","set"].includes(qTab)) state.ui.tab = qTab; }
 function load(){
   try {
-    const raw = localStorage.getItem(LS_KEY);
-    if (raw) { const s = JSON.parse(raw); if (s && s.version === 1) return s; }
+    const raw = localStorage.getItem(LS_KEY) || localStorage.getItem(LS_KEY_LEGACY);
+    if (raw) {
+      const s = JSON.parse(raw);
+      if (s && s.version === 1) { s.history = s.history || []; return s; }
+    }
   } catch (e) {}
   return defaultState();
 }
@@ -430,7 +456,12 @@ const I = {
   gauge: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 14l4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg>',
   flame: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3 2.5.5 5 2.5 5 6a4.5 4.5 0 1 1-9 0c0-1.15.43-2.28 1-3-.5 1-.5 1.5 1.5 2.5z"/><path d="M14.5 9.5c1-1.5 1-3.5 0-5.5 4 2 7 6 7 10a8.5 8.5 0 0 1-17 0c0-2.5 1.5-5 3-6.5"/></svg>',
   plates: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12h4M19 12h4"/><rect x="5" y="5" width="3" height="14" rx="1"/><rect x="16" y="5" width="3" height="14" rx="1"/><rect x="8" y="8" width="2.5" height="8" rx="1"/><rect x="13.5" y="8" width="2.5" height="8" rx="1"/></svg>',
+  pencil: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>',
+  medal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="6"/><path d="M8.5 14.5 7 22l5-3 5 3-1.5-7.5"/></svg>',
+  target: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".5"/></svg>',
 };
+const pl = (n, s1, s2, s5) => n === 1 ? s1 : (n >= 2 && n <= 4 ? s2 : s5);
+const czDate = (iso) => { const [y, m, d] = iso.split("-"); return `${+d}. ${+m}. ${y.slice(2)}`; };
 
 /* ============ topbar + taby ============ */
 function renderChips(){
@@ -469,7 +500,7 @@ function renderPlan(){
         <button class="btn" onclick="addBlock()">${I.plus} Nový blok</button>
       </div>
     </aside>`;
-  if (!block) return `<div class="plan-grid">${sidebar}<div class="empty">Zatím žádný blok. Vytvoř první.</div></div>`;
+  if (!block) return `<div class="plan-grid">${sidebar}<div class="empty">Zatím žádný blok. Založ první a začni plánovat.</div></div>`;
 
   const wi = Math.min(state.ui.weekIndex, block.weeks.length - 1);
   const week = block.weeks[wi];
@@ -489,11 +520,9 @@ function renderPlan(){
         <button class="icon-btn" onclick="dupDay(${di})" title="Duplikovat den" aria-label="Duplikovat den">${I.copy}</button>
         <button class="icon-btn danger" onclick="delDay(${di})" title="Smazat den" aria-label="Smazat den">${I.trash}</button>
       </div>
-      <div class="ex-scroll"><div class="ex-table">
-        ${d.exercises.length ? `
-        <div class="ex-head"><span>Cvik</span><span>Lift</span><span>Sady</span><span>Opak</span><span>Režim</span><span>Hodn.</span><span style="text-align:right">Váha</span><span></span><span></span></div>
-        ${d.exercises.map((ex, ei) => renderExRow(ex, di, ei)).join("")}` : `<div class="empty">Žádné cviky — přidej první.</div>`}
-      </div></div>
+      <div class="ex-list">
+        ${d.exercises.length ? d.exercises.map((ex, ei) => renderExItem(ex, di, ei)).join("") : `<div class="empty">Prázdný den. Přidej první cvik tlačítkem dole.</div>`}
+      </div>
       <div class="day-foot">
         <button class="btn btn-ghost" onclick="addEx(${di})">${I.plus} Přidat cvik</button>
         <span class="eyebrow">${dayTonnage(d)}</span>
@@ -516,37 +545,77 @@ function renderPlan(){
       </div>
     </div></div>`;
 }
-function renderExRow(ex, di, ei){
+const openLogs = new Set();
+function renderExItem(ex, di, ei){
   const w = rowWeight(ex);
-  const wTxt = w === null ? `<span style="color:var(--yellow)" title="Vyber lift s nastaveným maximem">—</span>` : (w ? fmtKg(w) : "—");
+  const wTxt = w === null ? `<span style="color:var(--yellow)" title="Vyber lift, ať víme, z čeho počítat">—</span>` : (w ? fmtKg(w) : "—");
+  const sub = ex.mode === "pct" ? `${ex.pct} % TM` : ex.mode === "rpe" ? `RPE ${fmt(ex.rpe)}` : "napevno";
   const title = w ? platesTitle(w) : "";
   const valInput =
-    ex.mode === "pct" ? `<input type="number" step="2.5" min="0" max="130" value="${ex.pct}" onchange="updEx(${di},${ei},'pct',this.value)" aria-label="Procento TM">` :
-    ex.mode === "rpe" ? `<input type="number" step="0.5" min="6" max="10" value="${ex.rpe}" onchange="updEx(${di},${ei},'rpe',this.value)" aria-label="RPE">` :
-                        `<input type="number" step="0.5" min="0" value="${ex.kg}" onchange="updEx(${di},${ei},'kg',this.value)" aria-label="Váha v kg">`;
-  return `<div class="ex-row ${ex.done ? "done" : ""}">
-    <span class="exname"><input value="${esc(ex.name)}" placeholder="Název cviku" onchange="updEx(${di},${ei},'name',this.value)" aria-label="Cvik"></span>
-    <select onchange="updEx(${di},${ei},'liftId',this.value)" aria-label="Vazba na lift">
-      <option value="">—</option>
-      ${state.lifts.map(l => `<option value="${l.id}" ${ex.liftId === l.id ? "selected" : ""}>${esc(l.short || l.name)}</option>`).join("")}
-    </select>
-    <input type="number" min="1" max="20" value="${ex.sets}" onchange="updEx(${di},${ei},'sets',this.value)" aria-label="Sady">
-    <input type="number" min="1" max="30" value="${ex.reps}" onchange="updEx(${di},${ei},'reps',this.value)" aria-label="Opakování">
-    <select onchange="updEx(${di},${ei},'mode',this.value)" aria-label="Režim zátěže">
-      <option value="pct" ${ex.mode === "pct" ? "selected" : ""}>% TM</option>
-      <option value="rpe" ${ex.mode === "rpe" ? "selected" : ""}>RPE</option>
-      <option value="kg" ${ex.mode === "kg" ? "selected" : ""}>kg</option>
-    </select>
-    ${valInput}
-    <span class="wt" title="${esc(title)}">${wTxt}${ex.mode !== "kg" && w ? `<small>${ex.mode === "pct" ? ex.pct + " % TM" : "RPE " + ex.rpe}</small>` : ""}</span>
-    <input type="checkbox" class="chk" ${ex.done ? "checked" : ""} onchange="updEx(${di},${ei},'done',this.checked)" title="Odtrénováno" aria-label="Odtrénováno">
-    <button class="icon-btn danger" onclick="delEx(${di},${ei})" title="Smazat cvik" aria-label="Smazat cvik">${I.trash}</button>
+    ex.mode === "pct" ? `<input type="number" step="2.5" min="0" max="130" value="${ex.pct}" onchange="updEx(${di},${ei},'pct',this.value)" aria-label="Procento tréninkového maxima" title="% tréninkového maxima">` :
+    ex.mode === "rpe" ? `<input type="number" step="0.5" min="6" max="10" value="${ex.rpe}" onchange="updEx(${di},${ei},'rpe',this.value)" aria-label="Cílové RPE" title="Cílové RPE">` :
+                        `<input type="number" step="0.5" min="0" value="${ex.kg}" onchange="updEx(${di},${ei},'kg',this.value)" aria-label="Váha v kg" title="Váha v kg">`;
+  const res = ex.result;
+  const logOpen = openLogs.has(ex.id);
+  return `<div class="ex-item ${ex.done ? "done" : ""}">
+    <div class="ex-top">
+      <input class="ex-name" value="${esc(ex.name)}" placeholder="Název cviku" onchange="updEx(${di},${ei},'name',this.value)" aria-label="Název cviku">
+      <select onchange="updEx(${di},${ei},'liftId',this.value)" aria-label="Vazba na hlavní lift" title="Hlavní lift — z jeho maxima se počítá váha">
+        <option value="">bez liftu</option>
+        ${state.lifts.map(l => `<option value="${l.id}" ${ex.liftId === l.id ? "selected" : ""}>${esc(l.short || l.name)}</option>`).join("")}
+      </select>
+      <input type="checkbox" class="chk" ${ex.done ? "checked" : ""} onchange="updEx(${di},${ei},'done',this.checked)" title="Odcvičeno" aria-label="Odcvičeno">
+      <button class="icon-btn danger" onclick="delEx(${di},${ei})" title="Smazat cvik" aria-label="Smazat cvik">${I.trash}</button>
+    </div>
+    <div class="ex-bottom">
+      <span class="ex-sr"><input type="number" min="1" max="20" value="${ex.sets}" onchange="updEx(${di},${ei},'sets',this.value)" aria-label="Počet sérií" title="Série">×<input type="number" min="1" max="30" value="${ex.reps}" onchange="updEx(${di},${ei},'reps',this.value)" aria-label="Počet opakování" title="Opakování"></span>
+      <select onchange="updEx(${di},${ei},'mode',this.value)" aria-label="Způsob zadání zátěže">
+        <option value="pct" ${ex.mode === "pct" ? "selected" : ""}>% TM</option>
+        <option value="rpe" ${ex.mode === "rpe" ? "selected" : ""}>RPE</option>
+        <option value="kg" ${ex.mode === "kg" ? "selected" : ""}>kg</option>
+      </select>
+      ${valInput}
+      <button class="log-btn" onclick="toggleLog(${di},${ei})" aria-expanded="${logOpen}">${I.pencil} Výsledek</button>
+      <div class="ex-weight" title="${esc(title)}">${wTxt}${w ? ` kg<small>${sub}</small>` : ""}</div>
+    </div>
+    ${res ? `<div style="margin-top:8px"><span class="result-chip">✓ ${fmtKg(res.kg)} kg × ${res.reps} @${fmt(res.rpe)} · e1RM ${fmtKg(res.e1rm)} kg</span></div>` : ""}
+    ${logOpen ? renderLogForm(ex, di, ei) : ""}
   </div>`;
 }
+function renderLogForm(ex, di, ei){
+  const kg = ex.result ? ex.result.kg : (rowWeight(ex) || "");
+  const reps = ex.result ? ex.result.reps : ex.reps;
+  const rpe = ex.result ? ex.result.rpe : (ex.mode === "rpe" ? ex.rpe : 8);
+  return `<div class="ex-log">
+    <div class="lf"><span>Zvednuto (kg)</span><input type="number" step="0.5" min="0" id="lg-kg-${ex.id}" value="${kg}"></div>
+    <div class="lf"><span>Opakování</span><input type="number" min="1" max="30" id="lg-r-${ex.id}" value="${reps}"></div>
+    <div class="lf"><span>RPE</span><input type="number" step="0.5" min="6" max="10" id="lg-rpe-${ex.id}" value="${rpe}"></div>
+    <button class="btn btn-primary" onclick="saveResult(${di},${ei})" data-save-log>Uložit</button>
+  </div>`;
+}
+window.toggleLog = (di, ei) => {
+  const ex = curWeek().days[di].exercises[ei];
+  if (openLogs.has(ex.id)) openLogs.delete(ex.id); else openLogs.add(ex.id);
+  render();
+};
+window.saveResult = (di, ei) => {
+  const ex = curWeek().days[di].exercises[ei];
+  const kg = +document.getElementById("lg-kg-" + ex.id).value || 0;
+  const reps = +document.getElementById("lg-r-" + ex.id).value || 1;
+  const rpe = +document.getElementById("lg-rpe-" + ex.id).value || 8;
+  if (!kg) return;
+  const e1rm = Math.round(kg / rpePct(reps, rpe) * 1000) / 10;
+  ex.result = { kg, reps, rpe, e1rm };
+  ex.done = true;
+  state.history.push({ id: uid(), date: new Date().toLocaleDateString("sv-SE"), name: ex.name || "Cvik", liftId: ex.liftId, kg, reps, rpe, e1rm });
+  openLogs.delete(ex.id);
+  save(); render();
+};
+window.delHist = (id) => mut(() => { state.history = state.history.filter(h => h.id !== id); });
 function dayTonnage(d){
   let ton = 0, sets = 0;
   d.exercises.forEach(ex => { const w = rowWeight(ex) || 0; ton += (+ex.sets||0) * (+ex.reps||0) * w; sets += +ex.sets||0; });
-  return `${sets} sad · ${fmt(Math.round(ton))} kg tonáž`;
+  return `${sets} ${pl(sets, "série", "série", "sérií")} · ${fmt(Math.round(ton))} kg`;
 }
 const curWeek = () => { const b = curBlock(); return b ? b.weeks[Math.min(state.ui.weekIndex, b.weeks.length - 1)] : null; };
 window.selBlock = (id) => mut(() => { state.ui.blockId = id; state.ui.weekIndex = 0; });
@@ -555,7 +624,7 @@ window.addBlock = () => mut(() => {
   const b = { id: uid(), name: "Nový blok", goal: "Síla", weeks: [{ id: uid(), days: [{ id: uid(), name: "Den A", exercises: [] }] }] };
   state.blocks.push(b); state.ui.blockId = b.id; state.ui.weekIndex = 0;
 });
-window.delBlock = () => { if (!confirm("Smazat celý blok včetně všech týdnů?")) return;
+window.delBlock = () => { if (!confirm("Fakt smazat celý blok? Zmizí i všechny jeho týdny a cviky.")) return;
   mut(() => { state.blocks = state.blocks.filter(b => b.id !== state.ui.blockId); state.ui.blockId = state.blocks[0]?.id || null; state.ui.weekIndex = 0; }); };
 window.dupBlock = () => mut(() => {
   const b = curBlock(); if (!b) return;
@@ -571,7 +640,7 @@ window.dupWeek = () => mut(() => {
   copy.days.forEach(d => { d.id = uid(); d.exercises.forEach(e => { e.id = uid(); e.done = false; }); });
   b.weeks.splice(state.ui.weekIndex + 1, 0, copy); state.ui.weekIndex += 1;
 });
-window.delWeek = () => { if (!confirm("Smazat tento týden?")) return;
+window.delWeek = () => { if (!confirm("Smazat tenhle týden i se všemi cviky?")) return;
   mut(() => { const b = curBlock(); b.weeks.splice(state.ui.weekIndex, 1); state.ui.weekIndex = Math.max(0, state.ui.weekIndex - 1); }); };
 window.updDay = (di, v) => mut(() => { curWeek().days[di].name = v; });
 window.addDay = () => mut(() => { const w = curWeek(); w.days.push({ id: uid(), name: "Den " + String.fromCharCode(65 + w.days.length), exercises: [] }); });
@@ -580,7 +649,7 @@ window.dupDay = (di) => mut(() => {
   copy.id = uid(); copy.name += " (kopie)"; copy.exercises.forEach(e => { e.id = uid(); e.done = false; });
   w.days.splice(di + 1, 0, copy);
 });
-window.delDay = (di) => { if (!confirm("Smazat tento den?")) return; mut(() => { curWeek().days.splice(di, 1); }); };
+window.delDay = (di) => { if (!confirm("Smazat tenhle den?")) return; mut(() => { curWeek().days.splice(di, 1); }); };
 window.addEx = (di) => mut(() => { curWeek().days[di].exercises.push({ id: uid(), name: "", liftId: null, sets: 3, reps: 5, mode: "kg", pct: 70, rpe: 8, kg: 0, done: false }); });
 window.delEx = (di, ei) => mut(() => { curWeek().days[di].exercises.splice(ei, 1); });
 window.updEx = (di, ei, f, v) => mut(() => {
@@ -592,7 +661,25 @@ window.updEx = (di, ei, f, v) => mut(() => {
 });
 
 /* ============ KALKULAČKY ============ */
-const calc = { e1: { w: 100, r: 5, rpe: "" }, rpe: { liftId: "sq", man: "", r: 3, rpe: 8 }, wu: { w: 140, p: "standard" }, pl: { w: 142.5 } };
+const calc = { e1: { w: 100, r: 5, rpe: "" }, rpe: { liftId: "sq", man: "", r: 3, rpe: 8 }, wu: { w: 140, p: "standard" }, pl: { w: 142.5 }, att: { liftId: "sq", man: "", strat: "std" }, dots: { sex: "m", bw: 90, total: "" } };
+
+const ATT_STRATS = {
+  kons: { name: "Na jistotu", p: [89, 94, 99] },
+  std:  { name: "Vyvážená", p: [91, 96, 101] },
+  agr:  { name: "Agresivní", p: [93, 98, 103] },
+};
+const DOTS_COEF = {
+  m: [-307.75076, 24.0900756, -0.1918759221, 0.0007391293, -0.000001093],
+  f: [-57.96288, 13.6175032, -0.1126655495, 0.0005158568, -0.0000010706],
+};
+function dotsScore(sex, bw, total){
+  const [a, b, c, d, e] = DOTS_COEF[sex];
+  const den = a + b * bw + c * bw ** 2 + d * bw ** 3 + e * bw ** 4;
+  return den > 0 ? total * 500 / den : 0;
+}
+const dotsLevel = (p) =>
+  p >= 600 ? "světová třída" : p >= 500 ? "elita" : p >= 450 ? "pokročilý" :
+  p >= 400 ? "středně pokročilý" : p >= 300 ? "solidní základ" : "začátek cesty";
 
 function renderCalc(){
   return `<div class="calc-grid">
@@ -600,7 +687,55 @@ function renderCalc(){
     ${rpeCard()}
     ${warmupCard()}
     ${plateCard()}
+    ${attemptCard()}
+    ${dotsCard()}
   </div>`;
+}
+function attemptCard(){
+  const c = calc.att;
+  const lift = liftById(c.liftId);
+  const base = c.man !== "" ? +c.man : (lift ? lift.tm : 0);
+  const strat = ATT_STRATS[c.strat];
+  const rows = strat.p.map((p, i) => `<tr class="${i === 2 ? "hl" : ""}">
+    <td>${i + 1}. pokus${i === 0 ? " (otvírák)" : ""}</td>
+    <td class="n">${p} %</td>
+    <td class="n">${fmtKg(roundW(base * p / 100))} kg</td>
+  </tr>`).join("");
+  return `<section class="card calc-card">
+    <h2>${I.medal} Pokusy na závody</h2>
+    <p class="desc">Otvírák dej tak těžký, abys ho zvládl na trojku i po mizerné noci. Devět platných pokusů vyhrává víc závodů než jeden hrdinský třetí.</p>
+    <div class="frow">
+      <div><label class="f" for="atl">Lift</label><select id="atl" onchange="updCalc('att','liftId',this.value)">
+        ${state.lifts.map(l => `<option value="${l.id}" ${c.liftId === l.id ? "selected" : ""}>${esc(l.name)} (TM ${l.tm ? fmt(l.tm) : "—"})</option>`).join("")}
+      </select></div>
+      <div><label class="f" for="atm">…nebo maximum ručně</label><input id="atm" class="mono" type="number" step="0.5" min="0" placeholder="${lift ? fmt(lift.tm) : ""}" value="${c.man}" oninput="updCalc('att','man',this.value)"></div>
+      <div><label class="f" for="ats">Strategie</label><select id="ats" onchange="updCalc('att','strat',this.value)">
+        ${Object.entries(ATT_STRATS).map(([k, s]) => `<option value="${k}" ${c.strat === k ? "selected" : ""}>${s.name}</option>`).join("")}
+      </select></div>
+    </div>
+    ${base > 0 ? `<table class="minitable"><thead><tr><th>Pokus</th><th style="text-align:right">% maxima</th><th style="text-align:right">Váha</th></tr></thead><tbody>${rows}</tbody></table>`
+      : `<div class="empty">Vyplň maximum a rozpočítám ti všechny tři pokusy.</div>`}
+  </section>`;
+}
+function dotsCard(){
+  const c = calc.dots;
+  const tmSum = state.lifts.slice(0, 3).reduce((a, l) => a + (+l.tm || 0), 0);
+  const total = c.total !== "" ? +c.total : tmSum;
+  const pts = c.bw > 0 && total > 0 ? dotsScore(c.sex, +c.bw, total) : 0;
+  return `<section class="card calc-card">
+    <h2>${I.target} DOTS skóre</h2>
+    <p class="desc">Porovnání síly bez ohledu na tělesnou váhu — podle DOTS se vyhlašuje absolutní pořadí na většině závodů.</p>
+    <div class="frow">
+      <div><label class="f" for="dsx">Pohlaví</label><select id="dsx" onchange="updCalc('dots','sex',this.value)">
+        <option value="m" ${c.sex === "m" ? "selected" : ""}>Muž</option>
+        <option value="f" ${c.sex === "f" ? "selected" : ""}>Žena</option>
+      </select></div>
+      <div><label class="f" for="dbw">Tělesná váha (kg)</label><input id="dbw" class="mono" type="number" step="0.1" min="30" value="${c.bw}" oninput="updCalc('dots','bw',this.value)"></div>
+      <div><label class="f" for="dtt">Trojboj celkem (kg)</label><input id="dtt" class="mono" type="number" step="0.5" min="0" placeholder="${fmt(tmSum)}" value="${c.total}" oninput="updCalc('dots','total',this.value)"></div>
+    </div>
+    <div class="result-hero"><span class="big">${pts ? fmt(Math.round(pts * 10) / 10, 1) : "—"}</span><span class="unit">bodů DOTS</span><span class="tag">${pts ? dotsLevel(pts) : ""}</span></div>
+    <p class="note-text">Když trojboj nevyplníš, bereme součet tvých tréninkových maxim (${fmt(tmSum)} kg).</p>
+  </section>`;
 }
 function e1rmCard(){
   const { w, r, rpe } = calc.e1;
@@ -611,13 +746,13 @@ function e1rmCard(){
     if (rpe !== "") { rpeVal = w / rpePct(r, +rpe) * 100; }
     const avg = vals.reduce((a, [,v]) => a + v, 0) / vals.length;
     hero = fmtKg(rpeVal ?? avg);
-    tag = rpeVal ? `RPE metoda (Tuchscherer)` : `průměr ${vals.length} vzorců`;
+    tag = rpeVal ? `podle RPE (Tuchscherer)` : `průměr ze ${vals.length} vzorců`;
     rows = vals.map(([n, v]) => `<tr><td>${n}</td><td class="n">${fmtKg(v)} kg</td></tr>`).join("");
     if (rpeVal) rows = `<tr class="hl"><td>RPE ${fmt(+rpe)} × ${r}</td><td class="n">${fmtKg(rpeVal)} kg</td></tr>` + rows;
   }
   return `<section class="card calc-card">
     <h2>${I.gauge} E1RM — odhad maxima</h2>
-    <p class="desc">Zadej nejtěžší sérii. RPE nepovinné — zpřesní odhad přes Tuchschererovu tabulku.</p>
+    <p class="desc">Zadej svou nejtěžší sérii a uvidíš, na čem zhruba jsi. Když doplníš i RPE, odhad se ještě zpřesní.</p>
     <div class="frow">
       <div><label class="f" for="e1w">Váha (kg)</label><input id="e1w" class="mono" type="number" step="0.5" min="1" value="${w}" oninput="updCalc('e1','w',this.value)"></div>
       <div><label class="f" for="e1r">Opakování</label><input id="e1r" class="mono" type="number" min="1" max="15" value="${r}" oninput="updCalc('e1','r',this.value)"></div>
@@ -637,7 +772,7 @@ function rpeCard(){
   const target = base > 0 ? roundW(base * pct / 100) : 0;
   return `<section class="card calc-card">
     <h2>${I.bolt} RPE převodník</h2>
-    <p class="desc">Kolik naložit pro X opakování na dané RPE. Vychází z tréninkového maxima nebo ručně zadaného e1RM.</p>
+    <p class="desc">Chceš třeba pětku na RPE 8 a nevíš, kolik naložit? Tady to zjistíš — z tréninkového maxima, nebo z ručně zadaného e1RM.</p>
     <div class="frow">
       <div><label class="f" for="rpl">Lift</label><select id="rpl" onchange="updCalc('rpe','liftId',this.value)">
         ${state.lifts.map(l => `<option value="${l.id}" ${c.liftId === l.id ? "selected" : ""}>${esc(l.name)} (TM ${l.tm ? fmt(l.tm) : "—"})</option>`).join("")}
@@ -666,10 +801,10 @@ function warmupCard(){
       <span class="reps">×${reps}</span>
       <div>${barVizHTML(kg)}</div>
     </div>`;
-  }).join("") : `<div class="empty">Zadej pracovní váhu vyšší než osa (${fmt(bar)} kg).</div>`;
+  }).join("") : `<div class="empty">Pracovní váha musí být těžší než samotná osa (${fmt(bar)} kg).</div>`;
   return `<section class="card calc-card">
     <h2>${I.flame} Rozcvičkové série</h2>
-    <p class="desc">Rampa k pracovní váze včetně nakládky. Protokoly podle běžné praxe i soutěžní rozcvičky.</p>
+    <p class="desc">Postupná rampa až k pracovní váze — včetně toho, co přesně naložit na osu v každé sérii.</p>
     <div class="frow">
       <div><label class="f" for="wuw">Pracovní váha (kg)</label><input id="wuw" class="mono" type="number" step="2.5" min="0" value="${c.w}" oninput="updCalc('wu','w',this.value)"></div>
       <div><label class="f" for="wup">Protokol</label><select id="wup" onchange="updCalc('wu','p',this.value)">
@@ -685,16 +820,16 @@ function plateCard(){
   const ok = c.w >= bar;
   return `<section class="card calc-card">
     <h2>${I.plates} Nakládačka</h2>
-    <p class="desc">Kotouče na jednu stranu osy. Barvy odpovídají soutěžním IPF kotoučům.</p>
+    <p class="desc">Kolik kotoučů hodit na každou stranu osy. Barvy sedí se závodními IPF kotouči, takže to poznáš na první pohled.</p>
     <div class="frow">
       <div><label class="f" for="plw">Cílová váha (kg)</label><input id="plw" class="mono" type="number" step="0.5" min="0" value="${c.w}" oninput="updCalc('pl','w',this.value)"></div>
       <div><label class="f">Osa</label><div class="mono" style="padding:7px 2px;color:var(--muted)">${fmt(bar)} kg</div></div>
     </div>
-    ${ok ? barVizHTML(+c.w) : `<div class="empty">Cílová váha musí být aspoň váha osy (${fmt(bar)} kg).</div>`}
+    ${ok ? barVizHTML(+c.w) : `<div class="empty">Cílová váha nemůže být lehčí než osa (${fmt(bar)} kg).</div>`}
   </section>`;
 }
 window.updCalc = (card, f, v) => {
-  const keepString = (card === "e1" && f === "rpe") || f === "man" || f === "p" || f === "liftId";
+  const keepString = (card === "e1" && f === "rpe") || ["man", "p", "liftId", "strat", "sex", "total"].includes(f);
   calc[card][f] = keepString ? v : (v === "" ? "" : +v);
   render();
 };
@@ -715,8 +850,46 @@ function blockWeekStats(block){
     return per;
   });
 }
+function sparkline(entries, color){
+  if (entries.length < 2) return "";
+  const w = 130, h = 38, p = 4;
+  const vals = entries.map(e => e.e1rm);
+  const min = Math.min(...vals), max = Math.max(...vals), rng = (max - min) || 1;
+  const pts = entries.map((e, i) =>
+    `${(p + i * (w - 2 * p) / (entries.length - 1)).toFixed(1)},${(h - p - (e.e1rm - min) / rng * (h - 2 * p)).toFixed(1)}`).join(" ");
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" opacity=".9"/></svg>`;
+}
+function renderRecords(){
+  const hist = state.history;
+  const prHtml = state.lifts.map(l => {
+    const entries = hist.filter(h => h.liftId === l.id).sort((a, b) => a.date < b.date ? -1 : 1);
+    if (!entries.length) return "";
+    const best = entries.reduce((m, h) => h.e1rm > m.e1rm ? h : m);
+    return `<div class="card pr-card">
+      <div>
+        <div class="eyebrow" style="display:flex;align-items:center;gap:7px"><i style="width:9px;height:9px;border-radius:2px;background:${LIFT_COLORS[l.color] || "var(--plate-5)"}"></i>${esc(l.name)}</div>
+        <div class="num">${fmtKg(best.e1rm)} <small>kg e1RM</small></div>
+        <div class="date">${czDate(best.date)} · ${fmtKg(best.kg)} × ${best.reps} @${fmt(best.rpe)}</div>
+      </div>
+      ${sparkline(entries.slice(-12), LIFT_COLORS[l.color] || "var(--plate-5)")}
+    </div>`;
+  }).join("");
+  const histRows = [...hist].reverse().slice(0, 12).map(h => `<tr>
+    <td class="n" style="white-space:nowrap">${czDate(h.date)}</td><td>${esc(h.name)}</td>
+    <td class="n" style="white-space:nowrap">${fmtKg(h.kg)} × ${h.reps} @${fmt(h.rpe)}</td>
+    <td class="n">${fmtKg(h.e1rm)} kg</td>
+    <td style="width:34px"><button class="icon-btn danger" onclick="delHist('${h.id}')" title="Smazat záznam" aria-label="Smazat záznam">${I.trash}</button></td>
+  </tr>`).join("");
+  return `
+    <div class="section-title"><h2>Rekordy a výsledky</h2><span class="eyebrow">z toho, co si zapíšeš u cviků v plánu</span></div>
+    ${prHtml ? `<div class="pr-cards">${prHtml}</div>` : ""}
+    ${hist.length ? `<div class="card" style="padding:6px 14px 10px;margin-bottom:28px;overflow-x:auto">
+      <table class="minitable" style="min-width:520px"><thead><tr><th>Datum</th><th>Cvik</th><th style="text-align:right">Nejlepší série</th><th style="text-align:right">e1RM</th><th></th></tr></thead><tbody>${histRows}</tbody></table>
+    </div>` : `<div class="card" style="padding:16px 18px;margin-bottom:28px;color:var(--muted);font-size:13.5px;line-height:1.6">
+      Zatím tu nic není. V plánu klikni u cviku na <strong style="color:var(--chalk)">Výsledek</strong> a zapiš, co jsi doopravdy zvedl — osobní rekordy a graf vývoje se tu objeví samy.</div>`}`;
+}
 function renderStats(){
-  if (!state.blocks.length) return `<div class="empty">Žádný blok k analýze.</div>`;
+  if (!state.blocks.length) return renderRecords() + `<div class="empty">Žádný blok k analýze — nejdřív si nějaký naplánuj.</div>`;
   const block = curBlock();
   const stats = blockWeekStats(block);
   const keys = [...state.lifts.map(l => l.id), "other"];
@@ -746,15 +919,15 @@ function renderStats(){
       <td class="n">${per[k].pctN ? fmt(per[k].pctSum / per[k].pctN) + " %" : "—"}</td>
     </tr>`).join("")).join("");
 
-  return `
-    <div class="section-title"><h2>Statistiky bloku</h2>
+  return renderRecords() + `
+    <div class="section-title"><h2>Plán bloku v číslech</h2>
       <select onchange="selBlock(this.value)" aria-label="Vybrat blok">
         ${state.blocks.map(b => `<option value="${b.id}" ${b.id === block.id ? "selected" : ""}>${esc(b.name)}</option>`).join("")}
       </select>
     </div>
     <div class="stat-cards">
       <div class="card stat-card"><div class="eyebrow">Celková tonáž</div><div class="num">${fmt(Math.round(totTon / 100) / 10, 1)} <small>t</small></div></div>
-      <div class="card stat-card"><div class="eyebrow">Pracovní sady</div><div class="num">${totSets}</div></div>
+      <div class="card stat-card"><div class="eyebrow">Pracovní série</div><div class="num">${totSets}</div></div>
       <div class="card stat-card"><div class="eyebrow">Ø intenzita (S/B/D)</div><div class="num">${pctN ? fmt(pctSum / pctN) : "—"} <small>% TM</small></div></div>
       <div class="card stat-card"><div class="eyebrow">Týdnů v bloku</div><div class="num">${block.weeks.length}</div></div>
     </div>
@@ -764,7 +937,7 @@ function renderStats(){
     </div>
     <div class="card" style="padding:6px 14px 10px;overflow-x:auto">
       <table class="minitable" style="min-width:560px">
-        <thead><tr><th>Týden</th><th>Lift</th><th style="text-align:right">Sady</th><th style="text-align:right">Opakování</th><th style="text-align:right">Tonáž</th><th style="text-align:right">Ø intenzita</th></tr></thead>
+        <thead><tr><th>Týden</th><th>Lift</th><th style="text-align:right">Série</th><th style="text-align:right">Opakování</th><th style="text-align:right">Tonáž</th><th style="text-align:right">Ø intenzita</th></tr></thead>
         <tbody>${tableRows || `<tr><td colspan="6" class="empty">Blok zatím nemá naplánované cviky.</td></tr>`}</tbody>
       </table>
     </div>`;
@@ -776,7 +949,7 @@ function renderSettings(){
   return `<div class="set-grid">
     <section class="card calc-card">
       <h2>${I.gauge} Tréninková maxima</h2>
-      <p class="desc">TM = váha, ze které se počítají % v plánu. Obvykle 90–100 % skutečného 1RM. Aktualizuj po testu nebo přes E1RM kalkulačku.</p>
+      <p class="desc">Z tréninkového maxima (TM) se počítají procenta v plánu. Bývá to 90–100 % skutečného maxima — radši si ho nastav střízlivě, procenta pak sedí líp.</p>
       ${state.lifts.map((l, i) => `
         <div class="lift-row">
           <span class="lift-dot" style="background:${LIFT_COLORS[l.color] || "var(--plate-5)"}"></span>
@@ -788,7 +961,7 @@ function renderSettings(){
     </section>
     <section class="card calc-card">
       <h2>${I.plates} Vybavení</h2>
-      <p class="desc">Použije se pro zaokrouhlení a nakládačku.</p>
+      <p class="desc">Podle tohohle zaokrouhlujeme váhy v plánu a počítáme nakládačku.</p>
       <div class="frow">
         <div><label class="f" for="sbar">Osa (kg)</label><input id="sbar" class="mono" type="number" step="2.5" min="5" value="${state.settings.barWeight}" onchange="updSet('barWeight',this.value)"></div>
         <div><label class="f" for="sround">Zaokrouhlení</label><select id="sround" class="mono" onchange="updSet('rounding',this.value)">
@@ -802,20 +975,20 @@ function renderSettings(){
     </section>
     <section class="card calc-card">
       <h2>${I.down} Data</h2>
-      <p class="desc">Všechno se ukládá lokálně v prohlížeči. Záloha = JSON soubor, který jde přenést jinam.</p>
+      <p class="desc">Všechno zůstává u tebe v prohlížeči, nikam se nic neposílá. Záloha je obyčejný soubor — hodí se před čištěním prohlížeče nebo pro přenos na jiný počítač.</p>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <button class="btn btn-primary" onclick="exportData()">${I.down} Exportovat zálohu</button>
         <button class="btn" onclick="document.getElementById('importFile').click()">${I.up} Importovat zálohu</button>
         <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)">
         <button class="btn btn-ghost" onclick="resetData()" style="color:var(--red-hi)">${I.trash} Smazat všechna data</button>
       </div>
-      <p class="note-text">Import přepíše aktuální data. Před importem si pro jistotu exportuj zálohu.</p>
+      <p class="note-text">Import přepíše všechno, co tu teď máš. Pro jistotu si předtím stáhni zálohu.</p>
     </section>
   </div>`;
 }
 window.updLift = (i, f, v) => mut(() => { state.lifts[i][f] = f === "tm" ? (+v || 0) : v; if (f === "name") state.lifts[i].short = v.split(" ").map(x => x[0] || "").join("").toUpperCase().slice(0, 3); });
 window.addLift = () => mut(() => { state.lifts.push({ id: uid(), name: "Nový lift", short: "NL", tm: 0, color: "chalk" }); });
-window.delLift = (i) => { if (!confirm("Smazat lift? Cviky na něj navázané ztratí výpočet váhy.")) return; mut(() => { state.lifts.splice(i, 1); }); };
+window.delLift = (i) => { if (!confirm("Smazat tenhle lift? Cviky, které na něj odkazují, přijdou o výpočet váhy.")) return; mut(() => { state.lifts.splice(i, 1); }); };
 window.updSet = (f, v) => mut(() => { state.settings[f] = +v; });
 window.togglePlate = (p, on) => mut(() => {
   const s = new Set(state.settings.plates);
@@ -826,7 +999,7 @@ window.exportData = () => {
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "zelezo-zaloha-" + new Date().toISOString().slice(0, 10) + ".json";
+  a.download = "volum-zaloha-" + new Date().toLocaleDateString("sv-SE") + ".json";
   a.click(); URL.revokeObjectURL(a.href);
 };
 window.importData = (inp) => {
@@ -837,12 +1010,12 @@ window.importData = (inp) => {
       const s = JSON.parse(reader.result);
       if (!s || s.version !== 1 || !Array.isArray(s.blocks)) throw new Error("bad");
       state = s; save(); render();
-    } catch (e) { alert("Soubor se nepodařilo načíst — není to platná záloha aplikace Železo."); }
+    } catch (e) { alert("Tenhle soubor nejde načíst — nevypadá jako záloha z Volumu."); }
     inp.value = "";
   };
   reader.readAsText(file);
 };
-window.resetData = () => { if (!confirm("Opravdu smazat všechna data? Tohle nejde vrátit.")) return;
+window.resetData = () => { if (!confirm("Opravdu všechno smazat a začít od nuly? Tohle vrátit nejde.")) return;
   state = defaultState(); save(); render(); };
 
 /* ============ render ============ */
