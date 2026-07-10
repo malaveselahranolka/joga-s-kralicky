@@ -4,44 +4,49 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Volum Powerlifting — plánovač tréninku</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='14' width='28' height='4' rx='1' fill='%23EDEBE3'/%3E%3Crect x='5' y='7' width='4' height='18' rx='1' fill='%23D0453C'/%3E%3Crect x='23' y='7' width='4' height='18' rx='1' fill='%23D0453C'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%230A0A0A'/%3E%3Cpath d='M148 128 L256 384 L364 128 L316 128 L256 304 L196 128 Z' fill='%2326F07A'/%3E%3Crect x='192' y='392' width='128' height='16' rx='8' fill='%2326F07A' opacity='0.6'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --iron:#1B1E22;        /* pozadí — litina */
-  --steel:#22262C;       /* panel */
-  --steel-2:#2A2F36;     /* zvednutý povrch */
-  --steel-3:#333943;     /* hover povrch */
-  --line:#363C45;
-  --line-soft:#2E333B;
-  --chalk:#EDEBE3;       /* magnézium */
-  --muted:#98A0AB;
-  --dim:#6C7480;
-  --red:#C9423A;         /* kotouč 25 kg */
-  --red-hi:#E05A50;
-  --blue:#3E6FB4;        /* kotouč 20 kg */
-  --yellow:#D9AC3E;      /* kotouč 15 kg */
-  --green:#4E8F63;       /* kotouč 10 kg */
-  --plate-5:#DDDAD2;
-  --plate-25:#2E3238;
+  --iron:#0C0E11;        /* nejhlubší podklad */
+  --steel:#111318;       /* panel */
+  --steel-2:#16181D;     /* zvednutý povrch */
+  --steel-3:#1E2127;     /* hover povrch */
+  --line:#23262D;
+  --line-soft:#1B1E24;
+  --chalk:#F5F6F8;       /* hlavní text */
+  --muted:#8A8F98;
+  --dim:#5B6068;
+  --accent:#26F07A;      /* Volum zelená — primární akcent */
+  --accent-hi:#4CF793;
+  --accent-soft:rgba(38,240,122,.12);
+  --ink:#04140B;         /* text na zelené ploše */
+  --red:#FF4D4F;         /* kotouč 25 kg / dřep */
+  --red-hi:#FF6D6F;
+  --blue:#3E86E0;        /* kotouč 20 kg */
+  --yellow:#F0B429;      /* kotouč 15 kg */
+  --green:#26C46A;       /* kotouč 10 kg */
+  --plate-5:#E4E7EC;
+  --plate-25:#20242B;
   --plate-125:#A7ADB6;
   --radius:16px;
-  --shadow-1:inset 0 1px 0 rgba(255,255,255,.045), 0 1px 2px rgba(5,6,8,.5), 0 12px 32px rgba(5,6,8,.38);
-  --shadow-2:inset 0 1px 0 rgba(255,255,255,.05), 0 2px 4px rgba(5,6,8,.55), 0 18px 48px rgba(5,6,8,.5);
-  --ring:0 0 0 3px rgba(224,90,80,.16);
+  --ease:cubic-bezier(0.22,1,0.36,1);
+  --shadow-1:inset 0 1px 0 rgba(255,255,255,.04), 0 1px 2px rgba(0,0,0,.5), 0 12px 32px rgba(0,0,0,.4);
+  --shadow-2:inset 0 1px 0 rgba(255,255,255,.05), 0 2px 4px rgba(0,0,0,.55), 0 18px 48px rgba(0,0,0,.5);
+  --ring:0 0 0 3px rgba(38,240,122,.22);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
 body{
-  background:#131518;
+  background:#08090B;
   background-image:
-    radial-gradient(1100px 560px at 82% -12%, rgba(62,111,180,.11), transparent 62%),
-    radial-gradient(850px 500px at -8% 108%, rgba(201,66,58,.09), transparent 58%),
-    radial-gradient(1400px 900px at 50% 42%, rgba(36,40,47,.55), transparent 75%);
+    radial-gradient(1100px 600px at 82% -14%, rgba(38,240,122,.07), transparent 60%),
+    radial-gradient(900px 520px at -8% 108%, rgba(38,240,122,.045), transparent 58%),
+    radial-gradient(1400px 900px at 50% 44%, rgba(20,23,28,.6), transparent 78%);
   color:var(--chalk);
-  font-family:'Barlow',system-ui,sans-serif;
+  font-family:'Geist',system-ui,sans-serif;
   font-size:15px;line-height:1.55;
   min-height:100vh;
 }
@@ -56,19 +61,19 @@ body::before{
 ::-webkit-scrollbar-track{background:transparent}
 @keyframes viewIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
 #view.anim{animation:viewIn .26s ease both}
-h1,h2,h3,.disp{font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.05em}
-.mono{font-family:'JetBrains Mono',monospace}
+h1,h2,h3,.disp{font-family:'Geist',sans-serif;text-transform:uppercase;letter-spacing:.05em}
+.mono{font-family:'Geist Mono',monospace}
 
 /* ---------- topbar ---------- */
 .topbar{display:flex;align-items:center;gap:18px;padding:18px 0 10px;flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:12px}
 .brand svg{flex:none}
 .brand h1{font-size:30px;font-weight:700;letter-spacing:.08em;line-height:1}
-.brand .sub{font-size:12px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;font-family:'Barlow Condensed'}
+.brand .sub{font-size:12px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;font-family:'Geist'}
 .max-chips{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
 .max-chip{display:flex;align-items:baseline;gap:6px;background:rgba(36,40,48,.65);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:5px 11px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
-.max-chip .lbl{font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:.08em;font-size:12px;color:var(--muted)}
-.max-chip .val{font-family:'JetBrains Mono';font-size:14px;font-weight:700}
+.max-chip .lbl{font-family:'Geist';text-transform:uppercase;letter-spacing:.08em;font-size:12px;color:var(--muted)}
+.max-chip .val{font-family:'Geist Mono';font-size:14px;font-weight:700}
 .max-chip .dot{width:8px;height:8px;border-radius:2px;align-self:center}
 
 /* rack strip — pás barev kotoučů */
@@ -86,23 +91,24 @@ h1,h2,h3,.disp{font-family:'Barlow Condensed',sans-serif;text-transform:uppercas
   border:1px solid rgba(255,255,255,.08);border-radius:14px;box-shadow:0 10px 32px rgba(5,6,8,.45);
   margin-bottom:24px;overflow-x:auto}
 .tab{display:flex;align-items:center;gap:8px;background:none;border:none;color:var(--muted);
-  font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:.09em;font-size:15.5px;font-weight:600;
+  font-family:'Geist';text-transform:uppercase;letter-spacing:.09em;font-size:15.5px;font-weight:600;
   padding:8px 16px;cursor:pointer;border-radius:10px;white-space:nowrap;
   transition:color .18s ease,background-color .18s ease,box-shadow .18s ease}
 .tab svg{width:16px;height:16px}
 .tab:hover{color:var(--chalk);background:rgba(255,255,255,.05)}
-.tab.active{color:#fff;background:linear-gradient(180deg,var(--red-hi),var(--red));box-shadow:0 3px 14px rgba(201,66,58,.4)}
+.tab.active{color:var(--ink);background:linear-gradient(180deg,var(--accent-hi),var(--accent));box-shadow:0 3px 16px rgba(38,240,122,.32);font-weight:700}
 
 /* ---------- obecné prvky ---------- */
 .btn{display:inline-flex;align-items:center;gap:7px;background:linear-gradient(180deg,#2E333B,#262B32);color:var(--chalk);
-  border:1px solid var(--line);border-radius:10px;padding:7px 14px;font-family:'Barlow',sans-serif;
+  border:1px solid var(--line);border-radius:10px;padding:7px 14px;font-family:'Geist',sans-serif;
   font-size:13.5px;font-weight:500;cursor:pointer;
   transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease,color .18s ease}
 .btn:hover{border-color:#4A525E;transform:translateY(-1px);box-shadow:0 6px 18px rgba(5,6,8,.4)}
 .btn:active{transform:translateY(0);box-shadow:none}
 .btn svg{width:15px;height:15px}
-.btn-primary{background:linear-gradient(180deg,var(--red-hi),var(--red));border-color:rgba(224,90,80,.55);box-shadow:0 4px 16px rgba(201,66,58,.3)}
-.btn-primary:hover{border-color:var(--red-hi);box-shadow:0 8px 24px rgba(201,66,58,.45)}
+.btn-primary{background:linear-gradient(180deg,var(--accent-hi),var(--accent));color:var(--ink);font-weight:600;border-color:rgba(38,240,122,.55);box-shadow:0 4px 16px rgba(38,240,122,.28)}
+.btn-primary:hover{border-color:var(--accent-hi);box-shadow:0 8px 26px rgba(38,240,122,.42)}
+.btn-primary svg{stroke-width:2.4}
 .btn-ghost{background:transparent;border-color:transparent;color:var(--muted)}
 .btn-ghost:hover{background:var(--steel-2);color:var(--chalk);border-color:transparent}
 .icon-btn{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;
@@ -113,18 +119,18 @@ h1,h2,h3,.disp{font-family:'Barlow Condensed',sans-serif;text-transform:uppercas
 input,select,textarea{
   background:#15171B;border:1px solid var(--line);border-radius:9px;color:var(--chalk);
   box-shadow:inset 0 1px 3px rgba(0,0,0,.3);
-  font-family:'Barlow',sans-serif;font-size:14px;padding:6px 9px;
+  font-family:'Geist',sans-serif;font-size:14px;padding:6px 9px;
   transition:border-color .18s ease,box-shadow .18s ease;min-width:0}
-input.mono,select.mono{font-family:'JetBrains Mono';font-size:13px}
+input.mono,select.mono{font-family:'Geist Mono';font-size:13px}
 input:hover,select:hover,textarea:hover{border-color:#454C57}
-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--red);box-shadow:inset 0 1px 3px rgba(0,0,0,.3),var(--ring)}
-:focus-visible{outline:2px solid var(--red-hi);outline-offset:2px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:inset 0 1px 3px rgba(0,0,0,.3),var(--ring)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2398A0AB' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:24px}
 input[type=number]{-moz-appearance:textfield;appearance:textfield}
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
-label.f{display:block;font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:.09em;font-size:12.5px;color:var(--muted);margin-bottom:4px}
+label.f{display:block;font-family:'Geist';text-transform:uppercase;letter-spacing:.09em;font-size:12.5px;color:var(--muted);margin-bottom:4px}
 .card{background:linear-gradient(180deg,#242830 0%,#1F232A 100%);border:1px solid rgba(255,255,255,.065);border-radius:var(--radius);box-shadow:var(--shadow-1)}
-.eyebrow{font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:.14em;font-size:12.5px;color:var(--dim)}
+.eyebrow{font-family:'Geist';text-transform:uppercase;letter-spacing:.14em;font-size:12.5px;color:var(--dim)}
 
 /* ---------- plán ---------- */
 .plan-grid{display:grid;grid-template-columns:250px 1fr;gap:20px;align-items:start}
@@ -132,13 +138,13 @@ label.f{display:block;font-family:'Barlow Condensed';text-transform:uppercase;le
 .days>*{min-width:0}
 .block-list{display:flex;flex-direction:column;gap:8px}
 .block-item{text-align:left;background:linear-gradient(180deg,#242830,#1F232A);border:1px solid rgba(255,255,255,.065);border-radius:14px;
-  padding:11px 13px;cursor:pointer;color:var(--chalk);font-family:'Barlow',sans-serif;width:100%;
+  padding:11px 13px;cursor:pointer;color:var(--chalk);font-family:'Geist',sans-serif;width:100%;
   transition:border-color .18s ease,transform .18s ease,box-shadow .18s ease;position:relative}
 .block-item:hover{border-color:#4A525E;transform:translateY(-1px);box-shadow:0 6px 18px rgba(5,6,8,.35)}
-.block-item.active{border-color:rgba(224,90,80,.6);box-shadow:0 4px 18px rgba(201,66,58,.16)}
+.block-item.active{border-color:rgba(38,240,122,.55);box-shadow:0 4px 20px rgba(38,240,122,.14)}
 .block-item .bi-name{font-weight:600;font-size:14.5px;margin-bottom:3px}
 .block-item .bi-meta{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted)}
-.goal-tag{font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:.07em;font-size:11.5px;
+.goal-tag{font-family:'Geist';text-transform:uppercase;letter-spacing:.07em;font-size:11.5px;
   padding:1px 7px;border-radius:4px;border:1px solid var(--line)}
 .goal-tag[data-g="Síla"]{color:var(--red-hi);border-color:rgba(201,66,58,.5)}
 .goal-tag[data-g="Hypertrofie"]{color:#7FA7DC;border-color:rgba(62,111,180,.55)}
@@ -146,58 +152,79 @@ label.f{display:block;font-family:'Barlow Condensed';text-transform:uppercase;le
 .goal-tag[data-g="Deload"]{color:#83B896;border-color:rgba(78,143,99,.55)}
 
 .block-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
-.block-head input.name{font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:.04em;
+.block-head input.name{font-family:'Geist';text-transform:uppercase;letter-spacing:.04em;
   font-size:22px;font-weight:600;background:transparent;border-color:transparent;box-shadow:none;padding:4px 8px;flex:1;min-width:200px}
 .block-head input.name:hover{border-color:var(--line)}
-.block-head input.name:focus{border-color:var(--red);background:var(--iron)}
+.block-head input.name:focus{border-color:var(--accent);background:var(--iron)}
 
 .week-bar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
 .week-tab{background:var(--steel);border:1px solid var(--line-soft);color:var(--muted);border-radius:999px;
-  font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:.07em;font-size:14.5px;font-weight:600;
+  font-family:'Geist';text-transform:uppercase;letter-spacing:.07em;font-size:14.5px;font-weight:600;
   padding:6px 15px;cursor:pointer;transition:color .18s ease,border-color .18s ease,background-color .18s ease,box-shadow .18s ease}
 .week-tab:hover{color:var(--chalk);border-color:#454C57}
-.week-tab.active{color:#fff;border-color:rgba(224,90,80,.55);background:rgba(201,66,58,.16);box-shadow:0 2px 12px rgba(201,66,58,.22)}
+.week-tab.active{color:var(--accent);border-color:rgba(38,240,122,.5);background:var(--accent-soft);box-shadow:0 2px 14px rgba(38,240,122,.16)}
 .week-bar .spacer{flex:1}
 
 .days{display:grid;grid-template-columns:repeat(auto-fill,minmax(390px,1fr));gap:16px}
 .day-card{padding:14px 14px 12px}
 .day-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.day-head input{font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:.06em;font-weight:600;
+.day-head input{font-family:'Geist';text-transform:uppercase;letter-spacing:.06em;font-weight:600;
   font-size:16.5px;background:transparent;border-color:transparent;box-shadow:none;flex:1;padding:3px 7px}
 .day-head input:hover{border-color:var(--line)}
-.day-head input:focus{border-color:var(--red);background:var(--iron)}
-.ex-list{display:flex;flex-direction:column;gap:8px}
-.ex-item{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.055);border-radius:12px;padding:9px 11px 10px;transition:border-color .18s ease,opacity .18s ease}
-.ex-item:hover{border-color:rgba(255,255,255,.13)}
-.ex-item.done{opacity:.6}
+.day-head input:focus{border-color:var(--accent);background:var(--iron)}
+.ex-list{display:flex;flex-direction:column;gap:9px}
+.ex-item{background:linear-gradient(180deg,rgba(255,255,255,.032),rgba(255,255,255,.012));border:1px solid rgba(255,255,255,.06);border-radius:13px;padding:10px 12px 11px;transition:border-color .18s var(--ease),opacity .18s var(--ease),box-shadow .18s var(--ease)}
+.ex-item:hover{border-color:rgba(255,255,255,.13);box-shadow:0 4px 16px rgba(0,0,0,.28)}
+.ex-item.done{opacity:.55}
 .ex-item.done .ex-name{text-decoration:line-through;color:var(--muted)}
-.ex-top{display:flex;gap:7px;align-items:center}
+.ex-top{display:flex;gap:7px;align-items:center;margin-bottom:6px}
 .ex-name{flex:1 1 130px;min-width:0;font-weight:600;font-size:14.5px;background:transparent;border-color:transparent;box-shadow:none;padding:4px 7px}
 .ex-name:hover{border-color:var(--line)}
-.ex-name:focus{background:#15171B}
-.ex-top select{width:82px;flex:none;padding:5px 20px 5px 7px;background-position:right 6px center;font-size:12.5px}
-.ex-bottom{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:7px}
-.ex-sr{display:flex;align-items:center;gap:4px;color:var(--dim);font-family:'JetBrains Mono';font-size:12px}
-.ex-bottom input[type=number]{width:46px;text-align:center;font-family:'JetBrains Mono';font-size:12.5px;padding:5px 4px}
-.ex-bottom select{width:78px;padding:5px 20px 5px 8px;background-position:right 6px center;font-size:12.5px}
-.ex-weight{margin-left:auto;text-align:right;font-family:'JetBrains Mono';font-weight:700;font-size:15.5px;line-height:1.12;cursor:help;white-space:nowrap}
-.ex-weight small{display:block;font-family:'Barlow Condensed';font-weight:500;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--dim)}
-.chk{width:17px;height:17px;accent-color:var(--green);cursor:pointer;flex:none}
+.ex-name:focus{background:var(--iron)}
+.ex-top select{width:90px;flex:none;padding:5px 20px 5px 8px;background-position:right 6px center;font-size:12.5px}
+.ex-lines{display:flex;flex-direction:column}
+.ex-line{display:flex;gap:7px;align-items:center;padding:6px 0}
+.ex-line+.ex-line{border-top:1px dashed var(--line-soft)}
+.ln-sr{display:flex;align-items:center;gap:3px;color:var(--dim);font-family:'Geist Mono';font-size:12px;flex:none}
+.ln-sr input{width:38px}
+.ex-line input[type=number]{text-align:center;font-family:'Geist Mono';font-size:12.5px;padding:5px 4px}
+.ex-line select{width:76px;flex:none;padding:5px 18px 5px 8px;background-position:right 6px center;font-size:12px}
+.ln-val{width:50px;flex:none}
+.ln-weight{margin-left:auto;text-align:right;font-family:'Geist Mono';font-weight:700;font-size:15px;line-height:1.08;cursor:help;white-space:nowrap;color:var(--chalk)}
+.ln-weight small{display:block;font-family:'Geist';font-weight:500;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+.w-warn{color:var(--yellow)}
+.ln-x{flex:none}
+.ex-actions{display:flex;align-items:center;gap:7px;margin-top:9px;padding-top:9px;border-top:1px solid var(--line-soft)}
+.ex-actions .log-btn{margin-left:auto}
+.add-line{display:inline-flex;align-items:center;gap:5px;background:var(--accent-soft);border:1px solid rgba(38,240,122,.28);border-radius:8px;color:var(--accent);
+  font-family:'Geist';text-transform:uppercase;letter-spacing:.05em;font-size:11.5px;font-weight:600;padding:5px 12px;cursor:pointer;transition:background-color .18s var(--ease),border-color .18s var(--ease)}
+.add-line:hover{background:rgba(38,240,122,.17);border-color:rgba(38,240,122,.5)}
+.add-line svg{width:12px;height:12px;stroke-width:2.6}
+.chk-wrap{position:relative;display:inline-flex;flex:none;cursor:pointer;padding:3px}
+.chk{position:absolute;opacity:0;width:0;height:0;margin:0}
+.chk-box{display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:7px;
+  border:1.5px solid var(--line);background:var(--iron);color:transparent;
+  transition:background-color .16s var(--ease),border-color .16s var(--ease),color .16s var(--ease),transform .16s var(--ease)}
+.chk-box svg{width:13px;height:13px;stroke-width:3}
+.chk-wrap:hover .chk-box{border-color:var(--accent)}
+.chk:checked+.chk-box{background:var(--accent);border-color:var(--accent);color:var(--ink)}
+.chk:focus-visible+.chk-box{box-shadow:var(--ring)}
+.chk:checked:active+.chk-box{transform:scale(.9)}
 .log-btn{display:inline-flex;align-items:center;gap:5px;background:none;border:1px solid transparent;border-radius:8px;color:var(--dim);
-  font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:.08em;font-size:12px;font-weight:600;padding:4px 9px;cursor:pointer;
+  font-family:'Geist';text-transform:uppercase;letter-spacing:.08em;font-size:12px;font-weight:600;padding:4px 9px;cursor:pointer;
   transition:color .18s ease,border-color .18s ease}
 .log-btn:hover{color:var(--chalk);border-color:var(--line)}
 .log-btn svg{width:12px;height:12px}
 .ex-log{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-top:9px;padding-top:9px;border-top:1px dashed var(--line)}
 .ex-log .lf{display:flex;flex-direction:column;gap:3px}
-.ex-log .lf span{font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:.08em;font-size:10.5px;color:var(--dim)}
-.ex-log input{width:62px;text-align:center;font-family:'JetBrains Mono';font-size:12.5px;padding:5px 4px}
-.result-chip{display:inline-flex;gap:7px;align-items:center;font-family:'JetBrains Mono';font-size:11.5px;color:#8FC4A1;background:rgba(78,143,99,.13);border:1px solid rgba(78,143,99,.38);border-radius:99px;padding:3px 11px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.ex-log .lf span{font-family:'Geist';text-transform:uppercase;letter-spacing:.08em;font-size:10.5px;color:var(--dim)}
+.ex-log input{width:62px;text-align:center;font-family:'Geist Mono';font-size:12.5px;padding:5px 4px}
+.result-chip{display:inline-flex;gap:7px;align-items:center;font-family:'Geist Mono';font-size:11.5px;color:#8FC4A1;background:rgba(78,143,99,.13);border:1px solid rgba(78,143,99,.38);border-radius:99px;padding:3px 11px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .pr-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-bottom:18px}
 .pr-card{padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px}
-.pr-card .num{font-family:'JetBrains Mono';font-size:24px;font-weight:700;line-height:1.15;margin:3px 0 2px}
+.pr-card .num{font-family:'Geist Mono';font-size:24px;font-weight:700;line-height:1.15;margin:3px 0 2px}
 .pr-card .num small{font-size:12px;color:var(--muted);font-weight:400}
-.pr-card .date{font-size:11.5px;color:var(--dim);font-family:'JetBrains Mono'}
+.pr-card .date{font-size:11.5px;color:var(--dim);font-family:'Geist Mono'}
 .day-foot{display:flex;justify-content:space-between;align-items:center;margin-top:9px}
 .empty{color:var(--dim);font-size:13.5px;padding:10px 2px}
 
@@ -205,27 +232,27 @@ label.f{display:block;font-family:'Barlow Condensed';text-transform:uppercase;le
 .calc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:18px}
 .calc-card{padding:18px}
 .calc-card h2{font-size:19px;font-weight:600;letter-spacing:.06em;display:flex;align-items:center;gap:9px;margin-bottom:2px}
-.calc-card h2 svg{width:18px;height:18px;color:var(--red-hi)}
+.calc-card h2 svg{width:18px;height:18px;color:var(--accent)}
 .calc-card .desc{color:var(--muted);font-size:13px;margin-bottom:13px}
 .frow{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
 .frow>div{flex:1;min-width:86px}
 .result-hero{display:flex;align-items:baseline;gap:10px;padding:13px 16px;background:linear-gradient(180deg,#16181C,#121417);border:1px solid rgba(255,255,255,.06);border-radius:12px;margin-bottom:12px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
-.result-hero .big{font-family:'JetBrains Mono';font-size:34px;font-weight:700;line-height:1;text-shadow:0 0 24px rgba(224,90,80,.25)}
-.result-hero .unit{font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-size:14px}
+.result-hero .big{font-family:'Geist Mono';font-size:34px;font-weight:700;line-height:1;color:var(--accent);text-shadow:0 0 26px rgba(38,240,122,.3)}
+.result-hero .unit{font-family:'Geist';text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-size:14px}
 .result-hero .tag{margin-left:auto;font-size:12px;color:var(--dim)}
 .minitable{width:100%;border-collapse:collapse;font-size:13px}
-.minitable th{font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:.08em;font-weight:600;font-size:11.5px;color:var(--dim);text-align:left;padding:4px 8px;border-bottom:1px solid var(--line-soft)}
+.minitable th{font-family:'Geist';text-transform:uppercase;letter-spacing:.08em;font-weight:600;font-size:11.5px;color:var(--dim);text-align:left;padding:4px 8px;border-bottom:1px solid var(--line-soft)}
 .minitable td{padding:4.5px 8px;border-bottom:1px solid var(--line-soft)}
 .minitable tr:last-child td{border-bottom:none}
-.minitable td.n{font-family:'JetBrains Mono';font-size:12.5px;text-align:right}
-.minitable tr.hl td{color:var(--red-hi);font-weight:600}
+.minitable td.n{font-family:'Geist Mono';font-size:12.5px;text-align:right}
+.minitable tr.hl td{color:var(--accent);font-weight:600}
 
 /* nakládání osy */
 .bar-viz{display:flex;align-items:center;height:72px;padding:0 6px;position:relative}
 .bar-viz .sleeve{height:7px;background:linear-gradient(180deg,#8A919C,#5B626D);border-radius:2px;flex:1;min-width:26px}
 .bar-viz .collar{width:9px;height:22px;background:#767E8A;border-radius:2px;flex:none}
 .plate{flex:none;border-radius:3px;margin:0 1px;display:flex;align-items:center;justify-content:center;
-  font-family:'JetBrains Mono';font-size:9px;font-weight:700;color:rgba(0,0,0,.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+  font-family:'Geist Mono';font-size:9px;font-weight:700;color:rgba(0,0,0,.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
 .plate[data-p="25"]{background:var(--red);width:15px;height:62px;color:rgba(255,255,255,.85)}
 .plate[data-p="20"]{background:var(--blue);width:14px;height:62px;color:rgba(255,255,255,.85)}
 .plate[data-p="15"]{background:var(--yellow);width:13px;height:56px}
@@ -233,26 +260,26 @@ label.f{display:block;font-family:'Barlow Condensed';text-transform:uppercase;le
 .plate[data-p="5"]{background:var(--plate-5);width:10px;height:36px}
 .plate[data-p="2.5"]{background:var(--plate-25);width:9px;height:28px;color:var(--chalk);box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
 .plate[data-p="1.25"]{background:var(--plate-125);width:8px;height:20px}
-.plate-list{font-family:'JetBrains Mono';font-size:12px;color:var(--muted)}
+.plate-list{font-family:'Geist Mono';font-size:12px;color:var(--muted)}
 .wu-row{display:grid;grid-template-columns:64px 70px 44px 1fr;gap:10px;align-items:center;border-bottom:1px solid var(--line-soft);padding:2px 0}
 .wu-row:last-child{border-bottom:none}
-.wu-row .pct{font-family:'Barlow Condensed';text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-size:14px}
-.wu-row .kg{font-family:'JetBrains Mono';font-size:14.5px;font-weight:700;text-align:right}
-.wu-row .reps{font-family:'JetBrains Mono';font-size:12px;color:var(--muted);text-align:center}
+.wu-row .pct{font-family:'Geist';text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-size:14px}
+.wu-row .kg{font-family:'Geist Mono';font-size:14.5px;font-weight:700;text-align:right}
+.wu-row .reps{font-family:'Geist Mono';font-size:12px;color:var(--muted);text-align:center}
 
 /* ---------- statistiky ---------- */
 .stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:20px}
 .stat-card{padding:14px 16px}
 .stat-card .eyebrow{margin-bottom:5px}
-.stat-card .num{font-family:'JetBrains Mono';font-size:26px;font-weight:700;line-height:1.1}
+.stat-card .num{font-family:'Geist Mono';font-size:26px;font-weight:700;line-height:1.1}
 .stat-card .num small{font-size:13px;color:var(--muted);font-weight:400}
 .chart{display:flex;gap:14px;align-items:flex-end;justify-content:center;height:190px;padding:16px 16px 8px}
 .chart .col{flex:1;max-width:110px;display:flex;flex-direction:column;justify-content:flex-end;gap:0;height:100%;position:relative}
 .chart .seg{border-radius:4px;margin-top:3px;min-height:3px;transition:opacity .18s ease;
   background-image:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,0) 45%)}
 .chart .col:hover .seg{opacity:.85}
-.chart .cap{text-align:center;font-family:'Barlow Condensed';text-transform:uppercase;font-size:12.5px;color:var(--muted);margin-top:7px;letter-spacing:.07em}
-.chart .tot{text-align:center;font-family:'JetBrains Mono';font-size:11px;color:var(--dim)}
+.chart .cap{text-align:center;font-family:'Geist';text-transform:uppercase;font-size:12.5px;color:var(--muted);margin-top:7px;letter-spacing:.07em}
+.chart .tot{text-align:center;font-family:'Geist Mono';font-size:11px;color:var(--dim)}
 .legend{display:flex;gap:16px;flex-wrap:wrap;padding:0 16px 14px}
 .legend span{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}
 .legend i{width:10px;height:10px;border-radius:2px}
@@ -263,9 +290,9 @@ label.f{display:block;font-family:'Barlow Condensed';text-transform:uppercase;le
 .lift-row:last-of-type{border-bottom:none}
 .lift-dot{width:10px;height:10px;border-radius:3px}
 .plate-checks{display:flex;gap:8px;flex-wrap:wrap}
-.plate-check{display:flex;align-items:center;gap:6px;background:var(--iron);border:1px solid var(--line);border-radius:7px;padding:6px 10px;cursor:pointer;font-family:'JetBrains Mono';font-size:12.5px;transition:border-color .18s ease}
+.plate-check{display:flex;align-items:center;gap:6px;background:var(--iron);border:1px solid var(--line);border-radius:7px;padding:6px 10px;cursor:pointer;font-family:'Geist Mono';font-size:12.5px;transition:border-color .18s ease}
 .plate-check:hover{border-color:#454C57}
-.plate-check input{accent-color:var(--red);cursor:pointer}
+.plate-check input{accent-color:var(--accent);cursor:pointer}
 .note-text{color:var(--dim);font-size:12.5px;line-height:1.6;margin-top:10px}
 
 .section-title{display:flex;align-items:baseline;gap:12px;margin-bottom:14px}
@@ -285,6 +312,10 @@ label.f{display:block;font-family:'Barlow Condensed';text-transform:uppercase;le
   .brand h1{font-size:24px}
   .ex-top{flex-wrap:wrap}
   .ex-name{flex:1 1 100%}
+  .ex-line{flex-wrap:wrap;row-gap:5px}
+  .ln-weight{order:5}
+  .ln-x{order:6}
+  .block-head input.name{min-width:120px;font-size:19px}
 }
 @media (prefers-reduced-motion:reduce){
   *{transition:none!important;animation:none!important}
@@ -295,12 +326,13 @@ label.f{display:block;font-family:'Barlow Condensed';text-transform:uppercase;le
 <div id="app">
   <header class="topbar">
     <div class="brand">
-      <svg width="38" height="38" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-        <rect x="1" y="14.5" width="30" height="3" rx="1.2" fill="#B9BFC9"/>
-        <rect x="5" y="7" width="3.6" height="18" rx="1.2" fill="var(--red)"/>
-        <rect x="9.4" y="9.5" width="3" height="13" rx="1.1" fill="var(--blue)"/>
-        <rect x="23.4" y="7" width="3.6" height="18" rx="1.2" fill="var(--red)"/>
-        <rect x="19.6" y="9.5" width="3" height="13" rx="1.1" fill="var(--blue)"/>
+      <svg width="42" height="42" viewBox="0 0 512 512" fill="none" aria-hidden="true">
+        <defs><linearGradient id="vg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#26F07A"/><stop offset="100%" stop-color="#00CC52"/>
+        </linearGradient></defs>
+        <rect width="512" height="512" rx="112" fill="#0A0A0A"/>
+        <path d="M148 128 L256 384 L364 128 L316 128 L256 304 L196 128 Z" fill="url(#vg)"/>
+        <rect x="192" y="392" width="128" height="16" rx="8" fill="#26F07A" opacity="0.6"/>
       </svg>
       <div>
         <h1>Volum</h1>
@@ -346,6 +378,13 @@ const WARMUP_PROTOCOLS = {
 const GOALS = ["Síla","Hypertrofie","Peaking","Deload"];
 const LIFT_COLORS = { red:"var(--red)", blue:"var(--blue)", yellow:"var(--yellow)", green:"var(--green)", chalk:"var(--plate-5)" };
 
+const LN = {
+  pct: (sets, reps, pct) => ({ sets, reps, mode: "pct", pct, rpe: 8, kg: 0 }),
+  rpe: (sets, reps, rpe) => ({ sets, reps, mode: "rpe", pct: 0, rpe, kg: 0 }),
+  kg:  (sets, reps, kg)  => ({ sets, reps, mode: "kg",  pct: 0, rpe: 8, kg }),
+  e1rm:(sets, reps, pct) => ({ sets, reps, mode: "e1rm",pct, rpe: 8, kg: 0 }),
+};
+const EX = (name, liftId, lines) => ({ id: uid(), name, liftId, done: false, result: null, lines });
 function defaultState(){
   const sq = "sq", bp = "bp", dl = "dl";
   return {
@@ -361,20 +400,20 @@ function defaultState(){
       weeks: [{
         id: uid(), days: [
           { id: uid(), name: "Den A — dřep + bench", exercises: [
-            { id: uid(), name: "Dřep", liftId: sq, sets: 5, reps: 5, mode: "pct", pct: 75, rpe: 8, kg: 100, done: false },
-            { id: uid(), name: "Bench press", liftId: bp, sets: 5, reps: 5, mode: "pct", pct: 72.5, rpe: 8, kg: 70, done: false },
-            { id: uid(), name: "Rumunský mrtvý tah", liftId: null, sets: 3, reps: 8, mode: "kg", pct: 0, rpe: 7, kg: 100, done: false },
-            { id: uid(), name: "Přítahy v předklonu", liftId: null, sets: 4, reps: 10, mode: "kg", pct: 0, rpe: 8, kg: 60, done: false },
+            EX("Dřep", sq, [LN.pct(1, 3, 85), LN.pct(3, 5, 75)]),
+            EX("Bench press", bp, [LN.pct(5, 5, 72.5)]),
+            EX("Rumunský mrtvý tah", null, [LN.kg(3, 8, 100)]),
+            EX("Přítahy v předklonu", null, [LN.kg(4, 10, 60)]),
           ]},
           { id: uid(), name: "Den B — mrtvý tah", exercises: [
-            { id: uid(), name: "Mrtvý tah", liftId: dl, sets: 4, reps: 3, mode: "rpe", pct: 0, rpe: 8, kg: 0, done: false },
-            { id: uid(), name: "Tlak nad hlavu", liftId: null, sets: 3, reps: 8, mode: "kg", pct: 0, rpe: 8, kg: 50, done: false },
-            { id: uid(), name: "Shyby s přítěží", liftId: null, sets: 4, reps: 6, mode: "kg", pct: 0, rpe: 8, kg: 10, done: false },
+            EX("Mrtvý tah", dl, [LN.rpe(1, 3, 8), LN.pct(3, 4, 80)]),
+            EX("Tlak nad hlavu", null, [LN.kg(3, 8, 50)]),
+            EX("Shyby s přítěží", null, [LN.kg(4, 6, 10)]),
           ]},
           { id: uid(), name: "Den C — objemový dřep", exercises: [
-            { id: uid(), name: "Dřep s pauzou", liftId: sq, sets: 4, reps: 4, mode: "pct", pct: 70, rpe: 7, kg: 0, done: false },
-            { id: uid(), name: "Bench press úzký úchop", liftId: bp, sets: 4, reps: 6, mode: "pct", pct: 65, rpe: 7, kg: 0, done: false },
-            { id: uid(), name: "Bulharské dřepy", liftId: null, sets: 3, reps: 10, mode: "kg", pct: 0, rpe: 8, kg: 24, done: false },
+            EX("Dřep s pauzou", sq, [LN.pct(4, 4, 70)]),
+            EX("Bench press úzký úchop", bp, [LN.pct(4, 6, 65)]),
+            EX("Bulharské dřepy", null, [LN.kg(3, 10, 24)]),
           ]},
         ],
       }],
@@ -387,12 +426,25 @@ function defaultState(){
 let state = load();
 { const qTab = new URLSearchParams(location.search).get("tab");
   if (qTab && ["plan","calc","stats","set"].includes(qTab)) state.ui.tab = qTab; }
+function migrateEx(ex){
+  if (!ex.lines){
+    ex.lines = [{ sets: +ex.sets || 3, reps: +ex.reps || 5, mode: ex.mode || "kg", pct: +ex.pct || 0, rpe: +ex.rpe || 8, kg: +ex.kg || 0 }];
+    ["sets","reps","mode","pct","rpe","kg"].forEach(k => delete ex[k]);
+  }
+  if (ex.result === undefined) ex.result = null;
+  return ex;
+}
+function migrateState(s){
+  (s.blocks || []).forEach(b => b.weeks.forEach(w => w.days.forEach(d => (d.exercises || []).forEach(migrateEx))));
+  s.history = s.history || [];
+  return s;
+}
 function load(){
   try {
     const raw = localStorage.getItem(LS_KEY) || localStorage.getItem(LS_KEY_LEGACY);
     if (raw) {
       const s = JSON.parse(raw);
-      if (s && s.version === 1) { s.history = s.history || []; return s; }
+      if (s && s.version === 1) return migrateState(s);
     }
   } catch (e) {}
   return defaultState();
@@ -408,12 +460,22 @@ function roundW(w){ const s = state.settings.rounding || 2.5; return Math.round(
 const liftById = (id) => state.lifts.find(l => l.id === id) || null;
 const curBlock = () => state.blocks.find(b => b.id === state.ui.blockId) || state.blocks[0] || null;
 
-function rowWeight(ex){
-  if (ex.mode === "kg") return +ex.kg || 0;
-  const lift = liftById(ex.liftId);
+function liftBestE1RM(liftId){
+  if (!liftId) return 0;
+  const es = state.history.filter(h => h.liftId === liftId);
+  if (es.length) return Math.max(...es.map(h => +h.e1rm || 0));
+  const l = liftById(liftId); return l ? (+l.tm || 0) : 0;
+}
+function rowWeight(ln, liftId){
+  if (ln.mode === "kg") return +ln.kg || 0;
+  if (ln.mode === "e1rm"){
+    const base = liftBestE1RM(liftId);
+    return base ? roundW(base * (+ln.pct || 0) / 100) : null;
+  }
+  const lift = liftById(liftId);
   if (!lift || !lift.tm) return null;
-  if (ex.mode === "pct") return roundW(lift.tm * (+ex.pct || 0) / 100);
-  if (ex.mode === "rpe") return roundW(lift.tm * rpePct(+ex.reps || 1, +ex.rpe || 8) / 100);
+  if (ln.mode === "pct") return roundW(lift.tm * (+ln.pct || 0) / 100);
+  if (ln.mode === "rpe") return roundW(lift.tm * rpePct(+ln.reps || 1, +ln.rpe || 8) / 100);
   return null;
 }
 function platesFor(target){
@@ -459,6 +521,7 @@ const I = {
   pencil: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>',
   medal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="6"/><path d="M8.5 14.5 7 22l5-3 5 3-1.5-7.5"/></svg>',
   target: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".5"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
 };
 const pl = (n, s1, s2, s5) => n === 1 ? s1 : (n >= 2 && n <= 4 ? s2 : s5);
 const czDate = (iso) => { const [y, m, d] = iso.split("-"); return `${+d}. ${+m}. ${y.slice(2)}`; };
@@ -546,15 +609,28 @@ function renderPlan(){
     </div></div>`;
 }
 const openLogs = new Set();
-function renderExItem(ex, di, ei){
-  const w = rowWeight(ex);
-  const wTxt = w === null ? `<span style="color:var(--yellow)" title="Vyber lift, ať víme, z čeho počítat">—</span>` : (w ? fmtKg(w) : "—");
-  const sub = ex.mode === "pct" ? `${ex.pct} % TM` : ex.mode === "rpe" ? `RPE ${fmt(ex.rpe)}` : "napevno";
+const MODE_LABEL = { pct: "% TM", rpe: "RPE", kg: "kg", e1rm: "% e1RM" };
+function renderLine(ex, ln, di, ei, li){
+  const w = rowWeight(ln, ex.liftId);
+  const wTxt = w === null ? `<span class="w-warn" title="Vyber cviku lift, ať je z čeho počítat">—</span>` : (w ? fmtKg(w) : "—");
+  const sub = ln.mode === "pct" ? `${ln.pct} % TM` : ln.mode === "e1rm" ? `${ln.pct} % e1RM` : ln.mode === "rpe" ? `RPE ${fmt(ln.rpe)}` : "napevno";
   const title = w ? platesTitle(w) : "";
   const valInput =
-    ex.mode === "pct" ? `<input type="number" step="2.5" min="0" max="130" value="${ex.pct}" onchange="updEx(${di},${ei},'pct',this.value)" aria-label="Procento tréninkového maxima" title="% tréninkového maxima">` :
-    ex.mode === "rpe" ? `<input type="number" step="0.5" min="6" max="10" value="${ex.rpe}" onchange="updEx(${di},${ei},'rpe',this.value)" aria-label="Cílové RPE" title="Cílové RPE">` :
-                        `<input type="number" step="0.5" min="0" value="${ex.kg}" onchange="updEx(${di},${ei},'kg',this.value)" aria-label="Váha v kg" title="Váha v kg">`;
+    ln.mode === "pct"  ? `<input class="ln-val" type="number" step="2.5" min="0" max="130" value="${ln.pct}" onchange="updLine(${di},${ei},${li},'pct',this.value)" aria-label="Procento tréninkového maxima" title="% tréninkového maxima">` :
+    ln.mode === "e1rm" ? `<input class="ln-val" type="number" step="2.5" min="0" max="130" value="${ln.pct}" onchange="updLine(${di},${ei},${li},'pct',this.value)" aria-label="Procento odhadovaného maxima" title="% odhadovaného 1RM (z rekordů)">` :
+    ln.mode === "rpe"  ? `<input class="ln-val" type="number" step="0.5" min="6" max="10" value="${ln.rpe}" onchange="updLine(${di},${ei},${li},'rpe',this.value)" aria-label="Cílové RPE" title="Cílové RPE">` :
+                         `<input class="ln-val" type="number" step="0.5" min="0" value="${ln.kg}" onchange="updLine(${di},${ei},${li},'kg',this.value)" aria-label="Váha v kg" title="Váha v kg">`;
+  return `<div class="ex-line">
+    <span class="ln-sr"><input type="number" min="1" max="20" value="${ln.sets}" onchange="updLine(${di},${ei},${li},'sets',this.value)" aria-label="Počet sérií" title="Série">×<input type="number" min="1" max="30" value="${ln.reps}" onchange="updLine(${di},${ei},${li},'reps',this.value)" aria-label="Počet opakování" title="Opakování"></span>
+    <select onchange="updLine(${di},${ei},${li},'mode',this.value)" aria-label="Způsob zadání zátěže">
+      ${Object.entries(MODE_LABEL).map(([m, lbl]) => `<option value="${m}" ${ln.mode === m ? "selected" : ""}>${lbl}</option>`).join("")}
+    </select>
+    ${valInput}
+    <div class="ln-weight" title="${esc(title)}">${wTxt}${w ? ` kg` : ""}<small>${sub}</small></div>
+    ${ex.lines.length > 1 ? `<button class="icon-btn danger ln-x" onclick="delLine(${di},${ei},${li})" title="Smazat sérii" aria-label="Smazat sérii">${I.trash}</button>` : `<span class="ln-x"></span>`}
+  </div>`;
+}
+function renderExItem(ex, di, ei){
   const res = ex.result;
   const logOpen = openLogs.has(ex.id);
   return `<div class="ex-item ${ex.done ? "done" : ""}">
@@ -564,28 +640,23 @@ function renderExItem(ex, di, ei){
         <option value="">bez liftu</option>
         ${state.lifts.map(l => `<option value="${l.id}" ${ex.liftId === l.id ? "selected" : ""}>${esc(l.short || l.name)}</option>`).join("")}
       </select>
-      <input type="checkbox" class="chk" ${ex.done ? "checked" : ""} onchange="updEx(${di},${ei},'done',this.checked)" title="Odcvičeno" aria-label="Odcvičeno">
+      <label class="chk-wrap" title="Odcvičeno"><input type="checkbox" class="chk" ${ex.done ? "checked" : ""} onchange="updEx(${di},${ei},'done',this.checked)" aria-label="Označit jako odcvičeno"><span class="chk-box">${I.check}</span></label>
       <button class="icon-btn danger" onclick="delEx(${di},${ei})" title="Smazat cvik" aria-label="Smazat cvik">${I.trash}</button>
     </div>
-    <div class="ex-bottom">
-      <span class="ex-sr"><input type="number" min="1" max="20" value="${ex.sets}" onchange="updEx(${di},${ei},'sets',this.value)" aria-label="Počet sérií" title="Série">×<input type="number" min="1" max="30" value="${ex.reps}" onchange="updEx(${di},${ei},'reps',this.value)" aria-label="Počet opakování" title="Opakování"></span>
-      <select onchange="updEx(${di},${ei},'mode',this.value)" aria-label="Způsob zadání zátěže">
-        <option value="pct" ${ex.mode === "pct" ? "selected" : ""}>% TM</option>
-        <option value="rpe" ${ex.mode === "rpe" ? "selected" : ""}>RPE</option>
-        <option value="kg" ${ex.mode === "kg" ? "selected" : ""}>kg</option>
-      </select>
-      ${valInput}
+    <div class="ex-lines">${ex.lines.map((ln, li) => renderLine(ex, ln, di, ei, li)).join("")}</div>
+    <div class="ex-actions">
+      <button class="add-line" onclick="addLine(${di},${ei})" title="Přidat další sérii (např. odlehčené backoff sety)">${I.plus} série</button>
       <button class="log-btn" onclick="toggleLog(${di},${ei})" aria-expanded="${logOpen}">${I.pencil} Výsledek</button>
-      <div class="ex-weight" title="${esc(title)}">${wTxt}${w ? ` kg<small>${sub}</small>` : ""}</div>
     </div>
-    ${res ? `<div style="margin-top:8px"><span class="result-chip">✓ ${fmtKg(res.kg)} kg × ${res.reps} @${fmt(res.rpe)} · e1RM ${fmtKg(res.e1rm)} kg</span></div>` : ""}
+    ${res ? `<div style="margin-top:9px"><span class="result-chip">✓ ${fmtKg(res.kg)} kg × ${res.reps} @${fmt(res.rpe)} · e1RM ${fmtKg(res.e1rm)} kg</span></div>` : ""}
     ${logOpen ? renderLogForm(ex, di, ei) : ""}
   </div>`;
 }
 function renderLogForm(ex, di, ei){
-  const kg = ex.result ? ex.result.kg : (rowWeight(ex) || "");
-  const reps = ex.result ? ex.result.reps : ex.reps;
-  const rpe = ex.result ? ex.result.rpe : (ex.mode === "rpe" ? ex.rpe : 8);
+  const ln = ex.lines[0] || {};
+  const kg = ex.result ? ex.result.kg : (rowWeight(ln, ex.liftId) || "");
+  const reps = ex.result ? ex.result.reps : (ln.reps || 1);
+  const rpe = ex.result ? ex.result.rpe : (ln.mode === "rpe" ? ln.rpe : 8);
   return `<div class="ex-log">
     <div class="lf"><span>Zvednuto (kg)</span><input type="number" step="0.5" min="0" id="lg-kg-${ex.id}" value="${kg}"></div>
     <div class="lf"><span>Opakování</span><input type="number" min="1" max="30" id="lg-r-${ex.id}" value="${reps}"></div>
@@ -614,7 +685,7 @@ window.saveResult = (di, ei) => {
 window.delHist = (id) => mut(() => { state.history = state.history.filter(h => h.id !== id); });
 function dayTonnage(d){
   let ton = 0, sets = 0;
-  d.exercises.forEach(ex => { const w = rowWeight(ex) || 0; ton += (+ex.sets||0) * (+ex.reps||0) * w; sets += +ex.sets||0; });
+  d.exercises.forEach(ex => ex.lines.forEach(ln => { const w = rowWeight(ln, ex.liftId) || 0; ton += (+ln.sets||0) * (+ln.reps||0) * w; sets += +ln.sets||0; }));
   return `${sets} ${pl(sets, "série", "série", "sérií")} · ${fmt(Math.round(ton))} kg`;
 }
 const curWeek = () => { const b = curBlock(); return b ? b.weeks[Math.min(state.ui.weekIndex, b.weeks.length - 1)] : null; };
@@ -650,14 +721,25 @@ window.dupDay = (di) => mut(() => {
   w.days.splice(di + 1, 0, copy);
 });
 window.delDay = (di) => { if (!confirm("Smazat tenhle den?")) return; mut(() => { curWeek().days.splice(di, 1); }); };
-window.addEx = (di) => mut(() => { curWeek().days[di].exercises.push({ id: uid(), name: "", liftId: null, sets: 3, reps: 5, mode: "kg", pct: 70, rpe: 8, kg: 0, done: false }); });
+window.addEx = (di) => mut(() => { curWeek().days[di].exercises.push({ id: uid(), name: "", liftId: null, done: false, result: null, lines: [{ sets: 3, reps: 5, mode: "kg", pct: 70, rpe: 8, kg: 0 }] }); });
 window.delEx = (di, ei) => mut(() => { curWeek().days[di].exercises.splice(ei, 1); });
 window.updEx = (di, ei, f, v) => mut(() => {
   const ex = curWeek().days[di].exercises[ei];
   if (f === "done") ex.done = !!v;
-  else if (["sets","reps","pct","rpe","kg"].includes(f)) ex[f] = v === "" ? 0 : +v;
   else if (f === "liftId") ex.liftId = v || null;
   else ex[f] = v;
+});
+window.updLine = (di, ei, li, f, v) => mut(() => {
+  const ln = curWeek().days[di].exercises[ei].lines[li];
+  ln[f] = f === "mode" ? v : (v === "" ? 0 : +v);
+});
+window.addLine = (di, ei) => mut(() => {
+  const ex = curWeek().days[di].exercises[ei];
+  ex.lines.push({ ...ex.lines[ex.lines.length - 1] });
+});
+window.delLine = (di, ei, li) => mut(() => {
+  const ex = curWeek().days[di].exercises[ei];
+  if (ex.lines.length > 1) ex.lines.splice(li, 1);
 });
 
 /* ============ KALKULAČKY ============ */
@@ -838,15 +920,15 @@ window.updCalc = (card, f, v) => {
 function blockWeekStats(block){
   return block.weeks.map(w => {
     const per = {};
-    w.days.forEach(d => d.exercises.forEach(ex => {
+    w.days.forEach(d => d.exercises.forEach(ex => ex.lines.forEach(ln => {
       const key = ex.liftId || "other";
-      const wt = rowWeight(ex) || 0;
-      const sets = +ex.sets || 0, reps = +ex.reps || 0;
+      const wt = rowWeight(ln, ex.liftId) || 0;
+      const sets = +ln.sets || 0, reps = +ln.reps || 0;
       per[key] = per[key] || { sets: 0, reps: 0, ton: 0, pctSum: 0, pctN: 0 };
       per[key].sets += sets; per[key].reps += sets * reps; per[key].ton += sets * reps * wt;
       const lift = liftById(ex.liftId);
       if (lift && lift.tm && wt) { per[key].pctSum += (wt / lift.tm) * 100 * sets; per[key].pctN += sets; }
-    }));
+    })));
     return per;
   });
 }
