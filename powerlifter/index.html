@@ -76,14 +76,10 @@ h1,h2,h3,.disp{font-family:'Geist',sans-serif;text-transform:uppercase;letter-sp
 .max-chip .val{font-family:'Geist Mono';font-size:14px;font-weight:700}
 .max-chip .dot{width:8px;height:8px;border-radius:2px;align-self:center}
 
-/* rack strip — pás barev kotoučů */
-.rack-strip{display:flex;height:4px;border-radius:2px;overflow:hidden;margin:2px 0 14px}
-.rack-strip i{flex:1}
-.rack-strip i:nth-child(1){background:var(--red)}
-.rack-strip i:nth-child(2){background:var(--blue)}
-.rack-strip i:nth-child(3){background:var(--yellow)}
-.rack-strip i:nth-child(4){background:var(--green)}
-.rack-strip i:nth-child(5){background:var(--plate-5)}
+/* podpis autora */
+.credit{display:flex;justify-content:flex-end;align-items:center;gap:5px;margin:4px 0 16px;
+  font-family:'Geist';font-size:12px;letter-spacing:.04em;color:var(--dim)}
+.credit span{color:var(--accent);font-weight:600}
 
 /* ---------- tabs ---------- */
 .tabs{position:sticky;top:10px;z-index:60;display:flex;gap:4px;width:max-content;max-width:100%;
@@ -341,7 +337,7 @@ label.f{display:block;font-family:'Geist';text-transform:uppercase;letter-spacin
     </div>
     <div class="max-chips" id="maxChips"></div>
   </header>
-  <div class="rack-strip" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="credit">made by <span>Filip&nbsp;Adámek</span></div>
   <nav class="tabs" id="tabs"></nav>
   <main id="view"></main>
 </div>
