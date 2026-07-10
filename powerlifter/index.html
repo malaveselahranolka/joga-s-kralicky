@@ -224,6 +224,75 @@ label.f{display:block;font-family:'Geist';text-transform:uppercase;letter-spacin
 .day-foot{display:flex;justify-content:space-between;align-items:center;margin-top:9px}
 .empty{color:var(--dim);font-size:13.5px;padding:10px 2px}
 
+/* ---------- den: seznam dlaždic ---------- */
+.day-list{display:flex;flex-direction:column;gap:10px;max-width:660px}
+.day-tile{display:flex;align-items:center;gap:13px;width:100%;text-align:left;cursor:pointer;
+  background:linear-gradient(180deg,#242830 0%,#1F232A 100%);border:1px solid rgba(255,255,255,.065);border-radius:15px;
+  padding:14px 16px;color:var(--chalk);font-family:'Geist';box-shadow:var(--shadow-1);
+  transition:border-color .18s var(--ease),transform .18s var(--ease),box-shadow .18s var(--ease)}
+.day-tile:hover{border-color:rgba(38,240,122,.4);transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.day-tile.complete{border-color:rgba(38,240,122,.45)}
+.dt-dot{width:9px;height:9px;border-radius:99px;background:var(--accent);flex:none;box-shadow:0 0 10px rgba(38,240,122,.55)}
+.dt-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.dt-name{font-weight:600;font-size:16px;letter-spacing:.005em}
+.dt-meta{font-size:12.5px;color:var(--muted)}
+.dt-prog{display:block;height:4px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:4px;max-width:240px}
+.dt-prog span{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .3s var(--ease)}
+.dt-chev{color:var(--dim);flex:none;display:flex}
+.dt-chev svg{width:18px;height:18px}
+.day-tile:hover .dt-chev{color:var(--accent)}
+.add-day-btn{align-self:flex-start;margin-top:2px}
+
+/* ---------- den: detail tréninku ---------- */
+.day-detail{max-width:680px}
+.dd-head{display:flex;align-items:center;gap:6px;margin-bottom:10px}
+.dd-head .spacer{flex:1}
+.dd-back{padding-left:10px}
+.dd-back svg{width:15px;height:15px}
+.dd-title{margin-bottom:16px}
+.dd-name{font-weight:700;font-size:24px;letter-spacing:-.01em;background:transparent;border-color:transparent;box-shadow:none;padding:2px 6px;width:100%}
+.dd-name:hover{border-color:var(--line)}
+.dd-name:focus{background:var(--iron)}
+.dd-sub{display:block;font-size:12.5px;color:var(--muted);padding:2px 7px;margin-top:3px}
+.dd-ex{display:flex;flex-direction:column;gap:14px}
+.add-ex-btn{align-self:flex-start}
+
+/* ---------- cvik v detailu (styl appky) ---------- */
+.ex-detail{background:linear-gradient(180deg,#242830 0%,#1F232A 100%);border:1px solid rgba(255,255,255,.07);border-radius:16px;box-shadow:var(--shadow-1);padding:2px 2px 12px}
+.ex-detail.done{border-color:rgba(38,240,122,.32)}
+.exd-head{display:flex;align-items:center;gap:8px;padding:11px 12px 9px}
+.exd-head .ex-name{flex:1;min-width:0;font-weight:600;font-size:15.5px;background:transparent;border-color:transparent;box-shadow:none;padding:5px 7px}
+.exd-head .ex-name:hover{border-color:var(--line)}
+.exd-head .ex-name:focus{background:var(--iron)}
+.exd-head select{width:98px;flex:none;padding:6px 20px 6px 9px;background-position:right 7px center;font-size:13px}
+.mini-lbl{font-family:'Geist';text-transform:uppercase;letter-spacing:.1em;font-size:10.5px;font-weight:600;color:var(--dim);margin:2px 14px 7px}
+.presc{margin:0 12px 12px;padding:8px 11px 10px;background:rgba(0,0,0,.2);border:1px solid var(--line-soft);border-radius:12px}
+.presc .mini-lbl{margin:0 0 4px}
+.presc .ex-line{padding:5px 0}
+.presc .add-line{margin-top:6px}
+.log-head{display:grid;grid-template-columns:32px minmax(66px,1fr) 1fr 1fr 46px 40px;gap:8px;align-items:center;padding:0 14px 7px;
+  font-family:'Geist';text-transform:uppercase;letter-spacing:.05em;font-size:10px;font-weight:600;color:var(--dim);border-bottom:1px solid var(--line-soft)}
+.log-head span{text-align:center}
+.log-head span:nth-child(2){text-align:left}
+.set-rows{padding:0 12px}
+.set-wrap{border-bottom:1px solid rgba(255,255,255,.05)}
+.set-wrap:last-child{border-bottom:none}
+.set-wrap.done{opacity:.6}
+.set-row{display:grid;grid-template-columns:32px minmax(66px,1fr) 1fr 1fr 46px 40px;gap:8px;align-items:center;padding:8px 2px}
+.sr-num{font-family:'Geist Mono';font-size:13.5px;font-weight:700;color:var(--muted);text-align:center}
+.sr-tgt{font-family:'Geist Mono';font-size:12.5px;font-weight:700;color:var(--muted);line-height:1.12}
+.sr-tgt small{display:block;font-family:'Geist';font-weight:500;font-size:9px;letter-spacing:.03em;text-transform:uppercase;color:var(--dim)}
+.sr-in{width:100%;text-align:center;font-family:'Geist Mono';font-size:14px;padding:7px 4px;background:#15171B}
+.set-check{display:flex;align-items:center;justify-content:center;width:34px;height:34px;margin:0 auto;border-radius:9px;cursor:pointer;flex:none;
+  background:var(--steel-2);border:1px solid var(--line);color:var(--dim);
+  transition:background-color .16s var(--ease),border-color .16s var(--ease),color .16s var(--ease),transform .12s var(--ease),box-shadow .16s var(--ease)}
+.set-check svg{width:16px;height:16px}
+.set-check:hover{border-color:rgba(38,240,122,.45);color:var(--accent)}
+.set-check.on{background:var(--accent);border-color:var(--accent);color:var(--ink);box-shadow:0 0 14px rgba(38,240,122,.45)}
+.set-check:active{transform:scale(.9)}
+.sr-e1{font-family:'Geist Mono';font-size:10px;color:var(--accent);text-align:right;padding:0 44px 6px 0;margin-top:-2px}
+.exd-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:11px 14px 2px}
+
 /* ---------- kalkulačky ---------- */
 .calc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:18px}
 .calc-card{padding:18px}
@@ -380,7 +449,7 @@ const LN = {
   kg:  (sets, reps, kg)  => ({ sets, reps, mode: "kg",  pct: 0, rpe: 8, kg }),
   e1rm:(sets, reps, pct) => ({ sets, reps, mode: "e1rm",pct, rpe: 8, kg: 0 }),
 };
-const EX = (name, liftId, lines) => ({ id: uid(), name, liftId, done: false, result: null, lines });
+const EX = (name, liftId, lines) => ({ id: uid(), name, liftId, done: false, result: null, log: [], lines });
 function defaultState(){
   const sq = "sq", bp = "bp", dl = "dl";
   return {
@@ -428,6 +497,7 @@ function migrateEx(ex){
     ["sets","reps","mode","pct","rpe","kg"].forEach(k => delete ex[k]);
   }
   if (ex.result === undefined) ex.result = null;
+  if (!Array.isArray(ex.log)) ex.log = [];
   return ex;
 }
 function migrateState(s){
@@ -518,6 +588,8 @@ const I = {
   medal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="6"/><path d="M8.5 14.5 7 22l5-3 5 3-1.5-7.5"/></svg>',
   target: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".5"/></svg>',
   check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  chevR: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',
+  arrowL: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7M19 12H5"/></svg>',
 };
 const pl = (n, s1, s2, s5) => n === 1 ? s1 : (n >= 2 && n <= 4 ? s2 : s5);
 const czDate = (iso) => { const [y, m, d] = iso.split("-"); return `${+d}. ${+m}. ${y.slice(2)}`; };
@@ -572,21 +644,17 @@ function renderPlan(){
       ${block.weeks.length > 1 ? `<button class="icon-btn danger" onclick="delWeek()" title="Smazat týden" aria-label="Smazat týden">${I.trash}</button>` : ""}
     </div>`;
 
-  const days = week.days.map((d, di) => `
-    <section class="card day-card">
-      <div class="day-head">
-        <input value="${esc(d.name)}" onchange="updDay(${di},this.value)" aria-label="Název dne">
-        <button class="icon-btn" onclick="dupDay(${di})" title="Duplikovat den" aria-label="Duplikovat den">${I.copy}</button>
-        <button class="icon-btn danger" onclick="delDay(${di})" title="Smazat den" aria-label="Smazat den">${I.trash}</button>
-      </div>
-      <div class="ex-list">
-        ${d.exercises.length ? d.exercises.map((ex, ei) => renderExItem(ex, di, ei)).join("") : `<div class="empty">Prázdný den. Přidej první cvik tlačítkem dole.</div>`}
-      </div>
-      <div class="day-foot">
-        <button class="btn btn-ghost" onclick="addEx(${di})">${I.plus} Přidat cvik</button>
-        <span class="eyebrow">${dayTonnage(d)}</span>
-      </div>
-    </section>`).join("");
+  const openDay = state.ui.openDayId ? week.days.find(d => d.id === state.ui.openDayId) : null;
+  if (openDay){
+    const di = week.days.indexOf(openDay);
+    return `<div class="plan-grid">${sidebar}
+      <div>${renderDayDetail(openDay, di, block, wi)}</div></div>`;
+  }
+
+  const dayList = `<div class="day-list">
+      ${week.days.map((d, di) => renderDayTile(d, di)).join("")}
+      <button class="btn add-day-btn" onclick="addDay()">${I.plus} Přidat den</button>
+    </div>`;
 
   return `<div class="plan-grid">${sidebar}
     <div>
@@ -599,11 +667,141 @@ function renderPlan(){
         <button class="icon-btn danger" onclick="delBlock()" title="Smazat blok" aria-label="Smazat blok">${I.trash}</button>
       </div>
       ${weekBar}
-      <div class="days">${days}
-        <button class="btn" style="align-self:start" onclick="addDay()">${I.plus} Přidat den</button>
-      </div>
+      ${dayList}
     </div></div>`;
 }
+/* ---- den: dlaždice v seznamu ---- */
+function dayCounts(d){
+  let sets = 0, done = 0;
+  d.exercises.forEach(ex => { const t = setTargets(ex); sets += t.length; (ex.log || []).forEach((l, i) => { if (l && l.done && i < t.length) done++; }); });
+  return { exs: d.exercises.length, sets, done };
+}
+function renderDayTile(d, di){
+  const { exs, sets, done } = dayCounts(d);
+  const pct = sets ? Math.round(done / sets * 100) : 0;
+  const meta = `${exs} ${pl(exs, "cvik", "cviky", "cviků")}${sets ? ` · ${sets} ${pl(sets, "série", "série", "sérií")}` : ""}${done ? ` · ${done}/${sets} hotovo` : ""}`;
+  return `<button class="day-tile ${sets && done === sets ? "complete" : ""}" onclick="openDay('${d.id}')">
+    <span class="dt-dot"></span>
+    <span class="dt-main">
+      <span class="dt-name">${esc(d.name)}</span>
+      <span class="dt-meta">${meta}</span>
+      ${sets ? `<span class="dt-prog"><span style="width:${pct}%"></span></span>` : ""}
+    </span>
+    <span class="dt-chev">${I.chevR}</span>
+  </button>`;
+}
+/* ---- den: detail tréninku se zápisem ---- */
+function renderDayDetail(d, di){
+  const { done, sets } = dayCounts(d);
+  return `<div class="day-detail">
+    <div class="dd-head">
+      <button class="btn btn-ghost dd-back" onclick="closeDay()">${I.arrowL} Zpět na dny</button>
+      <span class="spacer"></span>
+      <button class="icon-btn" onclick="dupDay(${di})" title="Duplikovat den" aria-label="Duplikovat den">${I.copy}</button>
+      <button class="icon-btn danger" onclick="delDayDetail(${di})" title="Smazat den" aria-label="Smazat den">${I.trash}</button>
+    </div>
+    <div class="dd-title">
+      <input class="dd-name" value="${esc(d.name)}" onchange="updDay(${di},this.value)" aria-label="Název dne">
+      <span class="dd-sub">${sets ? `${done}/${sets} sérií hotovo` : "zatím bez sérií"} · ${dayTonnage(d)}</span>
+    </div>
+    <div class="dd-ex">
+      ${d.exercises.length ? d.exercises.map((ex, ei) => renderExDetail(ex, di, ei)).join("") : `<div class="empty">Prázdný trénink. Přidej první cvik.</div>`}
+      <button class="btn add-ex-btn" onclick="addEx(${di})">${I.plus} Přidat cvik</button>
+    </div>
+  </div>`;
+}
+function renderExDetail(ex, di, ei){
+  const targets = setTargets(ex);
+  const log = ex.log || [];
+  const doneE = log.filter((l, i) => l && l.done && l.kg && i < targets.length).map(l => (+l.kg) / rpePct(+l.reps || 1, +l.rpe || 8) * 100);
+  const bestE = doneE.length ? Math.max(...doneE) : 0;
+  const rows = targets.map((t, si) => {
+    const lg = log[si] || {};
+    const e1 = lg.done && lg.kg ? (+lg.kg) / rpePct(+lg.reps || 1, +lg.rpe || 8) * 100 : null;
+    return `<div class="set-wrap ${lg.done ? "done" : ""}">
+      <div class="set-row">
+        <span class="sr-num">${si + 1}</span>
+        <span class="sr-tgt" title="cíl z plánu">${t.kg ? fmtKg(t.kg) : "—"}<small>${t.sub}</small></span>
+        <input class="sr-in" type="number" step="0.5" inputmode="decimal" placeholder="${t.kg ? fmtKg(t.kg) : "kg"}" value="${lg.kg ?? ""}" onchange="updSet(${di},${ei},${si},'kg',this.value)" aria-label="Zvednuto v kg">
+        <input class="sr-in" type="number" inputmode="numeric" placeholder="${t.reps || ""}" value="${lg.reps ?? ""}" onchange="updSet(${di},${ei},${si},'reps',this.value)" aria-label="Opakování">
+        <input class="sr-in" type="number" step="0.5" min="6" max="10" inputmode="decimal" placeholder="${t.rpe || 8}" value="${lg.rpe ?? ""}" onchange="updSet(${di},${ei},${si},'rpe',this.value)" aria-label="RPE">
+        <button class="set-check ${lg.done ? "on" : ""}" onclick="toggleSet(${di},${ei},${si})" aria-pressed="${!!lg.done}" title="Odškrtnout jako hotové">${I.check}</button>
+      </div>
+      ${e1 ? `<div class="sr-e1">e1RM ${fmtKg(e1)} kg</div>` : ""}
+    </div>`;
+  }).join("");
+  return `<div class="ex-detail ${ex.done ? "done" : ""}">
+    <div class="exd-head">
+      <input class="ex-name" value="${esc(ex.name)}" placeholder="Název cviku" onchange="updEx(${di},${ei},'name',this.value)" aria-label="Název cviku">
+      <select onchange="updEx(${di},${ei},'liftId',this.value)" aria-label="Hlavní lift" title="Hlavní lift — z jeho maxima se počítá cíl">
+        <option value="">bez liftu</option>
+        ${state.lifts.map(l => `<option value="${l.id}" ${ex.liftId === l.id ? "selected" : ""}>${esc(l.short || l.name)}</option>`).join("")}
+      </select>
+      <button class="icon-btn danger" onclick="delEx(${di},${ei})" title="Smazat cvik" aria-label="Smazat cvik">${I.trash}</button>
+    </div>
+    <div class="presc">
+      <div class="mini-lbl">Plán zátěže</div>
+      ${ex.lines.map((ln, li) => renderLine(ex, ln, di, ei, li)).join("")}
+      <button class="add-line" onclick="addLine(${di},${ei})" title="Přidat sérii s jinou zátěží (backoff)">${I.plus} série s jinou zátěží</button>
+    </div>
+    <div class="mini-lbl">Zápis tréninku</div>
+    <div class="log-head"><span>#</span><span>Cíl</span><span>Kg</span><span>Opak.</span><span>RPE</span><span>✓</span></div>
+    <div class="set-rows">${rows || `<div class="empty" style="padding:8px 2px">Nastav plán zátěže výše.</div>`}</div>
+    <div class="exd-foot">
+      <button class="add-line" onclick="addSetRow(${di},${ei})" title="Přidat další sérii do zápisu">${I.plus} série</button>
+      ${bestE ? `<span class="eyebrow">nejlepší dnes: e1RM ${fmtKg(bestE)} kg</span>` : ""}
+    </div>
+  </div>`;
+}
+function setTargets(ex){
+  const out = [];
+  (ex.lines || []).forEach((ln, li) => {
+    const w = rowWeight(ln, ex.liftId);
+    const n = Math.max(1, +ln.sets || 1);
+    const sub = ln.mode === "pct" ? `${ln.pct} % TM` : ln.mode === "e1rm" ? `${ln.pct} % e1RM` : ln.mode === "rpe" ? `RPE ${fmt(ln.rpe)}` : "napevno";
+    for (let k = 0; k < n; k++) out.push({ kg: w, reps: +ln.reps || 0, rpe: ln.mode === "rpe" ? +ln.rpe : 8, sub, lineIdx: li });
+  });
+  return out;
+}
+window.openDay = (id) => mut(() => { state.ui.openDayId = id; });
+window.closeDay = () => mut(() => { state.ui.openDayId = null; });
+window.delDayDetail = (di) => { if (!confirm("Smazat tenhle den?")) return; mut(() => { curWeek().days.splice(di, 1); state.ui.openDayId = null; }); };
+window.addSetRow = (di, ei) => mut(() => {
+  const ex = curWeek().days[di].exercises[ei];
+  const last = ex.lines[ex.lines.length - 1];
+  last.sets = (+last.sets || 0) + 1;
+});
+window.toggleSet = (di, ei, si) => mut(() => {
+  const ex = curWeek().days[di].exercises[ei];
+  ex.log = ex.log || [];
+  const tg = setTargets(ex)[si] || {};
+  const lg = ex.log[si] || {};
+  if (lg.done){
+    if (lg.histId) state.history = state.history.filter(h => h.id !== lg.histId);
+    ex.log[si] = { ...lg, done: false, histId: null };
+  } else {
+    const kg = lg.kg !== undefined && lg.kg !== "" ? +lg.kg : (tg.kg || 0);
+    const reps = lg.reps !== undefined && lg.reps !== "" ? +lg.reps : (tg.reps || 1);
+    const rpe = lg.rpe !== undefined && lg.rpe !== "" ? +lg.rpe : (tg.rpe || 8);
+    const e1rm = kg ? Math.round(kg / rpePct(reps, rpe) * 1000) / 10 : 0;
+    const histId = uid();
+    ex.log[si] = { kg, reps, rpe, done: true, histId };
+    if (kg) state.history.push({ id: histId, date: new Date().toLocaleDateString("sv-SE"), name: ex.name || "Cvik", liftId: ex.liftId, kg, reps, rpe, e1rm });
+  }
+  const targets = setTargets(ex);
+  ex.done = targets.length > 0 && targets.every((_, k) => ex.log[k] && ex.log[k].done);
+});
+window.updSet = (di, ei, si, f, v) => mut(() => {
+  const ex = curWeek().days[di].exercises[ei];
+  ex.log = ex.log || [];
+  ex.log[si] = ex.log[si] || {};
+  ex.log[si][f] = v === "" ? "" : +v;
+  const lg = ex.log[si];
+  if (lg.done && lg.histId){
+    const h = state.history.find(x => x.id === lg.histId);
+    if (h){ const kg = +lg.kg || 0, reps = +lg.reps || 1, rpe = +lg.rpe || 8; h.kg = kg; h.reps = reps; h.rpe = rpe; h.e1rm = kg ? Math.round(kg / rpePct(reps, rpe) * 1000) / 10 : 0; }
+  }
+});
 const openLogs = new Set();
 const MODE_LABEL = { pct: "% TM", rpe: "RPE", kg: "kg", e1rm: "% e1RM" };
 function renderLine(ex, ln, di, ei, li){
