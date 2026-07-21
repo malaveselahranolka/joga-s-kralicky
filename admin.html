@@ -126,6 +126,34 @@
   .att-item.is-cancelled strong { text-decoration: line-through; }
   .att-empty { padding: 1rem 1.1rem; color: var(--ink-soft); font-size: .9rem; }
   [data-view][aria-expanded="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  /* odbavení — čtečka QR */
+  .scan-wrap { max-width: 520px; margin-inline: auto; }
+  .scan-view { position: relative; aspect-ratio: 1; background: var(--ink); border-radius: var(--r-lg); overflow: hidden; display: grid; place-items: center; }
+  .scan-view video { width: 100%; height: 100%; object-fit: cover; }
+  .scan-view .hintline { color: color-mix(in srgb, var(--paper) 66%, transparent); font-size: .92rem; text-align: center; padding: 2rem 1.6rem; margin: 0; }
+  .scan-view .reticle { position: absolute; inset: 16%; border: 2px solid color-mix(in srgb, var(--paper) 85%, transparent); border-radius: 20px; pointer-events: none; }
+  .scan-bar { display: flex; justify-content: center; margin-top: 1rem; }
+  .scan-bar .btn { min-width: 210px; }
+  .scan-manual { margin-top: 1.4rem; }
+  .scan-manual label { display: block; font-size: .82rem; font-weight: 700; color: var(--ink-soft); margin-bottom: .4rem; }
+  .scan-manual-row { display: flex; gap: .5rem; }
+  .scan-manual-row input { flex: 1; text-transform: uppercase; letter-spacing: .08em; }
+  .scan-card { margin-top: 1.4rem; border: 1px solid var(--line); border-radius: var(--r-lg); padding: 1.3rem 1.4rem; }
+  .scan-card .verdict { display: flex; align-items: center; gap: .8rem; }
+  .scan-card .dot { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; flex: none; }
+  .scan-card .dot svg { width: 22px; height: 22px; }
+  .scan-card .verdict .big { font-family: "Fraunces"; font-size: 1.5rem; line-height: 1.05; }
+  .scan-card .who { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+  .scan-card .who strong { font-family: "Fraunces"; font-size: 1.2rem; font-weight: 400; }
+  .scan-card .who .sub { font-size: .88rem; color: var(--ink-soft); }
+  .scan-card .acts { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: 1rem; }
+  .scan-yes  { background: color-mix(in srgb, var(--clover) 16%, var(--cloud)); border-color: color-mix(in srgb, var(--clover) 40%, var(--line)); }
+  .scan-yes .dot { background: var(--clover); color: #fff; }
+  .scan-no   { background: color-mix(in srgb, var(--carrot) 15%, var(--cloud)); border-color: color-mix(in srgb, var(--carrot) 42%, var(--line)); }
+  .scan-no .dot { background: var(--carrot); color: #fff; }
+  .scan-bad  { background: color-mix(in srgb, var(--ink) 8%, var(--cloud)); }
+  .scan-bad .dot { background: var(--ink-soft); color: #fff; }
+
   .toolbar { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; margin-bottom: 1.2rem; }
   .toolbar select { width: auto; min-width: 200px; }
   .toast { position: fixed; left: 50%; bottom: 1.5rem; transform: translateX(-50%) translateY(120%); background: var(--ink); color: var(--paper); padding: .8em 1.3em; border-radius: 999px; font-size: .9rem; font-weight: 600; box-shadow: 0 16px 40px -16px rgba(0,0,0,.5); transition: transform .4s var(--ease); z-index: 100; }
@@ -207,6 +235,7 @@
       <button class="tab" role="tab" aria-selected="true" data-tab="dash">Přehled</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="lessons">Lekce</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="bookings">Rezervace</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="scan">Odbavení</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="news">Newsletter</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="vouchers">Poukazy</button>
     </div>
@@ -328,6 +357,35 @@
       <div class="rows" id="newsRows"></div>
     </section>
 
+    <!-- ODBAVENÍ (čtečka QR ze vstupenky) -->
+    <section class="panel" id="panel-scan" role="tabpanel">
+      <div class="panel-head">
+        <h2>Odbavení u dveří</h2>
+      </div>
+      <div class="scan-wrap">
+        <div class="scan-view" id="scanView">
+          <p class="hintline" id="scanHint">Namiřte kameru na QR kód na vstupence hosta. Ukáže se jméno, lekce a jestli má zaplaceno.</p>
+          <video id="scanVideo" playsinline muted hidden></video>
+          <div class="reticle" id="scanReticle" hidden></div>
+        </div>
+        <canvas id="scanCanvas" hidden></canvas>
+
+        <div class="scan-bar">
+          <button class="btn btn-primary" id="scanToggle" type="button">Zapnout kameru</button>
+        </div>
+
+        <div class="scan-manual">
+          <label for="scanManual">Kamera nejde? Opište kód ze vstupenky</label>
+          <div class="scan-manual-row">
+            <input id="scanManual" type="text" autocomplete="off" spellcheck="false" placeholder="např. 3F9A21C4" />
+            <button class="btn btn-ghost" id="scanManualBtn" type="button">Najít</button>
+          </div>
+        </div>
+
+        <div id="scanResult"></div>
+      </div>
+    </section>
+
     <!-- POUKAZY -->
     <section class="panel" id="panel-vouchers" role="tabpanel">
       <div class="panel-head">
@@ -352,6 +410,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script src="supabase-config.js?v=2"></script>
 <script>
 (function () {
@@ -442,6 +501,7 @@
     t.setAttribute('aria-selected', 'true');
     document.querySelectorAll('.panel').forEach((p) => p.classList.remove('active'));
     $('panel-' + t.dataset.tab).classList.add('active');
+    if (t.dataset.tab !== 'scan') scanStop();   // kamera nemá běžet na pozadí
   }));
 
   // dashboard ----------------------------------------------------------
@@ -825,6 +885,126 @@
     return true;
   }
   $('bookingRows').addEventListener('click', (e) => { const btn = e.target.closest('button'); if (btn) applyBookingAction(btn); });
+
+  // odbavení u dveří (QR ze vstupenky) ----------------------------------
+  const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+  let scanStream = null, scanTimer = null, scanDetector = null, scanBusy = false, scanLast = '', scanLastAt = 0;
+
+  function scanStop() {
+    clearTimeout(scanTimer); scanTimer = null;
+    if (scanStream) { scanStream.getTracks().forEach((t) => t.stop()); scanStream = null; }
+    const v = $('scanVideo');
+    if (v) { v.srcObject = null; v.hidden = true; }
+    if ($('scanReticle')) $('scanReticle').hidden = true;
+    if ($('scanHint')) $('scanHint').hidden = false;
+    if ($('scanToggle')) $('scanToggle').textContent = 'Zapnout kameru';
+  }
+
+  async function scanStart() {
+    const video = $('scanVideo'), hint = $('scanHint');
+    try {
+      scanStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+    } catch (e) {
+      hint.textContent = 'Kameru se nepodařilo zapnout. Povolte přístup ke kameře v prohlížeči, nebo kód opište ručně níže.';
+      return;
+    }
+    video.srcObject = scanStream; video.hidden = false; hint.hidden = true;
+    $('scanReticle').hidden = false;
+    $('scanToggle').textContent = 'Vypnout kameru';
+    await video.play().catch(() => {});
+
+    if ('BarcodeDetector' in window && !scanDetector) {
+      try { scanDetector = new window.BarcodeDetector({ formats: ['qr_code'] }); } catch (e) { scanDetector = null; }
+    }
+    scanTick();
+  }
+
+  async function scanTick() {
+    if (!scanStream) return;
+    const video = $('scanVideo');
+    if (!scanBusy && video.readyState >= 2 && video.videoWidth) {
+      scanBusy = true;
+      let raw = null;
+      try {
+        if (scanDetector) {
+          const found = await scanDetector.detect(video);
+          if (found && found.length) raw = found[0].rawValue;
+        } else if (window.jsQR) {
+          const c = $('scanCanvas'), ctx = c.getContext('2d', { willReadFrequently: true });
+          const w = 420, h = Math.round(video.videoHeight / video.videoWidth * 420);
+          c.width = w; c.height = h; ctx.drawImage(video, 0, 0, w, h);
+          const px = ctx.getImageData(0, 0, w, h);
+          const res = window.jsQR(px.data, w, h, { inversionAttempts: 'dontInvert' });
+          if (res) raw = res.data;
+        }
+      } catch (e) { /* jeden neúspěšný snímek nevadí, zkusíme další */ }
+      scanBusy = false;
+      const m = raw && raw.match(UUID_RE);
+      if (m) {
+        const id = m[0].toLowerCase(), now = Date.now();
+        if (id !== scanLast || now - scanLastAt > 4000) {   // stejný lístek nečti pořád dokola
+          scanLast = id; scanLastAt = now;
+          if (navigator.vibrate) navigator.vibrate(60);
+          await showScan(id);
+        }
+      }
+    }
+    scanTimer = setTimeout(scanTick, 260);
+  }
+
+  function scanCard(cls, icon, verdict, body, acts) {
+    $('scanResult').innerHTML = '<div class="scan-card ' + cls + '">' +
+      '<div class="verdict"><span class="dot">' + icon + '</span><span class="big">' + verdict + '</span></div>' +
+      (body ? '<div class="who">' + body + '</div>' : '') +
+      (acts ? '<div class="acts">' + acts + '</div>' : '') + '</div>';
+  }
+
+  async function showScan(id) {
+    const { data: b, error } = await sb.from('bookings').select('*').eq('id', id).maybeSingle();
+    const ico = {
+      ok:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><path d="M20 6 9 17l-5-5"/></svg>',
+      warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>',
+      no:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M18 6 6 18M6 6l12 12"/></svg>'
+    };
+    if (error || !b) { scanCard('scan-bad', ico.no, 'Vstupenka neznámá', '<div class="sub">Tenhle kód v rezervacích není.</div>'); return; }
+
+    const l = lessons.find((x) => x.id === b.lesson_id);
+    const who = '<strong>' + esc(b.name) + '</strong>' +
+      '<div class="sub">' + (l ? esc(l.title) + ' · ' + fmtDT(l.starts_at) : 'Lekce neznámá') +
+      ' · ' + b.spots + (b.spots === 1 ? ' místo' : (b.spots < 5 ? ' místa' : ' míst')) + '</div>';
+
+    if (b.status === 'cancelled') { scanCard('scan-bad', ico.no, 'Rezervace zrušena', who); return; }
+
+    if (b.payment_status === 'paid') {
+      scanCard('scan-yes', ico.ok, b.payment_method === 'cash' ? 'Zaplaceno na místě' : 'Zaplaceno online', who);
+    } else if (b.payment_status === 'pending') {
+      scanCard('scan-no', ico.warn, 'Platba se zpracovává', who,
+        '<button class="btn btn-ghost btn-sm" data-rescan="' + b.id + '">Zkontrolovat znovu</button>' +
+        '<button class="btn btn-primary btn-sm" data-paid="' + b.id + '">Zaplaceno na místě</button>');
+    } else {
+      scanCard('scan-no', ico.warn, 'Nezaplaceno', who,
+        '<button class="btn btn-primary btn-sm" data-paid="' + b.id + '">Zaplaceno na místě</button>');
+    }
+  }
+
+  $('scanToggle').addEventListener('click', () => { if (scanStream) scanStop(); else scanStart(); });
+
+  $('scanManualBtn').addEventListener('click', () => {
+    const q = $('scanManual').value.trim().toLowerCase().replace(/[^0-9a-f-]/g, '');
+    if (q.length < 6) { toast('Zadejte aspoň 6 znaků kódu'); return; }
+    const hits = bookings.filter((b) => b.id.startsWith(q));
+    if (!hits.length) { toast('Žádná rezervace s tímhle kódem'); return; }
+    if (hits.length > 1) { toast('Kód sedí na víc rezervací — opište ho celý'); return; }
+    showScan(hits[0].id);
+  });
+  $('scanManual').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); $('scanManualBtn').click(); } });
+
+  $('scanResult').addEventListener('click', async (e) => {
+    const btn = e.target.closest('button'); if (!btn) return;
+    const again = btn.dataset.rescan;
+    if (again) { await showScan(again); return; }
+    if (btn.dataset.paid) { await applyBookingAction(btn); await showScan(btn.dataset.paid); }
+  });
 })();
 </script>
 </body>

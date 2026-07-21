@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vstupenka — Jóga s králíčky</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #F1EEE5; --cream: #F7F4EC; --surface: #FFFFFF;
+    --ink: #1E231C; --ink-soft: #5C6357;
+    --forest: #2C3B2E; --forest-deep: #1E2920; --clover: #6E8A4E; --carrot: #D2854A;
+    --line: #E3DFD3; --line-soft: #ECE8DE;
+    --r-xl: 30px; --r-lg: 22px; --r-md: 14px;
+    --ease: cubic-bezier(.22,.61,.36,1); --ease-spring: cubic-bezier(.34,1.4,.5,1);
+    --sh-1: 0 1px 2px rgba(30,40,30,.05), 0 3px 8px -2px rgba(30,40,30,.06);
+    --sh-3: 0 1px 0 rgba(255,255,255,.6) inset, 0 6px 14px -8px rgba(30,40,30,.14), 0 26px 46px -22px rgba(44,59,46,.32);
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; font-family: "Hanken Grotesk", system-ui, sans-serif; color: var(--ink); background: var(--paper); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  h1, h2, h3 { font-family: "Schibsted Grotesk", system-ui, sans-serif; font-weight: 600; line-height: 1.05; letter-spacing: -.025em; margin: 0; }
+  p { margin: 0; }
+  a { color: inherit; text-decoration: none; }
+  img, svg, canvas { display: block; max-width: 100%; }
+  ::selection { background: var(--clover); color: #fff; }
+  .wrap { width: min(100% - 2.4rem, 960px); margin-inline: auto; }
+
+  body::after { content: ""; position: fixed; inset: 0; z-index: 2; pointer-events: none; opacity: .03; mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+  header.bar { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--paper) 90%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+  .bar-inner { display: flex; align-items: center; justify-content: space-between; height: 68px; }
+  .brand { display: inline-flex; align-items: center; gap: .55rem; font-family: "Schibsted Grotesk"; font-weight: 700; font-size: 1.12rem; letter-spacing: -.02em; }
+  .brand img { width: 32px; height: 32px; }
+  .home-link { display: inline-flex; align-items: center; gap: .45rem; font-weight: 600; font-size: .95rem; color: var(--ink-soft); transition: color .3s var(--ease); }
+  .home-link:hover { color: var(--forest); }
+
+  main { padding: clamp(2rem, 5vw, 3.4rem) 0 4rem; }
+  .page-head { text-align: center; max-width: 40ch; margin: 0 auto clamp(1.6rem, 4vw, 2.4rem); }
+  .eyebrow { display: inline-block; font-size: .82rem; font-weight: 600; letter-spacing: .04em; color: var(--clover); margin-bottom: .8rem; }
+  .eyebrow::before { content: "/ "; opacity: .7; }
+  .page-head h1 { font-size: clamp(1.9rem, 1.4rem + 2vw, 2.8rem); }
+  .page-head p { margin-top: .9rem; color: var(--ink-soft); }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; font-family: inherit; font-size: 1rem; font-weight: 600; padding: .8em 1.5em; border-radius: 999px; border: 1px solid transparent; cursor: pointer; transition: transform .3s var(--ease), background-color .3s var(--ease), box-shadow .3s var(--ease), border-color .3s var(--ease); }
+  .btn:focus-visible { outline: 2px solid var(--clover); outline-offset: 3px; }
+  .btn-primary { background: var(--forest); color: var(--cream); }
+  .btn-primary:hover { transform: translateY(-2px); background: var(--forest-deep); box-shadow: 0 12px 22px -12px rgba(44,59,46,.6); }
+  .btn-ghost { background: transparent; border-color: var(--line); color: var(--ink); }
+  .btn-ghost:hover { transform: translateY(-2px); border-color: var(--forest); background: var(--cream); }
+  .btn .arrow { transition: transform .3s var(--ease); }
+  .btn:hover .arrow { transform: translateX(3px); }
+
+  /* ---------- vstupenka: papírový lístek s utrhávacím útržkem ---------- */
+  .ticket {
+    position: relative; max-width: 480px; margin-inline: auto;
+    background: var(--surface); border-radius: var(--r-xl); box-shadow: var(--sh-3);
+    overflow: hidden;
+  }
+  /* zoubkovaný předěl — vykousnutí po stranách přesně v místě perforace */
+  .t-stub::before, .t-stub::after {
+    content: ""; position: absolute; top: -1px; width: 30px; height: 30px;
+    background: var(--paper); border-radius: 50%; transform: translateY(-50%); z-index: 1;
+  }
+  .t-stub::before { left: -15px; }
+  .t-stub::after  { right: -15px; }
+
+  .t-top { padding: clamp(1.5rem, 4vw, 2.1rem); }
+  .t-lesson { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: clamp(1.45rem, 1.2rem + 1.4vw, 1.9rem); color: var(--forest); }
+  .t-when { margin-top: .3rem; font-weight: 500; color: var(--ink); }
+  .t-where { margin-top: .1rem; color: var(--ink-soft); font-size: .95rem; }
+
+  .t-rows { margin-top: 1.3rem; border-top: 1px solid var(--line-soft); }
+  .t-row { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; padding: .7rem 0; border-bottom: 1px solid var(--line-soft); }
+  .t-row .k { font-size: .74rem; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-soft); }
+  .t-row .v { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: 1.02rem; text-align: right; }
+
+  .t-stub { position: relative; padding: clamp(1.4rem, 4vw, 2rem); background: var(--cream); border-top: 2px dashed var(--line); text-align: center; }
+  .qr-frame { display: inline-block; padding: 14px; background: #fff; border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--sh-1); }
+  .qr-code { width: 208px; height: 208px; }
+  .qr-code svg { width: 100%; height: 100%; display: block; shape-rendering: crispEdges; }
+  .t-hint { margin-top: .9rem; font-size: .92rem; color: var(--ink-soft); }
+  .t-id { margin-top: .5rem; font-size: .74rem; letter-spacing: .08em; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+
+  /* stav platby — jediné barevné místo na lístku */
+  .t-status { display: flex; align-items: center; gap: .8rem; padding: 1rem clamp(1.5rem, 4vw, 2.1rem); font-weight: 600; }
+  .t-status .dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; flex: none; }
+  .t-status .dot svg { width: 19px; height: 19px; }
+  .t-status .lbl { font-family: "Schibsted Grotesk"; font-size: 1.05rem; }
+  .t-status .note { display: block; font-family: "Hanken Grotesk"; font-weight: 500; font-size: .88rem; color: var(--ink-soft); }
+  .is-paid    { background: color-mix(in srgb, var(--clover) 14%, var(--surface)); color: var(--forest); }
+  .is-paid .dot { background: var(--clover); color: #fff; }
+  .is-open    { background: color-mix(in srgb, var(--carrot) 12%, var(--surface)); color: var(--forest); }
+  .is-open .dot { background: var(--carrot); color: #fff; }
+  .is-void    { background: color-mix(in srgb, var(--ink) 8%, var(--surface)); color: var(--ink-soft); }
+  .is-void .dot { background: var(--ink-soft); color: #fff; }
+
+  .acts { display: flex; gap: .7rem; justify-content: center; flex-wrap: wrap; margin-top: 1.6rem; }
+  .msg { max-width: 480px; margin: 0 auto; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-xl); box-shadow: var(--sh-1); padding: 2rem; text-align: center; }
+  .msg h2 { font-size: 1.4rem; margin-bottom: .6rem; }
+  .msg p { color: var(--ink-soft); }
+  .hidden { display: none !important; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+  @media print {
+    header.bar, .acts, .page-head p, body::after { display: none; }
+    body { background: #fff; }
+    .ticket { box-shadow: none; border: 1px solid var(--line); }
+  }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap bar-inner">
+    <a class="brand" href="index.html" aria-label="Jóga s králíčky — domů">
+      <img src="assets/logo.svg" alt="" width="32" height="32" /> Jóga&nbsp;s&nbsp;králíčky
+    </a>
+    <a class="home-link" href="rezervace.html">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18 9 12l6-6"/></svg>
+      Termíny
+    </a>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="page-head">
+      <span class="eyebrow">Vstupenka</span>
+      <h1>Ukažte QR kód ve studiu</h1>
+      <p>Uložte si tuhle stránku do záložek nebo si ji vyfoťte. Stav platby se aktualizuje sám.</p>
+    </div>
+
+    <div id="out"></div>
+
+    <div class="acts" id="acts"></div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script src="supabase-config.js?v=2"></script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const PLACE = 'Studio klidu, Údolní 12, Brno-střed';
+  const esc = (s) => (s == null ? '' : String(s)).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const two = (n) => String(n).padStart(2, '0');
+  const cap = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+  const fmtTime = (d) => two(d.getHours()) + ':' + two(d.getMinutes());
+  const fmtDate = (d) => two(d.getDate()) + '. ' + two(d.getMonth() + 1) + '. ' + d.getFullYear();
+  const fmtDow = (d) => d.toLocaleDateString('cs-CZ', { weekday: 'long' });
+  const spotsTxt = (n) => n + (n === 1 ? ' místo' : (n < 5 ? ' místa' : ' míst'));
+
+  const id = (location.hash || '').replace(/^#/, '').trim();
+  const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  const CONFIGURED = /^https:\/\/.+\.supabase\.co/.test(window.SUPABASE_URL || '') &&
+    !!window.SUPABASE_ANON_KEY && window.SUPABASE_ANON_KEY.length > 20 && typeof window.supabase !== 'undefined';
+  const sb = CONFIGURED ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY) : null;
+
+  function msg(title, text) {
+    $('out').innerHTML = '<div class="msg"><h2>' + esc(title) + '</h2><p>' + text + '</p></div>';
+    $('acts').innerHTML = '<a class="btn btn-primary" href="rezervace.html">Zpět na termíny <span class="arrow">→</span></a>';
+  }
+
+  // stav platby → jeden ze tří vzhledů
+  function statusBlock(t) {
+    const ok = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg>';
+    const info = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>';
+    if (t.status === 'cancelled' || t.lesson_status === 'cancelled') {
+      return { cls: 'is-void', icon: info, lbl: 'Rezervace zrušena', note: 'Tahle vstupenka už neplatí.' };
+    }
+    if (t.payment_status === 'paid') {
+      const how = t.payment_method === 'cash' ? 'na místě' : 'online';
+      return { cls: 'is-paid', icon: ok, lbl: 'Zaplaceno ' + how, note: 'Vstup je vyřízený, nic dalšího neplatíte.' };
+    }
+    if (t.payment_status === 'pending') {
+      return { cls: 'is-open', icon: info, lbl: 'Platba se zpracovává', note: 'Za chvíli dejte Obnovit stav.' };
+    }
+    return { cls: 'is-open', icon: info, lbl: 'Zaplatíte na místě', note: 'Rezervace platí i tak — stačí přijít.' };
+  }
+
+  function render(t) {
+    const dt = new Date(t.starts_at);
+    const end = new Date(dt.getTime() + t.duration_min * 60000);
+    const s = statusBlock(t);
+
+    $('out').innerHTML =
+      '<article class="ticket">' +
+        '<div class="t-top">' +
+          '<div class="t-lesson">' + esc(t.lesson) + '</div>' +
+          '<div class="t-when">' + cap(fmtDow(dt)) + ' ' + fmtDate(dt) + ' · ' + fmtTime(dt) + '–' + fmtTime(end) + '</div>' +
+          '<div class="t-where">' + PLACE + '</div>' +
+          '<div class="t-rows">' +
+            '<div class="t-row"><span class="k">Jméno</span><span class="v">' + esc(t.name) + '</span></div>' +
+            '<div class="t-row"><span class="k">Počet míst</span><span class="v">' + spotsTxt(t.spots) + '</span></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="t-status ' + s.cls + '">' +
+          '<span class="dot">' + s.icon + '</span>' +
+          '<span><span class="lbl">' + s.lbl + '</span><span class="note">' + s.note + '</span></span>' +
+        '</div>' +
+        '<div class="t-stub">' +
+          '<div class="qr-frame"><div class="qr-code" id="qr" role="img" aria-label="QR kód vstupenky"></div></div>' +
+          '<p class="t-hint">Ve studiu QR kód jen ukažte — lektorka ho načte.</p>' +
+          '<p class="t-id">' + esc(id.slice(0, 8).toUpperCase()) + '</p>' +
+        '</div>' +
+      '</article>';
+
+    $('acts').innerHTML =
+      '<button class="btn btn-ghost" id="refresh" type="button">Obnovit stav</button>' +
+      '<a class="btn btn-ghost" href="rezervace.html">Zpět na termíny</a>';
+    $('refresh').addEventListener('click', load);
+
+    try {
+      const qr = window.qrcode(0, 'M');
+      qr.addData(location.href);
+      qr.make();
+      $('qr').innerHTML = qr.createSvgTag({ cellSize: 8, margin: 0, scalable: true });
+    } catch (e) {
+      $('qr').closest('.qr-frame').outerHTML = '<p class="t-hint">QR kód se nepodařilo vykreslit. Ve studiu stačí říct jméno a kód níže.</p>';
+    }
+  }
+
+  async function load() {
+    const { data, error } = await sb.rpc('get_ticket', { p_id: id });
+    if (error) { msg('Vstupenku se nepodařilo načíst', 'Zkuste to prosím za chvíli znovu, nebo nám napište na <a href="mailto:ahoj@jogaskralicky.cz" style="color:var(--clover)">ahoj@jogaskralicky.cz</a>.'); return; }
+    if (!data) { msg('Vstupenka nenalezena', 'Odkaz je nejspíš neúplný. Použijte prosím ten z potvrzovacího e-mailu.'); return; }
+    render(data);
+  }
+
+  if (!CONFIGURED) msg('Vstupenky zatím nejsou zapnuté', 'Napište nám na <a href="mailto:ahoj@jogaskralicky.cz" style="color:var(--clover)">ahoj@jogaskralicky.cz</a> a rezervaci potvrdíme ručně.');
+  else if (!UUID.test(id)) msg('Chybí kód vstupenky', 'Otevřete prosím odkaz z potvrzovacího e-mailu — je zakončený kódem rezervace.');
+  else load();
+
+  // vrátí-li se člověk z platby na jinou vstupenku, načti ji
+  window.addEventListener('hashchange', () => location.reload());
+})();
+</script>
+</body>
+</html>

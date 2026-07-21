@@ -277,6 +277,9 @@
   const ENTRY_URL = PAY.entryUrl || '';
   const VOUCHER_URL = PAY.voucherUrl || '';
   const PAY_ON = !!PAY.enabled && /^https:\/\/.+/.test(ENTRY_URL);
+  // Stripe si k platbě odnese ID rezervace → webhook podle něj označí „zaplaceno".
+  const payHref = (id) => ENTRY_URL + (ENTRY_URL.includes('?') ? '&' : '?') + 'client_reference_id=' + encodeURIComponent(id);
+  const ticketHref = (id) => 'vstupenka.html#' + id;
   const VOUCHER_ON = !!PAY.enabled && /^https:\/\/.+/.test(VOUCHER_URL);
   const PRICE = Number(PAY.depositCzk || 499); // cena za vstup (Kč)
 
@@ -434,9 +437,11 @@
     const end = new Date(chosen.dt.getTime() + chosen.duration_min * 60000);
     const summaryTxt = esc(chosen.title) + ' · ' + fmtDate(chosen.dt) + ' · ' + fmtTime(chosen.dt) + '–' + fmtTime(end) +
       ' · ' + spots + (spots === 1 ? ' místo' : (spots < 5 ? ' místa' : ' míst'));
-    let acts = '<a class="btn btn-ghost" href="rezervace.html">Nová rezervace</a>';
-    if (PAY_ON) acts = '<a class="btn btn-primary" href="' + ENTRY_URL + '">Zaplatit vstup (499&nbsp;Kč) online <span class="arrow">→</span></a>' + acts;
-    stateBox('ok', 'Místo držíme pro vás', '<p class="big">' + summaryTxt + '</p><p>Potvrzení pošleme e-mailem. Zaplatit můžete online, nebo na místě před lekcí — rezervace platí i tak.</p>', acts);
+    localStorage.setItem('lastBooking', lastBookingId);
+    let acts = '<a class="btn btn-ghost" href="' + ticketHref(lastBookingId) + '">Otevřít vstupenku</a>' +
+               '<a class="btn btn-ghost" href="rezervace.html">Nová rezervace</a>';
+    if (PAY_ON) acts = '<a class="btn btn-primary" href="' + payHref(lastBookingId) + '">Zaplatit vstup (499&nbsp;Kč) online <span class="arrow">→</span></a>' + acts;
+    stateBox('ok', 'Místo držíme pro vás', '<p class="big">' + summaryTxt + '</p><p>Potvrzení pošleme e-mailem. Zaplatit můžete online, nebo na místě před lekcí — rezervace platí i tak. Na vstupence je QR kód, který ve studiu jen ukážete.</p>', acts);
 
     // potvrzovací e-mail
     const emailV = email.value.trim();
@@ -446,7 +451,8 @@
       lesson: chosen.title,
       datetime: cap(fmtDow(chosen.dt)) + ' ' + fmtDate(chosen.dt) + ' · ' + fmtTime(chosen.dt) + '–' + fmtTime(end),
       spots: spots + (spots === 1 ? ' místo' : (spots < 5 ? ' místa' : ' míst')),
-      location: PLACE
+      location: PLACE,
+      ticket_url: new URL(ticketHref(lastBookingId), location.href).href
     });
   });
 
@@ -469,8 +475,10 @@
   (function () {
     const q = new URLSearchParams(location.search);
     const platba = q.get('platba'), voucher = q.get('voucher');
-    if (platba === 'ok') stateBox('ok', 'Platba přijata ✓', '<p>Děkujeme! Platba proběhla a místo je vaše. Potvrzení dorazí e-mailem.</p>', '<a class="btn btn-ghost" href="rezervace.html">Zpět na termíny</a>');
-    else if (platba === 'zrus') stateBox('info', 'Platba nedokončena', '<p>Nevadí — místo máte zarezervované i tak, zaplatit můžete na místě.</p>', '<a class="btn btn-ghost" href="rezervace.html">Zpět na termíny</a>');
+    const lastId = localStorage.getItem('lastBooking') || '';
+    const ticketBtn = (cls) => lastId ? '<a class="btn ' + cls + '" href="' + ticketHref(lastId) + '">Otevřít vstupenku s QR</a>' : '';
+    if (platba === 'ok') stateBox('ok', 'Platba přijata ✓', '<p>Děkujeme! Platba proběhla a místo je vaše. Vstupenka má QR kód — ve studiu ho jen ukážete a je hotovo.</p>', ticketBtn('btn-primary') + '<a class="btn btn-ghost" href="rezervace.html">Zpět na termíny</a>');
+    else if (platba === 'zrus') stateBox('info', 'Platba nedokončena', '<p>Nevadí — místo máte zarezervované i tak, zaplatit můžete na místě.</p>', ticketBtn('btn-ghost') + '<a class="btn btn-ghost" href="rezervace.html">Zpět na termíny</a>');
     else if (voucher === 'ok') {
       const code = voucherCode(q.get('session_id') || '');
       const em = localStorage.getItem('voucherEmail') || '';
