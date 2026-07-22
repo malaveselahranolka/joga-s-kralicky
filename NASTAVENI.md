@@ -210,6 +210,63 @@ Rezervuj/kup poukaz zkušebně. Ve Stripe **Test mode** zaplať kartou
 
 ---
 
+## Vstupenka s QR kódem
+
+Po rezervaci dostane host **vstupenku** (`vstupenka.html`) s QR kódem. Ve studiu
+ho jen ukáže na mobilu, ty ho v adminu naskenuješ v záložce **Odbavení** a hned
+vidíš jméno, lekci a jestli má **zaplaceno**.
+
+Odkaz na vstupenku vypadá takhle a je jedinečný pro každou rezervaci:
+`…/vstupenka.html#3f9a21c4-…`. To dlouhé ID je zároveň klíč — kdo ho nemá, nic
+nepřečte. QR kód neobsahuje nic jiného než tenhle odkaz.
+
+### A) Spusť SQL
+Supabase → **SQL Editor → New query → Run**: obsah **`supabase/tickets.sql`**.
+(Předtím musí být hotové `schema.sql` a `payments.sql`.)
+
+### B) Aby QR ukazoval opravdový stav ze Stripe
+Tohle je ta důležitá část. Bez ní vstupenka funguje, ale u platby bude vždycky
+stát „zaplatíte na místě", protože databáze se o zaplacení nedozví.
+
+Web už při platbě posílá Stripu ID rezervace (`client_reference_id`) — nic
+nastavovat nemusíš. Chybí jen **webhook**, kterým Stripe zaplacení oznámí zpět:
+
+1. Supabase → **Edge Functions → Deploy a new function → Via Editor**, jméno
+   přesně `stripe-webhook`, vlož obsah `supabase/functions/stripe-webhook/index.ts`.
+   U téhle funkce **vypni „Verify JWT"** (Stripe neposílá Supabase token).
+2. Stripe → **Developers → Webhooks → Add endpoint**
+   - **Endpoint URL:** `https://TVUJ_PROJECT_REF.functions.supabase.co/stripe-webhook`
+   - **Events:** `checkout.session.completed`, `checkout.session.expired`,
+     `checkout.session.async_payment_failed`
+3. Zkopíruj **Signing secret** (`whsec_...`) a ulož ho v Supabase →
+   **Edge Functions → Secrets** jako `STRIPE_WEBHOOK_SECRET`.
+   (`STRIPE_SECRET_KEY` už tam máš.)
+
+Po zaplacení se stav promítne do pár vteřin. Na vstupence je tlačítko
+**Obnovit stav**, kdyby to chvíli trvalo.
+
+### C) Odkaz na vstupenku v potvrzovacím e-mailu (nepovinné)
+Web posílá do EmailJS navíc pole **`ticket_url`**. Přidej do své šablony
+potvrzení rezervace řádek, ať ho host má po ruce:
+
+```
+Vstupenka s QR kódem: {{ticket_url}}
+```
+
+### D) Jak to používáš u dveří
+Admin → záložka **Odbavení** → **Zapnout kameru** → namíříš na QR hosta.
+- 🟢 **Zaplaceno online / na místě** — pouštíš dál.
+- 🟠 **Nezaplaceno** — vybereš peníze a klikneš **Zaplaceno na místě**.
+- ⚫ **Rezervace zrušena / Vstupenka neznámá** — neplatí.
+
+Kamera nejede (nepovolený přístup, starý telefon)? Pod čtečkou je políčko, kam
+opíšeš krátký kód z dolní části vstupenky.
+
+> Kamera funguje jen na **https** (GitHub Pages ano) nebo na `localhost`.
+> Poprvé se prohlížeč zeptá na povolení — dej **Povolit**.
+
+---
+
 ## Newsletter (odběr novinek)
 
 V patičce webu je políčko **„Odebírat"**, kam návštěvník zadá e-mail.

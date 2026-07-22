@@ -34,7 +34,11 @@ Deno.serve(async (req) => {
 
   const admin = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"));
   const obj = event.data.object as any;
-  const bookingId = obj?.metadata?.booking_id;
+  // booking_id chodí dvěma cestami:
+  //  • metadata.booking_id      — když platbu zakládá funkce stripe-create
+  //  • client_reference_id      — když web posílá zákazníka na Payment Link
+  //                               s ?client_reference_id=<id rezervace>
+  const bookingId = obj?.metadata?.booking_id || obj?.client_reference_id;
   const isVoucher = obj?.metadata?.type === "voucher";
 
   if (bookingId) {
