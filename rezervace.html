@@ -287,6 +287,25 @@
     !!window.SUPABASE_ANON_KEY && window.SUPABASE_ANON_KEY.length > 20 && typeof window.supabase !== 'undefined';
   const sb = CONFIGURED ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY) : null;
 
+  // Po návratu z platby se rovnou zeptáme Stripu, jestli je zaplaceno, a stav
+  // zapíšeme. Webhook zůstává jako druhá cesta — ale nečekáme jen na něj.
+  async function confirmPayment(sessionId) {
+    if (!CONFIGURED || !sessionId) return false;
+    try {
+      const r = await fetch(String(window.SUPABASE_URL).replace(/\/$/, '') + '/functions/v1/stripe-confirm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: window.SUPABASE_ANON_KEY,
+          Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY
+        },
+        body: JSON.stringify({ session_id: sessionId })
+      });
+      const j = await r.json();
+      return !!(j && j.paid);
+    } catch (e) { return false; }
+  }
+
   // EmailJS — potvrzení rezervace (nepovinné; bez konfigurace rezervace běží dál)
   const EMAIL_OK = !!(window.EMAILJS_PUBLIC_KEY && window.EMAILJS_SERVICE_ID && window.EMAILJS_TEMPLATE_ID &&
     String(window.EMAILJS_PUBLIC_KEY).indexOf('TVUJ_') !== 0 && typeof window.emailjs !== 'undefined');
@@ -438,16 +457,17 @@
     const summaryTxt = esc(chosen.title) + ' · ' + fmtDate(chosen.dt) + ' · ' + fmtTime(chosen.dt) + '–' + fmtTime(end) +
       ' · ' + spots + (spots === 1 ? ' místo' : (spots < 5 ? ' místa' : ' míst'));
     localStorage.setItem('lastBooking', lastBookingId);
-    let acts = '<a class="btn btn-ghost" href="' + ticketHref(lastBookingId) + '">Otevřít vstupenku</a>' +
+    let acts = '<a class="btn btn-ghost" href="' + ticketHref(lastBookingId) + '">Stav rezervace</a>' +
                '<a class="btn btn-ghost" href="rezervace.html">Nová rezervace</a>';
     if (PAY_ON) acts = '<a class="btn btn-primary" href="' + payHref(lastBookingId) + '">Zaplatit vstup (499&nbsp;Kč) online <span class="arrow">→</span></a>' + acts;
-    stateBox('ok', 'Místo držíme pro vás', '<p class="big">' + summaryTxt + '</p><p>Potvrzení pošleme e-mailem. Zaplatit můžete online, nebo na místě před lekcí — rezervace platí i tak. Na vstupence je QR kód, který ve studiu jen ukážete.</p>', acts);
+    stateBox('ok', 'Místo držíme pro vás', '<p class="big">' + summaryTxt + '</p><p>Potvrzení posíláme e-mailem — je v něm i <strong>QR kód</strong>, který ve studiu jen ukážete. Zaplatit můžete online, nebo na místě před lekcí — rezervace platí i tak.</p>', acts);
 
     // potvrzovací e-mail
     const emailV = email.value.trim();
     const ticketUrl = new URL(ticketHref(lastBookingId), location.href).href;
-    // QR do e-mailu musí být hostovaný obrázek (e-mail nespustí JS). Kóduje stejný
-    // odkaz jako QR na vstupence → čtečka v adminu ho přečte identicky.
+    // QR chodí jen e-mailem, na webu se nekreslí. V e-mailu musí být hostovaný
+    // obrázek (e-mail nespustí JS). Kóduje odkaz na stav rezervace — přesně to,
+    // co čtečka v adminu očekává.
     const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data=' + encodeURIComponent(ticketUrl);
     sendConfirmation({
       email: emailV, to_email: emailV,
@@ -477,13 +497,27 @@
   }
 
   // ---- návrat z platby / poukazu ----
-  (function () {
+  (async function () {
     const q = new URLSearchParams(location.search);
     const platba = q.get('platba'), voucher = q.get('voucher');
     const lastId = localStorage.getItem('lastBooking') || '';
-    const ticketBtn = (cls) => lastId ? '<a class="btn ' + cls + '" href="' + ticketHref(lastId) + '">Otevřít vstupenku s QR</a>' : '';
-    if (platba === 'ok') stateBox('ok', 'Platba přijata ✓', '<p>Děkujeme! Platba proběhla a místo je vaše. Vstupenka má QR kód — ve studiu ho jen ukážete a je hotovo.</p>', ticketBtn('btn-primary') + '<a class="btn btn-ghost" href="rezervace.html">Zpět na termíny</a>');
-    else if (platba === 'zrus') stateBox('info', 'Platba nedokončena', '<p>Nevadí — místo máte zarezervované i tak, zaplatit můžete na místě.</p>', ticketBtn('btn-ghost') + '<a class="btn btn-ghost" href="rezervace.html">Zpět na termíny</a>');
+    const statusBtn = (cls) => lastId ? '<a class="btn ' + cls + '" href="' + ticketHref(lastId) + '">Stav rezervace</a>' : '';
+    const backBtn = '<a class="btn btn-ghost" href="rezervace.html">Zpět na termíny</a>';
+    // jak to s platbou opravdu stojí v databázi (webhook ji mohl stihnout zapsat)
+    const paidInDb = async (id) => {
+      if (!CONFIGURED || !id) return false;
+      try { const { data } = await sb.rpc('get_ticket', { p_id: id }); return !!(data && data.payment_status === 'paid'); }
+      catch (e) { return false; }
+    };
+    if (platba === 'ok') {
+      stateBox('info', 'Ověřujeme platbu…', '<p>Chviličku strpení, ptáme se platební brány na potvrzení.</p>', '');
+      let paid = await confirmPayment(q.get('session_id') || '');
+      if (!paid) paid = await paidInDb(lastId);
+      if (!paid) { await new Promise((r) => setTimeout(r, 2500)); paid = await paidInDb(lastId); }
+      if (paid) stateBox('ok', 'Zaplaceno ✓', '<p>Děkujeme, platba je potvrzená a místo je vaše. QR kód pro vstup máte v potvrzovacím e-mailu — ve studiu ho jen ukážete.</p>', statusBtn('btn-primary') + backBtn);
+      else stateBox('info', 'Platbu ještě potvrzujeme', '<p>Peníze nejspíš odešly, jen se k nám potvrzení ještě nepropsalo. Zkuste za chvíli otevřít stav rezervace — a kdyby to nesedělo ani před lekcí, vyřešíme to na místě.</p>', statusBtn('btn-primary') + backBtn);
+    }
+    else if (platba === 'zrus') stateBox('info', 'Platba nedokončena', '<p>Nevadí — místo máte zarezervované i tak, zaplatit můžete na místě.</p>', statusBtn('btn-ghost') + backBtn);
     else if (voucher === 'ok') {
       const code = voucherCode(q.get('session_id') || '');
       const em = localStorage.getItem('voucherEmail') || '';

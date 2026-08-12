@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Vstupenka — Jóga s králíčky</title>
+<title>Stav rezervace — Jóga s králíčky</title>
 <meta name="robots" content="noindex" />
 <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -80,11 +80,9 @@
   .t-row .v { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: 1.02rem; text-align: right; }
 
   .t-stub { position: relative; padding: clamp(1.4rem, 4vw, 2rem); background: var(--cream); border-top: 2px dashed var(--line); text-align: center; }
-  .qr-frame { display: inline-block; padding: 14px; background: #fff; border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--sh-1); }
-  .qr-code { width: 208px; height: 208px; }
-  .qr-code svg { width: 100%; height: 100%; display: block; shape-rendering: crispEdges; }
-  .t-hint { margin-top: .9rem; font-size: .92rem; color: var(--ink-soft); }
-  .t-id { margin-top: .5rem; font-size: .74rem; letter-spacing: .08em; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  .t-hint { font-size: .92rem; color: var(--ink-soft); }
+  .t-id { margin-top: .7rem; font-family: "Schibsted Grotesk"; font-weight: 600; font-size: 1.15rem; letter-spacing: .12em; color: var(--forest); font-variant-numeric: tabular-nums; }
+  .t-id-lbl { margin-top: .15rem; font-size: .72rem; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-soft); }
 
   /* stav platby — jediné barevné místo na lístku */
   .t-status { display: flex; align-items: center; gap: .8rem; padding: 1rem clamp(1.5rem, 4vw, 2.1rem); font-weight: 600; }
@@ -132,9 +130,9 @@
 <main>
   <div class="wrap">
     <div class="page-head">
-      <span class="eyebrow">Vstupenka</span>
-      <h1>Ukažte QR kód ve studiu</h1>
-      <p>Uložte si tuhle stránku do záložek nebo si ji vyfoťte. Stav platby se aktualizuje sám.</p>
+      <span class="eyebrow">Rezervace</span>
+      <h1>Vaše místo na lekci</h1>
+      <p>QR kód pro vstup máte v potvrzovacím e-mailu — ve studiu ho jen ukážete. Tady vidíte aktuální stav platby.</p>
     </div>
 
     <div id="out"></div>
@@ -144,7 +142,6 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script src="supabase-config.js?v=2"></script>
 <script>
 (function () {
@@ -208,9 +205,9 @@
           '<span><span class="lbl">' + s.lbl + '</span><span class="note">' + s.note + '</span></span>' +
         '</div>' +
         '<div class="t-stub">' +
-          '<div class="qr-frame"><div class="qr-code" id="qr" role="img" aria-label="QR kód vstupenky"></div></div>' +
-          '<p class="t-hint">Ve studiu QR kód jen ukažte — lektorka ho načte.</p>' +
+          '<p class="t-hint">QR kód pro vstup je v potvrzovacím e-mailu. Kdyby se v mailu nezobrazil, ve studiu stačí nadiktovat tenhle kód:</p>' +
           '<p class="t-id">' + esc(id.slice(0, 8).toUpperCase()) + '</p>' +
+          '<p class="t-id-lbl">Kód rezervace</p>' +
         '</div>' +
       '</article>';
 
@@ -218,26 +215,17 @@
       '<button class="btn btn-ghost" id="refresh" type="button">Obnovit stav</button>' +
       '<a class="btn btn-ghost" href="rezervace.html">Zpět na termíny</a>';
     $('refresh').addEventListener('click', load);
-
-    try {
-      const qr = window.qrcode(0, 'M');
-      qr.addData(location.href);
-      qr.make();
-      $('qr').innerHTML = qr.createSvgTag({ cellSize: 8, margin: 0, scalable: true });
-    } catch (e) {
-      $('qr').closest('.qr-frame').outerHTML = '<p class="t-hint">QR kód se nepodařilo vykreslit. Ve studiu stačí říct jméno a kód níže.</p>';
-    }
   }
 
   async function load() {
     const { data, error } = await sb.rpc('get_ticket', { p_id: id });
-    if (error) { msg('Vstupenku se nepodařilo načíst', 'Zkuste to prosím za chvíli znovu, nebo nám napište na <a href="mailto:ahoj@jogaskralicky.cz" style="color:var(--clover)">ahoj@jogaskralicky.cz</a>.'); return; }
-    if (!data) { msg('Vstupenka nenalezena', 'Odkaz je nejspíš neúplný. Použijte prosím ten z potvrzovacího e-mailu.'); return; }
+    if (error) { msg('Rezervaci se nepodařilo načíst', 'Zkuste to prosím za chvíli znovu, nebo nám napište na <a href="mailto:ahoj@jogaskralicky.cz" style="color:var(--clover)">ahoj@jogaskralicky.cz</a>.'); return; }
+    if (!data) { msg('Rezervace nenalezena', 'Odkaz je nejspíš neúplný. Použijte prosím ten z potvrzovacího e-mailu.'); return; }
     render(data);
   }
 
-  if (!CONFIGURED) msg('Vstupenky zatím nejsou zapnuté', 'Napište nám na <a href="mailto:ahoj@jogaskralicky.cz" style="color:var(--clover)">ahoj@jogaskralicky.cz</a> a rezervaci potvrdíme ručně.');
-  else if (!UUID.test(id)) msg('Chybí kód vstupenky', 'Otevřete prosím odkaz z potvrzovacího e-mailu — je zakončený kódem rezervace.');
+  if (!CONFIGURED) msg('Stav rezervace zatím nejde zobrazit', 'Napište nám na <a href="mailto:ahoj@jogaskralicky.cz" style="color:var(--clover)">ahoj@jogaskralicky.cz</a> a rezervaci potvrdíme ručně.');
+  else if (!UUID.test(id)) msg('Chybí kód rezervace', 'Otevřete prosím odkaz z potvrzovacího e-mailu — je zakončený kódem rezervace.');
   else load();
 
   // vrátí-li se člověk z platby na jinou vstupenku, načti ji

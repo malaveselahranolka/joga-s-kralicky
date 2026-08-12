@@ -72,21 +72,30 @@ Aby hostovi po rezervaci přišel potvrzovací e-mail (a tobě kopie). Bez tohot
    - **From Name:** `Jóga s králíčky`
    - **Bcc:** `kovacikovabarbora71@gmail.com`  *(sem chodí tvoje kopie — přehled o nových rezervacích)*
    - **Subject:** `Potvrzení rezervace — Jóga s králíčky`
-   - **Content** (přepni na text a vlož):
-     ```
-     Dobrý den {{name}},
-
-     děkujeme za rezervaci! Vaše místo je potvrzené:
-
-     Lekce: {{lesson}}
-     Kdy: {{datetime}}
-     Počet míst: {{spots}}
-     Kde: {{location}}
-
-     Těšíme se na vás (a králíci taky).
-     Jóga s králíčky
+   - **Content** — přepni na **Code** (`<>`) a vlož:
+     ```html
+     <p>Dobrý den {{name}},</p>
+     <p>děkujeme za rezervaci! Vaše místo je potvrzené:</p>
+     <p>
+       Lekce: {{lesson}}<br />
+       Kdy: {{datetime}}<br />
+       Počet míst: {{spots}}<br />
+       Kde: {{location}}
+     </p>
+     <p style="text-align:center;margin:24px 0">
+       <img src="{{qr_url}}" alt="QR kód vstupenky" width="260" height="260"
+            style="display:block;margin:0 auto;border:1px solid #E3DFD3;border-radius:12px" />
+       <span style="display:block;margin-top:10px;font-size:14px;color:#5C6357">
+         Tenhle QR kód ukažte ve studiu — je to vaše vstupenka.
+       </span>
+     </p>
+     <p>Stav rezervace a platby: <a href="{{ticket_url}}">{{ticket_url}}</a></p>
+     <p>Těšíme se na vás (a králíci taky).<br />Jóga s králíčky</p>
      ```
    Ulož a zapiš si **Template ID** (např. `template_xy34`).
+
+   > Ten obrázek `{{qr_url}}` je **jediné místo, kde host QR kód dostane** —
+   > na webu se QR záměrně nezobrazuje. Bez něj přijde e-mail bez vstupenky.
 4. **Account → General** (nebo **API Keys**) → zkopíruj **Public Key**.
 5. Vlož všechny tři hodnoty do **`supabase-config.js`**:
    ```js
@@ -166,6 +175,8 @@ STRIPE_WEBHOOK_SECRET  = whsec_...   (doplníš v kroku D)
 Pak **Edge Functions → Deploy a new function → Via Editor** a nahraj (jméno přesně):
 - `stripe-create`  — vlož obsah `supabase/functions/stripe-create/index.ts`
 - `stripe-voucher` — vlož obsah `supabase/functions/stripe-voucher/index.ts` (dárkové poukazy)
+- `stripe-confirm` — vlož obsah `supabase/functions/stripe-confirm/index.ts`
+  (ověří platbu hned po návratu z brány); i tady **vypni „Verify JWT"**
 - `stripe-webhook` — vlož obsah `supabase/functions/stripe-webhook/index.ts`;
   u téhle funkce **vypni „Verify JWT"** (Stripe neposílá Supabase token).
 
@@ -210,26 +221,70 @@ Rezervuj/kup poukaz zkušebně. Ve Stripe **Test mode** zaplať kartou
 
 ---
 
-## Vstupenka s QR kódem
+## QR kód (chodí e-mailem, na webu se nezobrazuje)
 
-Po rezervaci dostane host **vstupenku** (`vstupenka.html`) s QR kódem. Ve studiu
+Po rezervaci pošleme hostovi potvrzovací e-mail a **v něm je QR kód**. Ve studiu
 ho jen ukáže na mobilu, ty ho v adminu naskenuješ v záložce **Odbavení** a hned
 vidíš jméno, lekci a jestli má **zaplaceno**.
 
-Odkaz na vstupenku vypadá takhle a je jedinečný pro každou rezervaci:
-`…/vstupenka.html#3f9a21c4-…`. To dlouhé ID je zároveň klíč — kdo ho nemá, nic
-nepřečte. QR kód neobsahuje nic jiného než tenhle odkaz.
+Na webu se QR nikde nekreslí. Stránka `vstupenka.html` slouží už jen jako
+**stav rezervace** (termín, počet míst, stav platby) — host se na ni dostane
+z odkazu v e-mailu.
+
+QR kóduje jediný údaj: odkaz `…/vstupenka.html#3f9a21c4-…`, jedinečný pro každou
+rezervaci. To dlouhé ID je zároveň klíč — kdo ho nemá, nic nepřečte.
 
 ### A) Spusť SQL
 Supabase → **SQL Editor → New query → Run**: obsah **`supabase/tickets.sql`**.
 (Předtím musí být hotové `schema.sql` a `payments.sql`.)
 
-### B) Aby QR ukazoval opravdový stav ze Stripe
-Tohle je ta důležitá část. Bez ní vstupenka funguje, ale u platby bude vždycky
-stát „zaplatíte na místě", protože databáze se o zaplacení nedozví.
+Ověř si, že to prošlo: SQL Editor → `select public.get_ticket('00000000-0000-0000-0000-000000000000');`
+Musí vrátit prázdný řádek, ne chybu „function does not exist".
 
-Web už při platbě posílá Stripu ID rezervace (`client_reference_id`) — nic
-nastavovat nemusíš. Chybí jen **webhook**, kterým Stripe zaplacení oznámí zpět:
+### B) QR do potvrzovacího e-mailu (POVINNÉ — jinak host QR nedostane)
+Web posílá do EmailJS dvě pole navíc: **`qr_url`** (hotový obrázek QR kódu)
+a **`ticket_url`** (odkaz na stav rezervace). Šablona je musí použít, jinak se
+v e-mailu neobjeví nic.
+
+EmailJS → **Email Templates** → tvoje šablona potvrzení → přepni na **Code**
+(`<>`) a vlož do těla e-mailu:
+
+```html
+<p style="text-align:center;margin:24px 0">
+  <img src="{{qr_url}}" alt="QR kód vstupenky" width="260" height="260"
+       style="display:block;margin:0 auto;border:1px solid #E3DFD3;border-radius:12px" />
+  <span style="display:block;margin-top:10px;font-size:14px;color:#5C6357">
+    Tenhle QR kód ukažte ve studiu.
+  </span>
+</p>
+<p>Stav rezervace a platby: <a href="{{ticket_url}}">{{ticket_url}}</a></p>
+```
+
+Pak **Save** a pošli si zkušební rezervaci na vlastní e-mail.
+
+> Některé e-mailové aplikace obrázky napoprvé blokují („Zobrazit obrázky").
+> Proto je na stránce stavu rezervace i krátký kód, který stačí nadiktovat.
+
+### C) Aby stav platby seděl (jinak bude pořád „nezaplaceno")
+Tohle je ta důležitá část. Bez ní u platby vždycky stojí „zaplatíte na místě",
+protože databáze se o zaplacení nedozví. Vedou k ní **dvě nezávislé cesty** —
+nastav obě, jedna druhou jistí.
+
+**Cesta 1 — ověření hned po návratu z platby (funkce `stripe-confirm`)**
+
+1. Supabase → **Edge Functions → Deploy a new function → Via Editor**, jméno
+   přesně `stripe-confirm`, vlož obsah `supabase/functions/stripe-confirm/index.ts`.
+   U téhle funkce **vypni „Verify JWT"**. (Bezpečné: bez platného ID platební
+   session neudělá nic a ven pošle jen „zaplaceno ano/ne".)
+2. Stripe → **Payment Links** → otevři svůj odkaz na vstup → **After payment**
+   → *Redirect customers to your website* a nastav URL i se session ID:
+   ```
+   https://malaveselahranolka.github.io/joga-s-kralicky/rezervace.html?platba=ok&session_id={CHECKOUT_SESSION_ID}
+   ```
+   Ta složená závorka `{CHECKOUT_SESSION_ID}` tam patří přesně takhle — Stripe ji
+   sám nahradí. Bez ní se platba po návratu neověří.
+
+**Cesta 2 — webhook (chytí i platby, kde host zavřel okno)**
 
 1. Supabase → **Edge Functions → Deploy a new function → Via Editor**, jméno
    přesně `stripe-webhook`, vlož obsah `supabase/functions/stripe-webhook/index.ts`.
@@ -242,16 +297,17 @@ nastavovat nemusíš. Chybí jen **webhook**, kterým Stripe zaplacení oznámí
    **Edge Functions → Secrets** jako `STRIPE_WEBHOOK_SECRET`.
    (`STRIPE_SECRET_KEY` už tam máš.)
 
-Po zaplacení se stav promítne do pár vteřin. Na vstupence je tlačítko
-**Obnovit stav**, kdyby to chvíli trvalo.
+> ⚠️ **Nejčastější chyba: test vs. live.** Stripe má dva oddělené světy.
+> Když platíš přes **live** odkaz (`buy.stripe.com/…`, tvůj případ), ale webhook
+> a `STRIPE_SECRET_KEY` máš z **Test mode**, Stripe zaplacení nikam neohlásí a
+> rezervace zůstane „nezaplaceno". V Stripe vpravo nahoře přepni na **live**
+> a zkontroluj, že tam ten endpoint je a že `STRIPE_SECRET_KEY` začíná `sk_live_`.
 
-### C) Odkaz na vstupenku v potvrzovacím e-mailu (nepovinné)
-Web posílá do EmailJS navíc pole **`ticket_url`**. Přidej do své šablony
-potvrzení rezervace řádek, ať ho host má po ruce:
-
-```
-Vstupenka s QR kódem: {{ticket_url}}
-```
+**Kde koukat, když to nesedí:**
+- Stripe → **Developers → Webhooks** → klik na endpoint → *Events* — musí tam
+  být `checkout.session.completed` se zelenou 200. Červená = klikni a přečti chybu.
+- Supabase → **Edge Functions → stripe-confirm / stripe-webhook → Logs**.
+- Supabase → **Table editor → bookings** — sloupec `payment_status` musí být `paid`.
 
 ### D) Jak to používáš u dveří
 Admin → záložka **Odbavení** → **Zapnout kameru** → namíříš na QR hosta.
@@ -260,7 +316,7 @@ Admin → záložka **Odbavení** → **Zapnout kameru** → namíříš na QR h
 - ⚫ **Rezervace zrušena / Vstupenka neznámá** — neplatí.
 
 Kamera nejede (nepovolený přístup, starý telefon)? Pod čtečkou je políčko, kam
-opíšeš krátký kód z dolní části vstupenky.
+opíšeš krátký kód rezervace (host ho vidí na stránce stavu rezervace).
 
 > Kamera funguje jen na **https** (GitHub Pages ano) nebo na `localhost`.
 > Poprvé se prohlížeč zeptá na povolení — dej **Povolit**.
