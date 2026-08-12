@@ -1,8 +1,8 @@
 -- =====================================================================
---  Jóga s králíčky — vstupenka s QR kódem
+--  Jóga s králíčky — stav rezervace (stránka, na kterou míří QR z e-mailu)
 --  Spusť: Supabase → SQL Editor → New query → Run. Bezpečné víckrát.
 --
---  QR kód na vstupence obsahuje odkaz  .../vstupenka.html#<id rezervace>.
+--  QR kód z potvrzovacího e-mailu obsahuje odkaz  .../vstupenka.html#<id rezervace>.
 --  Tahle funkce k tomu ID vrátí jen to, co patří na vstupenku — žádný
 --  e-mail ani telefon. Samotné ID je náhodné UUID, takže funguje jako klíč:
 --  kdo ho nemá, nic nepřečte.
@@ -36,6 +36,4 @@ $$;
 
 grant execute on function public.get_ticket(uuid) to anon, authenticated;
 
--- Hotovo. Neplatné ID vrátí prázdno → stránka ukáže „vstupenka nenalezena".
-</content>
-</invoke>
+-- Hotovo. Neplatné ID vrátí prázdno → stránka ukáže „rezervace nenalezena".
