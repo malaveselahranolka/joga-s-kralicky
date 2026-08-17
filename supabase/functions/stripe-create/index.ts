@@ -127,11 +127,20 @@ Deno.serve(async (req) => {
       border_style: "rounded",
     };
 
-    // Kdyby Stripe branding_settings nepřijal, platba se založí bez něj.
-    // Radši brána v základním vzhledu než žádná brána.
+    // Nastavení navíc, bez kterých platba funguje taky. Kdyby je Stripe
+    // nepřijal, založíme platbu bez nich — radši brána v základním vzhledu
+    // než žádná brána.
+    const extras = {
+      branding_settings: branding,
+      // Vypne peněženku Link. Nejde vypnout přes payment_method_types —
+      // Link se veze s kartou, proto tenhle samostatný přepínač.
+      // Apple Pay a Google Pay tím nezmizí.
+      wallet_options: { link: { display: "never" } },
+    };
+
     let session;
     try {
-      session = await stripe.checkout.sessions.create({ ...params, branding_settings: branding });
+      session = await stripe.checkout.sessions.create({ ...params, ...extras });
     } catch (_e) {
       session = await stripe.checkout.sessions.create(params);
     }
