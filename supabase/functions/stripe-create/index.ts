@@ -67,6 +67,15 @@ Deno.serve(async (req) => {
     const base = env("SITE_URL", "https://malaveselahranolka.github.io/joga-s-kralicky/").replace(/\/$/, "");
     const persons = qty === 1 ? "1 osoba" : (qty < 5 ? qty + " osoby" : qty + " osob");
 
+    // Fotka k lekci — v platební bráně se ukáže nad názvem, ať to není holá plocha.
+    // Stejné přiřazení jako na webu (rezervace.html → thumbFor).
+    const t = lessonTitle.toLowerCase();
+    const photo =
+      t.includes("ranní") ? "yoga-7.jpg" :
+      t.includes("děti") ? "rabbit-6.jpg" :
+      (t.includes("soumrak") || t.includes("restorativ")) ? "yoga-4.jpg" :
+      t.includes("hatha") ? "yoga-11.jpg" : "rabbit-1.jpg";
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       customer_email: bk.email,
@@ -79,9 +88,13 @@ Deno.serve(async (req) => {
           product_data: {
             name: `${lessonTitle} — vstup (Jóga s králíčky)`,
             description: `Rezervace na jméno, ${persons} × ${entryCzk} Kč`,
+            images: [`${base}/assets/photos/${photo}`],
           },
         },
       }],
+      custom_text: {
+        submit: { message: "Místo na lekci držíme 35 minut, než platbu dokončíte." },
+      },
       metadata: { booking_id: String(bk.id), spots: String(qty) },
       payment_intent_data: { metadata: { booking_id: String(bk.id), spots: String(qty) } },
       // {CHECKOUT_SESSION_ID} doplní Stripe — web se pak brány zeptá,
