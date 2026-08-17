@@ -83,6 +83,11 @@ Deno.serve(async (req) => {
     const params: any = {
       mode: "payment",
       customer_email: bk.email,
+      // Jen karta — vypíná Link (peněženka Stripu) a Klarnu (nákup na splátky).
+      // Apple Pay a Google Pay tím NEzmizí, ty jezdí jako karta.
+      // POZOR: tohle přebíjí Settings → Payment methods ve Stripe Dashboardu.
+      // Chceš někdy přidat další způsob platby? Přidej ho sem do seznamu.
+      payment_method_types: ["card"],
       expires_at: Math.floor(Date.now() / 1000) + SESSION_MINUTES * 60,
       line_items: [{
         quantity: qty,

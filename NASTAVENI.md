@@ -252,8 +252,18 @@ display_name:     'Jóga s králíčky',
 >
 > Logo a ikona se berou z účtu (v dashboardu je nahrané máš), ty v kódu nejsou.
 
-Po změně barev musíš funkci `stripe-create` znovu nasadit (Edge Functions →
-`stripe-create` → vložit nový obsah → Deploy).
+Ve stejném souboru se řídí i **způsoby platby**:
+
+```js
+payment_method_types: ['card'],   // jen karta (+ Apple Pay a Google Pay)
+```
+
+Link a Klarna jsou tím vypnuté. Apple Pay a Google Pay zůstávají — jedou jako
+karta. I tohle **přebíjí** Dashboard (*Settings → Payment methods*); chceš-li
+další způsob platby, přidej ho do toho seznamu.
+
+Po změně barev nebo způsobů platby musíš funkci `stripe-create` znovu nasadit
+(Edge Functions → `stripe-create` → Code → vložit nový obsah → Deploy updates).
 
 ### F) Dárkový poukaz + e-mail s kódem (EmailJS)
 Poukaz se zaplatí přes Stripe, po zaplacení web ukáže **kód** a pošle ho e-mailem.
