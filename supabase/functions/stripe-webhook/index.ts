@@ -42,14 +42,20 @@ Deno.serve(async (req) => {
   const isVoucher = obj?.metadata?.type === "voucher";
 
   if (bookingId) {
+    // Sloupec hold_expires_at přidává až online-only.sql, proto se nastavuje
+    // zvlášť — kdyby ještě nebyl, nesmí to shodit zápis stavu platby.
     if (event.type === "checkout.session.completed") {
       await admin.from("bookings").update({
         payment_status: "paid",
         paid_at: new Date().toISOString(),
         payment_method: "online",
       }).eq("id", bookingId);
+      await admin.from("bookings").update({ hold_expires_at: null }).eq("id", bookingId);
     } else if (event.type === "checkout.session.expired" || event.type === "checkout.session.async_payment_failed") {
       await admin.from("bookings").update({ payment_status: "failed" }).eq("id", bookingId);
+      // platba nedopadla → místo pustíme hned zpátky do nabídky
+      await admin.from("bookings").update({ hold_expires_at: new Date().toISOString() })
+        .eq("id", bookingId).neq("payment_status", "paid");
     }
   } else if (isVoucher && event.type === "checkout.session.completed") {
     // dárkový poukaz zaplacen → vygeneruj kód a ulož (kód je deterministický ze session id)

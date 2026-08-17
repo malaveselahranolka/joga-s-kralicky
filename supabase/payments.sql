@@ -3,9 +3,9 @@
 --  Spusť: Supabase → SQL Editor → New query → Run.
 --  Je bezpečné spustit víckrát (IF NOT EXISTS).
 --
---  Platba je nepovinná: rezervace vzniká dál přes create_booking a je
---  platná i bez platby. Tyhle sloupce jen evidují případnou zálohu
---  (online přes Stripe, nebo „na místě" odškrtnutou v adminu).
+--  Tyhle sloupce evidují stav platby. Samotné pravidlo „platí se jen
+--  online a rezervace bez platby po chvíli propadne" přidává až
+--  `online-only.sql` — spusť ho hned po tomhle souboru.
 -- =====================================================================
 
 alter table public.bookings add column if not exists payment_status text not null default 'none'

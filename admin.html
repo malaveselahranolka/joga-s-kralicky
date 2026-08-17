@@ -323,7 +323,7 @@
           <option value="all">Všechny</option>
           <option value="paid">Zaplaceno</option>
           <option value="pending">Platba čeká</option>
-          <option value="onsite">Zaplatí na místě</option>
+          <option value="unpaid">Nezaplaceno</option>
         </select>
       </div>
       <p class="muted" id="paySummary" style="margin:-.4rem 0 1rem;font-size:.86rem"></p>
@@ -428,26 +428,31 @@
   const fmtDT = (iso) => cap(new Date(iso).toLocaleString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' }));
   const esc = (s) => (s == null ? '' : String(s)).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2600); }
-  function bookedFor(lessonId) { return bookings.filter((b) => b.lesson_id === lessonId && b.status !== 'cancelled').reduce((s, b) => s + b.spots, 0); }
+  // propadlé nezaplacené rezervace místo neblokují — stejně to počítá i web
+  function bookedFor(lessonId) { return bookings.filter((b) => b.lesson_id === lessonId && b.status !== 'cancelled' && !holdExpired(b)).reduce((s, b) => s + b.spots, 0); }
 
-  // platba: graceful i bez sloupců (dokud nespustíš comgate.sql) → bere se jako 'na místě'
+  // Platí se jen online. Nezaplacená rezervace drží místo do hold_expires_at,
+  // pak propadne — místo se samo vrátí do nabídky (viz supabase/online-only.sql).
   function payCat(b) {
     const st = b.payment_status || 'none';
     if (st === 'paid') return 'paid';
-    if (st === 'pending') return 'pending';
-    if (st === 'failed' || st === 'cancelled') return 'onsite'; // platba neproběhla → zaplatí na místě
-    return 'onsite';
+    if (st === 'pending' && !holdExpired(b)) return 'pending';
+    return 'unpaid';
+  }
+  function holdExpired(b) {
+    return !!b.hold_expires_at && new Date(b.hold_expires_at).getTime() < Date.now() && b.payment_status !== 'paid';
   }
   function payBadge(b) {
     const cat = payCat(b);
-    if (cat === 'paid') return '<span class="pill pill-paid">' + (b.payment_method === 'cash' ? 'Zaplaceno na místě' : 'Zaplaceno online') + '</span>';
-    if (cat === 'pending') return '<span class="pill pill-pending">Platba čeká</span>';
-    return '<span class="pill pill-onsite">Zaplatí na místě</span>';
+    if (cat === 'paid') return '<span class="pill pill-paid">' + (b.payment_method === 'cash' ? 'Zaplaceno ručně' : 'Zaplaceno online') + '</span>';
+    if (cat === 'pending') return '<span class="pill pill-pending">Čeká na platbu</span>';
+    if (holdExpired(b)) return '<span class="pill pill-cancel">Propadlo — nezaplaceno</span>';
+    return '<span class="pill pill-onsite">Nezaplaceno</span>';
   }
   function payActionBtn(b) {
     return payCat(b) === 'paid'
       ? '<button class="btn btn-ghost btn-sm" data-unpaid="' + b.id + '">Zrušit platbu</button>'
-      : '<button class="btn btn-ghost btn-sm" data-paid="' + b.id + '">Označit zaplaceno</button>';
+      : '<button class="btn btn-ghost btn-sm" data-paid="' + b.id + '">Označit zaplaceno ručně</button>';
   }
 
   // auth ---------------------------------------------------------------
@@ -830,10 +835,10 @@
 
     // souhrn plateb (z aktivních rezervací ve výběru lekce, před filtrem platby)
     const active = list.filter((b) => b.status !== 'cancelled');
-    const cnt = { paid: 0, pending: 0, onsite: 0 };
+    const cnt = { paid: 0, pending: 0, unpaid: 0 };
     active.forEach((b) => { cnt[payCat(b)]++; });
     $('paySummary').textContent = active.length
-      ? cnt.paid + '× zaplaceno · ' + cnt.onsite + '× zaplatí na místě' + (cnt.pending ? ' · ' + cnt.pending + '× platba čeká' : '')
+      ? cnt.paid + '× zaplaceno · ' + cnt.unpaid + '× nezaplaceno' + (cnt.pending ? ' · ' + cnt.pending + '× čeká na platbu' : '')
       : '';
 
     if (payFilter !== 'all') list = list.filter((b) => b.status !== 'cancelled' && payCat(b) === payFilter);
@@ -859,12 +864,13 @@
     const id = btn.dataset.cancelb || btn.dataset.restore || btn.dataset.delb || btn.dataset.paid || btn.dataset.unpaid;
     if (!id) return false;
     if (btn.dataset.paid) {
-      const { error } = await sb.from('bookings').update({ payment_status: 'paid', payment_method: 'cash', paid_at: new Date().toISOString() }).eq('id', id);
-      if (error) toast('Nejdřív spusťte supabase/payments.sql'); else { toast('Označeno jako zaplaceno'); await loadAll(); }
+      // ruční potvrzení mimo bránu (telefon, převod) — a zruší se držení místa
+      const { error } = await sb.from('bookings').update({ payment_status: 'paid', payment_method: 'cash', paid_at: new Date().toISOString(), hold_expires_at: null }).eq('id', id);
+      if (error) toast('Nejdřív spusťte supabase/payments.sql a online-only.sql'); else { toast('Označeno jako zaplaceno'); await loadAll(); }
       return true;
     }
     if (btn.dataset.unpaid) {
-      const { error } = await sb.from('bookings').update({ payment_status: 'none', payment_method: null, paid_at: null }).eq('id', id);
+      const { error } = await sb.from('bookings').update({ payment_status: 'none', payment_method: null, paid_at: null, hold_expires_at: null }).eq('id', id);
       if (error) toast('Akce selhala'); else { toast('Platba zrušena'); await loadAll(); }
       return true;
     }
@@ -976,14 +982,15 @@
     if (b.status === 'cancelled') { scanCard('scan-bad', ico.no, 'Rezervace zrušena', who); return; }
 
     if (b.payment_status === 'paid') {
-      scanCard('scan-yes', ico.ok, b.payment_method === 'cash' ? 'Zaplaceno na místě' : 'Zaplaceno online', who);
-    } else if (b.payment_status === 'pending') {
+      scanCard('scan-yes', ico.ok, b.payment_method === 'cash' ? 'Zaplaceno ručně' : 'Zaplaceno online', who);
+    } else if (b.payment_status === 'pending' && !holdExpired(b)) {
       scanCard('scan-no', ico.warn, 'Platba se zpracovává', who,
         '<button class="btn btn-ghost btn-sm" data-rescan="' + b.id + '">Zkontrolovat znovu</button>' +
-        '<button class="btn btn-primary btn-sm" data-paid="' + b.id + '">Zaplaceno na místě</button>');
+        '<button class="btn btn-primary btn-sm" data-paid="' + b.id + '">Označit zaplaceno ručně</button>');
     } else {
       scanCard('scan-no', ico.warn, 'Nezaplaceno', who,
-        '<button class="btn btn-primary btn-sm" data-paid="' + b.id + '">Zaplaceno na místě</button>');
+        '<button class="btn btn-ghost btn-sm" data-rescan="' + b.id + '">Zkontrolovat znovu</button>' +
+        '<button class="btn btn-primary btn-sm" data-paid="' + b.id + '">Označit zaplaceno ručně</button>');
     }
   }
 

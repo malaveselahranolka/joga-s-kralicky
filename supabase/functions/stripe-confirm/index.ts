@@ -62,6 +62,11 @@ Deno.serve(async (req) => {
     }).eq("id", bookingId);
     if (error) return json({ ok: false, error: "db_update_failed", detail: error.message }, 500);
 
+    // Zaplaceno → místo se už nemá uvolňovat. Zvlášť a bez hlídání chyby:
+    // kdyby sloupec ještě nebyl (nespuštěný online-only.sql), platba se tím
+    // nesmí rozbít — a „paid" místo drží tak jako tak.
+    await admin.from("bookings").update({ hold_expires_at: null }).eq("id", bookingId);
+
     return json({ ok: true, paid: true });
   } catch (e) {
     return json({ ok: false, error: "server_error", detail: String(e) }, 500);

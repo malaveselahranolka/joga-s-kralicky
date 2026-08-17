@@ -139,35 +139,49 @@ Nastav ji u každé lekce při zakládání (pole *Kapacita*). Výchozí je 12.
 
 ---
 
-## Platby přes Stripe (volitelná záloha)
+## Platby přes Stripe (POUZE ONLINE, povinné před lekcí)
 
-Web umí **volitelnou online zálohu** přes **Stripe Checkout**. Je to
-**vypnuté**, dokud to sám nezapneš — do té doby je rezervace zdarma jako teď.
+Vstup se platí **výhradně online kartou** přes **Stripe Checkout**, hned při
+rezervaci. Na místě se **neplatí**. Rezervace bez zaplacení jen **drží místo
+35 minut**, pak se místo samo vrátí do nabídky.
+
+Cenu počítá **server**: `cena za osobu × počet míst`. Když si někdo rezervuje
+3 místa na jedno jméno, brána mu rovnou napočítá 3 × 499 Kč. Prohlížeč do
+částky nemluví (nešlo by ji podvrhnout).
 
 > Tajný klíč Stripe (`sk_...`) **nikdy nedávej do `payment-config.js` ani do
 > repozitáře**. Patří jen na server (Supabase Edge Functions, krok C níže).
 
 ### Jak to funguje
-1. Zákazník dokončí rezervaci jako dosud (místo se hned drží).
-2. Na potvrzovací obrazovce se navíc objeví tlačítko **„Zaplatit zálohu online"**.
-3. Po kliknutí ho web pošle na **Stripe Checkout**; po zaplacení se vrátí zpět.
-4. Stripe pošle potvrzení na server (webhook) a stav platby se uloží k rezervaci.
+1. Zákazník vyplní formulář a zvolí počet míst (cena se mu hned přepočítá).
+2. Web založí rezervaci, **drží místo 35 minut** a rovnou ho pošle do brány.
+3. Ve Stripe zaplatí celou částku (v rozpisu vidí „3 × 499 Kč").
+4. Po návratu se web zeptá Stripu (`stripe-confirm`), zapíše „zaplaceno"
+   a **teprve teď** odešle potvrzovací e-mail s QR kódem.
+5. Webhook (`stripe-webhook`) je druhá, nezávislá cesta pro případ,
+   že host zavře okno dřív, než se vrátí.
 
-Platba je **nepovinná** — rezervace platí i bez ní.
+Nezaplacená rezervace **nikdy nezablokuje místo natrvalo** — po vypršení
+držení ji web přestane počítat do obsazenosti.
 
 ### A) Účet a klíče
 1. Založ účet na **https://stripe.com**. Pro zkoušení nech účet v **Test mode**.
 2. **Developers → API keys** → zkopíruj **Secret key** (`sk_test_...`).
 
 ### B) Databáze (jednorázově)
-V Supabase → **SQL Editor** → **New query** vlož obsah souboru
-**`supabase/payments.sql`** a dej **Run**. Přidá k rezervacím sloupce o stavu platby.
+V Supabase → **SQL Editor** → **New query** spusť postupně:
+1. **`supabase/payments.sql`** — sloupce o stavu platby,
+2. **`supabase/online-only.sql`** — držení místa do zaplacení, přepočet volných
+   míst a rezervace pro víc osob na jedno jméno (1–8).
+
+*(Když jsi `tickets.sql` a `schema.sql` spustil dřív, nevadí — `online-only.sql`
+je jen přepíše novější verzí.)*
 
 ### C) Nasazení funkcí + tajné klíče (Supabase Dashboard, bez CLI)
 **Edge Functions → Secrets** nastav:
 ```
 STRIPE_SECRET_KEY      = sk_test_...
-PAYMENT_DEPOSIT_CZK    = 499
+PAYMENT_ENTRY_CZK      = 499          (cena za JEDNO místo; musí sedět s payment-config.js)
 PAYMENT_VOUCHER_CZK    = 499
 SITE_URL               = https://malaveselahranolka.github.io/joga-s-kralicky/
 STRIPE_WEBHOOK_SECRET  = whsec_...   (doplníš v kroku D)
@@ -196,13 +210,29 @@ Otevři **`payment-config.js`** a nastav:
 window.PAYMENTS = {
   provider: 'stripe',
   enabled: true,
-  functionsUrl: 'https://TVUJ_PROJECT_REF.functions.supabase.co',
-  depositCzk: 499,
+  entryCzk: 499,     // cena za JEDNO místo — stejné číslo jako PAYMENT_ENTRY_CZK
+  maxSpots: 4,       // kolik míst smí host koupit na jedno jméno (max 8)
+  holdMinutes: 35,   // jak dlouho držíme nezaplacené místo
+  voucherUrl: 'https://buy.stripe.com/…',   // Payment Link na dárkový poukaz
   voucherCzk: 499,
+  fallbackEntryUrl: 'https://buy.stripe.com/…',  // záchranná brzda, viz níž
 };
 ```
-Commitni + pushni. Hotovo — po rezervaci se nabídne platba a objeví se karta
-na koupi dárkového poukazu.
+
+> **Co je `fallbackEntryUrl`:** starý pevný odkaz na jeden vstup za 499 Kč.
+> Použije se jen když funkce `stripe-create` neodpoví (není nasazená, výpadek)
+> **a jde o rezervaci na jedno místo**. U víc osob by strhl málo, takže se tam
+> platba radši nespustí a host dostane výzvu napsat vám. Až bude `stripe-create`
+> nasazená, tahle cesta se nikdy nepoužije — nech ji tam jako pojistku.
+Commitni + pushni. Hotovo — po odeslání formuláře jde host rovnou do platby
+a na stránce s termíny je i karta na koupi dárkového poukazu.
+
+> **Cenu měň na dvou místech naráz:** `entryCzk` v `payment-config.js`
+> (co host vidí) a secret `PAYMENT_ENTRY_CZK` (co brána opravdu strhne).
+> Kdyby se rozešly, platí ta serverová.
+>
+> **`enabled: false`** je nouzová brzda: platby se vypnou a rezervace budou
+> zdarma jako dřív. Nech `true`, dokud platby fungují.
 
 ### F) Dárkový poukaz + e-mail s kódem (EmailJS)
 Poukaz se zaplatí přes Stripe, po zaplacení web ukáže **kód** a pošle ho e-mailem.
@@ -265,9 +295,9 @@ Pak **Save** a pošli si zkušební rezervaci na vlastní e-mail.
 > Některé e-mailové aplikace obrázky napoprvé blokují („Zobrazit obrázky").
 > Proto je na stránce stavu rezervace i krátký kód, který stačí nadiktovat.
 
-### C) Aby stav platby seděl (jinak bude pořád „nezaplaceno")
-Tohle je ta důležitá část. Bez ní u platby vždycky stojí „zaplatíte na místě",
-protože databáze se o zaplacení nedozví. Vedou k ní **dvě nezávislé cesty** —
+### C) Aby stav platby seděl (jinak zůstane „nezaplaceno")
+Tohle je ta důležitá část — bez ní se databáze o zaplacení nedozví a host
+zůstane viset na „Čeká na zaplacení". Vedou k ní **dvě nezávislé cesty** —
 nastav obě, jedna druhou jistí.
 
 **Cesta 1 — ověření hned po návratu z platby (funkce `stripe-confirm`)**
@@ -276,13 +306,10 @@ nastav obě, jedna druhou jistí.
    přesně `stripe-confirm`, vlož obsah `supabase/functions/stripe-confirm/index.ts`.
    U téhle funkce **vypni „Verify JWT"**. (Bezpečné: bez platného ID platební
    session neudělá nic a ven pošle jen „zaplaceno ano/ne".)
-2. Stripe → **Payment Links** → otevři svůj odkaz na vstup → **After payment**
-   → *Redirect customers to your website* a nastav URL i se session ID:
-   ```
-   https://malaveselahranolka.github.io/joga-s-kralicky/rezervace.html?platba=ok&session_id={CHECKOUT_SESSION_ID}
-   ```
-   Ta složená závorka `{CHECKOUT_SESSION_ID}` tam patří přesně takhle — Stripe ji
-   sám nahradí. Bez ní se platba po návratu neověří.
+2. Návratovou adresu **nikde nenastavuješ** — platbu zakládá funkce
+   `stripe-create` a `?platba=ok&session_id={CHECKOUT_SESSION_ID}` si do ní
+   doplní sama. Jen zkontroluj secret `SITE_URL` (krok C výše), ať míří na tvůj web.
+   *(Ruční nastavení „After payment" má pořád jen Payment Link na dárkový poukaz.)*
 
 **Cesta 2 — webhook (chytí i platby, kde host zavřel okno)**
 
@@ -311,8 +338,11 @@ nastav obě, jedna druhou jistí.
 
 ### D) Jak to používáš u dveří
 Admin → záložka **Odbavení** → **Zapnout kameru** → namíříš na QR hosta.
-- 🟢 **Zaplaceno online / na místě** — pouštíš dál.
-- 🟠 **Nezaplaceno** — vybereš peníze a klikneš **Zaplaceno na místě**.
+- 🟢 **Zaplaceno online** — pouštíš dál. (E-mail s QR chodí až po zaplacení,
+  takže kdo má QR, má skoro vždy i zaplaceno.)
+- 🟠 **Nezaplaceno / Platba se zpracovává** — dej **Zkontrolovat znovu**; pokud
+  to pořád nesedí a peníze vyřešíte jinak (převod, výjimka), klikni
+  **Označit zaplaceno ručně**.
 - ⚫ **Rezervace zrušena / Vstupenka neznámá** — neplatí.
 
 Kamera nejede (nepovolený přístup, starý telefon)? Pod čtečkou je políčko, kam
@@ -348,21 +378,21 @@ Adresy se ukládají do databáze a vidíš je v adminu v záložce **Newsletter
 
 ## Platby ve správě rezervací
 
-Když spustíš **`supabase/payments.sql`** (viz sekce *Platby přes Stripe*),
-přibude u každé rezervace v adminu **stav platby**:
+Když spustíš **`supabase/payments.sql`** a **`supabase/online-only.sql`**
+(viz sekce *Platby přes Stripe*), má každá rezervace v adminu **stav platby**:
 
-- **Zaplaceno online** — host zaplatil zálohu online (Stripe).
-- **Platba čeká** — platbu spustil, ale ještě nedokončil.
-- **Zaplatí na místě** — online neplatil (typicky ruční / telefonická rezervace).
+- **Zaplaceno online** — host zaplatil v bráně. Jediná běžná cesta.
+- **Zaplaceno ručně** — odškrtla jsi to sama (telefonická rezervace, převod,
+  výjimka). Jde vrátit přes **„Zrušit platbu"**.
+- **Čeká na platbu** — platbu spustil, ale ještě nedokončil; místo mu držíme.
+- **Propadlo — nezaplaceno** — držení vypršelo. **Místo už je zase volné**,
+  řádek zůstává jen pro přehled (klidně ho smaž).
+- **Nezaplaceno** — typicky ruční rezervace z adminu; ta místo drží napořád.
 
-V záložce **Rezervace** navíc:
-- Tlačítko **„Označit zaplaceno"** u rezervace = host zaplatil na místě
-  (hotově/kartou na recepci). Zase to jde vrátit přes **„Zrušit platbu"**.
-- Filtr **Platba** (vše / zaplaceno / platba čeká / zaplatí na místě) a
-  krátký souhrn nad seznamem.
+V záložce **Rezervace** je i filtr **Platba** a souhrn nad seznamem.
 
-> Tahle evidence funguje i **bez** zapnutých online plateb — stačí spustit
-> `supabase/payments.sql` a platby na místě si odškrtáváš ručně.
+> **Ruční rezervace (telefon / walk-in)** z adminu se online neplatí a její
+> místo se nikdy samo neuvolní — je to tvoje výjimka z pravidla „jen online".
 
 ---
 

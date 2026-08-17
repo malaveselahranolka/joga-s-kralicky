@@ -2,6 +2,13 @@
 --  Jóga s králíčky — databázové schéma pro Supabase
 --  Spusť celý tento soubor v Supabase: SQL Editor → New query → Run.
 --  Je bezpečné spustit ho víckrát (používá IF NOT EXISTS / OR REPLACE).
+--
+--  ⚠️ POZOR: tenhle soubor je ZÁKLAD. Platby jen online (držení místa do
+--  zaplacení, přepočet volných míst) přidává až `online-only.sql`, který
+--  zdejší `public_lessons` a `create_booking` přepisuje novější verzí.
+--  Když někdy spustíš schema.sql znovu, spusť po něm i:
+--      payments.sql → tickets.sql → online-only.sql
+--  jinak se web vrátí k rezervacím bez placení.
 -- =====================================================================
 
 -- ---------------------------------------------------------------------

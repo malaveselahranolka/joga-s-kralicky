@@ -143,10 +143,14 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=2"></script>
+<script src="payment-config.js?v=4"></script>
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
   const PLACE = 'Studio klidu, Údolní 12, Brno-střed';
+  const PAY = window.PAYMENTS || {};
+  const PRICE = Number(PAY.entryCzk || PAY.depositCzk || 499);
+  const czk = (n) => Number(n).toLocaleString('cs-CZ') + ' Kč';
   const esc = (s) => (s == null ? '' : String(s)).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const two = (n) => String(n).padStart(2, '0');
   const cap = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
@@ -161,13 +165,55 @@
   const CONFIGURED = /^https:\/\/.+\.supabase\.co/.test(window.SUPABASE_URL || '') &&
     !!window.SUPABASE_ANON_KEY && window.SUPABASE_ANON_KEY.length > 20 && typeof window.supabase !== 'undefined';
   const sb = CONFIGURED ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY) : null;
+  const PAY_ON = !!PAY.enabled && CONFIGURED;
+
+  // Doplacení online — částku (cena × počet míst) spočítá server ve stripe-create.
+  // Když funkce neodpoví, sáhneme po pevném odkazu, ale jen u jednoho místa
+  // (u víc osob by strhl málo — to radši neuděláme, stejně jako na rezervaci).
+  async function payNow(e) {
+    const b = e.currentTarget, keep = b.innerHTML, howMany = Number(b.dataset.spots) || 1;
+    b.disabled = true; b.textContent = 'Otevírám platbu…';
+    let status = 0, body = null;
+    try {
+      const r = await fetch(String(window.SUPABASE_URL).replace(/\/$/, '') + '/functions/v1/stripe-create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: window.SUPABASE_ANON_KEY,
+          Authorization: 'Bearer ' + window.SUPABASE_ANON_KEY
+        },
+        body: JSON.stringify({ booking_id: id })
+      });
+      status = r.status; body = await r.json().catch(() => null);
+    } catch (err) { /* síť/CORS → bereme jako nedostupnou bránu */ }
+
+    if (body && body.ok && body.url) { window.location.href = body.url; return; }
+    const fallback = PAY.fallbackEntryUrl || '';
+    if ((!body || status === 404 || status === 0) && fallback && howMany === 1) {
+      window.location.href = fallback + (fallback.includes('?') ? '&' : '?') + 'client_reference_id=' + encodeURIComponent(id);
+      return;
+    }
+    b.disabled = false; b.innerHTML = keep;
+    alert(body && body.error === 'full'
+      ? 'Mezitím se místa zaplnila, rezervaci proto nelze zaplatit. Napište nám prosím na ahoj@jogaskralicky.cz.'
+      : 'Platební bránu se nepodařilo otevřít. Zkuste to prosím znovu, nebo nám napište na ahoj@jogaskralicky.cz.');
+  }
 
   function msg(title, text) {
     $('out').innerHTML = '<div class="msg"><h2>' + esc(title) + '</h2><p>' + text + '</p></div>';
     $('acts').innerHTML = '<a class="btn btn-primary" href="rezervace.html">Zpět na termíny <span class="arrow">→</span></a>';
   }
 
-  // stav platby → jeden ze tří vzhledů
+  // Vstup se platí jen online. Nezaplacená rezervace drží místo do hold_expires_at,
+  // pak propadne — proto tu nabízíme tlačítko Zaplatit, dokud držení běží.
+  const holdLeftMs = (t) => (t && t.hold_expires_at) ? (new Date(t.hold_expires_at).getTime() - Date.now()) : Infinity;
+  const amountTxt = (t) => czk(t.payment_amount ? Math.round(t.payment_amount / 100) : PRICE * (t.spots || 1));
+  function canPay(t) {
+    return t.status !== 'cancelled' && t.lesson_status !== 'cancelled' &&
+      t.payment_status !== 'paid' && holdLeftMs(t) > 0;
+  }
+
+  // stav platby → jeden ze čtyř vzhledů
   function statusBlock(t) {
     const ok = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg>';
     const info = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>';
@@ -175,14 +221,22 @@
       return { cls: 'is-void', icon: info, lbl: 'Rezervace zrušena', note: 'Tahle vstupenka už neplatí.' };
     }
     if (t.payment_status === 'paid') {
-      const how = t.payment_method === 'cash' ? 'na místě' : 'online';
-      return { cls: 'is-paid', icon: ok, lbl: 'Zaplaceno ' + how, note: 'Vstup je vyřízený, nic dalšího neplatíte.' };
+      const how = t.payment_method === 'cash' ? 'potvrzeno studiem' : 'online';
+      return { cls: 'is-paid', icon: ok, lbl: 'Zaplaceno (' + how + ')', note: 'Vstup je vyřízený, nic dalšího neplatíte.' };
+    }
+    const left = holdLeftMs(t);
+    if (left <= 0) {
+      return { cls: 'is-void', icon: info, lbl: 'Rezervace propadla', note: 'Nebyla zaplacená včas a místo se vrátilo do nabídky.' };
     }
     if (t.payment_status === 'pending') {
-      return { cls: 'is-open', icon: info, lbl: 'Platba se zpracovává', note: 'Za chvíli dejte Obnovit stav.' };
+      return { cls: 'is-open', icon: info, lbl: 'Čeká na zaplacení', note: 'Místo držíme do ' + holdTxt(t) + ' — zaplaťte prosím online.' };
     }
-    return { cls: 'is-open', icon: info, lbl: 'Zaplatíte na místě', note: 'Rezervace platí i tak — stačí přijít.' };
+    return { cls: 'is-open', icon: info, lbl: 'Nezaplaceno', note: 'Vstup se platí online, na místě se neplatí.' };
   }
+  const holdTxt = (t) => {
+    const d = new Date(t.hold_expires_at);
+    return two(d.getHours()) + ':' + two(d.getMinutes());
+  };
 
   function render(t) {
     const dt = new Date(t.starts_at);
@@ -198,6 +252,7 @@
           '<div class="t-rows">' +
             '<div class="t-row"><span class="k">Jméno</span><span class="v">' + esc(t.name) + '</span></div>' +
             '<div class="t-row"><span class="k">Počet míst</span><span class="v">' + spotsTxt(t.spots) + '</span></div>' +
+            '<div class="t-row"><span class="k">Cena celkem</span><span class="v">' + amountTxt(t) + '</span></div>' +
           '</div>' +
         '</div>' +
         '<div class="t-status ' + s.cls + '">' +
@@ -211,10 +266,13 @@
         '</div>' +
       '</article>';
 
+    const payable = PAY_ON && canPay(t);
     $('acts').innerHTML =
+      (payable ? '<button class="btn btn-primary" id="payNow" type="button" data-spots="' + (t.spots || 1) + '">Zaplatit ' + amountTxt(t) + ' online <span class="arrow">→</span></button>' : '') +
       '<button class="btn btn-ghost" id="refresh" type="button">Obnovit stav</button>' +
       '<a class="btn btn-ghost" href="rezervace.html">Zpět na termíny</a>';
     $('refresh').addEventListener('click', load);
+    if (payable) $('payNow').addEventListener('click', payNow);
   }
 
   async function load() {

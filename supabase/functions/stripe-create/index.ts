@@ -1,12 +1,15 @@
 // =====================================================================
-//  stripe-create — založí Stripe Checkout platbu (zálohu) k rezervaci
-//  Volá se z webu po úspěšné rezervaci. Vstup: { booking_id }
-//  Výstup: { ok, url }  → web na 'url' přesměruje zákazníka (Stripe Checkout).
+//  stripe-create — založí Stripe Checkout platbu k rezervaci
+//  Volá se z webu hned po vytvoření rezervace. Vstup: { booking_id }
+//  Výstup: { ok, url, amount_czk, spots }  → web na 'url' přesměruje hosta.
 //
-//  Bezpečnost: částku určuje SERVER (PAYMENT_DEPOSIT_CZK), ne prohlížeč.
+//  Platí se VÝHRADNĚ ONLINE a částku určuje SERVER, ne prohlížeč:
+//      cena za místo (PAYMENT_ENTRY_CZK) × počet míst v rezervaci
+//  Díky quantity vidí host v bráně i rozpis „499 Kč × 3 osoby".
+//
 //  Tajný klíč Stripe je jen v prostředí (Supabase secrets):
 //    STRIPE_SECRET_KEY   – sk_test_... / sk_live_...
-//    PAYMENT_DEPOSIT_CZK – výše zálohy v Kč (výchozí 290)
+//    PAYMENT_ENTRY_CZK   – cena za jedno místo v Kč (výchozí 499)
 //    SITE_URL            – adresa webu (návrat po platbě)
 // =====================================================================
 import Stripe from "https://esm.sh/stripe@14.21.0?target=denonext";
@@ -18,6 +21,10 @@ const cors = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 const env = (n: string, d = "") => Deno.env.get(n) ?? d;
+
+// Jak dlouho platí odkaz na platbu. Stripe povoluje nejméně 30 minut a web
+// drží místo 35 minut (supabase/online-only.sql), takže se to potkává.
+const SESSION_MINUTES = 30;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -35,32 +42,51 @@ Deno.serve(async (req) => {
     const admin = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"));
     const { data: bk, error } = await admin
       .from("bookings")
-      .select("id, email, spots, payment_status, lesson:lessons(title)")
+      .select("id, email, spots, status, payment_status, lesson:lessons(title)")
       .eq("id", booking_id)
       .single();
     if (error || !bk) return json({ ok: false, error: "booking_not_found" }, 404);
+    if (bk.status === "cancelled") return json({ ok: false, error: "booking_cancelled" }, 409);
     if (bk.payment_status === "paid") return json({ ok: false, error: "already_paid" }, 409);
 
-    const depositCzk = Number(env("PAYMENT_DEPOSIT_CZK", "290"));
-    const unit = Math.round(depositCzk * 100); // haléře
+    // Prodluž držení místa a zároveň ověř, že místa pořád jsou. Když mezitím
+    // rezervace propadla a lekce se naplnila, platbu vůbec nezakládáme —
+    // ať host neplatí za místo, které už není.
+    const { data: hold } = await admin.rpc("hold_booking", {
+      p_id: booking_id,
+      p_minutes: SESSION_MINUTES + 5,
+    });
+    if (hold && hold.ok === false) {
+      return json({ ok: false, error: hold.error || "hold_failed" }, 409);
+    }
+
+    const entryCzk = Number(env("PAYMENT_ENTRY_CZK", env("PAYMENT_DEPOSIT_CZK", "499")));
+    const unit = Math.round(entryCzk * 100); // haléře
     const qty = Math.max(1, Number(bk.spots) || 1);
     const lessonTitle = (bk as any).lesson?.title ?? "Lekce jógy";
     const base = env("SITE_URL", "https://malaveselahranolka.github.io/joga-s-kralicky/").replace(/\/$/, "");
+    const persons = qty === 1 ? "1 osoba" : (qty < 5 ? qty + " osoby" : qty + " osob");
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       customer_email: bk.email,
+      expires_at: Math.floor(Date.now() / 1000) + SESSION_MINUTES * 60,
       line_items: [{
         quantity: qty,
         price_data: {
           currency: "czk",
           unit_amount: unit,
-          product_data: { name: `Záloha – ${lessonTitle} (Jóga s králíčky)` },
+          product_data: {
+            name: `${lessonTitle} — vstup (Jóga s králíčky)`,
+            description: `Rezervace na jméno, ${persons} × ${entryCzk} Kč`,
+          },
         },
       }],
-      metadata: { booking_id: String(bk.id) },
-      payment_intent_data: { metadata: { booking_id: String(bk.id) } },
-      success_url: `${base}/rezervace.html?platba=ok`,
+      metadata: { booking_id: String(bk.id), spots: String(qty) },
+      payment_intent_data: { metadata: { booking_id: String(bk.id), spots: String(qty) } },
+      // {CHECKOUT_SESSION_ID} doplní Stripe — web se pak brány zeptá,
+      // jestli je opravdu zaplaceno (funkce stripe-confirm).
+      success_url: `${base}/rezervace.html?platba=ok&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${base}/rezervace.html?platba=zrus`,
     });
 
@@ -71,7 +97,7 @@ Deno.serve(async (req) => {
       payment_method: "online",
     }).eq("id", bk.id);
 
-    return json({ ok: true, url: session.url });
+    return json({ ok: true, url: session.url, amount_czk: entryCzk * qty, spots: qty });
   } catch (e) {
     return json({ ok: false, error: "server_error", detail: String(e) }, 500);
   }
