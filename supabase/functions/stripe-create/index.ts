@@ -37,7 +37,10 @@ Deno.serve(async (req) => {
 
     const sk = env("STRIPE_SECRET_KEY");
     if (!sk) return json({ ok: false, error: "stripe_not_configured" }, 500);
-    const stripe = new Stripe(sk, { httpClient: Stripe.createFetchHttpClient(), apiVersion: "2024-06-20" });
+    // Verzi API schválně NEfixujeme — použije se výchozí verze účtu, která
+    // je novější a umí branding_settings (vzhled brány) níž. Napevno zadaná
+    // stará verze by ten parametr odmítla.
+    const stripe = new Stripe(sk, { httpClient: Stripe.createFetchHttpClient() });
 
     const admin = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"));
     const { data: bk, error } = await admin
@@ -76,7 +79,7 @@ Deno.serve(async (req) => {
       (t.includes("soumrak") || t.includes("restorativ")) ? "yoga-4.jpg" :
       t.includes("hatha") ? "yoga-11.jpg" : "rabbit-1.jpg";
 
-    const session = await stripe.checkout.sessions.create({
+    const params: any = {
       mode: "payment",
       customer_email: bk.email,
       expires_at: Math.floor(Date.now() / 1000) + SESSION_MINUTES * 60,
@@ -101,7 +104,31 @@ Deno.serve(async (req) => {
       // jestli je opravdu zaplaceno (funkce stripe-confirm).
       success_url: `${base}/rezervace.html?platba=ok&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${base}/rezervace.html?platba=zrus`,
-    });
+    };
+
+    // ---------------------------------------------------------------
+    //  VZHLED PLATEBNÍ BRÁNY
+    //  POZOR: tohle PŘEBÍJÍ nastavení ve Stripe Dashboardu (Branding).
+    //  Chceš jiné barvy? Změň je TADY, ne v dashboardu — ten už na tuhle
+    //  bránu nemá vliv. (Dashboard dál řídí vzhled e-mailových účtenek
+    //  a odkazu na dárkový poukaz.)
+    //  Barvy jsou z webu: --forest #2C3B2E. Logo a ikonu bereme z účtu.
+    // ---------------------------------------------------------------
+    const branding = {
+      background_color: "#2C3B2E",   // levý panel — lesní zeleň jako na webu
+      button_color: "#2C3B2E",       // dřív bílé tlačítko na bílé = vypadalo neaktivně
+      display_name: "Jóga s králíčky", // dřív se zákazníkům ukazovalo „kralicci"
+      border_style: "rounded",
+    };
+
+    // Kdyby Stripe branding_settings nepřijal, platba se založí bez něj.
+    // Radši brána v základním vzhledu než žádná brána.
+    let session;
+    try {
+      session = await stripe.checkout.sessions.create({ ...params, branding_settings: branding });
+    } catch (_e) {
+      session = await stripe.checkout.sessions.create(params);
+    }
 
     await admin.from("bookings").update({
       payment_status: "pending",

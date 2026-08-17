@@ -234,6 +234,27 @@ a na stránce s termíny je i karta na koupi dárkového poukazu.
 > **`enabled: false`** je nouzová brzda: platby se vypnou a rezervace budou
 > zdarma jako dřív. Nech `true`, dokud platby fungují.
 
+### E2) Vzhled platební brány — kde se mění
+Barvy a název v platební bráně **nejsou ve Stripe Dashboardu**, ale
+v souboru `supabase/functions/stripe-create/index.ts`, v bloku `const branding`.
+Je to tam schválně: dá se to měnit spolu se zbytkem webu.
+
+```js
+background_color: '#2C3B2E',      // levý panel
+button_color:     '#2C3B2E',      // tlačítko Zaplatit
+display_name:     'Jóga s králíčky',
+```
+
+> Nastavení ve Stripe Dashboardu (**Settings → Branding**) tuhle bránu
+> **neovlivní** — kód ho přebíjí. Dashboard řídí jen vzhled **e-mailových
+> účtenek** od Stripu a **odkazu na dárkový poukaz**. Když měníš barvy,
+> změň je pro jistotu na obou místech, ať to ladí všude.
+>
+> Logo a ikona se berou z účtu (v dashboardu je nahrané máš), ty v kódu nejsou.
+
+Po změně barev musíš funkci `stripe-create` znovu nasadit (Edge Functions →
+`stripe-create` → vložit nový obsah → Deploy).
+
 ### F) Dárkový poukaz + e-mail s kódem (EmailJS)
 Poukaz se zaplatí přes Stripe, po zaplacení web ukáže **kód** a pošle ho e-mailem.
 1. V EmailJS vytvoř šablonu (pole: `to_email`, `code`, `amount`), zkopíruj Template ID.
