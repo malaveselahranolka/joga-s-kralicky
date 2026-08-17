@@ -71,13 +71,14 @@ Deno.serve(async (req) => {
     const persons = qty === 1 ? "1 osoba" : (qty < 5 ? qty + " osoby" : qty + " osob");
 
     // Fotka k lekci — v platební bráně se ukáže nad názvem, ať to není holá plocha.
-    // Stejné přiřazení jako na webu (rezervace.html → thumbFor).
+    //
+    // POZOR na výběr: Stripe fotku ořízne do ČTVERCE. Fotky jógy z assets/photos
+    // jsou umělecké detaily těla bez hlavy — ve čtverci z nich vyjdou nechtěné
+    // výřezy (yoga-11 takhle udělal detail rozkroku). Proto tu jsou jen králíci:
+    // mají subjekt uprostřed a ořez jim nevadí. Než sem dáš jinou fotku,
+    // podívej se, jak vypadá ve čtvercovém výřezu.
     const t = lessonTitle.toLowerCase();
-    const photo =
-      t.includes("ranní") ? "yoga-7.jpg" :
-      t.includes("děti") ? "rabbit-6.jpg" :
-      (t.includes("soumrak") || t.includes("restorativ")) ? "yoga-4.jpg" :
-      t.includes("hatha") ? "yoga-11.jpg" : "rabbit-1.jpg";
+    const photo = t.includes("děti") ? "rabbit-6.jpg" : "rabbit-1.jpg";
 
     const params: any = {
       mode: "payment",
