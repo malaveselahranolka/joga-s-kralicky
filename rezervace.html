@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Rezervace — Jóga s králíčky</title>
-<meta name="description" content="Vyberte si termín lekce jógy s králíčky a rezervujte si místo. Studio klidu, Brno." />
+<meta name="description" content="Vyberte si termín lekce jógy s králíčky a rezervujte si místo. Fit&amp;Fun Studio Ostrava." />
 <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -278,7 +278,7 @@
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const PLACE = 'Studio klidu, Údolní 12, Brno-střed';
+  const PLACE = 'Fit&Fun Studio Ostrava, Tovární 486/7, 709 00 Ostrava-Mariánské Hory';
   const THUMB = 'assets/photos/rabbit-1.webp';
   const thumbFor = (title) => {
     const t = (title || '').toLowerCase();
@@ -345,8 +345,8 @@
     if (code === 'full') return 'Mezitím se místa zaplnila — rezervaci proto nelze zaplatit. Vyberte prosím jiný termín.';
     if (code === 'already_paid') return 'Tahle rezervace už je zaplacená.';
     if (code === 'booking_cancelled' || code === 'unavailable') return 'Tahle rezervace už neplatí. Založte prosím novou.';
-    if (code === 'gateway_down') return 'Platební bránu se teď nedaří otevřít. Napište nám prosím na ahoj@jogaskralicky.cz — rezervaci pro víc osob vyřídíme ručně.';
-    return 'Platební bránu se nepodařilo otevřít. Zkuste to prosím znovu, nebo nám napište na ahoj@jogaskralicky.cz.';
+    if (code === 'gateway_down') return 'Platební bránu se teď nedaří otevřít. Napište nám prosím na info@jogaskralicky.cz — rezervaci pro víc osob vyřídíme ručně.';
+    return 'Platební bránu se nepodařilo otevřít. Zkuste to prosím znovu, nebo nám napište na info@jogaskralicky.cz.';
   };
 
   // Po návratu z platby se rovnou zeptáme Stripu, jestli je zaplaceno, a stav
@@ -418,7 +418,7 @@
   // ---- načtení termínů ----
   async function load() {
     if (!CONFIGURED) {
-      $('dayList').innerHTML = '<div class="empty">Online rezervace se připravuje. Zatím nám napište na <a href="mailto:ahoj@jogaskralicky.cz" style="color:var(--clover)">ahoj@jogaskralicky.cz</a> nebo zavolejte na +420 777 123 456.</div>';
+      $('dayList').innerHTML = '<div class="empty">Online rezervace se připravuje. Zatím nám napište na <a href="mailto:info@jogaskralicky.cz" style="color:var(--clover)">info@jogaskralicky.cz</a> nebo zavolejte na +420 603 340 860.</div>';
       return;
     }
     $('dayList').innerHTML = '<div class="empty">Načítám termíny…</div>';
@@ -525,7 +525,7 @@
       const code = data && data.error;
       if (code === 'full') { alert('Mezitím se místa zaplnila. Vyberte prosím jiný termín nebo méně míst.'); await load(); showStep('pick'); }
       else if (code === 'unavailable') { alert('Tento termín už není dostupný. Načítám aktuální nabídku…'); await load(); showStep('pick'); }
-      else alert('Rezervaci se nepodařilo uložit. Zkuste to prosím znovu, nebo nám napište na ahoj@jogaskralicky.cz.');
+      else alert('Rezervaci se nepodařilo uložit. Zkuste to prosím znovu, nebo nám napište na info@jogaskralicky.cz.');
       return;
     }
 
@@ -634,7 +634,7 @@
         return;
       }
       btn.disabled = false; btn.innerHTML = keep;
-      msg.textContent = 'Platbu se teď nepodařilo otevřít. Zkuste to prosím znovu, nebo nám napište na ahoj@jogaskralicky.cz.';
+      msg.textContent = 'Platbu se teď nepodařilo otevřít. Zkuste to prosím znovu, nebo nám napište na info@jogaskralicky.cz.';
       msg.className = 'vc-msg err';
     });
   }
@@ -668,7 +668,7 @@
           '<p>Děkujeme, platba je potvrzená a místo je vaše. QR kód pro vstup máte v potvrzovacím e-mailu — ve studiu ho jen ukážete.</p>',
           statusBtn('btn-primary') + backBtn);
       }
-      else stateBox('info', 'Platbu ještě potvrzujeme', '<p>Peníze nejspíš odešly, jen se k nám potvrzení ještě nepropsalo. Zkuste za chvíli otevřít stav rezervace — kdyby tam platba nenaskočila ani za pár minut, napište nám na <a href="mailto:ahoj@jogaskralicky.cz" style="color:var(--clover)">ahoj@jogaskralicky.cz</a> a dořešíme to.</p>', statusBtn('btn-primary') + backBtn);
+      else stateBox('info', 'Platbu ještě potvrzujeme', '<p>Peníze nejspíš odešly, jen se k nám potvrzení ještě nepropsalo. Zkuste za chvíli otevřít stav rezervace — kdyby tam platba nenaskočila ani za pár minut, napište nám na <a href="mailto:info@jogaskralicky.cz" style="color:var(--clover)">info@jogaskralicky.cz</a> a dořešíme to.</p>', statusBtn('btn-primary') + backBtn);
     }
     else if (platba === 'zrus') {
       stateBox('info', 'Platba nedokončena',

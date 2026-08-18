@@ -147,7 +147,7 @@
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const PLACE = 'Studio klidu, Údolní 12, Brno-střed';
+  const PLACE = 'Fit&Fun Studio Ostrava, Tovární 486/7, 709 00 Ostrava-Mariánské Hory';
   const PAY = window.PAYMENTS || {};
   const PRICE = Number(PAY.entryCzk || PAY.depositCzk || 499);
   const czk = (n) => Number(n).toLocaleString('cs-CZ') + ' Kč';
@@ -195,8 +195,8 @@
     }
     b.disabled = false; b.innerHTML = keep;
     alert(body && body.error === 'full'
-      ? 'Mezitím se místa zaplnila, rezervaci proto nelze zaplatit. Napište nám prosím na ahoj@jogaskralicky.cz.'
-      : 'Platební bránu se nepodařilo otevřít. Zkuste to prosím znovu, nebo nám napište na ahoj@jogaskralicky.cz.');
+      ? 'Mezitím se místa zaplnila, rezervaci proto nelze zaplatit. Napište nám prosím na info@jogaskralicky.cz.'
+      : 'Platební bránu se nepodařilo otevřít. Zkuste to prosím znovu, nebo nám napište na info@jogaskralicky.cz.');
   }
 
   function msg(title, text) {
@@ -277,12 +277,12 @@
 
   async function load() {
     const { data, error } = await sb.rpc('get_ticket', { p_id: id });
-    if (error) { msg('Rezervaci se nepodařilo načíst', 'Zkuste to prosím za chvíli znovu, nebo nám napište na <a href="mailto:ahoj@jogaskralicky.cz" style="color:var(--clover)">ahoj@jogaskralicky.cz</a>.'); return; }
+    if (error) { msg('Rezervaci se nepodařilo načíst', 'Zkuste to prosím za chvíli znovu, nebo nám napište na <a href="mailto:info@jogaskralicky.cz" style="color:var(--clover)">info@jogaskralicky.cz</a>.'); return; }
     if (!data) { msg('Rezervace nenalezena', 'Odkaz je nejspíš neúplný. Použijte prosím ten z potvrzovacího e-mailu.'); return; }
     render(data);
   }
 
-  if (!CONFIGURED) msg('Stav rezervace zatím nejde zobrazit', 'Napište nám na <a href="mailto:ahoj@jogaskralicky.cz" style="color:var(--clover)">ahoj@jogaskralicky.cz</a> a rezervaci potvrdíme ručně.');
+  if (!CONFIGURED) msg('Stav rezervace zatím nejde zobrazit', 'Napište nám na <a href="mailto:info@jogaskralicky.cz" style="color:var(--clover)">info@jogaskralicky.cz</a> a rezervaci potvrdíme ručně.');
   else if (!UUID.test(id)) msg('Chybí kód rezervace', 'Otevřete prosím odkaz z potvrzovacího e-mailu — je zakončený kódem rezervace.');
   else load();
 

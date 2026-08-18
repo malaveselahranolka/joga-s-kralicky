@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Jóga s králíčky — klidné lekce v jejich společnosti</title>
-<meta name="description" content="Lekce jógy, po kterých se volně prochází domácí králíčci. Zpomalte, dýchejte a nechte se rozptýlit těmi nejroztomilejšími učiteli klidu. Studio v Brně." />
+<meta name="description" content="Lekce jógy, po kterých se volně prochází domácí králíčci. Zpomalte, dýchejte a nechte se rozptýlit těmi nejroztomilejšími učiteli klidu. Fit&amp;Fun Studio Ostrava." />
 <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
 <link rel="preload" as="image" href="assets/photos/yoga-1.webp" fetchpriority="high" />
 <meta property="og:title" content="Jóga s králíčky — klidné lekce v jejich společnosti" />
@@ -656,7 +656,7 @@
     <div class="aurora breathe" aria-hidden="true" style="width:520px;height:520px;right:-120px;top:18%;background:radial-gradient(circle, rgba(210,133,74,.55), transparent 70%)"></div>
     <div class="aurora breathe" aria-hidden="true" style="width:420px;height:420px;left:-100px;bottom:6%;background:radial-gradient(circle, rgba(110,138,78,.5), transparent 70%);animation-delay:-5.5s"></div>
     <div class="wrap">
-      <span class="eyebrow hero-eyebrow">Studio klidu · Brno</span>
+      <span class="eyebrow hero-eyebrow">Fit&amp;Fun Studio Ostrava</span>
       <h1>Najděte klid <span class="dash">—</span> o&nbsp;zbytek se postarají králíčci</h1>
       <p class="hero-sub">Hodina jemné jógy, po které volně pobíhá deset chlupatých učitelů zpomalení. Žádné výkony, žádná zrcadla — jen dech, podložka a králík, který se vám možná uvelebí na koleni.</p>
       <div class="hero-actions">
@@ -906,7 +906,7 @@
       <div class="section-head reveal" style="max-width:none">
         <span class="eyebrow">Časté dotazy</span>
         <h2>Než přijdete poprvé</h2>
-        <p class="lead">Nenašli jste odpověď? Napište nám na <a href="mailto:ahoj@jogaskralicky.cz" style="color:var(--clover);text-decoration:underline">ahoj@jogaskralicky.cz</a>.</p>
+        <p class="lead">Nenašli jste odpověď? Napište nám na <a href="mailto:info@jogaskralicky.cz" style="color:var(--clover);text-decoration:underline">info@jogaskralicky.cz</a>.</p>
       </div>
       <div class="faq-list reveal">
         <div class="faq-item">
@@ -956,7 +956,7 @@
     <div class="foot-grid">
       <div class="brand-cell">
         <a class="brand" href="#top"><img decoding="async" class="mark" src="assets/logo.svg" alt="" width="34" height="34" /> Jóga&nbsp;s&nbsp;králíčky</a>
-        <p class="ftag">Studio klidu, kde tempo udávají králíci. Údolní 12, Brno-střed.</p>
+        <p class="ftag">Studio klidu, kde tempo udávají králíci. Fit&amp;Fun Studio Ostrava, Tovární 486/7, Ostrava-Mariánské Hory.</p>
         <div class="socials">
           <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
           <a href="https://facebook.com" target="_blank" rel="noopener" aria-label="Facebook"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 9V7c0-1 .5-2 2-2h2V2h-3c-2.5 0-4 1.5-4 4v3H8v3h3v8h3v-8h3l1-3z"/></svg></a>
@@ -978,9 +978,9 @@
       </nav>
       <div class="foot-col">
         <h5>Ozvěte se</h5>
-        <a class="foot-contact" href="mailto:ahoj@jogaskralicky.cz">ahoj@jogaskralicky.cz</a>
-        <a class="foot-contact" href="tel:+420777123456" style="margin-top:.6rem">+420 777 123 456</a>
-        <a href="https://maps.google.com" target="_blank" rel="noopener" style="margin-top:.6rem">Údolní 12, Brno-střed</a>
+        <a class="foot-contact" href="mailto:info@jogaskralicky.cz">info@jogaskralicky.cz</a>
+        <a class="foot-contact" href="tel:+420603340860" style="margin-top:.6rem">+420 603 340 860</a>
+        <a href="https://www.google.com/maps/search/?api=1&amp;query=Fit%26Fun+Studio+Ostrava%2C+Tovární+486%2F7%2C+709+00+Ostrava-Mariánské+Hory" target="_blank" rel="noopener" style="margin-top:.6rem">Tovární 486/7, Ostrava-Mariánské Hory</a>
       </div>
     </div>
     <form class="foot-news" id="newsForm" novalidate>
@@ -1283,7 +1283,7 @@
       if (busy) return;
       const email = input.value.trim();
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { setMsg('Zkontrolujte prosím e-mail.', 'err'); input.focus(); return; }
-      if (!sb) { setMsg('Přihlášení teď nejde — napište nám na ahoj@jogaskralicky.cz.', 'err'); return; }
+      if (!sb) { setMsg('Přihlášení teď nejde — napište nám na info@jogaskralicky.cz.', 'err'); return; }
       busy = true; btn.disabled = true; const label = btn.innerHTML; btn.textContent = 'Přihlašuji…';
       try {
         const { data, error } = await sb.rpc('subscribe_newsletter', { p_email: email, p_source: 'web-footer' });
