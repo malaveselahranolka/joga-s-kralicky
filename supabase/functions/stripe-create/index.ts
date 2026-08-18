@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
     const unit = Math.round(entryCzk * 100); // haléře
     const qty = Math.max(1, Number(bk.spots) || 1);
     const lessonTitle = (bk as any).lesson?.title ?? "Lekce jógy";
-    const base = env("SITE_URL", "https://malaveselahranolka.github.io/joga-s-kralicky/").replace(/\/$/, "");
+    const base = env("SITE_URL", "https://www.jogaskralicky.cz/").replace(/\/$/, "");
     const persons = qty === 1 ? "1 osoba" : (qty < 5 ? qty + " osoby" : qty + " osob");
 
     // Fotka k lekci — v platební bráně se ukáže nad názvem, ať to není holá plocha.

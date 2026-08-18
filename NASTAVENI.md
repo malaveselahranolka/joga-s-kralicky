@@ -183,7 +183,7 @@ je jen přepíše novější verzí.)*
 STRIPE_SECRET_KEY      = sk_test_...
 PAYMENT_ENTRY_CZK      = 499          (cena za JEDNO místo; musí sedět s payment-config.js)
 PAYMENT_VOUCHER_CZK    = 499
-SITE_URL               = https://malaveselahranolka.github.io/joga-s-kralicky/
+SITE_URL               = https://www.jogaskralicky.cz     (hlavní adresa webu)
 STRIPE_WEBHOOK_SECRET  = whsec_...   (doplníš v kroku D)
 ```
 Pak **Edge Functions → Deploy a new function → Via Editor** a nahraj (jméno přesně):
@@ -264,6 +264,20 @@ další způsob platby, přidej ho do toho seznamu.
 
 Po změně barev nebo způsobů platby musíš funkci `stripe-create` znovu nasadit
 (Edge Functions → `stripe-create` → Code → vložit nový obsah → Deploy updates).
+
+### E3) Kdyby se někdy měnila adresa webu
+Web běží na **https://www.jogaskralicky.cz** (holá `jogaskralicky.cz` na ni
+přesměrovává). Adresa je zadrátovaná na těchhle místech — kdyby se doména
+měnila, projdi je všechny, jinak se rozbijí návraty z plateb:
+
+| Kde | Co |
+|---|---|
+| Supabase → Edge Functions → **Secrets** | `SITE_URL` (má přednost před vším níž) |
+| `supabase/functions/stripe-create/index.ts` | výchozí hodnota `base` |
+| `supabase/functions/stripe-voucher/index.ts` | výchozí hodnota `base` |
+| `admin.html` | `const SITE` — odhlašovací odkazy v newsletteru |
+| `index.html` | `og:image`, `og:url`, `canonical` |
+| Stripe → **Payment Links** → poukaz | návratová adresa po zaplacení |
 
 ### F) Dárkový poukaz + e-mail s kódem (EmailJS)
 Poukaz se zaplatí přes Stripe, po zaplacení web ukáže **kód** a pošle ho e-mailem.

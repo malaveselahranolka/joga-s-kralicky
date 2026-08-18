@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
     const stripe = new Stripe(sk, { httpClient: Stripe.createFetchHttpClient(), apiVersion: "2024-06-20" });
 
     const czk = Number(env("PAYMENT_VOUCHER_CZK", "499"));
-    const base = env("SITE_URL", "https://malaveselahranolka.github.io/joga-s-kralicky/").replace(/\/$/, "");
+    const base = env("SITE_URL", "https://www.jogaskralicky.cz/").replace(/\/$/, "");
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",

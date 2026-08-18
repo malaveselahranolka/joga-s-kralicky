@@ -734,7 +734,7 @@
   });
 
   // rozeslání newsletteru přímo z adminu přes EmailJS
-  const SITE = 'https://malaveselahranolka.github.io/joga-s-kralicky/';
+  const SITE = 'https://www.jogaskralicky.cz/';
   const EJS_OK = !!(window.EMAILJS_PUBLIC_KEY && window.EMAILJS_SERVICE_ID && window.EMAILJS_NEWSLETTER_TEMPLATE_ID &&
     String(window.EMAILJS_NEWSLETTER_TEMPLATE_ID).indexOf('TVUJ_') !== 0 && typeof window.emailjs !== 'undefined');
   if (EJS_OK) { try { window.emailjs.init({ publicKey: window.EMAILJS_PUBLIC_KEY }); } catch (e) {} }
