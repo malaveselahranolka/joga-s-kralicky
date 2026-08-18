@@ -364,7 +364,7 @@
       </div>
       <div class="scan-wrap">
         <div class="scan-view" id="scanView">
-          <p class="hintline" id="scanHint">Namiřte kameru na QR kód na vstupence hosta. Ukáže se jméno, lekce a jestli má zaplaceno.</p>
+          <p class="hintline" id="scanHint">Namiřte kameru na QR kód hosta — z e-mailu s rezervací i z dárkového poukazu. Ukáže se jméno, lekce a jestli má zaplaceno; u poukazu můžete rovnou označit uplatnění.</p>
           <video id="scanVideo" playsinline muted hidden></video>
           <div class="reticle" id="scanReticle" hidden></div>
         </div>
@@ -375,9 +375,9 @@
         </div>
 
         <div class="scan-manual">
-          <label for="scanManual">Kamera nejde? Opište kód ze vstupenky</label>
+          <label for="scanManual">Kamera nejde? Opište kód ze vstupenky nebo z poukazu</label>
           <div class="scan-manual-row">
-            <input id="scanManual" type="text" autocomplete="off" spellcheck="false" placeholder="např. 3F9A21C4" />
+            <input id="scanManual" type="text" autocomplete="off" spellcheck="false" placeholder="např. 3F9A21C4 nebo DK-XKCD1234" />
             <button class="btn btn-ghost" id="scanManualBtn" type="button">Najít</button>
           </div>
         </div>
@@ -894,6 +894,13 @@
 
   // odbavení u dveří (QR ze vstupenky) ----------------------------------
   const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+  // kód dárkového poukazu: DK-XKCD1234 nebo DK-XKCD1234-2 (při koupi víc kusů)
+  const VOUCHER_RE = /DK-[A-Z0-9]{6,}(?:-\d+)?/i;
+  const scanIco = {
+    ok:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><path d="M20 6 9 17l-5-5"/></svg>',
+    warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>',
+    no:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M18 6 6 18M6 6l12 12"/></svg>'
+  };
   let scanStream = null, scanTimer = null, scanDetector = null, scanBusy = false, scanLast = '', scanLastAt = 0;
 
   function scanStop() {
@@ -945,13 +952,15 @@
         }
       } catch (e) { /* jeden neúspěšný snímek nevadí, zkusíme další */ }
       scanBusy = false;
-      const m = raw && raw.match(UUID_RE);
-      if (m) {
-        const id = m[0].toLowerCase(), now = Date.now();
-        if (id !== scanLast || now - scanLastAt > 4000) {   // stejný lístek nečti pořád dokola
-          scanLast = id; scanLastAt = now;
+      // QR může být vstupenka (UUID v odkazu) nebo dárkový poukaz (kód DK-…)
+      const mb = raw && raw.match(UUID_RE);
+      const mv = !mb && raw && raw.match(VOUCHER_RE);
+      if (mb || mv) {
+        const key = (mb ? mb[0].toLowerCase() : mv[0].toUpperCase()), now = Date.now();
+        if (key !== scanLast || now - scanLastAt > 4000) {   // stejný lístek nečti pořád dokola
+          scanLast = key; scanLastAt = now;
           if (navigator.vibrate) navigator.vibrate(60);
-          await showScan(id);
+          if (mb) await showScan(key); else await showVoucherScan(key);
         }
       }
     }
@@ -967,11 +976,7 @@
 
   async function showScan(id) {
     const { data: b, error } = await sb.from('bookings').select('*').eq('id', id).maybeSingle();
-    const ico = {
-      ok:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><path d="M20 6 9 17l-5-5"/></svg>',
-      warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>',
-      no:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M18 6 6 18M6 6l12 12"/></svg>'
-    };
+    const ico = scanIco;
     if (error || !b) { scanCard('scan-bad', ico.no, 'Vstupenka neznámá', '<div class="sub">Tenhle kód v rezervacích není.</div>'); return; }
 
     const l = lessons.find((x) => x.id === b.lesson_id);
@@ -994,9 +999,35 @@
     }
   }
 
+  // odbavení dárkového poukazu (QR z e-mailu obsahuje přímo kód DK-…)
+  async function showVoucherScan(code) {
+    const { data: v, error } = await sb.from('vouchers').select('*').eq('code', code).maybeSingle();
+    if (error || !v) {
+      scanCard('scan-bad', scanIco.no, 'Poukaz neznámý',
+        '<div class="sub">Kód ' + esc(code) + ' není mezi prodanými poukazy.</div>');
+      return;
+    }
+    const kc = v.amount ? ((v.amount / 100) | 0) + ' Kč' : '';
+    const who = '<strong style="font-family:monospace;letter-spacing:.04em">' + esc(v.code) + '</strong>' +
+      '<div class="sub">Dárkový poukaz' + (kc ? ' · ' + kc : '') + (v.email ? ' · ' + esc(v.email) : '') + '</div>';
+
+    if (v.redeemed) {
+      scanCard('scan-bad', scanIco.no, 'Poukaz už byl uplatněn',
+        who + (v.redeemed_at ? '<div class="sub">' + fmtDT(v.redeemed_at) + '</div>' : ''),
+        '<button class="btn btn-ghost btn-sm" data-unredeem="' + v.id + '">Vrátit platnost</button>');
+    } else {
+      scanCard('scan-yes', scanIco.ok, 'Poukaz platí', who,
+        '<button class="btn btn-primary btn-sm" data-redeem="' + v.id + '">Označit uplatněno</button>');
+    }
+  }
+
   $('scanToggle').addEventListener('click', () => { if (scanStream) scanStop(); else scanStart(); });
 
   $('scanManualBtn').addEventListener('click', () => {
+    // kód poukazu se opisuje celý (DK-…), vstupenka stačí prvních pár znaků
+    const typed = $('scanManual').value.trim().toUpperCase();
+    if (VOUCHER_RE.test(typed)) { showVoucherScan(typed.match(VOUCHER_RE)[0]); return; }
+
     const q = $('scanManual').value.trim().toLowerCase().replace(/[^0-9a-f-]/g, '');
     if (q.length < 6) { toast('Zadejte aspoň 6 znaků kódu'); return; }
     const hits = bookings.filter((b) => b.id.startsWith(q));
@@ -1010,7 +1041,20 @@
     const btn = e.target.closest('button'); if (!btn) return;
     const again = btn.dataset.rescan;
     if (again) { await showScan(again); return; }
-    if (btn.dataset.paid) { await applyBookingAction(btn); await showScan(btn.dataset.paid); }
+    if (btn.dataset.paid) { await applyBookingAction(btn); await showScan(btn.dataset.paid); return; }
+
+    // uplatnění / vrácení dárkového poukazu rovnou od dveří
+    const vid = btn.dataset.redeem || btn.dataset.unredeem;
+    if (vid) {
+      const redeemed = !!btn.dataset.redeem;
+      const known = vouchers.find((x) => x.id === vid);   // kód si podrž, seznam se přenačte
+      const { error } = await sb.from('vouchers')
+        .update({ redeemed, redeemed_at: redeemed ? new Date().toISOString() : null }).eq('id', vid);
+      if (error) { toast('Akce selhala'); return; }
+      toast(redeemed ? 'Poukaz uplatněn' : 'Platnost vrácena');
+      await loadAll();
+      if (known) await showVoucherScan(known.code);
+    }
   });
 })();
 </script>

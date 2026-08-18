@@ -289,9 +289,18 @@ počet vybere u karty s poukazem a cenu × počet spočítá server.
 > i funkce `stripe-webhook`** — jinak by host viděl jiné kódy, než máš
 > v adminu. Když ten výpočet měníš, změň ho na obou místech naráz.
 
-1. V EmailJS vytvoř šablonu (pole: `to_email`, `code`, `amount`, případně
-   `count`), zkopíruj Template ID. Při nákupu víc kusů přijdou všechny kódy
-   v poli `{{code}}` oddělené čárkou.
+1. V EmailJS vytvoř šablonu (pole: `to_email`, `code`, `amount`, `qr_url`),
+   zkopíruj Template ID. **Při nákupu víc kusů chodí jeden e-mail na každý
+   poukaz** — každý je samostatný dárek, dá se rovnou přeposlat obdarovanému.
+
+   Do těla šablony přidej QR kód, ať jde poukaz odbavit čtečkou:
+   ```html
+   <p>Kód poukazu: <strong>{{code}}</strong> ({{amount}})</p>
+   <p><img src="{{qr_url}}" alt="QR kód poukazu" width="220" height="220" /></p>
+   ```
+   QR obsahuje přímo kód poukazu. V adminu ho načteš v záložce **Odbavení**
+   stejně jako vstupenku — ukáže se, jestli poukaz platí, a jedním tlačítkem
+   ho označíš jako uplatněný. Kód jde i opsat ručně.
 2. Do `supabase-config.js`: `window.EMAILJS_VOUCHER_TEMPLATE_ID = 'template_…';`
 3. Prodané poukazy vidíš v adminu → záložka **Poukazy** (odškrtneš „uplatněno").
 

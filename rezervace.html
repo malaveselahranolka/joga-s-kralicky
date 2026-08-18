@@ -691,14 +691,23 @@
           : ('Uložte si ' + (many ? 'je' : 'ho') + ' prosím (opište nebo udělejte screenshot).')) + '</p>',
         '<a class="btn btn-ghost" href="rezervace.html">Zpět na termíny</a>');
       if (VOUCHER_EMAIL_OK && em) {
-        try {
-          window.emailjs.send(window.EMAILJS_SERVICE_ID, VOUCHER_TPL, {
-            email: em, to_email: em,
-            code: codes.join(', '),          // šablona má jedno pole {{code}}
-            count: String(codes.length),
-            amount: czk((PAY.voucherCzk || 499) * codes.length)
-          });
-        } catch (e) {}
+        // Jeden e-mail na každý poukaz — každý je samostatný dárek, takže se
+        // dá rovnou přeposlat obdarovanému. QR kóduje samotný kód poukazu,
+        // čtečka v adminu ho pozná stejně jako vstupenku.
+        (async () => {
+          for (let i = 0; i < codes.length; i++) {
+            const c = codes[i];
+            try {
+              await window.emailjs.send(window.EMAILJS_SERVICE_ID, VOUCHER_TPL, {
+                email: em, to_email: em,
+                code: c,
+                amount: czk(VOUCHER_PRICE),
+                qr_url: 'https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data=' + encodeURIComponent(c)
+              });
+            } catch (e) { /* jeden neodeslaný e-mail nesmí shodit zbytek */ }
+            if (i < codes.length - 1) await new Promise((r) => setTimeout(r, 700)); // limity EmailJS
+          }
+        })();
       }
       ls.del('voucherEmail'); ls.del('voucherCount');
     }
