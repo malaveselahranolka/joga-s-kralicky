@@ -149,6 +149,11 @@
   .vc-msg { margin: 0; font-size: .82rem; min-height: 1em; color: rgba(255,255,255,.85); }
   .vc-msg.err { color: #f0c2a0; }
   .code-box { font-family: "Schibsted Grotesk", sans-serif; font-weight: 700; font-size: clamp(1.6rem,1.2rem+1.6vw,2.3rem); letter-spacing: .06em; color: var(--forest); background: var(--cream); border: 2px dashed var(--clover); border-radius: var(--r-md); padding: .7em 1em; display: inline-block; margin: 1rem 0; }
+  .code-list { display: flex; flex-wrap: wrap; gap: .7rem; justify-content: center; margin: 1rem 0; }
+  .code-list .code-box { margin: 0; font-size: clamp(1.1rem,.9rem+.8vw,1.5rem); }
+  .vc-count { display: flex; align-items: center; justify-content: space-between; gap: .8rem; }
+  .vc-lbl { font-size: .88rem; font-weight: 600; color: rgba(255,255,255,.85); }
+  .vc-count .stepper { background: rgba(255,255,255,.96); border-color: rgba(255,255,255,.25); }
   @media (max-width: 720px) { .voucher-card { grid-template-columns: 1fr; } }
 
   @media (max-width: 720px) {
@@ -191,10 +196,18 @@
       <div id="voucherCard" class="voucher-card hidden">
         <div class="vc-info">
           <h2>Darujte klid 🐰</h2>
-          <p>Dárkový poukaz na jednu lekci jógy s králíčky za <b>499&nbsp;Kč</b>. Kód přijde e-mailem, obdarovaný ho uplatní přímo ve studiu.</p>
+          <p>Dárkový poukaz na jednu lekci jógy s králíčky za <b>499&nbsp;Kč</b>. Kód přijde e-mailem, obdarovaný ho uplatní přímo ve studiu. Můžete jich koupit i víc naráz.</p>
         </div>
         <div class="vc-buy">
           <input id="voucherEmail" type="email" autocomplete="email" placeholder="E-mail pro zaslání poukazu" aria-label="E-mail pro zaslání poukazu" />
+          <div class="vc-count">
+            <span class="vc-lbl">Počet poukazů</span>
+            <div class="stepper" role="group" aria-label="Počet poukazů">
+              <button type="button" id="vcDec" aria-label="Ubrat">−</button>
+              <span class="val" id="vcVal" aria-live="polite">1</span>
+              <button type="button" id="vcInc" aria-label="Přidat">+</button>
+            </div>
+          </div>
           <button class="btn btn-primary" id="voucherBtn" type="button">Koupit poukaz 499&nbsp;Kč <span class="arrow">→</span></button>
           <p class="vc-msg" id="voucherMsg" role="status"></p>
         </div>
@@ -278,8 +291,7 @@
 
   const PAY = window.PAYMENTS || {};
   const ENTRY_URL = PAY.fallbackEntryUrl || '';   // nouzový odkaz na 1 místo, viz startCheckout
-  const VOUCHER_URL = PAY.voucherUrl || '';
-  const VOUCHER_ON = !!PAY.enabled && /^https:\/\/.+/.test(VOUCHER_URL);
+  const VOUCHER_URL = PAY.voucherUrl || '';   // nouzový odkaz na 1 poukaz
   const ticketHref = (id) => 'vstupenka.html#' + id;
   const PRICE = Number(PAY.entryCzk || PAY.depositCzk || 499);   // cena za JEDNO místo (Kč)
   const MAX_PER = Math.min(8, Math.max(1, Number(PAY.maxSpots) || 4));
@@ -293,6 +305,7 @@
   // Platí se výhradně online. Rezervace bez zaplacení jen drží místo,
   // a to jen po dobu HOLD_MIN minut.
   const PAY_ON = !!PAY.enabled && CONFIGURED;
+  const VOUCHER_ON = PAY_ON;   // poukazy zakládá funkce stripe-voucher
 
   const FN_BASE = String(window.SUPABASE_URL || '').replace(/\/$/, '') + '/functions/v1/';
   async function fnPost(name, body) {
@@ -572,15 +585,57 @@
   // ---- dárkový poukaz ----
   const VOUCHER_TPL = window.EMAILJS_VOUCHER_TEMPLATE_ID;
   const VOUCHER_EMAIL_OK = EMAIL_OK && VOUCHER_TPL && String(VOUCHER_TPL).indexOf('TVUJ_') !== 0;
-  const voucherCode = (sid) => 'DK-' + String(sid).replace(/[^A-Za-z0-9]/g, '').slice(-8).toUpperCase();
+  const VOUCHER_PRICE = Number(PAY.voucherCzk || 499);
+  const MAX_VOUCHERS = Math.min(10, Math.max(1, Number(PAY.maxVouchers) || 10));
+  let vcCount = 1;
+
+  // Kódy poukazů. Počítá se to STEJNĚ i ve funkci stripe-webhook, aby host
+  // viděl přesně ty kódy, které se uložily do databáze. Měníš-li to tady,
+  // změň to i tam.
+  const voucherCodes = (sid, n) => {
+    const stem = 'DK-' + String(sid).replace(/[^A-Za-z0-9]/g, '').slice(-8).toUpperCase();
+    const cnt = Math.max(1, Number(n) || 1);
+    return cnt === 1 ? [stem] : Array.from({ length: cnt }, (_, i) => stem + '-' + (i + 1));
+  };
+
+  function updateVouchers() {
+    $('vcVal').textContent = vcCount;
+    $('vcDec').disabled = vcCount <= 1;
+    $('vcInc').disabled = vcCount >= MAX_VOUCHERS;
+    $('voucherBtn').innerHTML = 'Koupit ' +
+      (vcCount === 1 ? 'poukaz ' : (vcCount < 5 ? vcCount + ' poukazy ' : vcCount + ' poukazů ')) +
+      czk(VOUCHER_PRICE * vcCount) + ' <span class="arrow">→</span>';
+  }
 
   if (VOUCHER_ON) {
     $('voucherCard').classList.remove('hidden');
-    $('voucherBtn').addEventListener('click', () => {
-      const em = $('voucherEmail').value.trim(), msg = $('voucherMsg');
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { msg.textContent = 'Zadejte prosím e-mail, kam poukaz poslat.'; msg.className = 'vc-msg err'; return; }
-      ls.set('voucherEmail', em); // po návratu z platby na něj pošleme kód
-      window.location.href = VOUCHER_URL + (VOUCHER_URL.includes('?') ? '&' : '?') + 'prefilled_email=' + encodeURIComponent(em);
+    updateVouchers();
+    $('vcDec').addEventListener('click', () => { if (vcCount > 1) { vcCount--; updateVouchers(); } });
+    $('vcInc').addEventListener('click', () => { if (vcCount < MAX_VOUCHERS) { vcCount++; updateVouchers(); } });
+
+    $('voucherBtn').addEventListener('click', async () => {
+      const em = $('voucherEmail').value.trim(), msg = $('voucherMsg'), btn = $('voucherBtn');
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { msg.textContent = 'Zadejte prosím e-mail, kam poukazy poslat.'; msg.className = 'vc-msg err'; return; }
+
+      // po návratu z platby z tohohle poskládáme kódy a e-mail
+      ls.set('voucherEmail', em);
+      ls.set('voucherCount', String(vcCount));
+
+      const keep = btn.innerHTML;
+      btn.disabled = true; btn.textContent = 'Otevírám platbu…';
+      msg.textContent = ''; msg.className = 'vc-msg';
+
+      const { status, body } = await fnPost('stripe-voucher', { email: em, count: vcCount });
+      if (body && body.ok && body.url) { window.location.href = body.url; return; }
+
+      // Záchranná brzda jako u rezervací: pevný odkaz umí jen jeden kus.
+      if ((!body || status === 404 || status === 0) && VOUCHER_URL && vcCount === 1) {
+        window.location.href = VOUCHER_URL + (VOUCHER_URL.includes('?') ? '&' : '?') + 'prefilled_email=' + encodeURIComponent(em);
+        return;
+      }
+      btn.disabled = false; btn.innerHTML = keep;
+      msg.textContent = 'Platbu se teď nepodařilo otevřít. Zkuste to prosím znovu, nebo nám napište na ahoj@jogaskralicky.cz.';
+      msg.className = 'vc-msg err';
     });
   }
 
@@ -623,17 +678,29 @@
         statusBtn('btn-ghost') + backBtn);
     }
     else if (voucher === 'ok') {
-      const code = voucherCode(q.get('session_id') || '');
       const em = ls.get('voucherEmail') || '';
-      stateBox('ok', 'Poukaz je zaplacený 🐰',
-        '<p>Děkujeme! Tady je kód dárkového poukazu — obdarovaný ho uplatní přímo ve studiu:</p>' +
-        '<div class="code-box">' + code + '</div>' +
-        '<p>' + (VOUCHER_EMAIL_OK && em ? ('Poslali jsme ho i na ' + esc(em) + '.') : 'Uložte si ho prosím (opište nebo udělejte screenshot).') + '</p>',
+      const n = Math.max(1, Number(ls.get('voucherCount')) || 1);
+      const codes = voucherCodes(q.get('session_id') || '', n);
+      const many = codes.length > 1;
+      stateBox('ok', many ? 'Poukazy jsou zaplacené 🐰' : 'Poukaz je zaplacený 🐰',
+        '<p>Děkujeme! Tady ' + (many ? 'jsou kódy dárkových poukazů' : 'je kód dárkového poukazu') +
+        ' — obdarovaný ho uplatní přímo ve studiu:</p>' +
+        '<div class="code-list">' + codes.map((c) => '<span class="code-box">' + c + '</span>').join('') + '</div>' +
+        '<p>' + (VOUCHER_EMAIL_OK && em
+          ? ('Poslali jsme ' + (many ? 'je' : 'ho') + ' i na ' + esc(em) + '.')
+          : ('Uložte si ' + (many ? 'je' : 'ho') + ' prosím (opište nebo udělejte screenshot).')) + '</p>',
         '<a class="btn btn-ghost" href="rezervace.html">Zpět na termíny</a>');
       if (VOUCHER_EMAIL_OK && em) {
-        try { window.emailjs.send(window.EMAILJS_SERVICE_ID, VOUCHER_TPL, { email: em, to_email: em, code: code, amount: (PAY.voucherCzk || 499) + ' Kč' }); } catch (e) {}
+        try {
+          window.emailjs.send(window.EMAILJS_SERVICE_ID, VOUCHER_TPL, {
+            email: em, to_email: em,
+            code: codes.join(', '),          // šablona má jedno pole {{code}}
+            count: String(codes.length),
+            amount: czk((PAY.voucherCzk || 499) * codes.length)
+          });
+        } catch (e) {}
       }
-      ls.del('voucherEmail');
+      ls.del('voucherEmail'); ls.del('voucherCount');
     }
     else if (voucher === 'zrus') stateBox('info', 'Nákup poukazu zrušen', '<p>Poukaz jsi nekoupil — nic se nestrhlo. Klidně to zkus znovu.</p>', '<a class="btn btn-ghost" href="rezervace.html">Zpět na termíny</a>');
   })();

@@ -130,11 +130,12 @@ Deno.serve(async (req) => {
     // Nastavení navíc, bez kterých platba funguje taky. Kdyby je Stripe
     // nepřijal, založíme platbu bez nich — radši brána v základním vzhledu
     // než žádná brána.
-    // Peněženku Link tu schválně nevypínáme. Šlo by to přes
-    // wallet_options.link.display = "never", jenže kdyby to Stripe odmítl,
-    // spadne to sem dolů do fallbacku a přišli bychom i o barvy. Link nikomu
-    // nevadí a Apple Pay ani Google Pay nijak neblokuje.
-    const extras = { branding_settings: branding };
+    const extras = {
+      branding_settings: branding,
+      // Vypne peněženku Link. Nejde přes payment_method_types — Link se veze
+      // s kartou. Apple Pay a Google Pay tím nezmizí.
+      wallet_options: { link: { display: "never" } },
+    };
 
     let session;
     try {

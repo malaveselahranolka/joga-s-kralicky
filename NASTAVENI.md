@@ -280,8 +280,18 @@ měnila, projdi je všechny, jinak se rozbijí návraty z plateb:
 | Stripe → **Payment Links** → poukaz | návratová adresa po zaplacení |
 
 ### F) Dárkový poukaz + e-mail s kódem (EmailJS)
-Poukaz se zaplatí přes Stripe, po zaplacení web ukáže **kód** a pošle ho e-mailem.
-1. V EmailJS vytvoř šablonu (pole: `to_email`, `code`, `amount`), zkopíruj Template ID.
+Poukazy se platí přes Stripe (funkce `stripe-voucher`), po zaplacení web ukáže
+**kódy** a pošle je e-mailem. Zákazník si jich může koupit **víc naráz** —
+počet vybere u karty s poukazem a cenu × počet spočítá server.
+
+> **Kódy poukazů** vypadají `DK-XKCD1234` (jeden kus) nebo `DK-XKCD1234-1`,
+> `-2`, … (víc kusů). Odvozují se z čísla platby a **stejný výpočet dělá web
+> i funkce `stripe-webhook`** — jinak by host viděl jiné kódy, než máš
+> v adminu. Když ten výpočet měníš, změň ho na obou místech naráz.
+
+1. V EmailJS vytvoř šablonu (pole: `to_email`, `code`, `amount`, případně
+   `count`), zkopíruj Template ID. Při nákupu víc kusů přijdou všechny kódy
+   v poli `{{code}}` oddělené čárkou.
 2. Do `supabase-config.js`: `window.EMAILJS_VOUCHER_TEMPLATE_ID = 'template_…';`
 3. Prodané poukazy vidíš v adminu → záložka **Poukazy** (odškrtneš „uplatněno").
 

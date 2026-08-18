@@ -58,13 +58,25 @@ Deno.serve(async (req) => {
         .eq("id", bookingId).neq("payment_status", "paid");
     }
   } else if (isVoucher && event.type === "checkout.session.completed") {
-    // dárkový poukaz zaplacen → vygeneruj kód a ulož (kód je deterministický ze session id)
-    const code = "DK-" + String(obj.id).replace(/[^A-Za-z0-9]/g, "").slice(-8).toUpperCase();
+    // Dárkové poukazy zaplaceny → vygeneruj kódy a ulož je.
+    // Kódy jsou DETERMINISTICKÉ ze session id, protože úplně stejný výpočet
+    // dělá i web v rezervace.html (funkce voucherCodes) — jinak by host viděl
+    // jiné kódy, než jaké máš v adminu. Když ten výpočet měníš, změň ho na
+    // obou místech naráz.
+    const count = Math.max(1, Number(obj?.metadata?.count) || 1);
+    const stem = "DK-" + String(obj.id).replace(/[^A-Za-z0-9]/g, "").slice(-8).toUpperCase();
     const email = obj?.customer_details?.email || obj?.customer_email || null;
-    const amount = obj?.amount_total ?? null;
-    await admin.from("vouchers").upsert({
-      code, email, amount, session_id: obj.id, redeemed: false,
-    }, { onConflict: "code" });
+    const total = obj?.amount_total ?? null;
+    const each = total != null ? Math.round(total / count) : null;
+
+    const rows = Array.from({ length: count }, (_, i) => ({
+      code: count === 1 ? stem : `${stem}-${i + 1}`,
+      email,
+      amount: each,          // cena za JEDEN poukaz, ne celá objednávka
+      session_id: obj.id,
+      redeemed: false,
+    }));
+    await admin.from("vouchers").upsert(rows, { onConflict: "code" });
   }
 
   return new Response(JSON.stringify({ received: true }), {

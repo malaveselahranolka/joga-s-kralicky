@@ -25,9 +25,13 @@ window.PAYMENTS = {
   // Musí odpovídat tomu, co nastavuje supabase/online-only.sql (35 min).
   holdMinutes: 35,
 
-  // Dárkový poukaz — hotový Stripe Payment Link (pevná částka, 1 ks):
-  voucherUrl: 'https://buy.stripe.com/fZu28r7Dr6xLc8t1JH1gs00',
+  // Dárkové poukazy — cenu × počet kusů počítá funkce stripe-voucher.
   voucherCzk: 499,
+  maxVouchers: 10,   // kolik poukazů lze koupit najednou
+
+  // Nouzový odkaz na JEDEN poukaz — použije se jen když funkce
+  // stripe-voucher neodpoví. U víc kusů by strhl málo, tak se nepoužije.
+  voucherUrl: 'https://buy.stripe.com/fZu28r7Dr6xLc8t1JH1gs00',
 
   // ZÁCHRANNÁ BRZDA. Starý pevný odkaz na jeden vstup za 499 Kč. Použije se
   // jen tehdy, když funkce stripe-create neodpoví (není nasazená, výpadek) —
