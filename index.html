@@ -280,7 +280,6 @@
   .rs-item.is-on { opacity: 1; }
   .rs-item h3 { font-size: clamp(1.5rem, 1rem + 1.85vw, 2.45rem); letter-spacing: -.035em; max-width: 18ch; }
   .rs-item p { margin-top: .85rem; color: var(--ink-soft); max-width: 42ch; font-size: clamp(1rem, .95rem + .28vw, 1.14rem); }
-  .rs-inline { display: none; }
 
   /* ---------- lessons: only two, so both get room to breathe ---------- */
   .lessons { background: var(--forest-deep); color: var(--cream); overflow: hidden; }
@@ -370,7 +369,6 @@
   .gal-bar { flex: 1; height: 2px; background: var(--line); border-radius: 999px; overflow: hidden; }
   .gal-bar span { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, var(--clover), var(--carrot)); transform: scaleX(0); transform-origin: 0 50%; }
   .gal-hint { font-size: .84rem; color: var(--ink-soft); white-space: nowrap; }
-  .gal-hint .on-swipe { display: none; }
 
   /* ---------- testimonials ---------- */
   .reference { background: var(--cream); overflow: hidden; border-top: 1px solid var(--line-soft); }
@@ -500,10 +498,7 @@
   /* calm "breath" entrances; the pop variant is stronger and used where a photo
      should land with a bit of weight (reasons cards) */
   .reveal { opacity: 0; transform: translateY(28px); transition: opacity .8s var(--ease-out), transform .9s var(--ease-out); transition-delay: var(--rv-d, 0s); }
-  .reveal[data-rv="left"] { transform: translateX(-40px); }
-  .reveal[data-rv="right"] { transform: translateX(40px); }
-  /* must come after the variants: equal specificity, so source order decides */
-  .reveal.in, .reveal.in[data-rv] { opacity: 1; transform: none; }
+  .reveal.in { opacity: 1; transform: none; }
   .pop { opacity: 0; transform: translateY(52px) scale(.94); filter: blur(7px); transition: opacity .75s var(--ease-out), transform .95s var(--ease-out), filter .7s var(--ease-out); transition-delay: var(--rv-d, 0s); }
   .pop.in { opacity: 1; transform: none; filter: blur(0); }
   .pop img { transform: scale(1.14); transition: transform 1.25s var(--ease-out); transition-delay: var(--rv-d, 0s); }
@@ -562,7 +557,7 @@
   html.lite .pop img, html.lite .pop.in img { transform: none; transition: none; }
 
   @media (prefers-reduced-motion: reduce) {
-    .reveal, .reveal[data-rv], .pop { opacity: 1; transform: none; filter: none; }
+    .reveal, .pop { opacity: 1; transform: none; filter: none; }
     .pop img, .pop.in img { transform: none; transition: none; }
     .hero-eyebrow, .hero h1, .hero .hero-sub, .hero-actions { opacity: 1; animation: none; }
     .hero h1 .wi { transform: none; animation: none; }
@@ -626,32 +621,28 @@
     .foot-bottom { flex-direction: column; }
   }
   @media (max-width: 900px) {
-    /* na dotyku se nic nešpendlí — galerie je normální posuvná stopa pod prstem */
-    .gal-wrap { height: auto; }
-    .gal-sticky { position: static; height: auto; padding-block: clamp(3.5rem, 9vw, 5rem); }
-    .gal-view { overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; scroll-snap-type: x proximity; }
-    .gal-view::-webkit-scrollbar { display: none; }
-    .gal-track { transform: none !important; }
-    .gal-track > * { scroll-snap-align: center; }
-    .gal-track > :nth-child(4n+2), .gal-track > :nth-child(4n+3), .gal-track > :nth-child(4n) { transform: none; }
-    .gal-big .rshot { height: 300px; }
-    .gal-pair .rshot { height: 142px; }
-    .gal-foot { flex-wrap: wrap; }
-    .gal-bar { display: none; }
-    .gal-hint .on-scroll { display: none; }
-    .gal-hint .on-swipe { display: inline; }
+    /* stejné chování jako na desktopu, jen menší karty, ať se sekce vejde
+       i na nízký displej (počítáno pro 667 px vysoký telefon) */
+    .gal-sticky { padding-block: clamp(4.5rem, 11vh, 5.5rem) clamp(.9rem, 2vh, 1.4rem); gap: clamp(.9rem, 2vh, 1.4rem); }
+    .gal-big .rshot { height: min(40svh, 290px); }
+    .gal-pair .rshot, .gal-wide .rshot { height: min(18.5svh, 136px); }
+    .gal-big .bun-note { font-size: .82rem; margin-top: .6rem; }
+    .gal-foot { gap: .8rem; }
+    .gal-foot .btn { display: none; }
+    .gal-track > :nth-child(4n+2) { transform: translateY(10px); }
+    .gal-track > :nth-child(4n+3) { transform: translateY(-6px); }
+    .gal-track > :nth-child(4n) { transform: translateY(16px); }
   }
   @media (max-width: 900px) {
-    /* bez sticky sloupce: každý důvod dostane svou fotku rovnou nad text */
-    .rsplit { grid-template-columns: 1fr; gap: 0; }
-    .rs-media { display: none; }
+    /* fotka se drží pod hlavičkou a text jí podjíždí — stejná vazba jako na desktopu */
+    .rsplit { display: block; }
+    .rs-media { position: sticky; top: 78px; z-index: 2; background: var(--paper); padding-bottom: 1rem; }
+    .rs-frame { height: 38svh; }
+    .rs-count { left: 1rem; bottom: 1rem; }
     .rs-list { padding-left: 0; }
     .rs-list::before, .rs-rail { display: none; }
-    .rs-item { opacity: 1; padding-block: clamp(2rem, 6vw, 3rem); }
-    .rs-item:first-child { padding-top: 0; }
-    .rs-inline { display: block; border-radius: var(--r-lg); overflow: hidden; margin-bottom: 1.2rem; box-shadow: var(--sh-2); }
-    .rs-inline img { width: 100%; aspect-ratio: 4/3; object-fit: cover; }
-    .gal-wide .rshot { height: 142px; }
+    .rs-item { padding-block: clamp(2.2rem, 14vh, 4.5rem); }
+    .rs-item:first-child { padding-top: clamp(1.6rem, 5vh, 2.4rem); }
   }
   @media (max-width: 380px) {
     .nav-cta { padding: .45em .8em; font-size: .78rem; }
@@ -753,12 +744,12 @@
       </div>
 
       <div class="rsplit" id="rsplit">
-        <div class="rs-media" aria-hidden="true">
+        <div class="rs-media">
           <div class="rs-frame">
-            <figure class="rs-shot is-on"><img decoding="async" src="assets/photos/rabbit-3.webp" alt="" loading="lazy" /></figure>
-            <figure class="rs-shot"><img decoding="async" src="assets/photos/yoga-4.webp" alt="" loading="lazy" /></figure>
-            <figure class="rs-shot"><img decoding="async" src="assets/photos/rabbit-6.webp" alt="" loading="lazy" /></figure>
-            <figure class="rs-shot"><img decoding="async" src="assets/photos/rabbit-2.webp" alt="" loading="lazy" /></figure>
+            <figure class="rs-shot is-on"><img decoding="async" src="assets/photos/rabbit-3.webp" alt="Bílo-rezavý králík odpočívá v trávě" loading="lazy" /></figure>
+            <figure class="rs-shot"><img decoding="async" src="assets/photos/yoga-4.webp" alt="Žena sedí v klidu na podložce ve světlém sále" loading="lazy" /></figure>
+            <figure class="rs-shot"><img decoding="async" src="assets/photos/rabbit-6.webp" alt="Hnědý králík v trávě" loading="lazy" /></figure>
+            <figure class="rs-shot"><img decoding="async" src="assets/photos/rabbit-2.webp" alt="Šedý králík se rozhlíží" loading="lazy" /></figure>
             <div class="rs-count"><i class="on"></i><i></i><i></i><i></i></div>
           </div>
         </div>
@@ -766,22 +757,18 @@
         <ol class="rs-list">
           <span class="rs-rail" id="rsRail" aria-hidden="true"></span>
           <li class="rs-item is-on">
-            <div class="rs-inline"><img decoding="async" src="assets/photos/rabbit-3.webp" alt="Bílo-rezavý králík odpočívá v trávě" loading="lazy" /></div>
             <h3>Protože si k vám někdo lehne</h3>
             <p>Brokolice si za lekci vybere jeden klín. Když je to ten váš, odcházíte jiní, než jste přišli.</p>
           </li>
           <li class="rs-item">
-            <div class="rs-inline"><img decoding="async" src="assets/photos/yoga-4.webp" alt="Žena sedí v klidu na podložce ve světlém sále" loading="lazy" /></div>
             <h3>Protože se nikdo nedívá, jak vám to jde</h3>
             <p>Žádná zrcadla, žádné opravování. Lektorka ukáže a nechá vás to dělat po svém.</p>
           </li>
           <li class="rs-item">
-            <div class="rs-inline"><img decoding="async" src="assets/photos/rabbit-6.webp" alt="Hnědý králík v trávě" loading="lazy" /></div>
             <h3>Protože králík se nedá popohnat</h3>
             <p>Nemůžete uspíšit zvíře, které si dává na čas. Tak si ho nakonec dáte taky.</p>
           </li>
           <li class="rs-item">
-            <div class="rs-inline"><img decoding="async" src="assets/photos/rabbit-2.webp" alt="Šedý králík se rozhlíží" loading="lazy" /></div>
             <h3>Protože si zapamatujete jména dřív než pozice</h3>
             <p>Po měsíci znáte Pepu, Tofu i Mínku. Sanskrt počká, tahle hodina ne.</p>
           </li>
@@ -943,7 +930,7 @@
         <div class="wrap gal-foot">        </div>
 
         <div class="wrap gal-foot">
-          <span class="gal-hint"><span class="on-scroll">Scrollujte, galerie jede do strany</span><span class="on-swipe">Táhněte prstem do strany</span></span>
+          <span class="gal-hint">Scrollujte, galerie jede do strany</span>
           <span class="gal-bar" aria-hidden="true"><span id="galBar"></span></span>
           <a class="btn btn-ghost" href="rezervace.html">Chci je poznat <span class="arrow">→</span></a>
         </div>
@@ -1068,7 +1055,7 @@
         <p class="lead">Sídlíme ve Fit&amp;Fun Studiu. Přijďte prosím o deset minut dřív, ať se stihnete v klidu zout a králíci si vás stihnou očichat.</p>
       </div>
       <div class="visit-grid">
-        <div class="visit-card reveal" data-rv="left">
+        <div class="visit-card reveal">
           <p class="visit-addr">Fit&amp;Fun Studio Ostrava<span>Tovární 486/7, 709 00 Ostrava-Mariánské Hory</span></p>
           <div class="contact-list">
             <a href="mailto:info@jogaskralicky.cz">
@@ -1089,7 +1076,7 @@
             <a class="btn btn-ghost" href="https://www.google.com/maps/dir/?api=1&amp;destination=Fit%26Fun%20Studio%20Ostrava%2C%20Tovární%20486%2F7%2C%20709%2000%20Ostrava-Mariánské%20Hory" target="_blank" rel="noopener">Naplánovat trasu</a>
           </div>
         </div>
-        <div class="visit-map reveal" data-rv="right">
+        <div class="visit-map reveal">
           <iframe
             title="Mapa: Fit&amp;Fun Studio Ostrava, Tovární 486/7"
             src="https://maps.google.com/maps?q=Fit%26Fun%20Studio%20Ostrava%2C%20Tovární%20486%2F7%2C%20709%2000%20Ostrava-Mari%C3%A1nsk%C3%A9%20Hory&amp;z=15&amp;ie=UTF8&amp;output=embed"
@@ -1410,7 +1397,7 @@
       if (REDUCE) ctaLead.style.setProperty('--draw', 1);
     }
 
-    const galPinned = () => window.matchMedia('(min-width: 901px)').matches && !REDUCE;
+    const galPinned = () => !REDUCE;
 
     let vh = 0, docMax = 1, heroEnd = 0;
     let galTop = 0, galSpan = 1, galTravel = 0;
