@@ -256,30 +256,40 @@
   .proof-note { margin-left: auto; font-size: .86rem; color: rgba(255,255,255,.65); max-width: 26ch; }
 
   /* ---------- reasons people come back ----------
-     Jedna velká fotka drží na místě a přebarvuje se podle důvodu, u kterého
-     zrovna jste. Text vede, fotka odpovídá — proto je ta vazba čitelná. */
-  .reasons { background: var(--paper); }
-  .rsplit { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 5vw, 4.5rem); margin-top: clamp(2.4rem, 5vw, 4rem); align-items: start; }
+     Panely se lepí pod sebe a každý další se nasune přes předchozí. Světlá
+     karta na papírovém podkladu, aby bylo to nasouvání vidět i bez tmy. */
+  .reasons { background: var(--paper); padding-bottom: 0; }
+  .rstack { margin-top: clamp(2rem, 4vw, 3.2rem); }
 
-  .rs-media { position: sticky; top: clamp(96px, 13vh, 140px); }
-  .rs-frame { position: relative; height: min(70svh, 600px); border-radius: var(--r-xl); overflow: hidden; background: var(--forest-deep); box-shadow: var(--sh-3); }
-  .rs-shot { position: absolute; inset: 0; margin: 0; opacity: 0; transform: scale(1.07); transition: opacity .7s var(--ease-out), transform 1.4s var(--ease-out); }
-  .rs-shot.is-on { opacity: 1; transform: scale(1); }
-  .rs-shot img { width: 100%; height: 100%; object-fit: cover; }
-  .rs-frame::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(to top, rgba(15,20,14,.34), transparent 42%); }
-  .rs-count { position: absolute; z-index: 2; left: 1.4rem; bottom: 1.2rem; display: flex; gap: .4rem; }
-  .rs-count i { width: 22px; height: 3px; border-radius: 999px; background: rgba(255,255,255,.35); transition: background-color .4s var(--ease); }
-  .rs-count i.on { background: var(--carrot); }
+  .rpanel {
+    position: sticky; top: 0; min-height: 74svh;
+    display: flex; align-items: center;
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    border-radius: var(--r-xl) var(--r-xl) 0 0;
+    box-shadow: 0 -22px 46px -28px rgba(44,59,46,.45);
+  }
+  .rp-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: clamp(1.8rem, 3.4vw, 3rem); align-items: center;
+    padding-block: clamp(4.4rem, 9vh, 5.4rem) clamp(2.2rem, 5vh, 3.2rem);
+  }
 
-  .rs-list { list-style: none; margin: 0; padding: 0 0 0 clamp(1.4rem, 2.4vw, 2.3rem); position: relative; }
-  .rs-list::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 1px; background: var(--line); }
-  .rs-rail { position: absolute; left: -1px; top: 0; width: 3px; border-radius: 999px; background: linear-gradient(180deg, var(--clover), var(--carrot)); height: 0; transition: height .5s var(--ease-out); }
-  .rs-item { padding-block: clamp(2.6rem, 8vh, 5rem); opacity: .46; transition: opacity .55s var(--ease); }
-  .rs-item:first-child { padding-top: .5rem; }
-  .rs-item:last-child { padding-bottom: .5rem; }
-  .rs-item.is-on { opacity: 1; }
-  .rs-item h3 { font-size: clamp(1.5rem, 1rem + 1.85vw, 2.45rem); letter-spacing: -.035em; max-width: 18ch; }
-  .rs-item p { margin-top: .85rem; color: var(--ink-soft); max-width: 42ch; font-size: clamp(1rem, .95rem + .28vw, 1.14rem); }
+  .rp-label {
+    display: inline-flex; align-items: center; gap: .8rem;
+    font-size: .76rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--clover);
+  }
+  .rp-label::before { content: ""; width: clamp(2.2rem, 4vw, 3.4rem); height: 2px; border-radius: 999px; background: var(--carrot); }
+  .rp-text h3 { margin-top: clamp(1rem, 1.9vw, 1.4rem); font-size: clamp(1.7rem, .95rem + 2.4vw, 2.9rem); letter-spacing: -.04em; line-height: 1.05; max-width: 16ch; }
+  .rp-text p { margin-top: clamp(1rem, 2vw, 1.4rem); color: var(--ink-soft); max-width: 46ch; font-size: clamp(1rem, .95rem + .3vw, 1.14rem); }
+
+  .rp-pic { position: relative; border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--sh-3); height: min(46svh, 430px); background: var(--forest-deep); }
+  .rp-pic img { width: 100%; height: 100%; object-fit: cover; }
+  /* sudé panely mají fotku vlevo, ať se to při nasouvání střídá */
+  .rpanel:nth-child(even) .rp-pic { order: -1; }
+  .rp-bar { margin-top: clamp(1.5rem, 3vw, 2.2rem); max-width: 46ch; height: 2px; background: var(--line); border-radius: 999px; overflow: hidden; }
+  .rp-bar span { display: block; height: 100%; background: linear-gradient(90deg, var(--clover), var(--carrot)); transform: scaleX(var(--rp, 0)); transform-origin: 0 50%; }
 
   /* ---------- lessons: only two, so both get room to breathe ---------- */
   .lessons { background: var(--forest-deep); color: var(--cream); overflow: hidden; }
@@ -323,47 +333,45 @@
   /* ---------- rabbit gallery: the section pins and the photos pan sideways ----------
      Sticky + a tall spacer gives the same pinned scrub as a ScrollTrigger pin,
      without pulling a library onto a static page. Only transform is animated. */
-  .gal { background: var(--paper); padding: 0; }
+  .gal { background: var(--paper); padding: clamp(4.5rem, 8vw, 7rem) 0 0; }
+  .gal-intro { margin-bottom: clamp(1.6rem, 3vw, 2.4rem); }
   .gal-wrap { position: relative; height: calc(100svh + var(--travel, 900px)); }
   .gal-sticky {
     position: sticky; top: 0; height: 100svh; overflow: hidden;
-    display: flex; flex-direction: column; justify-content: center; gap: clamp(1.2rem, 2.5vw, 2.2rem);
-    padding-block: clamp(5rem, 9vh, 7rem) clamp(1.5rem, 3vh, 2.5rem);
+    display: flex; flex-direction: column; justify-content: center; gap: clamp(1rem, 2vh, 1.8rem);
+    padding-block: clamp(5.2rem, 9vh, 6.5rem) clamp(1.2rem, 2.5vh, 2rem);
   }
-  .gal-head { flex: none; }
-  .gal-head h2 { font-size: clamp(1.7rem, 1.1rem + 1.9vw, 2.7rem); }
-  .gal-head p { margin-top: .7rem; max-width: 52ch; }
   .gal-view { overflow: hidden; flex: none; }
   .gal-track {
-    display: flex; align-items: center; gap: clamp(.9rem, 1.6vw, 1.5rem); width: max-content;
+    --gal-gap: clamp(.6rem, .95vw, .95rem);
+    --shot-h: min(52svh, 490px);
+    display: flex; align-items: start; gap: var(--gal-gap); width: max-content;
     padding-inline: max(1.2rem, calc((100vw - var(--maxw)) / 2));
+    padding-block: .7rem .9rem;
     will-change: transform;
   }
   .gal-big { flex: none; }
-  .gal-pair, .gal-wide { flex: none; display: grid; gap: clamp(.9rem, 1.6vw, 1.5rem); }
-  /* a small vertical drift so the row reads as a gallery, not a strip */
-  .gal-track > :nth-child(4n+2) { transform: translateY(clamp(10px, 2.2vh, 26px)); }
-  .gal-track > :nth-child(4n+3) { transform: translateY(clamp(-14px, -1.6vh, -6px)); }
-  .gal-track > :nth-child(4n) { transform: translateY(clamp(16px, 3.4vh, 40px)); }
+  .gal-stack { flex: none; display: grid; gap: var(--gal-gap); }
+  .gal-hero { flex: none; }
 
   .rshot { position: relative; display: block; padding: 0; border: 0; margin: 0; cursor: pointer; background: var(--surface); overflow: hidden; border-radius: var(--r-lg); box-shadow: 0 12px 24px -14px rgba(44,59,46,.4); transition: transform .45s var(--ease-out), box-shadow .45s var(--ease); }
   .rshot img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s var(--ease); }
-  .gal-big .rshot { height: min(50svh, 430px); aspect-ratio: 3/4; }
-  .gal-pair .rshot { height: min(23svh, 198px); aspect-ratio: 1/1; border-radius: var(--r-md); }
-  .gal-pair .rshot:nth-child(2) { border-radius: var(--r-leaf); }
-  /* fotky na šířku dostanou vlastní, širší sloupec — čtverec je jen ořezával */
-  .gal-wide .rshot { height: min(23svh, 198px); aspect-ratio: 3/2; border-radius: var(--r-md); }
-  .gal-wide .rshot:nth-child(2) { border-radius: var(--r-leaf); }
+  /* tři typy sloupců, ale všechny fotky leží ve stejném vodorovném pásu:
+     stejná horní i dolní hrana, takže mezery kolem nich vycházejí všude stejně */
+  .gal-big .rshot { height: var(--shot-h); aspect-ratio: 3/4; }
+  .gal-stack .rshot { height: calc((var(--shot-h) - var(--gal-gap)) / 2); aspect-ratio: 3/2; border-radius: var(--r-md); }
+  .gal-stack .rshot:nth-child(2) { border-radius: var(--r-leaf); }
+  .gal-hero .rshot { height: var(--shot-h); aspect-ratio: 3/2; }
   .rshot::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(16,21,15,.7), rgba(16,21,15,0) 55%); }
   .rshot .cap { position: absolute; left: .9rem; right: .9rem; bottom: .7rem; z-index: 2; color: #fff; font-family: "Schibsted Grotesk"; font-weight: 600; font-size: .82rem; text-align: left; letter-spacing: -.01em; }
-  .gal-big .rshot .cap { font-size: 1.1rem; }
-  .gal-big .rshot .cap small { display: block; font-family: "Hanken Grotesk"; font-weight: 500; font-size: .78rem; color: rgba(255,255,255,.78); margin-top: .12rem; letter-spacing: 0; }
+  .gal-big .rshot .cap, .gal-hero .rshot .cap { font-size: 1.1rem; }
+  .gal-big .rshot .cap small, .gal-hero .rshot .cap small { display: block; font-family: "Hanken Grotesk"; font-weight: 500; font-size: .78rem; color: rgba(255,255,255,.78); margin-top: .12rem; letter-spacing: 0; }
   .rshot:focus-visible { outline: 2px solid var(--clover); outline-offset: 3px; }
   @media (hover: hover) and (pointer: fine) {
     .rshot:hover { transform: translateY(-6px); box-shadow: var(--sh-float); }
     .rshot:hover img { transform: scale(1.06); }
   }
-  .gal-big .bun-note { margin-top: .8rem; font-size: .88rem; color: var(--ink-soft); line-height: 1.45; max-width: 30ch; }
+  .gal-big .bun-note { margin-top: .8rem; font-size: .88rem; color: var(--ink-soft); line-height: 1.45; min-height: 2.9em; }
 
   .gal-foot { flex: none; display: flex; align-items: center; gap: 1.2rem; }
   .gal-bar { flex: 1; height: 2px; background: var(--line); border-radius: 999px; overflow: hidden; }
@@ -499,10 +507,6 @@
      should land with a bit of weight (reasons cards) */
   .reveal { opacity: 0; transform: translateY(28px); transition: opacity .8s var(--ease-out), transform .9s var(--ease-out); transition-delay: var(--rv-d, 0s); }
   .reveal.in { opacity: 1; transform: none; }
-  .pop { opacity: 0; transform: translateY(52px) scale(.94); filter: blur(7px); transition: opacity .75s var(--ease-out), transform .95s var(--ease-out), filter .7s var(--ease-out); transition-delay: var(--rv-d, 0s); }
-  .pop.in { opacity: 1; transform: none; filter: blur(0); }
-  .pop img { transform: scale(1.14); transition: transform 1.25s var(--ease-out); transition-delay: var(--rv-d, 0s); }
-  .pop.in img { transform: scale(1); }
 
   /* hero load animation (staggered rise) */
   @keyframes heroRise { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
@@ -553,12 +557,9 @@
   html.lite .breathe { animation: none; }
   html.lite .aurora { filter: blur(46px); opacity: .26; }
   html.lite .sglow { opacity: .5; }
-  html.lite .pop { filter: none; }
-  html.lite .pop img, html.lite .pop.in img { transform: none; transition: none; }
 
   @media (prefers-reduced-motion: reduce) {
-    .reveal, .pop { opacity: 1; transform: none; filter: none; }
-    .pop img, .pop.in img { transform: none; transition: none; }
+    .reveal { opacity: 1; transform: none; }
     .hero-eyebrow, .hero h1, .hero .hero-sub, .hero-actions { opacity: 1; animation: none; }
     .hero h1 .wi { transform: none; animation: none; }
     .deck-anim .hd-card { opacity: 1; animation: none; transform: rotate(var(--rot)); }
@@ -570,9 +571,7 @@
     .cta-arrow path { stroke-dashoffset: 0; }
     .cta-lead.armed .cta-arrow, .cta-lead.armed .btn::before { animation: none; }
     .lightbox img { animation: none; }
-    .rs-shot { transition: opacity .2s linear; transform: none; }
-    .rs-shot.is-on { transform: none; }
-    .rs-item { opacity: 1; }
+    .rp-pic img { transform: none; }
     .gal-wrap { height: auto; }
     .gal-sticky { position: static; height: auto; }
     .gal-view { overflow-x: auto; }
@@ -580,9 +579,6 @@
 
   /* ---------- responsive ---------- */
   @media (max-width: 1040px) {
-    .reason-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
-    .reason-grid > .rcard:nth-child(even) { margin-top: 0; }
-    .reason-grid > .rcard:nth-child(n+3) { margin-top: 0; }
     .lesson-pair { grid-template-columns: 1fr; max-width: 560px; margin-inline: auto; }
     .faq-wrap { grid-template-columns: 1fr; }
     .visit-grid { grid-template-columns: 1fr; }
@@ -611,8 +607,6 @@
   }
   @media (max-width: 560px) {
     section { padding: clamp(3.5rem, 9vw, 5rem) 0; }
-    .reason-grid { grid-template-columns: 1fr; }
-    .rcard { min-height: 320px; }
     .tcard { flex-basis: 100%; }
     .hero-actions .cta-split { width: 100%; }
     .hero-actions .cta-split .btn-light { flex: 1; }
@@ -623,26 +617,17 @@
   @media (max-width: 900px) {
     /* stejné chování jako na desktopu, jen menší karty, ať se sekce vejde
        i na nízký displej (počítáno pro 667 px vysoký telefon) */
-    .gal-sticky { padding-block: clamp(4.5rem, 11vh, 5.5rem) clamp(.9rem, 2vh, 1.4rem); gap: clamp(.9rem, 2vh, 1.4rem); }
-    .gal-big .rshot { height: min(40svh, 290px); }
-    .gal-pair .rshot, .gal-wide .rshot { height: min(18.5svh, 136px); }
-    .gal-big .bun-note { font-size: .82rem; margin-top: .6rem; }
-    .gal-foot { gap: .8rem; }
-    .gal-foot .btn { display: none; }
-    .gal-track > :nth-child(4n+2) { transform: translateY(10px); }
-    .gal-track > :nth-child(4n+3) { transform: translateY(-6px); }
-    .gal-track > :nth-child(4n) { transform: translateY(16px); }
+    .gal-sticky { padding-block: clamp(4.6rem, 10vh, 5.4rem) clamp(.8rem, 2vh, 1.2rem); gap: clamp(.8rem, 2vh, 1.2rem); }
+    .gal-track { --shot-h: min(46svh, 345px); }
+    .gal-big .bun-note { font-size: .82rem; margin-top: .55rem; }
+    .gal-foot { gap: .7rem 1rem; flex-wrap: wrap; }
+    .gal-foot .btn { padding: .7em 1.3em; font-size: .9rem; }
   }
-  @media (max-width: 900px) {
-    /* fotka se drží pod hlavičkou a text jí podjíždí — stejná vazba jako na desktopu */
-    .rsplit { display: block; }
-    .rs-media { position: sticky; top: 78px; z-index: 2; background: var(--paper); padding-bottom: 1rem; }
-    .rs-frame { height: 38svh; }
-    .rs-count { left: 1rem; bottom: 1rem; }
-    .rs-list { padding-left: 0; }
-    .rs-list::before, .rs-rail { display: none; }
-    .rs-item { padding-block: clamp(2.2rem, 14vh, 4.5rem); }
-    .rs-item:first-child { padding-top: clamp(1.6rem, 5vh, 2.4rem); }
+  @media (max-width: 860px) {
+    .rpanel { min-height: 68svh; }
+    .rp-grid { grid-template-columns: 1fr; gap: 1.5rem; padding-block: clamp(4.6rem, 10vh, 5.6rem) clamp(2.2rem, 5vh, 3rem); }
+    .rp-pic, .rpanel:nth-child(even) .rp-pic { order: -1; height: min(30svh, 260px); }
+    .rp-text h3 { max-width: none; }
   }
   @media (max-width: 380px) {
     .nav-cta { padding: .45em .8em; font-size: .78rem; }
@@ -736,44 +721,68 @@
 
   <!-- ============ WHY PEOPLE COME BACK ============ -->
   <section class="reasons" id="proc">
-    <div class="wrap">
-      <div class="section-head reveal">
-        <span class="eyebrow">Proč se lidi vracejí</span>
-        <h2>Zeptali jsme se. Nikdo neřekl „kvůli protažení“.</h2>
-        <p class="lead">Jóga je záminka. Tohle jsou čtyři důvody, které nám lidi říkají doopravdy.</p>
-      </div>
+    <div class="wrap section-head reveal">
+      <span class="eyebrow">Proč se lidi vracejí</span>
+      <h2>Zeptali jsme se. Nikdo neřekl „kvůli protažení“.</h2>
+      <p class="lead">Jóga je záminka. Tohle jsou čtyři důvody, které nám lidi říkají doopravdy.</p>
+    </div>
 
-      <div class="rsplit" id="rsplit">
-        <div class="rs-media">
-          <div class="rs-frame">
-            <figure class="rs-shot is-on"><img decoding="async" src="assets/photos/rabbit-3.webp" alt="Bílo-rezavý králík odpočívá v trávě" loading="lazy" /></figure>
-            <figure class="rs-shot"><img decoding="async" src="assets/photos/yoga-4.webp" alt="Žena sedí v klidu na podložce ve světlém sále" loading="lazy" /></figure>
-            <figure class="rs-shot"><img decoding="async" src="assets/photos/rabbit-6.webp" alt="Hnědý králík v trávě" loading="lazy" /></figure>
-            <figure class="rs-shot"><img decoding="async" src="assets/photos/rabbit-2.webp" alt="Šedý králík se rozhlíží" loading="lazy" /></figure>
-            <div class="rs-count"><i class="on"></i><i></i><i></i><i></i></div>
-          </div>
-        </div>
-
-        <ol class="rs-list">
-          <span class="rs-rail" id="rsRail" aria-hidden="true"></span>
-          <li class="rs-item is-on">
+    <div class="rstack">
+      <article class="rpanel">
+        <div class="wrap rp-grid">
+          <div class="rp-text">
+            <span class="rp-label">Blízkost</span>
             <h3>Protože si k vám někdo lehne</h3>
             <p>Brokolice si za lekci vybere jeden klín. Když je to ten váš, odcházíte jiní, než jste přišli.</p>
-          </li>
-          <li class="rs-item">
+            <div class="rp-bar" aria-hidden="true"><span></span></div>
+          </div>
+          <div class="rp-pic">
+            <img decoding="async" src="assets/photos/rabbit-3.webp" alt="Bílo-rezavý králík odpočívá v trávě" loading="lazy" />
+          </div>
+        </div>
+      </article>
+
+      <article class="rpanel">
+        <div class="wrap rp-grid">
+          <div class="rp-text">
+            <span class="rp-label">Bez zrcadel</span>
             <h3>Protože se nikdo nedívá, jak vám to jde</h3>
             <p>Žádná zrcadla, žádné opravování. Lektorka ukáže a nechá vás to dělat po svém.</p>
-          </li>
-          <li class="rs-item">
+            <div class="rp-bar" aria-hidden="true"><span></span></div>
+          </div>
+          <div class="rp-pic">
+            <img decoding="async" src="assets/photos/yoga-4.webp" alt="Žena sedí v klidu na podložce ve světlém sále" loading="lazy" />
+          </div>
+        </div>
+      </article>
+
+      <article class="rpanel">
+        <div class="wrap rp-grid">
+          <div class="rp-text">
+            <span class="rp-label">Tempo</span>
             <h3>Protože králík se nedá popohnat</h3>
             <p>Nemůžete uspíšit zvíře, které si dává na čas. Tak si ho nakonec dáte taky.</p>
-          </li>
-          <li class="rs-item">
+            <div class="rp-bar" aria-hidden="true"><span></span></div>
+          </div>
+          <div class="rp-pic">
+            <img decoding="async" src="assets/photos/rabbit-6.webp" alt="Hnědý králík v trávě" loading="lazy" />
+          </div>
+        </div>
+      </article>
+
+      <article class="rpanel">
+        <div class="wrap rp-grid">
+          <div class="rp-text">
+            <span class="rp-label">Parta</span>
             <h3>Protože si zapamatujete jména dřív než pozice</h3>
             <p>Po měsíci znáte Pepu, Tofu i Mínku. Sanskrt počká, tahle hodina ne.</p>
-          </li>
-        </ol>
-      </div>
+            <div class="rp-bar" aria-hidden="true"><span></span></div>
+          </div>
+          <div class="rp-pic">
+            <img decoding="async" src="assets/photos/rabbit-2.webp" alt="Šedý králík se rozhlíží" loading="lazy" />
+          </div>
+        </div>
+      </article>
     </div>
   </section>
 
@@ -837,13 +846,12 @@
 
   <!-- ============ RABBIT GALLERY — pins, then pans sideways ============ -->
   <section class="gal" id="kralicci">
+    <div class="wrap section-head gal-intro reveal">
+      <h2>Lektoři, kteří nikdy nespěchají</h2>
+      <p class="lead">Každý z desítky má jméno, povahu i svůj oblíbený kout sálu. Čtyři z nich poznáte hned při první lekci.</p>
+    </div>
     <div class="gal-wrap" id="galWrap">
       <div class="gal-sticky">
-        <div class="wrap gal-head">
-          <h2>Lektoři, kteří nikdy nespěchají</h2>
-          <p class="lead">Každý z desítky má jméno, povahu i svůj oblíbený kout sálu. Čtyři z nich poznáte hned při první lekci.</p>
-        </div>
-
         <div class="gal-view" id="galView" tabindex="0" role="region" aria-label="Fotogalerie králíků a studia">
           <div class="gal-track" id="galTrack">
 
@@ -855,7 +863,7 @@
               <p class="bun-note">Nejstarší a nejklidnější. Když si lehne vedle vás, děláte savasanu správně.</p>
             </div>
 
-            <div class="gal-pair">
+            <div class="gal-stack">
               <button class="rshot" type="button" data-full="assets/photos/rabbit-2.webp" data-cap="Ranní obhlídka sálu">
                 <img decoding="async" src="assets/photos/rabbit-2.webp" alt="Šedý králík se rozhlíží" loading="lazy" />
                 <span class="cap">Ranní obhlídka sálu</span>
@@ -863,6 +871,13 @@
               <button class="rshot" type="button" data-full="assets/photos/rabbit-3.webp" data-cap="Kdo si lehne, ten velí">
                 <img decoding="async" src="assets/photos/rabbit-3.webp" alt="Bílo-rezavý králík leží v trávě" loading="lazy" />
                 <span class="cap">Kdo si lehne, ten velí</span>
+              </button>
+            </div>
+
+            <div class="gal-hero">
+              <button class="rshot" type="button" data-full="assets/photos/yoga-6.webp" data-cap="Sál během Hathy">
+                <img decoding="async" src="assets/photos/yoga-6.webp" alt="Skupina cvičí v sále na podložkách" loading="lazy" />
+                <span class="cap">Sál během Hathy<small>Út · Čt · So, max 12 míst</small></span>
               </button>
             </div>
 
@@ -874,14 +889,14 @@
               <p class="bun-note">Floppy ouška, nulové zábrany. Najde si nejpohodlnější klín a zůstane do konce.</p>
             </div>
 
-            <div class="gal-wide">
-              <button class="rshot" type="button" data-full="assets/photos/yoga-6.webp" data-cap="Sál během Hathy">
-                <img decoding="async" src="assets/photos/yoga-6.webp" alt="Skupina cvičí v sále na podložkách" loading="lazy" />
-                <span class="cap">Sál během Hathy</span>
-              </button>
+            <div class="gal-stack">
               <button class="rshot" type="button" data-full="assets/photos/yoga-3.webp" data-cap="Rozcvička, než přijdou">
                 <img decoding="async" src="assets/photos/yoga-3.webp" alt="Cvičenka v pozici na podložce v sále" loading="lazy" />
                 <span class="cap">Rozcvička, než přijdou</span>
+              </button>
+              <button class="rshot" type="button" data-full="assets/photos/yoga-12.webp" data-cap="Poslední protažení">
+                <img decoding="async" src="assets/photos/yoga-12.webp" alt="Cvičenka v záklonu" loading="lazy" />
+                <span class="cap">Poslední protažení</span>
               </button>
             </div>
 
@@ -893,13 +908,13 @@
               <p class="bun-note">Mladý a hopsavý. Zahřeje atmosféru dřív než vy svaly. Děti ho milují.</p>
             </div>
 
-            <div class="gal-pair">
+            <div class="gal-stack">
               <button class="rshot" type="button" data-full="assets/photos/rabbit-6.webp" data-cap="Pauza na zahrádce">
                 <img decoding="async" src="assets/photos/rabbit-6.webp" alt="Hnědý králík v trávě" loading="lazy" />
                 <span class="cap">Pauza na zahrádce</span>
               </button>
               <button class="rshot" type="button" data-full="assets/photos/rabbit-1.webp" data-cap="Chvilka před lekcí">
-                <img decoding="async" src="assets/photos/rabbit-1.webp" alt="Bílý králík v zeleni" loading="lazy" style="object-position:60% 12%" />
+                <img decoding="async" src="assets/photos/rabbit-1.webp" alt="Bílý králík v zeleni" loading="lazy" style="object-position:60% 20%" />
                 <span class="cap">Chvilka před lekcí</span>
               </button>
             </div>
@@ -912,20 +927,18 @@
               <p class="bun-note">Sametový pohyb. Objeví se jako stín, chvíli je u vás a zase zmizí.</p>
             </div>
 
-            <div class="gal-wide">
-              <button class="rshot" type="button" data-full="assets/photos/yoga-12.webp" data-cap="Poslední protažení">
-                <img decoding="async" src="assets/photos/yoga-12.webp" alt="Cvičenka v záklonu" loading="lazy" />
-                <span class="cap">Poslední protažení</span>
-              </button>
+            <div class="gal-hero">
               <button class="rshot" type="button" data-full="assets/photos/yoga-1.webp" data-cap="Konec lekce">
                 <img decoding="async" src="assets/photos/yoga-1.webp" alt="Silueta v sedu při západu slunce" loading="lazy" />
-                <span class="cap">Konec lekce</span>
+                <span class="cap">Konec lekce<small>Posledních dvacet minut patří králíkům</small></span>
               </button>
             </div>
 
           </div>
 
         </div>
+
+        <div class="wrap gal-foot">        </div>
 
         <div class="wrap gal-foot">        </div>
 
@@ -1189,7 +1202,7 @@
 
   // ============ REVEAL (stagger uvnitř jedné skupiny, ne všechno naráz) ============
   (function () {
-    const items = document.querySelectorAll('.reveal, .pop');
+    const items = document.querySelectorAll('.reveal');
     const groups = new Map();
     items.forEach((el) => {
       const p = el.parentElement;
@@ -1318,31 +1331,6 @@
     }, 1900);
   })();
 
-  // ============ DŮVODY: fotka vlevo drží krok s důvodem, u kterého zrovna jste ============
-  (function () {
-    const split = document.getElementById('rsplit');
-    if (!split) return;
-    const items = [...split.querySelectorAll('.rs-item')];
-    const shots = [...split.querySelectorAll('.rs-shot')];
-    const dots = [...split.querySelectorAll('.rs-count i')];
-    const rail = document.getElementById('rsRail');
-    let current = -1;
-    function setActive(i) {
-      if (i === current) return;
-      current = i;
-      items.forEach((el, n) => el.classList.toggle('is-on', n === i));
-      shots.forEach((el, n) => el.classList.toggle('is-on', n === i));
-      dots.forEach((el, n) => el.classList.toggle('on', n === i));
-      if (rail) rail.style.height = ((i + 1) / items.length * 100).toFixed(1) + '%';
-    }
-    // úzký pás uprostřed obrazovky: aktivní je ten důvod, který jím právě prochází
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((e) => { if (e.isIntersecting) setActive(items.indexOf(e.target)); });
-    }, { rootMargin: '-45% 0px -45% 0px', threshold: 0 });
-    items.forEach((el) => io.observe(el));
-    setActive(0);
-  })();
-
   // ============ POČÍTADLA V PROOF PRUHU ============
   (function () {
     const strip = document.querySelector('.proof');
@@ -1386,6 +1374,7 @@
     const ctaLead = document.getElementById('ctaLead');
     const ctaSec = document.getElementById('pridejte');
     const glows = [...document.querySelectorAll('.sglow')];
+    const rstack = document.querySelector('.rstack');
     const clamp = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
     const docTop = (el) => { let y = 0; while (el) { y += el.offsetTop; el = el.offsetParent; } return y; };
 
@@ -1401,7 +1390,7 @@
 
     let vh = 0, docMax = 1, heroEnd = 0;
     let galTop = 0, galSpan = 1, galTravel = 0;
-    let ctaTop = 0, ctaH = 1;
+    let ctaTop = 0, ctaH = 1, rsTop = 0, rsSpan = 1;
     const glowBoxes = [];
 
     function measure() {
@@ -1412,7 +1401,8 @@
       if (galWrap && galTrack) {
         if (galPinned()) {
           galTravel = Math.max(galTrack.scrollWidth - window.innerWidth, 0);
-          galWrap.style.setProperty('--travel', galTravel + 'px');
+          // stopa ujede celou šířku za kratší scroll, jinak by pin trval věčnost
+          galWrap.style.setProperty('--travel', Math.round(galTravel * 0.6) + 'px');
           galTop = docTop(galWrap);
           galSpan = Math.max(galWrap.offsetHeight - vh, 1);
         } else {
@@ -1422,6 +1412,7 @@
         }
       }
       if (ctaSec) { ctaTop = docTop(ctaSec); ctaH = Math.max(ctaSec.offsetHeight, 1); }
+      if (rstack) { rsTop = docTop(rstack); rsSpan = Math.max(rstack.offsetHeight - vh, 1); }
 
       glowBoxes.length = 0;
       glows.forEach((g) => {
@@ -1447,6 +1438,8 @@
         galTrack.style.transform = 'translate3d(' + (-gp * galTravel).toFixed(1) + 'px,0,0)';
         if (galBar) galBar.style.transform = 'scaleX(' + gp.toFixed(4) + ')';
       }
+
+      if (rstack) rstack.style.setProperty('--rp', clamp((y - rsTop) / rsSpan).toFixed(3));
 
       if (ctaLead && !REDUCE) {
         const d = clamp((y + vh * 0.88 - ctaTop) / (ctaH * 0.62));
