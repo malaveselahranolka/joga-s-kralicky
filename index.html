@@ -239,11 +239,6 @@
   }
   .hd-card:first-child { margin-left: 0; }
   .hd-card img { width: 100%; aspect-ratio: 4/5; object-fit: cover; }
-  .hd-card figcaption {
-    position: absolute; left: 0; right: 0; bottom: 0; padding: 1.5rem .6rem .45rem;
-    font-size: .74rem; font-weight: 700; letter-spacing: .02em; color: #fff; text-align: left;
-    background: linear-gradient(to top, rgba(18,22,16,.85), transparent);
-  }
   .hd-card { position: relative; }
   .deck-anim .hd-card { opacity: 0; transform: translateY(34px) rotate(0deg) scale(.92); animation: deckIn .85s var(--ease-out) both; animation-delay: var(--dd); }
   @keyframes deckIn { to { opacity: 1; transform: translateY(0) rotate(var(--rot)) scale(1); } }
@@ -348,7 +343,7 @@
     padding-block: .7rem .9rem;
     will-change: transform;
   }
-  .gal-big { flex: none; }
+  .gal-big { flex: none; width: calc(var(--shot-h) * 3 / 4); }
   .gal-stack { flex: none; display: grid; gap: var(--gal-gap); }
   .gal-hero { flex: none; }
 
@@ -360,10 +355,6 @@
   .gal-stack .rshot { height: calc((var(--shot-h) - var(--gal-gap)) / 2); aspect-ratio: 3/2; border-radius: var(--r-md); }
   .gal-stack .rshot:nth-child(2) { border-radius: var(--r-leaf); }
   .gal-hero .rshot { height: var(--shot-h); aspect-ratio: 3/2; }
-  .rshot::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(16,21,15,.7), rgba(16,21,15,0) 55%); }
-  .rshot .cap { position: absolute; left: .9rem; right: .9rem; bottom: .7rem; z-index: 2; color: #fff; font-family: "Schibsted Grotesk"; font-weight: 600; font-size: .82rem; text-align: left; letter-spacing: -.01em; }
-  .gal-big .rshot .cap, .gal-hero .rshot .cap { font-size: 1.1rem; }
-  .gal-big .rshot .cap small, .gal-hero .rshot .cap small { display: block; font-family: "Hanken Grotesk"; font-weight: 500; font-size: .78rem; color: rgba(255,255,255,.78); margin-top: .12rem; letter-spacing: 0; }
   .rshot:focus-visible { outline: 2px solid var(--clover); outline-offset: 3px; }
   @media (hover: hover) and (pointer: fine) {
     .rshot:hover { transform: translateY(-6px); box-shadow: var(--sh-float); }
@@ -589,7 +580,6 @@
     .hero { justify-content: flex-end; }
     .hero-deck { position: static; margin-top: 2rem; }
     .hd-card { width: clamp(96px, 25vw, 130px); margin-left: -14px; }
-    .hd-card figcaption { font-size: .66rem; padding-inline: .5rem; }
     .hero h1 { max-width: 16ch; }
   }
   @media (max-width: 880px) {
@@ -694,15 +684,12 @@
       <div class="hero-deck deck-anim" id="heroDeck" aria-hidden="true">
         <figure class="hd-card" style="--rot:-9deg;--dd:.72s;--depth:1.6">
           <img src="assets/photos/rabbit-1.webp" alt="" loading="eager" decoding="async" />
-          <figcaption>Brokolice</figcaption>
         </figure>
         <figure class="hd-card" style="--rot:4deg;--dd:.84s;--depth:1">
           <img src="assets/photos/rabbit-5.webp" alt="" loading="eager" decoding="async" />
-          <figcaption>Pepa</figcaption>
         </figure>
         <figure class="hd-card" style="--rot:12deg;--dd:.96s;--depth:.5">
           <img src="assets/photos/rabbit-4.webp" alt="" loading="eager" decoding="async" />
-          <figcaption>Tofu</figcaption>
         </figure>
       </div>
     </div>
@@ -854,7 +841,6 @@
             <div class="gal-big">
               <button class="rshot" type="button" data-full="assets/photos/gal-brokolice.webp" data-cap="Brokolice, hlavní lektorka">
                 <img decoding="async" src="assets/photos/gal-brokolice.webp" alt="Šedohnědý králík s klopenýma ušima zblízka" loading="lazy" />
-                <span class="cap">Brokolice<small>Hlavní lektorka</small></span>
               </button>
               <p class="bun-note">Nejstarší a nejklidnější. Když si lehne vedle vás, děláte savasanu správně.</p>
             </div>
@@ -862,25 +848,21 @@
             <div class="gal-stack">
               <button class="rshot" type="button" data-full="assets/photos/gal-tofu.webp" data-cap="Ranní obhlídka sálu">
                 <img decoding="async" src="assets/photos/gal-tofu.webp" alt="Šedý králík odpočívá u dřevěné stěny chýše" loading="lazy" style="object-position:50% 55%" />
-                <span class="cap">Ranní obhlídka sálu</span>
               </button>
               <button class="rshot" type="button" data-full="assets/photos/gal-list.webp" data-cap="Kdo si lehne, ten velí">
                 <img decoding="async" src="assets/photos/gal-list.webp" alt="Králík okusuje list na zahradě" loading="lazy" style="object-position:55% 40%" />
-                <span class="cap">Kdo si lehne, ten velí</span>
               </button>
             </div>
 
             <div class="gal-hero">
               <button class="rshot" type="button" data-full="assets/photos/yoga-6.webp" data-cap="Sál během Hathy">
                 <img decoding="async" src="assets/photos/yoga-6.webp" alt="Skupina cvičí v sále na podložkách" loading="lazy" />
-                <span class="cap">Sál během Hathy<small>Út · Čt · So, max 12 míst</small></span>
               </button>
             </div>
 
             <div class="gal-big">
               <button class="rshot" type="button" data-full="assets/photos/gal-pepa.webp" data-cap="Pepa, specialista na klín">
                 <img decoding="async" src="assets/photos/gal-pepa.webp" alt="Černo-hnědý králík Pepa s postavenýma ušima" loading="lazy" />
-                <span class="cap">Pepa<small>Specialista na klín</small></span>
               </button>
               <p class="bun-note">Floppy ouška, nulové zábrany. Najde si nejpohodlnější klín a zůstane do konce.</p>
             </div>
@@ -888,18 +870,15 @@
             <div class="gal-stack">
               <button class="rshot" type="button" data-full="assets/photos/yoga-3.webp" data-cap="Rozcvička, než přijdou">
                 <img decoding="async" src="assets/photos/yoga-3.webp" alt="Cvičenka v pozici na podložce v sále" loading="lazy" />
-                <span class="cap">Rozcvička, než přijdou</span>
               </button>
               <button class="rshot" type="button" data-full="assets/photos/yoga-12.webp" data-cap="Poslední protažení">
                 <img decoding="async" src="assets/photos/yoga-12.webp" alt="Cvičenka v záklonu" loading="lazy" />
-                <span class="cap">Poslední protažení</span>
               </button>
             </div>
 
             <div class="gal-big">
               <button class="rshot" type="button" data-full="assets/photos/gal-minka.webp" data-cap="Tofu, energie lekce">
                 <img decoding="async" src="assets/photos/gal-minka.webp" alt="Hnědý králík Tofu okusuje trávu zblízka" loading="lazy" />
-                <span class="cap">Tofu<small>Energie lekce</small></span>
               </button>
               <p class="bun-note">Mladý a hopsavý. Zahřeje atmosféru dřív než vy svaly. Děti ho milují.</p>
             </div>
@@ -907,18 +886,15 @@
             <div class="gal-stack">
               <button class="rshot" type="button" data-full="assets/photos/gal-pauza.webp" data-cap="Pauza na zahrádce">
                 <img decoding="async" src="assets/photos/gal-pauza.webp" alt="Dva králíci spolu okusují seno v chýši" loading="lazy" style="object-position:50% 58%" />
-                <span class="cap">Pauza na zahrádce</span>
               </button>
               <button class="rshot" type="button" data-full="assets/photos/gal-chvilka.webp" data-cap="Chvilka před lekcí">
                 <img decoding="async" src="assets/photos/gal-chvilka.webp" alt="Černý králík si čichá k chlebu nad miskou vody" loading="lazy" style="object-position:40% 38%" />
-                <span class="cap">Chvilka před lekcí</span>
               </button>
             </div>
 
             <div class="gal-big">
               <button class="rshot" type="button" data-full="assets/photos/gal-rano.webp" data-cap="Mínka, mistryně klidu">
                 <img decoding="async" src="assets/photos/gal-rano.webp" alt="Bílo-hnědý králík Mínka schoulený ve slámě" loading="lazy" />
-                <span class="cap">Mínka<small>Mistryně klidu</small></span>
               </button>
               <p class="bun-note">Sametový pohyb. Objeví se jako stín, chvíli je u vás a zase zmizí.</p>
             </div>
@@ -926,7 +902,6 @@
             <div class="gal-hero">
               <button class="rshot" type="button" data-full="assets/photos/yoga-1.webp" data-cap="Konec lekce">
                 <img decoding="async" src="assets/photos/yoga-1.webp" alt="Silueta v sedu při západu slunce" loading="lazy" />
-                <span class="cap">Konec lekce<small>Posledních dvacet minut patří králíkům</small></span>
               </button>
             </div>
 
