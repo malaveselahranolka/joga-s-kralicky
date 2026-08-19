@@ -200,6 +200,7 @@
     .row .acts { grid-template-columns: 1fr; }
   }
 </style>
+<script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
 </head>
 <body>
 
@@ -759,7 +760,7 @@
         });
         sent++;
       } catch (err) { failed++; }
-      await new Promise((r) => setTimeout(r, 700)); // šetrně kvůli limitům EmailJS
+      await new Promise((r) => setTimeout(r, 700)); // šetrn�� kvůli limitům EmailJS
     }
     btn.disabled = false; btn.textContent = label;
     toast('Odesláno: ' + sent + (failed ? (' · nepovedlo se: ' + failed) : ''));
