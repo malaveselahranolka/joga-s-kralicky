@@ -288,8 +288,6 @@
   .rp-pic img { width: 100%; height: 100%; object-fit: cover; }
   /* sudé panely mají fotku vlevo, ať se to při nasouvání střídá */
   .rpanel:nth-child(even) .rp-pic { order: -1; }
-  .rp-bar { margin-top: clamp(1.5rem, 3vw, 2.2rem); max-width: 46ch; height: 2px; background: var(--line); border-radius: 999px; overflow: hidden; }
-  .rp-bar span { display: block; height: 100%; background: linear-gradient(90deg, var(--clover), var(--carrot)); transform: scaleX(var(--rp, 0)); transform-origin: 0 50%; }
 
   /* ---------- lessons: only two, so both get room to breathe ---------- */
   .lessons { background: var(--forest-deep); color: var(--cream); overflow: hidden; }
@@ -343,7 +341,7 @@
   }
   .gal-view { overflow: hidden; flex: none; }
   .gal-track {
-    --gal-gap: clamp(.6rem, .95vw, .95rem);
+    --gal-gap: clamp(.15rem, .25vw, .3rem);
     --shot-h: min(52svh, 490px);
     display: flex; align-items: start; gap: var(--gal-gap); width: max-content;
     padding-inline: max(1.2rem, calc((100vw - var(--maxw)) / 2));
@@ -624,10 +622,12 @@
     .gal-foot .btn { padding: .7em 1.3em; font-size: .9rem; }
   }
   @media (max-width: 860px) {
-    .rpanel { min-height: 68svh; }
-    .rp-grid { grid-template-columns: 1fr; gap: 1.5rem; padding-block: clamp(4.6rem, 10vh, 5.6rem) clamp(2.2rem, 5vh, 3rem); }
-    .rp-pic, .rpanel:nth-child(even) .rp-pic { order: -1; height: min(30svh, 260px); }
-    .rp-text h3 { max-width: none; }
+    .rpanel { min-height: 72svh; }
+    .rp-grid { grid-template-columns: 1fr; gap: 1.4rem; padding-block: clamp(4.6rem, 9vh, 5.4rem) clamp(2.4rem, 5.5vh, 3.1rem); }
+    .rp-pic, .rpanel:nth-child(even) .rp-pic { order: -1; height: min(31svh, 280px); }
+    .rp-label { font-size: .78rem; }
+    .rp-text h3 { max-width: none; font-size: clamp(1.8rem, 1.2rem + 3vw, 2.3rem); }
+    .rp-text p { font-size: 1rem; }
   }
   @media (max-width: 380px) {
     .nav-cta { padding: .45em .8em; font-size: .78rem; }
@@ -734,10 +734,9 @@
             <span class="rp-label">Blízkost</span>
             <h3>Protože si k vám někdo lehne</h3>
             <p>Brokolice si za lekci vybere jeden klín. Když je to ten váš, odcházíte jiní, než jste přišli.</p>
-            <div class="rp-bar" aria-hidden="true"><span></span></div>
           </div>
           <div class="rp-pic">
-            <img decoding="async" src="assets/photos/rabbit-3.webp" alt="Bílo-rezavý králík odpočívá v trávě" loading="lazy" />
+            <img decoding="async" src="assets/photos/rabbit-3.webp" alt="Klopoušek s dlouhýma ušima zblízka" loading="lazy" />
           </div>
         </div>
       </article>
@@ -748,7 +747,6 @@
             <span class="rp-label">Bez zrcadel</span>
             <h3>Protože se nikdo nedívá, jak vám to jde</h3>
             <p>Žádná zrcadla, žádné opravování. Lektorka ukáže a nechá vás to dělat po svém.</p>
-            <div class="rp-bar" aria-hidden="true"><span></span></div>
           </div>
           <div class="rp-pic">
             <img decoding="async" src="assets/photos/yoga-4.webp" alt="Žena sedí v klidu na podložce ve světlém sále" loading="lazy" />
@@ -762,10 +760,9 @@
             <span class="rp-label">Tempo</span>
             <h3>Protože králík se nedá popohnat</h3>
             <p>Nemůžete uspíšit zvíře, které si dává na čas. Tak si ho nakonec dáte taky.</p>
-            <div class="rp-bar" aria-hidden="true"><span></span></div>
           </div>
           <div class="rp-pic">
-            <img decoding="async" src="assets/photos/rabbit-6.webp" alt="Hnědý králík v trávě" loading="lazy" />
+            <img decoding="async" src="assets/photos/rabbit-6.webp" alt="Šedý a hnědý králík odpočívají v chýši" loading="lazy" />
           </div>
         </div>
       </article>
@@ -776,10 +773,9 @@
             <span class="rp-label">Parta</span>
             <h3>Protože si zapamatujete jména dřív než pozice</h3>
             <p>Po měsíci znáte Pepu, Tofu i Mínku. Sanskrt počká, tahle hodina ne.</p>
-            <div class="rp-bar" aria-hidden="true"><span></span></div>
           </div>
           <div class="rp-pic">
-            <img decoding="async" src="assets/photos/rabbit-2.webp" alt="Šedý králík se rozhlíží" loading="lazy" />
+            <img decoding="async" src="assets/photos/rabbit-2.webp" alt="Dva králíci si spolu pochutnávají na trávě" loading="lazy" />
           </div>
         </div>
       </article>
@@ -821,7 +817,7 @@
         <article class="lesson reveal">
           <div class="l-pic">
             <span class="l-tag">Pro děti od 5 let</span>
-            <img decoding="async" src="assets/photos/rabbit-4.webp" alt="Malý bílý králíček v trávě" loading="lazy" />
+            <img decoding="async" src="assets/photos/rabbit-4.webp" alt="Dva bílí králíčci pohromadě" loading="lazy" />
           </div>
           <div class="l-body">
             <div class="l-top">
@@ -856,20 +852,20 @@
           <div class="gal-track" id="galTrack">
 
             <div class="gal-big">
-              <button class="rshot" type="button" data-full="assets/photos/rabbit-1.webp" data-cap="Brokolice, hlavní lektorka">
-                <img decoding="async" src="assets/photos/rabbit-1.webp" alt="Bílý králík Brokolice zblízka" loading="lazy" />
+              <button class="rshot" type="button" data-full="assets/photos/gal-brokolice.webp" data-cap="Brokolice, hlavní lektorka">
+                <img decoding="async" src="assets/photos/gal-brokolice.webp" alt="Šedohnědý králík s klopenýma ušima zblízka" loading="lazy" />
                 <span class="cap">Brokolice<small>Hlavní lektorka</small></span>
               </button>
               <p class="bun-note">Nejstarší a nejklidnější. Když si lehne vedle vás, děláte savasanu správně.</p>
             </div>
 
             <div class="gal-stack">
-              <button class="rshot" type="button" data-full="assets/photos/rabbit-2.webp" data-cap="Ranní obhlídka sálu">
-                <img decoding="async" src="assets/photos/rabbit-2.webp" alt="Šedý králík se rozhlíží" loading="lazy" />
+              <button class="rshot" type="button" data-full="assets/photos/gal-tofu.webp" data-cap="Ranní obhlídka sálu">
+                <img decoding="async" src="assets/photos/gal-tofu.webp" alt="Šedý králík odpočívá u dřevěné stěny chýše" loading="lazy" style="object-position:50% 55%" />
                 <span class="cap">Ranní obhlídka sálu</span>
               </button>
-              <button class="rshot" type="button" data-full="assets/photos/rabbit-3.webp" data-cap="Kdo si lehne, ten velí">
-                <img decoding="async" src="assets/photos/rabbit-3.webp" alt="Bílo-rezavý králík leží v trávě" loading="lazy" />
+              <button class="rshot" type="button" data-full="assets/photos/gal-list.webp" data-cap="Kdo si lehne, ten velí">
+                <img decoding="async" src="assets/photos/gal-list.webp" alt="Králík okusuje list na zahradě" loading="lazy" style="object-position:55% 40%" />
                 <span class="cap">Kdo si lehne, ten velí</span>
               </button>
             </div>
@@ -882,8 +878,8 @@
             </div>
 
             <div class="gal-big">
-              <button class="rshot" type="button" data-full="assets/photos/rabbit-5.webp" data-cap="Pepa, specialista na klín">
-                <img decoding="async" src="assets/photos/rabbit-5.webp" alt="Krémový králík Pepa s klopenýma ušima" loading="lazy" />
+              <button class="rshot" type="button" data-full="assets/photos/gal-pepa.webp" data-cap="Pepa, specialista na klín">
+                <img decoding="async" src="assets/photos/gal-pepa.webp" alt="Černo-hnědý králík Pepa s postavenýma ušima" loading="lazy" />
                 <span class="cap">Pepa<small>Specialista na klín</small></span>
               </button>
               <p class="bun-note">Floppy ouška, nulové zábrany. Najde si nejpohodlnější klín a zůstane do konce.</p>
@@ -901,27 +897,27 @@
             </div>
 
             <div class="gal-big">
-              <button class="rshot" type="button" data-full="assets/photos/rabbit-4.webp" data-cap="Tofu, energie lekce">
-                <img decoding="async" src="assets/photos/rabbit-4.webp" alt="Malý bílý králíček Tofu v trávě" loading="lazy" />
+              <button class="rshot" type="button" data-full="assets/photos/gal-minka.webp" data-cap="Tofu, energie lekce">
+                <img decoding="async" src="assets/photos/gal-minka.webp" alt="Hnědý králík Tofu okusuje trávu zblízka" loading="lazy" />
                 <span class="cap">Tofu<small>Energie lekce</small></span>
               </button>
               <p class="bun-note">Mladý a hopsavý. Zahřeje atmosféru dřív než vy svaly. Děti ho milují.</p>
             </div>
 
             <div class="gal-stack">
-              <button class="rshot" type="button" data-full="assets/photos/rabbit-6.webp" data-cap="Pauza na zahrádce">
-                <img decoding="async" src="assets/photos/rabbit-6.webp" alt="Hnědý králík v trávě" loading="lazy" />
+              <button class="rshot" type="button" data-full="assets/photos/gal-pauza.webp" data-cap="Pauza na zahrádce">
+                <img decoding="async" src="assets/photos/gal-pauza.webp" alt="Dva králíci spolu okusují seno v chýši" loading="lazy" style="object-position:50% 58%" />
                 <span class="cap">Pauza na zahrádce</span>
               </button>
-              <button class="rshot" type="button" data-full="assets/photos/rabbit-1.webp" data-cap="Chvilka před lekcí">
-                <img decoding="async" src="assets/photos/rabbit-1.webp" alt="Bílý králík v zeleni" loading="lazy" style="object-position:60% 20%" />
+              <button class="rshot" type="button" data-full="assets/photos/gal-chvilka.webp" data-cap="Chvilka před lekcí">
+                <img decoding="async" src="assets/photos/gal-chvilka.webp" alt="Černý králík si čichá k chlebu nad miskou vody" loading="lazy" style="object-position:40% 38%" />
                 <span class="cap">Chvilka před lekcí</span>
               </button>
             </div>
 
             <div class="gal-big">
-              <button class="rshot" type="button" data-full="assets/photos/rabbit-7.webp" data-cap="Mínka, mistryně klidu">
-                <img decoding="async" src="assets/photos/rabbit-7.webp" alt="Hnědý králík Mínka v trávě" loading="lazy" />
+              <button class="rshot" type="button" data-full="assets/photos/gal-rano.webp" data-cap="Mínka, mistryně klidu">
+                <img decoding="async" src="assets/photos/gal-rano.webp" alt="Bílo-hnědý králík Mínka schoulený ve slámě" loading="lazy" />
                 <span class="cap">Mínka<small>Mistryně klidu</small></span>
               </button>
               <p class="bun-note">Sametový pohyb. Objeví se jako stín, chvíli je u vás a zase zmizí.</p>
@@ -979,7 +975,7 @@
             <div class="body"><p class="quote">„Nikdy jsem necvičila a bála se, že budu za vola. Lektorka i králíci mě uklidnili během minuty.“</p><p class="who">Markéta H.<span>první lekce</span></p></div>
           </article>
           <article class="tcard">
-            <div class="pic"><img decoding="async" src="assets/photos/rabbit-3.webp" alt="Odpočívající králík" loading="lazy" /></div>
+            <div class="pic"><img decoding="async" src="assets/photos/rabbit-3.webp" alt="Klopoušek s dlouhýma ušima" loading="lazy" /></div>
             <div class="body"><p class="quote">„Vodím sem dceru na sobotní Děti a králíci. Je to nejhezčí hodina našeho týdne.“</p><p class="who">Jana P.<span>maminka</span></p></div>
           </article>
           <article class="tcard">
@@ -1374,7 +1370,6 @@
     const ctaLead = document.getElementById('ctaLead');
     const ctaSec = document.getElementById('pridejte');
     const glows = [...document.querySelectorAll('.sglow')];
-    const rstack = document.querySelector('.rstack');
     const clamp = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
     const docTop = (el) => { let y = 0; while (el) { y += el.offsetTop; el = el.offsetParent; } return y; };
 
@@ -1390,7 +1385,7 @@
 
     let vh = 0, docMax = 1, heroEnd = 0;
     let galTop = 0, galSpan = 1, galTravel = 0;
-    let ctaTop = 0, ctaH = 1, rsTop = 0, rsSpan = 1;
+    let ctaTop = 0, ctaH = 1;
     const glowBoxes = [];
 
     function measure() {
@@ -1412,7 +1407,6 @@
         }
       }
       if (ctaSec) { ctaTop = docTop(ctaSec); ctaH = Math.max(ctaSec.offsetHeight, 1); }
-      if (rstack) { rsTop = docTop(rstack); rsSpan = Math.max(rstack.offsetHeight - vh, 1); }
 
       glowBoxes.length = 0;
       glows.forEach((g) => {
@@ -1438,8 +1432,6 @@
         galTrack.style.transform = 'translate3d(' + (-gp * galTravel).toFixed(1) + 'px,0,0)';
         if (galBar) galBar.style.transform = 'scaleX(' + gp.toFixed(4) + ')';
       }
-
-      if (rstack) rstack.style.setProperty('--rp', clamp((y - rsTop) / rsSpan).toFixed(3));
 
       if (ctaLead && !REDUCE) {
         const d = clamp((y + vh * 0.88 - ctaTop) / (ctaH * 0.62));
