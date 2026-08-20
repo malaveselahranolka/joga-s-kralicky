@@ -1,0 +1,28 @@
+{
+  "name": "joga-s-kralicky",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node --env-file-if-exists=.env.local scripts/build.mjs",
+    "studio": "sanity dev --host 127.0.0.1",
+    "seed": "node --env-file=.env.local scripts/seed-content.mjs"
+  },
+  "dependencies": {
+    "@sanity/client": "7.26.2",
+    "@sanity/vision": "6.10.1",
+    "@sanity/visual-editing": "6.0.4",
+    "esbuild": "0.28.2",
+    "sanity": "6.10.1",
+    "styled-components": "6.5.3"
+  },
+  "overrides": {
+    "@vercel/frameworks": {
+      "js-yaml": "3.15.1",
+      "smol-toml": "1.8.0"
+    },
+    "typeid-js": {
+      "uuid": "11.1.1"
+    }
+  }
+}

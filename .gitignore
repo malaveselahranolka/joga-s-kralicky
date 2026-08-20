@@ -1,0 +1,13 @@
+.vercel
+.sanity/
+.env*.local
+node_modules/
+public/
+studio/
+/cms.js
+/cms.css
+/cms.css.map
+/cms.js.map
+temporary screenshots/
+screenshot.mjs
+serve.mjs
