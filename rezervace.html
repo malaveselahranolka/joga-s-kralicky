@@ -3,8 +3,42 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Rezervace — Jóga s králíčky</title>
+<title>Rezervace lekce jógy s králíčky Ostrava — volné termíny</title>
 <meta name="description" content="Vyberte si termín lekce jógy s králíčky a rezervujte si místo. Fit&amp;Fun Studio Ostrava." />
+<link rel="canonical" href="https://www.jogaskralicky.cz/rezervace.html" />
+<meta name="robots" content="index, follow, max-image-preview:large" />
+<meta property="og:type" content="website" />
+<meta property="og:locale" content="cs_CZ" />
+<meta property="og:site_name" content="Jóga s králíčky" />
+<meta property="og:title" content="Rezervace lekce jógy s králíčky — Ostrava" />
+<meta property="og:description" content="Vyberte si termín jógy se zvířaty v Ostravě a rezervujte si místo online. Vstup 499 Kč." />
+<meta property="og:url" content="https://www.jogaskralicky.cz/rezervace.html" />
+<meta property="og:image" content="https://www.jogaskralicky.cz/assets/og-jogaskralicky.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Jóga s králíčky — Fit&amp;Fun Studio Ostrava" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="theme-color" content="#2C3B2E" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Jóga s králíčky",
+      "item": "https://www.jogaskralicky.cz/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Rezervace",
+      "item": "https://www.jogaskralicky.cz/rezervace.html"
+    }
+  ]
+}
+</script>
 <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -100,6 +134,11 @@
   .field input { width: 100%; font-family: inherit; font-size: 1rem; color: var(--ink); padding: .85em 1.05em; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface); transition: border-color .3s var(--ease), box-shadow .3s var(--ease); }
   .field input:focus { outline: none; border-color: var(--forest); box-shadow: 0 0 0 3px color-mix(in srgb, var(--forest) 18%, transparent); }
   .field.invalid input { border-color: var(--carrot); }
+  .field select { width: 100%; font-family: inherit; font-size: 1rem; color: var(--ink); padding: .85em 1.05em; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface); appearance: none; cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none' stroke='%235C6357' stroke-width='1.6'%3E%3Cpath d='M1 1.5 6 6.5l5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 1.05em center; background-size: 12px; padding-right: 2.6em;
+    transition: border-color .3s var(--ease), box-shadow .3s var(--ease); }
+  .field select:focus { outline: none; border-color: var(--forest); box-shadow: 0 0 0 3px color-mix(in srgb, var(--forest) 18%, transparent); }
   .field .err { display: none; color: var(--carrot); font-size: .8rem; font-weight: 700; margin-top: .35rem; }
   .show-errors .field.invalid .err { display: block; }
 
@@ -247,6 +286,20 @@
             <div class="amt" id="priceTotal">—</div>
             <div class="lbl" id="priceCalc" style="font-weight:500"></div>
           </div>
+        </div>
+
+        <div class="field" style="margin-top:1rem">
+          <label for="f-source">Jak jste se o nás dozvěděli? <span style="font-weight:400;color:var(--ink-soft)">(nepovinné)</span></label>
+          <select id="f-source">
+            <option value="">Vyberte…</option>
+            <option value="google">Našel/našla jsem vás na Googlu</option>
+            <option value="doporuceni">Od známého nebo rodiny</option>
+            <option value="instagram">Instagram</option>
+            <option value="facebook">Facebook</option>
+            <option value="darek">Dostal/dostala jsem poukaz</option>
+            <option value="media">Z článku, rádia nebo televize</option>
+            <option value="jinak">Jinak</option>
+          </select>
         </div>
 
         <label class="consent"><input type="checkbox" id="f-consent" required />
@@ -530,6 +583,16 @@
     }
 
     lastBookingId = data.booking_id;
+
+    // Odkud zákazník přišel. Schválně mimo hlavní tok: rezervace i platba
+    // proběhnou i když tenhle zápis selže (třeba než se nasadí
+    // supabase/attribution.sql). Zákazník o tom nesmí vědět.
+    const src = $('f-source') && $('f-source').value;
+    if (src) {
+      sb.from('booking_sources')
+        .insert({ booking_id: lastBookingId, source: src })
+        .then(null, () => {});
+    }
     const end = new Date(chosen.dt.getTime() + chosen.duration_min * 60000);
     const summaryTxt = esc(chosen.title) + ' · ' + fmtDate(chosen.dt) + ' · ' + fmtTime(chosen.dt) + '–' + fmtTime(end) +
       ' · ' + spotsTxt(spots);
