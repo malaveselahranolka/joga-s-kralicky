@@ -15,6 +15,7 @@ mkdirSync(output, {recursive: true})
 
 const files = [
   'index.html',
+  '404.html',
   'admin.html',
   'rezervace.html',
   'joga-se-zviraty.html',
