@@ -461,7 +461,8 @@
     transition: transform .6s var(--ease-out);
   }
   .hd-card:first-child { margin-left: 0; }
-  .hd-card img { width: 100%; aspect-ratio: 4/5; object-fit: cover; }
+  /* height:auto je nutne — bez nej prebije atribut height="..." pomer aspect-ratio a karta se natahne */
+  .hd-card img { width: 100%; height: auto; aspect-ratio: 4/5; object-fit: cover; }
   .hd-card { position: relative; }
   .deck-anim .hd-card { opacity: 0; transform: translateY(34px) rotate(0deg) scale(.92); animation: deckIn .85s var(--ease-out) both; animation-delay: var(--dd); }
   @keyframes deckIn { to { opacity: 1; transform: translateY(0) rotate(var(--rot)) scale(1); } }
