@@ -3,7 +3,8 @@
   "buildCommand": "npm run build",
   "outputDirectory": "public",
   "framework": null,
-  "cleanUrls": false,
-  "trailingSlash": false,
-  "rewrites": []
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/.*", "status": 404, "dest": "/404.html" }
+  ]
 }
