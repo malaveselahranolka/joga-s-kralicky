@@ -6,6 +6,8 @@ Allow: /
 Disallow: /admin.html
 Disallow: /vstupenka.html
 Disallow: /api/
+Disallow: /studio
+Disallow: /studio/
 
 # AI vyhledávače — chceme, aby nás citovaly
 User-agent: GPTBot

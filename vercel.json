@@ -4,5 +4,6 @@
   "outputDirectory": "public",
   "framework": null,
   "cleanUrls": false,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "rewrites": []
 }
