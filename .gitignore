@@ -11,3 +11,5 @@ studio/
 temporary screenshots/
 screenshot.mjs
 serve.mjs
+
+.playwright-mcp/
