@@ -670,7 +670,7 @@
     <div class="aurora breathe" aria-hidden="true" style="width:420px;height:420px;left:-100px;bottom:8%;background:radial-gradient(circle, rgba(110,138,78,.5), transparent 70%);animation-delay:-5.5s"></div>
     <div class="wrap">
       <span class="eyebrow hero-eyebrow">Fit&amp;Fun Studio Ostrava</span>
-      <h1>Míň jógy, víc králíků <span class="dash">—</span> a přesně proto to funguje</h1>
+      <h1><span data-cms="hero-title-start">Míň jógy, víc králíků</span> <span class="dash">—</span> <span data-cms="hero-title-end">a přesně proto to funguje</span></h1>
       <p class="hero-sub">Hodina jemné jógy, po které se po sále volně rozeběhne deset chlupatých učitelů zpomalení.</p>
       <div class="hero-actions">
         <div class="cta-split on-photo">
@@ -996,7 +996,7 @@
     <div class="wrap faq-wrap">
       <div class="section-head reveal" style="max-width:none">
         <h2>Než přijdete poprvé</h2>
-        <p class="lead">Šest věcí, na které se lidi ptají nejčastěji, než přijdou poprvé. Nenašli jste odpověď? Napište na <a href="mailto:info@jogaskralicky.cz" style="color:var(--clover);text-decoration:underline">info@jogaskralicky.cz</a>.</p>
+        <p class="lead"><span data-cms="faq-intro">Šest věcí, na které se lidi ptají nejčastěji, než přijdou poprvé. Nenašli jste odpověď? Napište na</span> <a href="mailto:info@jogaskralicky.cz" style="color:var(--clover);text-decoration:underline">info@jogaskralicky.cz</a>.</p>
         <p class="faq-cue">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v13M6 13l6 6 6-6"/></svg>
           Rozklikněte kteroukoliv otázku
@@ -1118,7 +1118,7 @@
     <form class="foot-news" id="newsForm" novalidate>
       <div class="fn-text">
         <h5>Klidná pošta, žádný spam</h5>
-        <p>Občas pošleme nové termíny, akce a pár fotek králíků. Odhlásíte se jedním kliknutím. Přihlášením souhlasíte se <a href="zasady-osobnich-udaju.html" style="color:inherit;text-decoration:underline">zpracováním e-mailu</a>.</p>
+        <p><span data-cms="newsletter-text">Občas pošleme nové termíny, akce a pár fotek králíků. Odhlásíte se jedním kliknutím. Přihlášením souhlasíte se</span> <a href="zasady-osobnich-udaju.html" style="color:inherit;text-decoration:underline">zpracováním e-mailu</a>.</p>
       </div>
       <div class="fn-field">
         <input id="news-email" type="email" autocomplete="email" placeholder="vas@email.cz" aria-label="E-mail pro odběr novinek" required />
@@ -1261,15 +1261,21 @@
     if (h1 && !REDUCE) {
       const frag = document.createDocumentFragment();
       let wi = 0;
-      const addWord = (node) => {
+      const addWord = (node, target = frag) => {
         const w = document.createElement('span'); w.className = 'w';
         const inner = document.createElement('span'); inner.className = 'wi';
         inner.style.setProperty('--wd', (0.16 + wi * 0.065).toFixed(2) + 's');
         if (typeof node === 'string') inner.textContent = node; else inner.appendChild(node);
-        w.appendChild(inner); frag.appendChild(w); frag.appendChild(document.createTextNode(' ')); wi++;
+        w.appendChild(inner); target.appendChild(w); target.appendChild(document.createTextNode(' ')); wi++;
       };
       Array.from(h1.childNodes).forEach((n) => {
         if (n.nodeType === 3) { n.textContent.split(' ').forEach((word) => { if (word.trim() !== '') addWord(word); }); }
+        else if (n.matches('[data-cms]')) {
+          const wrapper = n.cloneNode(false);
+          n.textContent.split(' ').forEach((word) => { if (word.trim() !== '') addWord(word, wrapper); });
+          frag.appendChild(wrapper);
+          frag.appendChild(document.createTextNode(' '));
+        }
         else addWord(n.cloneNode(true));
       });
       h1.textContent = ''; h1.appendChild(frag); h1.classList.add('split');
@@ -1483,5 +1489,6 @@
     });
   })();
 </script>
+<script type="module" src="cms.js"></script>
 </body>
 </html>

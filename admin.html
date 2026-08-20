@@ -233,6 +233,7 @@
   <div class="wrap">
     <div class="tabs" role="tablist">
       <button class="tab" role="tab" aria-selected="true" data-tab="dash">Přehled</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="content">Obsah webu</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="lessons">Lekce</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="bookings">Rezervace</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="scan">Odbavení</button>
@@ -246,6 +247,28 @@
       <div class="stat-row" id="statRow"></div>
       <h3 style="margin-bottom:.9rem">Nejbližší lekce</h3>
       <div class="dash-list" id="dashList"></div>
+    </section>
+
+    <!-- OBSAH WEBU -->
+    <section class="panel" id="panel-content" role="tabpanel">
+      <div class="panel-head">
+        <h2>Obsah webu</h2>
+        <a class="btn btn-primary btn-sm" href="studio/" target="_blank" rel="noopener">Otevřít editor obsahu</a>
+      </div>
+      <div class="card" style="padding:clamp(1.25rem,3vw,2rem)">
+        <p class="muted" style="font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.45rem">Sanity CMS · propojeno přes Vercel</p>
+        <h3 style="font-size:clamp(1.35rem,3vw,2rem);margin-bottom:.8rem">Texty i fotografie bez úprav kódu</h3>
+        <p class="muted" style="max-width:64ch;line-height:1.65">V editoru najdete úvod, čísla studia, důvody, lekce, galerii, reference, výzvu, FAQ, kontakt i patičku. Po úpravě klikněte na <strong>Publikovat</strong>. Web změnu načte hned, bez nového nasazení.</p>
+        <div class="stat-row" style="margin:1.5rem 0">
+          <div class="stat"><div class="n">1</div><div class="lbl">Otevřete editor</div></div>
+          <div class="stat"><div class="n">2</div><div class="lbl">Upravte text nebo fotografii</div></div>
+          <div class="stat"><div class="n">3</div><div class="lbl">Klikněte na Publikovat</div></div>
+        </div>
+        <div style="display:flex;gap:.7rem;flex-wrap:wrap">
+          <a class="btn btn-primary" href="studio/" target="_blank" rel="noopener">Upravit obsah</a>
+          <a class="btn btn-ghost" href="index.html" target="_blank" rel="noopener">Otevřít veřejný web</a>
+        </div>
+      </div>
     </section>
 
     <!-- LESSONS -->
