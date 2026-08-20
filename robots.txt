@@ -1,0 +1,29 @@
+# https://www.jogaskralicky.cz/
+# Vyhledávače i AI asistenty jsou vítáni. Interní stránky ne.
+
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /vstupenka.html
+Disallow: /api/
+
+# AI vyhledávače — chceme, aby nás citovaly
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://www.jogaskralicky.cz/sitemap.xml

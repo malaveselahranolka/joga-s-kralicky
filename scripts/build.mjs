@@ -15,14 +15,20 @@ mkdirSync(output, {recursive: true})
 
 const files = [
   'index.html',
+  '404.html',
   'admin.html',
   'rezervace.html',
+  'joga-se-zviraty.html',
+  'darkovy-poukaz.html',
+  'joga-pro-deti-ostrava.html',
+  'joga-se-stenaty.html',
+  'robots.txt',
+  'sitemap.xml',
   'vstupenka.html',
   'obchodni-podminky.html',
   'zasady-osobnich-udaju.html',
   'payment-config.js',
   'supabase-config.js',
-  'IMG_3849.png',
 ]
 
 for (const file of files) {
