@@ -76,27 +76,20 @@ function setMeta(selector, value, attribute = 'content') {
 }
 
 // ---------------------------------------------------------------------
-//  TEXTY ŘÍZENÉ Z HTML (a ne z CMS)
+//  POZOR NA DVA ZDROJE TEXTU
 //
-//  Tyhle texty se schválně neberou ze Sanity — jediným zdrojem pravdy je
-//  index.html:
+//  Každý text níž je na webu dvakrát: jednou napsaný v index.html a jednou
+//  uložený v Sanity. Prohlížeč nejdřív vykreslí HTML a pak ho přepíše tím,
+//  co přijde z CMS. Když se ty dvě verze rozejdou, vyhraje CMS — ale jen
+//  v prohlížeči. Vyhledávače a náhledy na sociálních sítích vidí HTML,
+//  protože se k nim CMS vůbec nedostane.
 //
-//    heroSubtitle            .hero-sub
-//    lessonsTitle            .lessons .section-head h2
-//    lessonsLead             .lessons .section-head .lead
-//    lessons[].meta          .l-meta li   (délka lekce, kapacita)
-//    lessons[].description   .l-desc
-//    galleryTitle            .gal-intro h2
+//  V srpnu 2026 kvůli tomu web ukazoval 75 minut a max 12 míst, i když
+//  v HTML už bylo správně 60 minut a max 10 míst.
 //
-//  Proč: v CMS zůstaly starší formulace a hlavně špatná čísla (75/45 minut,
-//  max 12 míst). Protože se obsah z CMS dotahuje až v prohlížeči, přepsal by
-//  správné hodnoty z HTML na ty staré — a to i v náhledech pro vyhledávače
-//  a sociální sítě, kam se CMS vůbec nedostane.
-//
-//  Pozor: pole výš pořád existují v Sanity Studiu, ale jejich změna se na
-//  webu neprojeví. Až se obsah v Sanity srovná s HTML, dá se řízení vrátit
-//  zpátky CMS: doplnit sem odpovídající setText() (viz historie gitu) a texty
-//  v HTML nechat jako záložní.
+//  Když měníš text v HTML, srovnej ho i v Sanity:
+//      npm run sync-content              ukáže, co se rozešlo
+//      npm run sync-content -- --write   srovná to
 // ---------------------------------------------------------------------
 
 function applyContent(data) {
@@ -111,7 +104,7 @@ function applyContent(data) {
   setText('.hero-eyebrow', data.heroLocation, 'heroLocation')
   setText('[data-cms="hero-title-start"]', data.heroTitleStart, 'heroTitleStart')
   setText('[data-cms="hero-title-end"]', data.heroTitleEnd, 'heroTitleEnd')
-  // .hero-sub schválně nepřepisujeme — viz „TEXTY ŘÍZENÉ Z HTML“ dole.
+  setText('.hero-sub', data.heroSubtitle, 'heroSubtitle')
   setImage(select('.hero-bg img'), data.heroImage, 'Hlavní fotografie lekce jógy', 'heroImage')
   selectAll('.hero-deck img').forEach((image, index) => {
     const item = data.heroDeck?.[index]
@@ -144,7 +137,8 @@ function applyContent(data) {
     setImage(select('.rp-pic img', panel), item.image, item.alt, `${base}.image`)
   })
 
-  // Nadpis a perex sekce lekcí řídí HTML — viz „TEXTY ŘÍZENÉ Z HTML“ dole.
+  setText('.lessons .section-head h2', data.lessonsTitle, 'lessonsTitle')
+  setText('.lessons .section-head .lead', data.lessonsLead, 'lessonsLead')
   selectAll('.lesson').forEach((card, index) => {
     const item = data.lessons?.[index]
     if (!item) return
@@ -152,7 +146,10 @@ function applyContent(data) {
     setText(select('.l-tag', card), item.tag, `${base}.tag`)
     setText(select('.l-top h3', card), item.title, `${base}.title`)
     setText(select('.l-price', card), item.price, `${base}.price`)
-    // Délka, kapacita a popis lekce se řídí z HTML — viz „TEXTY ŘÍZENÉ Z HTML“ dole.
+    selectAll('.l-meta li', card).forEach((element, metaIndex) => {
+      if (item.meta?.[metaIndex] != null) setText(element, item.meta[metaIndex], `${base}.meta[${metaIndex}]`)
+    })
+    setText(select('.l-desc', card), item.description, `${base}.description`)
     selectAll('.l-run > div', card).forEach((row, rowIndex) => {
       const timeline = item.timeline?.[rowIndex]
       if (!timeline) return
@@ -164,7 +161,7 @@ function applyContent(data) {
     setImage(select('.l-pic img', card), item.image, item.alt, `${base}.image`)
   })
 
-  // Nadpis galerie řídí HTML — viz „TEXTY ŘÍZENÉ Z HTML“ dole.
+  setText('.gal-intro h2', data.galleryTitle, 'galleryTitle')
   setText('.gal-intro .lead', data.galleryLead, 'galleryLead')
   setText('.gal-hint', data.galleryHint, 'galleryHint')
   setLeadingText(select('.gal-foot .btn'), `${data.galleryButtonLabel || 'Chci je poznat'} `, 'galleryButtonLabel')
