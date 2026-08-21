@@ -738,7 +738,21 @@
     else if (voucher === 'ok') {
       const em = ls.get('voucherEmail') || '';
       const n = Math.max(1, Number(ls.get('voucherCount')) || 1);
-      const codes = voucherCodes(q.get('session_id') || '', n);
+      const sid = q.get('session_id') || '';
+
+      // Poukaz musí vzniknout v databázi, jinak ho majitelka u dveří nenajde
+      // a hostovi řekne „neznámý poukaz". Dřív ho zapisoval JEN webhook —
+      // a když ten nedorazí, zákazník zaplatil a kód mu byl k ničemu.
+      // Proto si o zápis řekneme i odsud. Funkce si stav ověří přímo u Stripu
+      // (prohlížeči nevěří nic) a vrátí kódy, které opravdu uložila.
+      stateBox('info', 'Ověřujeme platbu…', '<p>Chviličku strpení, ptáme se platební brány na potvrzení.</p>', '');
+      const { body: vb } = await fnPost('stripe-confirm', { session_id: sid });
+
+      // Kdyby funkce neodpověděla, spočítáme kódy stejným vzorcem jako server,
+      // ať host aspoň něco vidí; do databáze je pak doplní webhook.
+      const codes = (vb && vb.ok && Array.isArray(vb.codes) && vb.codes.length)
+        ? vb.codes
+        : voucherCodes(sid, n);
       const many = codes.length > 1;
       stateBox('ok', many ? 'Poukazy jsou zaplacené 🐰' : 'Poukaz je zaplacený 🐰',
         '<p>Děkujeme! Tady ' + (many ? 'jsou kódy dárkových poukazů' : 'je kód dárkového poukazu') +
