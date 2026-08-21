@@ -64,6 +64,10 @@ const CIL = {
   lessonsTitle: 'Dvě lekce. Obě končí králíčkem na podložce.',
   lessonsLead: 'Máme jednu lekci pro dospělé a jednu pro děti s rodičem. Vyberte si a rezervujte rovnou tady.',
   galleryTitle: 'Králíčci, kteří nikdy nespěchají',
+
+  // Dřív „10 chlupatých lektorů · 230+ klidných hostů“. To číslo hostů je
+  // stejně nepodložené jako hodnocení, která jsme kvůli tomu odstranili.
+  communityNote: 'Deset králíčků · každý s vlastním jménem',
 }
 
 // Položky polí se dohledávají podle pořadí, _key se zachovává.
