@@ -75,6 +75,30 @@ function setMeta(selector, value, attribute = 'content') {
   if (element && value != null) element.setAttribute(attribute, clean(value))
 }
 
+// ---------------------------------------------------------------------
+//  TEXTY ŘÍZENÉ Z HTML (a ne z CMS)
+//
+//  Tyhle texty se schválně neberou ze Sanity — jediným zdrojem pravdy je
+//  index.html:
+//
+//    heroSubtitle            .hero-sub
+//    lessonsTitle            .lessons .section-head h2
+//    lessonsLead             .lessons .section-head .lead
+//    lessons[].meta          .l-meta li   (délka lekce, kapacita)
+//    lessons[].description   .l-desc
+//    galleryTitle            .gal-intro h2
+//
+//  Proč: v CMS zůstaly starší formulace a hlavně špatná čísla (75/45 minut,
+//  max 12 míst). Protože se obsah z CMS dotahuje až v prohlížeči, přepsal by
+//  správné hodnoty z HTML na ty staré — a to i v náhledech pro vyhledávače
+//  a sociální sítě, kam se CMS vůbec nedostane.
+//
+//  Pozor: pole výš pořád existují v Sanity Studiu, ale jejich změna se na
+//  webu neprojeví. Až se obsah v Sanity srovná s HTML, dá se řízení vrátit
+//  zpátky CMS: doplnit sem odpovídající setText() (viz historie gitu) a texty
+//  v HTML nechat jako záložní.
+// ---------------------------------------------------------------------
+
 function applyContent(data) {
   if (!data) return
 
@@ -87,7 +111,7 @@ function applyContent(data) {
   setText('.hero-eyebrow', data.heroLocation, 'heroLocation')
   setText('[data-cms="hero-title-start"]', data.heroTitleStart, 'heroTitleStart')
   setText('[data-cms="hero-title-end"]', data.heroTitleEnd, 'heroTitleEnd')
-  setText('.hero-sub', data.heroSubtitle, 'heroSubtitle')
+  // .hero-sub schválně nepřepisujeme — viz „TEXTY ŘÍZENÉ Z HTML“ dole.
   setImage(select('.hero-bg img'), data.heroImage, 'Hlavní fotografie lekce jógy', 'heroImage')
   selectAll('.hero-deck img').forEach((image, index) => {
     const item = data.heroDeck?.[index]
@@ -120,8 +144,7 @@ function applyContent(data) {
     setImage(select('.rp-pic img', panel), item.image, item.alt, `${base}.image`)
   })
 
-  setText('.lessons .section-head h2', data.lessonsTitle, 'lessonsTitle')
-  setText('.lessons .section-head .lead', data.lessonsLead, 'lessonsLead')
+  // Nadpis a perex sekce lekcí řídí HTML — viz „TEXTY ŘÍZENÉ Z HTML“ dole.
   selectAll('.lesson').forEach((card, index) => {
     const item = data.lessons?.[index]
     if (!item) return
@@ -129,10 +152,7 @@ function applyContent(data) {
     setText(select('.l-tag', card), item.tag, `${base}.tag`)
     setText(select('.l-top h3', card), item.title, `${base}.title`)
     setText(select('.l-price', card), item.price, `${base}.price`)
-    selectAll('.l-meta li', card).forEach((element, metaIndex) => {
-      if (item.meta?.[metaIndex] != null) setText(element, item.meta[metaIndex], `${base}.meta[${metaIndex}]`)
-    })
-    setText(select('.l-desc', card), item.description, `${base}.description`)
+    // Délka, kapacita a popis lekce se řídí z HTML — viz „TEXTY ŘÍZENÉ Z HTML“ dole.
     selectAll('.l-run > div', card).forEach((row, rowIndex) => {
       const timeline = item.timeline?.[rowIndex]
       if (!timeline) return
@@ -144,7 +164,7 @@ function applyContent(data) {
     setImage(select('.l-pic img', card), item.image, item.alt, `${base}.image`)
   })
 
-  setText('.gal-intro h2', data.galleryTitle, 'galleryTitle')
+  // Nadpis galerie řídí HTML — viz „TEXTY ŘÍZENÉ Z HTML“ dole.
   setText('.gal-intro .lead', data.galleryLead, 'galleryLead')
   setText('.gal-hint', data.galleryHint, 'galleryHint')
   setLeadingText(select('.gal-foot .btn'), `${data.galleryButtonLabel || 'Chci je poznat'} `, 'galleryButtonLabel')
