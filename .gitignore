@@ -13,3 +13,7 @@ screenshot.mjs
 serve.mjs
 
 .playwright-mcp/
+
+# nikdy necommitovat tajne klice
+token.txt
+*.token
