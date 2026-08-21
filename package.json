@@ -6,7 +6,8 @@
   "scripts": {
     "build": "node --env-file-if-exists=.env.local scripts/build.mjs",
     "studio": "sanity dev --host 127.0.0.1",
-    "seed": "node --env-file=.env.local scripts/seed-content.mjs"
+    "seed": "node --env-file=.env.local scripts/seed-content.mjs",
+    "sync-content": "node --env-file-if-exists=.env.local scripts/sync-content.mjs"
   },
   "dependencies": {
     "@sanity/client": "7.26.2",
