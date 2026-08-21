@@ -8,6 +8,25 @@
 //  přes CLI = `supabase functions deploy stripe-webhook --no-verify-jwt`.
 //
 //  Secrets:  STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
+//
+//  ---------------------------------------------------------------------
+//  TŘI PRAVIDLA, KTERÁ TAHLE FUNKCE DRŽÍ (a dřív nedržela):
+//
+//  1) NEVĚŘÍME, ŽE JE ZAPLACENO SPRÁVNĚ. Ověřujeme, že částka, měna a počet
+//     míst v Stripe session sedí s tím, co má rezervace v databázi. Dřív
+//     stačilo, že platba dorazila — takže zaplacení jednoho vstupu mohlo
+//     označit celou vícemístnou rezervaci jako uhrazenou.
+//
+//  2) NEBEREME client_reference_id. Ten si k libovolnému pevnému platebnímu
+//     odkazu připíše kdokoli. Rezervaci teď pozná jen metadata.booking_id,
+//     které nastavuje výhradně naše funkce stripe-create.
+//
+//  3) NELŽEME STRIPU. Když zápis do databáze selže, vrátíme 5xx a Stripe
+//     doručení zopakuje. Dřív se vracelo 200 i po chybě, takže zaplacená
+//     rezervace mohla navždy zůstat „nezaplaceno" a nikdo se to nedozvěděl.
+//
+//  Opakované doručení té samé události řeší tabulka public.stripe_events
+//  (vkládáme event.id jako primární klíč — druhý pokus na něm neprojde).
 // =====================================================================
 import Stripe from "https://esm.sh/stripe@14.21.0?target=denonext";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -34,40 +53,174 @@ Deno.serve(async (req) => {
 
   const admin = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"));
   const obj = event.data.object as any;
-  // booking_id chodí dvěma cestami:
-  //  • metadata.booking_id      — když platbu zakládá funkce stripe-create
-  //  • client_reference_id      — když web posílá zákazníka na Payment Link
-  //                               s ?client_reference_id=<id rezervace>
-  const bookingId = obj?.metadata?.booking_id || obj?.client_reference_id;
+
+  // ---------------------------------------------------------------
+  //  ODPOVĚDI
+  //  ok()      – zpracováno, Stripe už nemusí posílat znovu
+  //  reject()  – událost neprošla kontrolou. Vracíme 200 schválně:
+  //              opakování by dopadlo stejně. Důvod zůstane v
+  //              public.stripe_events, ať je v adminu vidět.
+  //  retry()   – naše chyba (databáze). 5xx → Stripe to zkusí znovu.
+  // ---------------------------------------------------------------
+  const ok = (note = "processed") =>
+    new Response(JSON.stringify({ received: true, status: note }), {
+      status: 200, headers: { "Content-Type": "application/json" },
+    });
+
+  const mark = async (status: string, error: string | null, bookingId: string | null) => {
+    await admin.from("stripe_events")
+      .update({ status, error, booking_id: bookingId })
+      .eq("id", event.id);
+  };
+
+  const reject = async (reason: string, bookingId: string | null = null) => {
+    console.error("stripe-webhook ODMITNUTO", event.id, event.type, reason);
+    await mark("rejected", reason, bookingId);
+    return ok("rejected: " + reason);
+  };
+
+  // Naše chyba → 5xx, Stripe to zkusí znovu. Záznam v deníku necháme se
+  // stavem 'failed', ať ho druhý pokus pozná jako nedokončený a smí ho
+  // zpracovat. (Kdybychom ho mazali a mazání selhalo, zůstal by navždy
+  // ve stavu 'processing' a další doručení by se odmítalo jako duplicita.)
+  const retry = async (reason: string) => {
+    console.error("stripe-webhook CHYBA DB", event.id, event.type, reason);
+    await admin.from("stripe_events").update({ status: "failed", error: reason }).eq("id", event.id);
+    return new Response(JSON.stringify({ error: reason }), {
+      status: 500, headers: { "Content-Type": "application/json" },
+    });
+  };
+
+  // ---------------------------------------------------------------
+  //  IDEMPOTENCE
+  //  Vložení event.id je zámek: kdo ho vloží, ten událost zpracuje.
+  //  Druhé doručení narazí na primární klíč (23505). Dokončenou událost
+  //  podruhé nezpracováváme; nedokončenou (spadlý pokus) ano.
+  //  Případné dvojí zpracování nevadí — zápisy jsou idempotentní
+  //  (nastavit „paid" podruhé nic nezmění, poukazy jdou přes upsert).
+  // ---------------------------------------------------------------
+  const { error: lockErr } = await admin.from("stripe_events").insert({
+    id: event.id, type: event.type, status: "processing",
+  });
+  if (lockErr) {
+    if (lockErr.code !== "23505") return await retry("event_lock_failed: " + lockErr.message);
+
+    const { data: prior, error: priorErr } = await admin
+      .from("stripe_events").select("status").eq("id", event.id).maybeSingle();
+    if (priorErr) return await retry("event_recheck_failed: " + priorErr.message);
+    const unfinished = prior?.status === "processing" || prior?.status === "failed";
+    if (!unfinished) return ok("duplicate");
+    // jinak propadneme dál a zkusíme událost dokončit
+  }
+
+  // ---------------------------------------------------------------
+  //  REZERVACE
+  //  booking_id bere JEN z metadata — ta umí nastavit pouze stripe-create.
+  //  client_reference_id (pevné platební odkazy) se záměrně ignoruje.
+  // ---------------------------------------------------------------
+  const bookingId: string | null = obj?.metadata?.booking_id ?? null;
   const isVoucher = obj?.metadata?.type === "voucher";
 
   if (bookingId) {
-    // Sloupec hold_expires_at přidává až online-only.sql, proto se nastavuje
-    // zvlášť — kdyby ještě nebyl, nesmí to shodit zápis stavu platby.
+    const { data: bk, error: bkErr } = await admin
+      .from("bookings")
+      .select("id, spots, status, payment_status, payment_amount, payment_ref")
+      .eq("id", bookingId)
+      .maybeSingle();
+    if (bkErr) return await retry("booking_lookup_failed: " + bkErr.message);
+    if (!bk) return await reject("booking_not_found", bookingId);
+
     if (event.type === "checkout.session.completed") {
-      await admin.from("bookings").update({
+      // --- kontroly, bez kterých se nic neoznačí jako zaplacené ---
+      if (obj?.payment_status !== "paid") {
+        return await reject("payment_status_not_paid:" + String(obj?.payment_status), bookingId);
+      }
+      if (String(obj?.currency).toLowerCase() !== "czk") {
+        return await reject("currency_mismatch:" + String(obj?.currency), bookingId);
+      }
+      // payment_ref zapsala stripe-create při zakládání platby. Když nesedí,
+      // přišla platba z jiné session, než která k téhle rezervaci patří.
+      if (bk.payment_ref && bk.payment_ref !== obj?.id) {
+        return await reject("session_mismatch", bookingId);
+      }
+      // Počet míst v metadatech musí sedět s rezervací — jinak by šlo
+      // zaplatit za jedno místo a nechat si potvrdit čtyři.
+      const metaSpots = Number(obj?.metadata?.spots);
+      if (!Number.isFinite(metaSpots) || metaSpots !== Number(bk.spots)) {
+        return await reject("spots_mismatch:" + String(obj?.metadata?.spots) + "/" + String(bk.spots), bookingId);
+      }
+      // Očekávaná částka: primárně to, co spočítal server při zakládání
+      // platby; když sloupec chybí, dopočítá se z ceny za místo.
+      const entryCzk = Number(env("PAYMENT_ENTRY_CZK", env("PAYMENT_DEPOSIT_CZK", "499")));
+      const expected = Number(bk.payment_amount) > 0
+        ? Number(bk.payment_amount)
+        : Math.round(entryCzk * 100) * Number(bk.spots);
+      if (Number(obj?.amount_total) !== expected) {
+        return await reject("amount_mismatch:" + String(obj?.amount_total) + "/" + String(expected), bookingId);
+      }
+
+      // --- teprve teď zapisujeme, a hlídáme výsledek ---
+      const { error: payErr } = await admin.from("bookings").update({
         payment_status: "paid",
         paid_at: new Date().toISOString(),
         payment_method: "online",
+        payment_ref: obj.id,
+        payment_amount: obj.amount_total,
+        hold_expires_at: null,   // zaplaceno → místo se už neuvolňuje
       }).eq("id", bookingId);
-      await admin.from("bookings").update({ hold_expires_at: null }).eq("id", bookingId);
-    } else if (event.type === "checkout.session.expired" || event.type === "checkout.session.async_payment_failed") {
-      await admin.from("bookings").update({ payment_status: "failed" }).eq("id", bookingId);
-      // platba nedopadla → místo pustíme hned zpátky do nabídky
-      await admin.from("bookings").update({ hold_expires_at: new Date().toISOString() })
-        .eq("id", bookingId).neq("payment_status", "paid");
+      if (payErr) return await retry("booking_paid_update_failed: " + payErr.message);
+
+      await mark("processed", null, bookingId);
+      return ok();
     }
-  } else if (isVoucher && event.type === "checkout.session.completed") {
-    // Dárkové poukazy zaplaceny → vygeneruj kódy a ulož je.
-    // Kódy jsou DETERMINISTICKÉ ze session id, protože úplně stejný výpočet
-    // dělá i web v rezervace.html (funkce voucherCodes) — jinak by host viděl
-    // jiné kódy, než jaké máš v adminu. Když ten výpočet měníš, změň ho na
-    // obou místech naráz.
+
+    if (event.type === "checkout.session.expired" || event.type === "checkout.session.async_payment_failed") {
+      // Zaplacenou rezervaci nikdy neshazujeme — mohla dorazit dřív jinou cestou.
+      if (bk.payment_status === "paid") {
+        await mark("skipped", "already_paid", bookingId);
+        return ok("already_paid");
+      }
+      const { error: failErr } = await admin.from("bookings").update({
+        payment_status: "failed",
+        hold_expires_at: new Date().toISOString(),   // místo hned zpátky do nabídky
+      }).eq("id", bookingId).neq("payment_status", "paid");
+      if (failErr) return await retry("booking_failed_update_failed: " + failErr.message);
+
+      await mark("processed", null, bookingId);
+      return ok();
+    }
+
+    await mark("ignored", "unhandled_type", bookingId);
+    return ok("ignored");
+  }
+
+  // ---------------------------------------------------------------
+  //  DÁRKOVÉ POUKAZY
+  //  Kódy jsou DETERMINISTICKÉ ze session id, protože úplně stejný výpočet
+  //  dělá i web v rezervace.html (funkce voucherCodes) — jinak by host viděl
+  //  jiné kódy, než jaké máš v adminu. Když ten výpočet měníš, změň ho na
+  //  obou místech naráz.
+  // ---------------------------------------------------------------
+  if (isVoucher && event.type === "checkout.session.completed") {
+    if (obj?.payment_status !== "paid") {
+      return await reject("voucher_payment_status_not_paid:" + String(obj?.payment_status));
+    }
+    if (String(obj?.currency).toLowerCase() !== "czk") {
+      return await reject("voucher_currency_mismatch:" + String(obj?.currency));
+    }
+
     const count = Math.max(1, Number(obj?.metadata?.count) || 1);
+    const voucherCzk = Number(env("PAYMENT_VOUCHER_CZK", env("PAYMENT_ENTRY_CZK", "499")));
+    const expected = Math.round(voucherCzk * 100) * count;
+    if (Number(obj?.amount_total) !== expected) {
+      return await reject("voucher_amount_mismatch:" + String(obj?.amount_total) + "/" + String(expected));
+    }
+
     const stem = "DK-" + String(obj.id).replace(/[^A-Za-z0-9]/g, "").slice(-8).toUpperCase();
     const email = obj?.customer_details?.email || obj?.customer_email || null;
-    const total = obj?.amount_total ?? null;
-    const each = total != null ? Math.round(total / count) : null;
+    const each = Math.round(Number(obj.amount_total) / count);
+    // Obchodní podmínky slibují platnost 12 měsíců — držíme ji i v datech.
+    const expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
 
     const rows = Array.from({ length: count }, (_, i) => ({
       code: count === 1 ? stem : `${stem}-${i + 1}`,
@@ -75,11 +228,16 @@ Deno.serve(async (req) => {
       amount: each,          // cena za JEDEN poukaz, ne celá objednávka
       session_id: obj.id,
       redeemed: false,
+      expires_at: expiresAt,
     }));
-    await admin.from("vouchers").upsert(rows, { onConflict: "code" });
+
+    const { error: vErr } = await admin.from("vouchers").upsert(rows, { onConflict: "code" });
+    if (vErr) return await retry("voucher_upsert_failed: " + vErr.message);
+
+    await mark("processed", null, null);
+    return ok();
   }
 
-  return new Response(JSON.stringify({ received: true }), {
-    status: 200, headers: { "Content-Type": "application/json" },
-  });
+  await mark("ignored", "no_booking_or_voucher", null);
+  return ok("ignored");
 });

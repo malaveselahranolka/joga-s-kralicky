@@ -12,6 +12,19 @@
 --     když zápis selže, zákazník o tom neví a platba proběhne.
 --
 -- Spustit v Supabase → SQL Editor. Je to bezpečné pustit i opakovaně.
+--
+-- ---------------------------------------------------------------------
+-- POZOR, ČTI PŘED NASAZENÍM
+--
+-- Dřívější verze tohohle souboru měla čtecí pravidlo `using (true)` pro
+-- roli `authenticated` a k tomu `grant select`. To znamenalo: KDOKOLI
+-- s potvrzeným účtem si mohl přečíst celou tabulku, tedy i booking_id
+-- všech rezervací. A protože public.get_ticket(uuid) je veřejná
+-- SECURITY DEFINER funkce, dá se z každého takového UUID vytáhnout jméno,
+-- termín a stav platby. Tabulka se naštěstí nikdy nenasadila.
+--
+-- Teď platí: číst smí jen majitelka (public.is_owner()), návštěvník smí
+-- pouze zapsat řádek ke své čerstvé rezervaci a nic si nepřečte.
 -- ---------------------------------------------------------------------
 
 create table if not exists public.booking_sources (
@@ -22,13 +35,14 @@ create table if not exists public.booking_sources (
 
 alter table public.booking_sources enable row level security;
 
--- Vlastník (přihlášený admin) vidí a spravuje všechno.
+-- Vlastník (přihlášená majitelka) vidí a spravuje všechno.
+-- Stejné pravidlo jako u bookings, lessons, vouchers a newsletteru.
 drop policy if exists booking_sources_owner_all on public.booking_sources;
 create policy booking_sources_owner_all on public.booking_sources
   for all
   to authenticated
-  using (true)
-  with check (true);
+  using (public.is_owner())
+  with check (public.is_owner());
 
 -- Návštěvník smí jen vložit řádek k rezervaci, která existuje a vznikla
 -- v posledních 15 minutách — tedy k té své. Nic nečte a nic nemění.
@@ -45,16 +59,23 @@ create policy booking_sources_anon_insert on public.booking_sources
     )
   );
 
+-- Zápis ano, čtení ne. Kdo nemá SELECT, nevytáhne si seznam booking_id.
 grant insert on public.booking_sources to anon, authenticated;
+revoke select on public.booking_sources from anon, authenticated;
 grant select on public.booking_sources to authenticated;
 
 -- ---------------------------------------------------------------------
 -- PŘEHLED PRO ADMINA
 -- Kolik rezervací a kolik míst přišlo z jakého zdroje. „neuvedeno“ jsou
 -- lidé, kteří pole nevyplnili — je nepovinné, takže jich bude dost.
+--
+-- security_invoker = on je tu podstatné: bez něj běží pohled s právy
+-- svého vlastníka a obešel by RLS na bookings i booking_sources, takže
+-- by statistiku (a s ní i počty rezervací) viděl každý přihlášený účet.
 -- ---------------------------------------------------------------------
 
-create or replace view public.booking_source_stats as
+create or replace view public.booking_source_stats
+with (security_invoker = on) as
 select
   coalesce(s.source, 'neuvedeno') as source,
   count(*)                        as bookings,

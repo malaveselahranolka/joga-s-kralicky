@@ -343,8 +343,6 @@
   };
 
   const PAY = window.PAYMENTS || {};
-  const ENTRY_URL = PAY.fallbackEntryUrl || '';   // nouzový odkaz na 1 místo, viz startCheckout
-  const VOUCHER_URL = PAY.voucherUrl || '';   // nouzový odkaz na 1 poukaz
   const ticketHref = (id) => 'vstupenka.html#' + id;
   const PRICE = Number(PAY.entryCzk || PAY.depositCzk || 499);   // cena za JEDNO místo (Kč)
   const MAX_PER = Math.min(8, Math.max(1, Number(PAY.maxSpots) || 4));
@@ -380,17 +378,16 @@
 
   // Otevření platební brány. Částku (cena × počet míst) počítá SERVER ve
   // funkci stripe-create — prohlížeč o ní nerozhoduje, jen sem pošle ID rezervace.
-  async function startCheckout(bookingId, howMany) {
+  async function startCheckout(bookingId) {
     const { status, body } = await fnPost('stripe-create', { booking_id: bookingId });
     if (body && body.ok && body.url) return body.url;
 
-    // Záchranná brzda: funkce není nasazená (404) nebo neodpověděla vůbec.
-    // Pevný platební odkaz umí jen JEDNO místo za pevnou cenu — u víc osob by
-    // strhl málo, tak radši platbu nepustíme dál, než aby host zaplatil špatně.
+    // Dřív tu byla „záchranná brzda": pevný platební odkaz na jedno místo.
+    // Šlo ji ale zneužít — ke stejnému odkazu si kdokoli připsal ID libovolné
+    // rezervace a za jeden vstup si nechal potvrdit všechna její místa.
+    // Když teď brána nejede, platbu radši nespustíme vůbec: nezaplacená
+    // rezervace je menší problém než špatně zaplacená.
     const gatewayDown = !body || status === 404 || status === 0;
-    if (gatewayDown && ENTRY_URL && (howMany || 1) === 1) {
-      return ENTRY_URL + (ENTRY_URL.includes('?') ? '&' : '?') + 'client_reference_id=' + encodeURIComponent(bookingId);
-    }
     throw new Error((body && body.error) || (gatewayDown ? 'gateway_down' : 'checkout_failed'));
   }
   const checkoutErr = (e) => {
@@ -464,7 +461,7 @@
   $('stateBox').addEventListener('click', async (e) => {
     const b = e.target.closest('[data-pay]'); if (!b) return;
     const keep = b.innerHTML; b.disabled = true; b.textContent = 'Otevírám platbu…';
-    try { window.location.href = await startCheckout(b.dataset.pay, Number(b.dataset.spots) || 1); }
+    try { window.location.href = await startCheckout(b.dataset.pay); }
     catch (err) { b.disabled = false; b.innerHTML = keep; alert(checkoutErr(err)); }
   });
 
@@ -634,7 +631,7 @@
     // Rovnou do platební brány — částku spočítá server jako cena × počet míst.
     btn.textContent = 'Přesměrovávám na platbu…';
     try {
-      window.location.href = await startCheckout(lastBookingId, spots);
+      window.location.href = await startCheckout(lastBookingId);
     } catch (err) {
       restore();
       stateBox('info', 'Platbu se nepodařilo otevřít',
@@ -688,14 +685,12 @@
       btn.disabled = true; btn.textContent = 'Otevírám platbu…';
       msg.textContent = ''; msg.className = 'vc-msg';
 
-      const { status, body } = await fnPost('stripe-voucher', { email: em, count: vcCount });
+      const { body } = await fnPost('stripe-voucher', { email: em, count: vcCount });
       if (body && body.ok && body.url) { window.location.href = body.url; return; }
 
-      // Záchranná brzda jako u rezervací: pevný odkaz umí jen jeden kus.
-      if ((!body || status === 404 || status === 0) && VOUCHER_URL && vcCount === 1) {
-        window.location.href = VOUCHER_URL + (VOUCHER_URL.includes('?') ? '&' : '?') + 'prefilled_email=' + encodeURIComponent(em);
-        return;
-      }
+      // Záchranná brzda tu bývala i pro poukazy — pevný odkaz bez metadat.
+      // Webhook z něj ale poukaz do databáze nezaložil, takže zákazník
+      // zaplatil a dostal kód, který u dveří neplatil. Radši nic.
       btn.disabled = false; btn.innerHTML = keep;
       msg.textContent = 'Platbu se teď nepodařilo otevřít. Zkuste to prosím znovu, nebo nám napište na info@jogaskralicky.cz.';
       msg.className = 'vc-msg err';

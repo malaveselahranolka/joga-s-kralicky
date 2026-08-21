@@ -29,15 +29,17 @@ window.PAYMENTS = {
   voucherCzk: 499,
   maxVouchers: 10,   // kolik poukazů lze koupit najednou
 
-  // Nouzový odkaz na JEDEN poukaz — použije se jen když funkce
-  // stripe-voucher neodpoví. U víc kusů by strhl málo, tak se nepoužije.
-  voucherUrl: 'https://buy.stripe.com/fZu28r7Dr6xLc8t1JH1gs00',
-
-  // ZÁCHRANNÁ BRZDA. Starý pevný odkaz na jeden vstup za 499 Kč. Použije se
-  // jen tehdy, když funkce stripe-create neodpoví (není nasazená, výpadek) —
-  // a jen pro rezervaci na JEDNO místo, kde ta pevná částka sedí. U víc osob
-  // se platba radši nespustí, aby nikdo nezaplatil míň, než má.
-  fallbackEntryUrl: 'https://buy.stripe.com/4gM6oH8Hvg8l4G1agd1gs01',
+  // POZOR — tady BÝVALY dva pevné Stripe Payment Linky jako „záchranná brzda",
+  // kdyby funkce stripe-create / stripe-voucher neodpověděly. Jsou pryč
+  // a ve Stripu deaktivované, protože se daly zneužít:
+  //
+  //   * u vstupu si kdokoli k odkazu připsal ?client_reference_id=<id cizí
+  //     rezervace> a za jeden vstup si nechal potvrdit všechna její místa,
+  //   * u poukazu odkaz neposílal metadata, takže webhook poukaz do databáze
+  //     vůbec nezaložil — zákazník zaplatil a dostal kód neplatný u dveří.
+  //
+  // Když brána nejede, platba se teď nespustí vůbec. Nezaplacená rezervace
+  // je menší problém než špatně zaplacená. Nevracej je sem.
 };
 
 // Zpětná kompatibilita se starším názvem (dřív se vstupu říkalo „záloha“).

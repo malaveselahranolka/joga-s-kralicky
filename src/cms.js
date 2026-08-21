@@ -1,7 +1,26 @@
 import {createDataAttribute, enableVisualEditing} from '@sanity/visual-editing'
 
 const params = new URLSearchParams(window.location.search)
-const editing = window.self !== window.top || params.has('visual-editing') || params.has('sanity-preview')
+
+// Editační režim (vizuální editace + časté dotazování na /api/content) se smí
+// zapnout jen ve vlastním Studiu. Dřív stačilo, že je stránka v JAKÉMKOLI
+// iframu — takže libovolný cizí web nás mohl vložit k sobě a rozjet nám
+// dotaz na /api/content každou 1,5 s (~40 volání funkce za minutu na každý
+// otevřený iframe), plus si nechat vykreslit editační atributy.
+//
+// Rámuje-li nás vlastní Studio, přijde same-origin referrer. Cizí web má
+// jiný origin (a od zavedení X-Frame-Options: SAMEORIGIN nás vůbec nevloží).
+function framedByOwnStudio() {
+  if (window.self === window.top) return false
+  try {
+    return !!document.referrer &&
+      new URL(document.referrer).origin === window.location.origin
+  } catch (_e) {
+    return false
+  }
+}
+
+const editing = framedByOwnStudio() || params.has('visual-editing') || params.has('sanity-preview')
 const studioUrl = `${window.location.origin}/studio`
 
 const select = (selector, root = document) => root.querySelector(selector)
