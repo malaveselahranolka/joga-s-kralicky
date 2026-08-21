@@ -115,7 +115,7 @@
           {
             "@type": "Offer",
             "name": "Hatha s králíčky",
-            "description": "Pomalá 75minutová hatha jóga pro dospělé i úplné začátečníky. Posledních 20 minut se sál otevře králíkům. Maximálně 12 míst.",
+            "description": "Pomalá 60minutová hatha jóga pro dospělé i úplné začátečníky. Posledních 20 minut se sál otevře králíkům. Maximálně 10 míst.",
             "price": "499",
             "priceCurrency": "CZK",
             "availability": "https://schema.org/InStock",
@@ -133,7 +133,7 @@
           {
             "@type": "Offer",
             "name": "Děti & králíci",
-            "description": "45minutová lekce pro děti od 5 let v doprovodu rodiče. Víc her než ásan. Maximálně 10 míst.",
+            "description": "60minutová lekce pro děti od 5 let v doprovodu rodiče. Víc her než ásan. Maximálně 10 míst.",
             "price": "499",
             "priceCurrency": "CZK",
             "availability": "https://schema.org/InStock",
@@ -878,7 +878,6 @@
   <a href="#proc">Proč se lidi vracejí</a>
   <a href="#lekce">Lekce</a>
   <a href="#kralicci">Králíčci</a>
-  <a href="#reference">Reference</a>
   <a href="#faq">Časté dotazy</a>
   <a href="#kontakt">Kde nás najdete</a>
   <a class="btn btn-primary menu-cta" href="rezervace.html">Rezervovat lekci <span class="arrow">→</span></a>
@@ -919,16 +918,11 @@
     </div>
   </section>
 
-  <!-- ============ PROOF STRIP ============ -->
-  <section class="proof" aria-label="Studio v číslech">
-    <div class="wrap proof-grid">
-      <div class="pstat"><div class="num">4,9★</div><div class="lbl">z 230 hodnocení</div></div>
-      <div class="pstat"><div class="num">10</div><div class="lbl">králíčků-lektorů</div></div>
-      <div class="pstat"><div class="num">75′</div><div class="lbl">délka jedné lekce</div></div>
-      <div class="pstat"><div class="num">max&nbsp;12</div><div class="lbl">míst v sále</div></div>
-      <p class="proof-note">Malé skupiny, ať má klid každý host i každý králík.</p>
-    </div>
-  </section>
+  <!-- ============ PROOF STRIP — DOCASNE SKRYTO ============
+       Pruh se statistikami (hodnoceni, delka lekce, mista v sale) je pryc,
+       protoze jsme zadna hodnoceni jeste nemeli a cisla nesedela.
+       Az hodnoceni budou, vrat blok z historie gitu — CSS (.proof, .pstat)
+       i napojeni na CMS (pole "stats") zustavaji na miste. -->
 
   <!-- ============ WHY PEOPLE COME BACK ============ -->
   <section class="reasons" id="proc">
@@ -999,8 +993,8 @@
     <div class="sglow" aria-hidden="true"></div>
     <div class="wrap">
       <div class="section-head reveal">
-        <h2>Dvě lekce. Obě končí králíkem na podložce.</h2>
-        <p class="lead">Nemáme rozpis na tři strany. Máme jednu lekci pro dospělé a jednu pro děti s rodičem. Vyberte si a rezervujte rovnou tady.</p>
+        <h2>Dvě lekce. Obě končí králíčkem na podložce.</h2>
+        <p class="lead">Máme jednu lekci pro dospělé a jednu pro děti s rodičem. Vyberte si a rezervujte rovnou tady.</p>
       </div>
       <div class="lesson-pair">
         <article class="lesson reveal">
@@ -1014,9 +1008,9 @@
               <span class="l-price">499 Kč</span>
             </div>
             <ul class="l-meta">
-              <li>75 minut</li><li>Út · Čt · So</li><li>max 12 míst</li><li>i pro úplné začátečníky</li>
+              <li>60 minut</li><li>Út · Čt · So</li><li>max 10 míst</li><li>i pro úplné začátečníky</li>
             </ul>
-            <p class="l-desc">Naše klasika. Pomalý pohyb a dech, u každé pozice se ukáže i jednodušší varianta. Nejde o to, jak hluboko se prohnete.</p>
+            <p class="l-desc">Naše klasika. Pomalý pohyb a dech, u každé pozice se ukáže i jednodušší varianta.</p>
             <div class="l-run">
               <div><b>0–10 min</b><span>Přijdete, zujete se, dostanete čaj.</span></div>
               <div><b>10–55 min</b><span>Pomalá hatha. Lektorka vede, nikdo neopravuje.</span></div>
@@ -1036,7 +1030,7 @@
               <span class="l-price">499 Kč</span>
             </div>
             <ul class="l-meta">
-              <li>45 minut</li><li>Sobota 9:30</li><li>max 10 míst</li><li>dítě s rodičem</li>
+              <li>60 minut</li><li>Sobota 9:30</li><li>max 10 míst</li><li>dítě s rodičem</li>
             </ul>
             <p class="l-desc">Víc her než ásan. Děti se učí jedinou věc: být tak klidné, aby k nim někdo přišel dobrovolně. Funguje to i na rodiče.</p>
             <div class="l-run">
@@ -1054,7 +1048,7 @@
   <!-- ============ RABBIT GALLERY — pins, then pans sideways ============ -->
   <section class="gal" id="kralicci">
     <div class="wrap section-head gal-intro reveal">
-      <h2>Lektoři, kteří nikdy nespěchají</h2>
+      <h2>Králíčci, kteří nikdy nespěchají</h2>
       <p class="lead">Každý z desítky má jméno, povahu i svůj oblíbený kout sálu. Čtyři z nich poznáte hned při první lekci.</p>
     </div>
     <div class="gal-wrap" id="galWrap">
@@ -1147,48 +1141,11 @@
   </section>
 
 
-  <!-- ============ TESTIMONIALS ============ -->
-  <section class="reference" id="reference">
-    <div class="wrap">
-      <div class="ref-head reveal">
-        <div class="section-head">
-          <h2>Klid od naší komunity</h2>
-          <p class="lead">Od úplných začátečníků po stálé hosty. Jejich rána se s námi proměnila a králíci na tom mají svůj podíl.</p>
-        </div>
-        <div>
-          <div class="ref-nav">
-            <button id="refPrev" aria-label="Předchozí reference"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18 9 12l6-6"/></svg></button>
-            <button id="refNext" aria-label="Další reference"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
-          </div>
-        </div>
-      </div>
-      <div class="ref-viewport">
-        <div class="ref-track" id="refTrack">
-          <article class="tcard green">
-            <div class="stars" aria-hidden="true">★★★★★</div>
-            <p class="quote">„Po první lekci jsem brečela štěstím. Pepa mi usnul na klíně během savasany a já jsem konečně vypnula.“</p>
-            <p class="who" style="margin-top:1.4rem">Sofie R.<span>chodí každý čtvrtek</span></p>
-          </article>
-          <article class="tcard">
-            <div class="pic"><img decoding="async" src="assets/photos/yoga-6.webp" alt="Skupinová lekce v sále" loading="lazy" width="1500" height="1000" /></div>
-            <div class="body"><p class="quote">„Nikdy jsem necvičila a bála se, že budu za vola. Lektorka i králíci mě uklidnili během minuty.“</p><p class="who">Markéta H.<span>první lekce</span></p></div>
-          </article>
-          <article class="tcard">
-            <div class="pic"><img decoding="async" src="assets/photos/rabbit-3.webp" alt="Klopoušek s dlouhýma ušima" loading="lazy" width="1050" height="1400" /></div>
-            <div class="body"><p class="quote">„Vodím sem dceru na sobotní Děti a králíci. Je to nejhezčí hodina našeho týdne.“</p><p class="who">Jana P.<span>maminka</span></p></div>
-          </article>
-          <article class="tcard">
-            <div class="pic"><img decoding="async" src="assets/photos/yoga-2.webp" alt="Cvičenka v pozici při západu slunce" loading="lazy" width="1500" height="946" /></div>
-            <div class="body"><p class="quote">„Chodím i dvakrát týdně a pokaždé odejdu lehčí. Nečekal jsem, že mě to chytne takhle.“</p><p class="who">Tomáš K.<span>chodí od jara</span></p></div>
-          </article>
-          <article class="tcard">
-            <div class="pic"><img decoding="async" src="assets/photos/yoga-12-768.webp" alt="Cvičenka v záklonu" loading="lazy" width="768" height="614" /></div>
-            <div class="body"><p class="quote">„Brokolice je lepší terapeut než leckterá appka na meditaci. Vážně.“</p><p class="who">Eliška M.<span>chodí ráno</span></p></div>
-          </article>
-        </div>
-      </div>
-    </div>
-  </section>
+  <!-- ============ REFERENCE — DOCASNE SKRYTO ============
+       Sekce s ohlasy je pryc, protoze zadne skutecne ohlasy zatim nemame.
+       Az nejake budou, vrat blok z historie gitu — CSS (.reference, .ref-*,
+       .tcard), karusel v JS (hlida si `if (!track) return`) i napojeni na CMS
+       (pole "testimonials") zustavaji na miste. -->
 
   <!-- ============ COMMUNITY ============ -->
   <section class="community on-dark" id="pridejte">
@@ -1321,7 +1278,6 @@
         <a href="#proc">Proč se lidi vracejí</a>
         <a href="#lekce">Lekce</a>
         <a href="#kralicci">Králíčci</a>
-        <a href="#reference">Reference</a>
       </nav>
       <nav class="foot-col" aria-label="Více">
         <h5>Více</h5>
