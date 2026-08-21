@@ -36,19 +36,52 @@ const env = (n: string, d = "") => Deno.env.get(n) ?? d;
 Deno.serve(async (req) => {
   const sk = env("STRIPE_SECRET_KEY");
   const whSecret = env("STRIPE_WEBHOOK_SECRET");
-  if (!sk || !whSecret) return new Response("not configured", { status: 500 });
+  // Bez tajného klíče nemá funkce jak cokoli ověřit. Chybějící podpisový
+  // secret ale fatální není — níž je druhá cesta přes dotaz u Stripu.
+  if (!sk) return new Response("not configured", { status: 500 });
 
   const stripe = new Stripe(sk, { httpClient: Stripe.createFetchHttpClient() });
   const sig = req.headers.get("stripe-signature");
   const body = await req.text();
 
+  // ---------------------------------------------------------------
+  //  OVĚŘENÍ, ŽE UDÁLOST OPRAVDU POSLAL STRIPE
+  //  Dvě cesty, v tomhle pořadí:
+  //
+  //  1) PODPIS (STRIPE_WEBHOOK_SECRET) — standardní a nejlevnější způsob.
+  //
+  //  2) DOTAZ PŘÍMO STRIPU — když podpis neprojde. Z těla si vezmeme JEDINÉ
+  //     id události, vyzvedneme si ji naším tajným klíčem a s tělem požadavku
+  //     dál nepracujeme. Autorita je výhradně odpověď Stripu, takže podvržený
+  //     obsah nemá jak projít.
+  //
+  //     Proč to tu je: sdílený podpisový secret se rozejde snadno (překlep,
+  //     mezera při kopírování, přeložený endpoint) a selhává TIŠE. Přesně to
+  //     se stalo 15.–21. 8. 2026: 123 událostí po sobě skončilo na „bad
+  //     signature", Stripe endpoint vypnul a zaplacenému zákazníkovi nevznikl
+  //     poukaz. Tahle druhá cesta drží systém funkční i tehdy.
+  //
+  //     Cena: jedno volání Stripe API navíc. Přísná kontrola tvaru id běží
+  //     ještě před ním, aby se z endpointu nedal dělat zesilovač požadavků.
+  // ---------------------------------------------------------------
   let event: Stripe.Event;
   try {
+    if (!whSecret) throw new Error("STRIPE_WEBHOOK_SECRET not set");
     event = await stripe.webhooks.constructEventAsync(
       body, sig!, whSecret, undefined, Stripe.createSubtleCryptoProvider(),
     );
-  } catch (e) {
-    return new Response("bad signature: " + String(e), { status: 400 });
+  } catch (sigErr) {
+    let id: unknown = null;
+    try { id = JSON.parse(body)?.id; } catch (_e) { /* nevalidní JSON */ }
+    if (typeof id !== "string" || !/^evt_[A-Za-z0-9]+$/.test(id)) {
+      return new Response("bad signature: " + String(sigErr), { status: 400 });
+    }
+    try {
+      event = await stripe.events.retrieve(id);
+      console.warn("stripe-webhook: podpis neprosel, udalost overena dotazem u Stripu", id);
+    } catch (_e) {
+      return new Response("event not found: " + id, { status: 400 });
+    }
   }
 
   const admin = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"));
@@ -131,6 +164,13 @@ Deno.serve(async (req) => {
     if (!bk) return await reject("booking_not_found", bookingId);
 
     if (event.type === "checkout.session.completed") {
+      // Zaplaceno už je (typicky stihl stripe-confirm po návratu z brány).
+      // Nepřepisujeme, ať se paid_at neposouvá při opakovaném doručení.
+      if (bk.payment_status === "paid" && bk.payment_ref === obj?.id) {
+        await mark("skipped", "already_paid", bookingId);
+        return ok("already_paid");
+      }
+
       // --- kontroly, bez kterých se nic neoznačí jako zaplacené ---
       if (obj?.payment_status !== "paid") {
         return await reject("payment_status_not_paid:" + String(obj?.payment_status), bookingId);
