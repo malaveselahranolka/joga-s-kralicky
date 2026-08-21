@@ -156,7 +156,7 @@ export const siteContent = defineType({
         defineArrayMember({
           type: 'object',
           fields: [
-            defineField({name: 'caption', title: 'Popisek v náhledu', type: 'string', validation: requiredText}),
+            defineField({name: 'caption', title: 'Název fotky (jen pro přehled tady ve Studiu, na webu se nezobrazuje)', type: 'string', validation: requiredText}),
             defineField({name: 'note', title: 'Text pod velkou fotografií', type: 'text', rows: 2}),
             defineField({name: 'image', title: 'Fotografie', type: 'image', options: {hotspot: true}, validation: requiredImage}),
             defineField({name: 'alt', title: 'Popis fotografie', type: 'string', validation: requiredText}),

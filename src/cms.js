@@ -172,7 +172,6 @@ function applyContent(data) {
     const image = select('img', button)
     setImage(image, item.image, item.alt, `${base}.image`)
     button.dataset.full = clean(item.image?.asset?.url)
-    button.dataset.cap = clean(item.caption)
     annotate(button, `${base}.image`)
     const note = button.closest('.gal-big')?.querySelector('.bun-note')
     if (note && item.note) setText(note, item.note, `${base}.note`)
