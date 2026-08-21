@@ -55,6 +55,11 @@ async function zapis(mutations) {
 //  Měníš-li text na jednom místě, změň ho i na druhém.
 // ---------------------------------------------------------------------
 const CIL = {
+  // Titulek a popisek stránky. V CMS zůstaly verze z doby před SEO úpravami
+  // a v prohlížeči přepisovaly ty novější z HTML.
+  pageTitle: 'Jóga s králíčky Ostrava — jóga se zvířaty, 10 králíků na lekci',
+  pageDescription: 'Jóga se zvířaty v Ostravě — hodina jemné hathy, při které vám mezi pozice hopsá deset domácích králíků. Bez výkonu, bez zrcadel. Vstup 499 Kč, Fit&Fun Studio, Ostrava-Mariánské Hory. Rezervace online.',
+
   heroSubtitle: 'Hodina jemné jógy, po které se po sále volně rozeběhne deset roztomilých králíčků.',
   lessonsTitle: 'Dvě lekce. Obě končí králíčkem na podložce.',
   lessonsLead: 'Máme jednu lekci pro dospělé a jednu pro děti s rodičem. Vyberte si a rezervujte rovnou tady.',
