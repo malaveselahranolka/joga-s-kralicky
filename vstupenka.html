@@ -14,6 +14,9 @@
     --paper: #F1EEE5; --cream: #F7F4EC; --surface: #FFFFFF;
     --ink: #1E231C; --ink-soft: #5C6357;
     --forest: #2C3B2E; --forest-deep: #1E2920; --clover: #6E8A4E; --carrot: #D2854A;
+    /* jen pro drobný text — značkové odstíny výš nemají na malé písmo dost
+       kontrastu (zelená 3,35:1, oranžová 2,52:1 proti 4,5:1 dle WCAG AA) */
+    --clover-text: #5C7341; --carrot-text: #975F35;
     --line: #E3DFD3; --line-soft: #ECE8DE;
     --r-xl: 30px; --r-lg: 22px; --r-md: 14px;
     --ease: cubic-bezier(.22,.61,.36,1); --ease-spring: cubic-bezier(.34,1.4,.5,1);
@@ -41,7 +44,7 @@
 
   main { padding: clamp(2rem, 5vw, 3.4rem) 0 4rem; }
   .page-head { text-align: center; max-width: 40ch; margin: 0 auto clamp(1.6rem, 4vw, 2.4rem); }
-  .eyebrow { display: inline-block; font-size: .82rem; font-weight: 600; letter-spacing: .04em; color: var(--clover); margin-bottom: .8rem; }
+  .eyebrow { display: inline-block; font-size: .82rem; font-weight: 600; letter-spacing: .04em; color: var(--clover-text); margin-bottom: .8rem; }
   .eyebrow::before { content: "/ "; opacity: .7; }
   .page-head h1 { font-size: clamp(1.9rem, 1.4rem + 2vw, 2.8rem); }
   .page-head p { margin-top: .9rem; color: var(--ink-soft); }
@@ -118,7 +121,7 @@
 
 <header class="bar">
   <div class="wrap bar-inner">
-    <a class="brand" href="index.html" aria-label="Jóga s králíčky — domů">
+    <a class="brand" href="/" aria-label="Jóga s králíčky — domů">
       <img src="assets/logo.svg" alt="" width="32" height="32" /> Jóga&nbsp;s&nbsp;králíčky
     </a>
     <a class="home-link" href="rezervace.html">
@@ -169,10 +172,14 @@
   const PAY_ON = !!PAY.enabled && CONFIGURED;
 
   // Doplacení online — částku (cena × počet míst) spočítá server ve stripe-create.
-  // Když funkce neodpoví, sáhneme po pevném odkazu, ale jen u jednoho místa
-  // (u víc osob by strhl málo — to radši neuděláme, stejně jako na rezervaci).
+  //
+  // Záchranná brzda přes pevný platební odkaz je pryč a nevracej ji.
+  // Šla zneužít: k odkazu si kdokoli připsal ?client_reference_id=<id cizí
+  // rezervace> a za jeden zaplacený vstup si nechal potvrdit všechna její
+  // místa. Když brána nejede, platbu radši nespustíme vůbec — nezaplacená
+  // rezervace je menší problém než špatně zaplacená.
   async function payNow(e) {
-    const b = e.currentTarget, keep = b.innerHTML, howMany = Number(b.dataset.spots) || 1;
+    const b = e.currentTarget, keep = b.innerHTML;
     b.disabled = true; b.textContent = 'Otevírám platbu…';
     let status = 0, body = null;
     try {
@@ -189,15 +196,16 @@
     } catch (err) { /* síť/CORS → bereme jako nedostupnou bránu */ }
 
     if (body && body.ok && body.url) { window.location.href = body.url; return; }
-    const fallback = PAY.fallbackEntryUrl || '';
-    if ((!body || status === 404 || status === 0) && fallback && howMany === 1) {
-      window.location.href = fallback + (fallback.includes('?') ? '&' : '?') + 'client_reference_id=' + encodeURIComponent(id);
-      return;
-    }
+
     b.disabled = false; b.innerHTML = keep;
-    alert(body && body.error === 'full'
-      ? 'Mezitím se místa zaplnila, rezervaci proto nelze zaplatit. Napište nám prosím na info@jogaskralicky.cz.'
-      : 'Platební bránu se nepodařilo otevřít. Zkuste to prosím znovu, nebo nám napište na info@jogaskralicky.cz.');
+    const code = (body && body.error) || (status === 0 ? 'gateway_down' : '');
+    alert({
+      full: 'Mezitím se místa zaplnila, rezervaci proto nelze zaplatit. Napište nám prosím na info@jogaskralicky.cz.',
+      payment_in_progress: 'Platbu k téhle rezervaci už zakládáme. Počkejte chviličku a klepněte znovu — otevře se ta rozdělaná, ne druhá.',
+      hold_failed: 'Zrovna se nedaří ověřit, jestli je místo volné. Zkuste to prosím za chvíli znovu.',
+      already_paid: 'Tahle rezervace už je zaplacená.',
+      booking_cancelled: 'Tahle rezervace už neplatí. Založte prosím novou.',
+    }[code] || 'Platební bránu se nepodařilo otevřít. Zkuste to prosím znovu, nebo nám napište na info@jogaskralicky.cz.');
   }
 
   function msg(title, text) {
@@ -278,12 +286,12 @@
 
   async function load() {
     const { data, error } = await sb.rpc('get_ticket', { p_id: id });
-    if (error) { msg('Rezervaci se nepodařilo načíst', 'Zkuste to prosím za chvíli znovu, nebo nám napište na <a href="mailto:info@jogaskralicky.cz" style="color:var(--clover)">info@jogaskralicky.cz</a>.'); return; }
+    if (error) { msg('Rezervaci se nepodařilo načíst', 'Zkuste to prosím za chvíli znovu, nebo nám napište na <a href="mailto:info@jogaskralicky.cz" style="color:var(--clover-text)">info@jogaskralicky.cz</a>.'); return; }
     if (!data) { msg('Rezervace nenalezena', 'Odkaz je nejspíš neúplný. Použijte prosím ten z potvrzovacího e-mailu.'); return; }
     render(data);
   }
 
-  if (!CONFIGURED) msg('Stav rezervace zatím nejde zobrazit', 'Napište nám na <a href="mailto:info@jogaskralicky.cz" style="color:var(--clover)">info@jogaskralicky.cz</a> a rezervaci potvrdíme ručně.');
+  if (!CONFIGURED) msg('Stav rezervace zatím nejde zobrazit', 'Napište nám na <a href="mailto:info@jogaskralicky.cz" style="color:var(--clover-text)">info@jogaskralicky.cz</a> a rezervaci potvrdíme ručně.');
   else if (!UUID.test(id)) msg('Chybí kód rezervace', 'Otevřete prosím odkaz z potvrzovacího e-mailu — je zakončený kódem rezervace.');
   else load();
 

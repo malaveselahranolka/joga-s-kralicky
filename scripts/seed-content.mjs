@@ -85,10 +85,9 @@ const document = {
   ],
 
   stats: [
-    keyed('rating', {number: '4,9★', label: 'z 230 hodnocení'}),
     keyed('rabbits', {number: '10', label: 'králíčků-lektorů'}),
-    keyed('duration', {number: '75′', label: 'délka jedné lekce'}),
-    keyed('capacity', {number: 'max 12', label: 'míst v sále'}),
+    keyed('duration', {number: '60′', label: 'délka jedné lekce'}),
+    keyed('capacity', {number: 'max 10', label: 'míst v sále'}),
   ],
   proofNote: 'Malé skupiny, ať má klid každý host i každý králík.',
 
@@ -133,12 +132,12 @@ const document = {
       tag: 'Pro dospělé',
       title: 'Hatha s králíčky',
       price: '499 Kč',
-      meta: ['75 minut', 'Út · Čt · So', 'max 12 míst', 'i pro úplné začátečníky'],
+      meta: ['60 minut', 'Út · Čt · So', 'max 10 míst', 'i pro úplné začátečníky'],
       description: 'Naše klasika. Pomalý pohyb a dech, u každé pozice se ukáže i jednodušší varianta. Nejde o to, jak hluboko se prohnete.',
       timeline: [
         keyed('adult-1', {time: '0–10 min', text: 'Přijdete, zujete se, dostanete čaj.'}),
-        keyed('adult-2', {time: '10–55 min', text: 'Pomalá hatha. Lektorka vede, nikdo neopravuje.'}),
-        keyed('adult-3', {time: '55–75 min', text: 'Savasana a sál se otevře králíkům. Vybírají si sami.'}),
+        keyed('adult-2', {time: '10–40 min', text: 'Pomalá hatha. Lektorka vede, nikdo neopravuje.'}),
+        keyed('adult-3', {time: '40–60 min', text: 'Savasana a sál se otevře králíkům. Vybírají si sami.'}),
       ],
       buttonLabel: 'Rezervovat Hathu',
       image: image('assets/photos/yoga-6.webp'),
@@ -148,12 +147,12 @@ const document = {
       tag: 'Pro děti od 5 let',
       title: 'Děti & králíci',
       price: '499 Kč',
-      meta: ['45 minut', 'Sobota 9:30', 'max 10 míst', 'dítě s rodičem'],
+      meta: ['60 minut', 'Sobota 9:30', 'max 10 míst', 'dítě s rodičem'],
       description: 'Víc her než ásan. Děti se učí jedinou věc: být tak klidné, aby k nim někdo přišel dobrovolně. Funguje to i na rodiče.',
       timeline: [
         keyed('children-1', {time: '0–10 min', text: 'Jak se ke králíkovi přiblížit, aby neutekl.'}),
-        keyed('children-2', {time: '10–35 min', text: 'Pozice se zvířecími jmény, hry a hodně smíchu.'}),
-        keyed('children-3', {time: '35–45 min', text: 'Klid na dece, mrkev a mazlení.'}),
+        keyed('children-2', {time: '10–40 min', text: 'Pozice se zvířecími jmény, hry a hodně smíchu.'}),
+        keyed('children-3', {time: '40–60 min', text: 'Klid na dece, mrkev a mazlení.'}),
       ],
       buttonLabel: 'Rezervovat sobotu',
       image: image('assets/photos/rabbit-4.webp'),
@@ -193,7 +192,7 @@ const document = {
   communityEyebrow: 'Přidejte se',
   communityTitle: 'Deset králíků čeká, až zpomalíte i vy',
   communityBody: 'Vstup stojí 499 Kč a platí se online rovnou při rezervaci, takže máte místo jisté hned. Žádné čekání na potvrzení.',
-  communityNote: '10 chlupatých lektorů · 230+ klidných hostů',
+  communityNote: 'Deset králíčků · každý s vlastním jménem',
   communityNudge: 'Ještě otázky?',
   communityNudgeLink: 'Sjeďte o kousek níž',
   communityFaces: [
@@ -229,5 +228,8 @@ const document = {
   copyright: '© 2026 Jóga s králíčky. Dýchejte pomalu.',
 }
 
+// POZOR: createOrReplace přepíše CELÝ dokument siteContent včetně toho,
+// co majitelka mezitím změnila ve Studiu. Používej jen při zakládání
+// prázdného datasetu. Na běžné změny je scripts/sync-content.mjs.
 await client.createOrReplace(document)
 console.log('Obsah webu uložen do Sanity jako dokument siteContent.')

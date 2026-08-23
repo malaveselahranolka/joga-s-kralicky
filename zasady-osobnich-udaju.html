@@ -42,12 +42,15 @@
     --paper: #F1EEE5; --cream: #F7F4EC; --surface: #FFFFFF;
     --ink: #1E231C; --ink-soft: #5C6357;
     --forest: #2C3B2E; --clover: #6E8A4E; --carrot: #D2854A;
+    /* jen pro drobný text — značkové odstíny výš nemají na malé písmo dost
+       kontrastu (zelená 3,35:1, oranžová 2,52:1 proti 4,5:1 dle WCAG AA) */
+    --clover-text: #5C7341; --carrot-text: #975F35;
     --line: #E3DFD3; --r-lg: 22px; --r-md: 14px;
   }
   *, *::before, *::after { box-sizing: border-box; }
   body { margin: 0; font-family: "Hanken Grotesk", system-ui, sans-serif; color: var(--ink); background: var(--paper); line-height: 1.7; -webkit-font-smoothing: antialiased; }
   h1, h2, h3 { font-family: "Schibsted Grotesk", system-ui, sans-serif; font-weight: 600; line-height: 1.15; letter-spacing: -.02em; }
-  a { color: var(--clover); }
+  a { color: var(--clover-text); }
   .wrap { width: min(100% - 2.4rem, 760px); margin-inline: auto; }
 
   header.bar { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--paper) 92%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
@@ -68,7 +71,7 @@
   li { margin-bottom: .5rem; }
   .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: clamp(1.2rem, 3vw, 1.8rem); margin: 1.4rem 0; }
   .todo { background: color-mix(in srgb, var(--carrot) 12%, var(--surface)); border: 1px solid color-mix(in srgb, var(--carrot) 40%, var(--line)); }
-  .todo strong { color: var(--carrot); }
+  .todo strong { color: var(--carrot-text); }
   table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .95rem; }
   th, td { text-align: left; padding: .7rem .6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
   th { font-family: "Schibsted Grotesk"; font-weight: 600; color: var(--forest); }
@@ -82,8 +85,8 @@
 
 <header class="bar">
   <div class="wrap bar-inner">
-    <a class="brand" href="index.html"><img src="assets/logo.svg" alt="" width="32" height="32" /> Jóga&nbsp;s&nbsp;králíčky</a>
-    <a class="home-link" href="index.html">← Zpět na web</a>
+    <a class="brand" href="/"><img src="assets/logo.svg" alt="" width="32" height="32" /> Jóga&nbsp;s&nbsp;králíčky</a>
+    <a class="home-link" href="/">← Zpět na web</a>
   </div>
 </header>
 
@@ -165,6 +168,7 @@
           <tr><td><strong>Stripe</strong> (Stripe Payments Europe, Irsko)</td><td>Platební brána</td><td>E-mail, částka, platební údaje, které zadáte přímo u nich</td></tr>
           <tr><td><strong>EmailJS</strong></td><td>Odesílání potvrzení, poukazů a novinek</td><td>Jméno, e-mail a obsah zprávy</td></tr>
           <tr><td><strong>Vercel</strong></td><td>Provoz webu</td><td>Technické údaje o návštěvě, včetně IP adresy</td></tr>
+          <tr><td><strong>Vercel Web Analytics</strong></td><td>Anonymní návštěvnost — kolik lidí přišlo a na které stránky</td><td>Adresa navštívené stránky, odkud jste přišli, typ zařízení a prohlížeče, země. Bez cookies, bez IP adresy v uložených datech, bez profilování.</td></tr>
           <tr><td><strong>QR Server (goqr.me)</strong></td><td>Vygenerování QR kódu do potvrzovacího e-mailu</td><td>Odkaz na vaši rezervaci nebo kód poukazu</td></tr>
           <tr><td><strong>Google Fonts</strong></td><td>Písma na webu</td><td>IP adresa při načtení stránky</td></tr>
         </tbody>
@@ -173,7 +177,8 @@
     <p>Někteří z těchto poskytovatelů mohou údaje zpracovávat i mimo Evropskou unii. V takovém případě se to děje na základě standardních smluvních doložek schválených Evropskou komisí nebo jiného právního nástroje podle kapitoly V GDPR.</p>
 
     <h2>4. Cookies a co si web ukládá do prohlížeče</h2>
-    <p>Nepoužíváme <strong>žádné reklamní ani analytické cookies</strong>, nesledujeme vás a nemáme na webu žádné měřicí kódy. Proto na vás nevyskakuje otravná lišta se souhlasem — není k čemu.</p>
+    <p>Nepoužíváme <strong>žádné reklamní cookies</strong>, nesledujeme vás napříč weby a neprodáváme vaše údaje. Proto na vás nevyskakuje otravná lišta se souhlasem — není k čemu.</p>
+    <p>Na některých stránkách běží <strong>Vercel Web Analytics</strong>. Je to počítadlo návštěv, které <em>neukládá cookies</em> ani vaši IP adresu a neumí vás poznat na jiném webu. Vidíme z něj jen souhrn: kolik lidí přišlo, na kterou stránku, z jakého odkazu, zhruba z jaké země a na jakém zařízení. Slouží nám k tomu, abychom věděli, co na webu chybí. Právní titul je náš oprávněný zájem (čl. 6 odst. 1 písm. f GDPR) na fungujícím webu; proti tomuto zpracování můžete kdykoli vznést námitku na <a href=mailto:info@jogaskralicky.cz>info@jogaskralicky.cz</a>. Data drží Vercel v souhrnné podobě po dobu, kterou popisuje ve <a href=https://vercel.com/docs/analytics/privacy-policy target=_blank rel=noopener>svých zásadách</a>.</p>
     <p>Web si do úložiště vašeho prohlížeče ukládá jen tohle, a to čistě proto, aby rezervace fungovala:</p>
     <ul>
       <li><code>lastBooking</code>, <code>pendingBooking</code> — číslo vaší poslední rezervace a její detaily, abychom vám po návratu z platby uměli ukázat stav a poslat potvrzení</li>
@@ -203,7 +208,7 @@
 
 <footer class="foot">
   <div class="wrap">
-    <a href="index.html">Domů</a>
+    <a href="/">Domů</a>
     <a href="obchodni-podminky.html">Obchodní podmínky</a>
     <a href="rezervace.html">Rezervace</a>
     <p style="margin-top:1rem">© 2026 Jóga s králíčky · Fit&Fun Studio Ostrava, Tovární 486/7, 709 00 Ostrava-Mariánské Hory</p>
