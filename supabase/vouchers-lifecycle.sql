@@ -153,5 +153,20 @@ create policy stripe_events_owner_all on public.stripe_events
 -- ---------------------------------------------------------------------
 alter table public.stripe_events alter column status set default 'processing';
 
+-- ---------------------------------------------------------------------
+-- 6) ÚKLID MRTVÉ FUNKCE
+--    payment_status_by_ref byl zbytek z dob pevných platebních odkazů:
+--    prohlížeč se jím ptal na stav platby podle Stripe session ref. Od
+--    zavedení funkce stripe-confirm ho nevolá nic — ani repozitář, ani
+--    nasazený web. V produkci ale zůstával jako SECURITY DEFINER funkce
+--    volatelná anonymně přes /rest/v1/rpc/payment_status_by_ref.
+--
+--    O vážný únik nešlo (vracela jen krátký řetězec se stavem a vyžadovala
+--    znalost dlouhého náhodného session id), ale mrtvá privilegovaná plocha
+--    je přesně to, co se jednou vrátí. V repu nikdy nebyla, takže tohle je
+--    zároveň zápis toho, že v produkci existovala.
+-- ---------------------------------------------------------------------
+drop function if exists public.payment_status_by_ref(text);
+
 -- Hotovo. Poukaz teď nejde oživit ani prodloužit opakovanou platbou
 -- a webhook má tabulku, kterou k idempotenci potřebuje.
