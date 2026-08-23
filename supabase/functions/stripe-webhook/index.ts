@@ -30,8 +30,19 @@
 // =====================================================================
 import Stripe from "https://esm.sh/stripe@14.21.0?target=denonext";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { bookingEmail, voucherEmail, enqueue, dispatch } from "../_shared/email.ts";
 
 const env = (n: string, d = "") => Deno.env.get(n) ?? d;
+
+// Stripe čeká na naši odpověď a odesílání e-mailů je pomalé (EmailJS má
+// limit 1 požadavek za sekundu). Pustíme ho tedy na pozadí a odpovíme hned.
+// Co se nestihne, zůstane ve frontě a vezme si to dispatcher nebo admin.
+function sendInBackground(admin: unknown) {
+  const job = dispatch(admin, 3).catch((e) =>
+    console.error("stripe-webhook: rozeslani na pozadi selhalo", String(e)));
+  // @ts-ignore EdgeRuntime existuje jen v Supabase runtime
+  if (typeof EdgeRuntime !== "undefined" && EdgeRuntime?.waitUntil) EdgeRuntime.waitUntil(job);
+}
 
 Deno.serve(async (req) => {
   const sk = env("STRIPE_SECRET_KEY");
@@ -101,9 +112,13 @@ Deno.serve(async (req) => {
     });
 
   const mark = async (status: string, error: string | null, bookingId: string | null) => {
-    await admin.from("stripe_events")
+    // Deník je jediné místo, kde je v adminu vidět, co se s událostí stalo.
+    // Když se zápis nepovede, obchodní změna už proběhla a Stripe nemá co
+    // opakovat — ale nesmí to zmizet potichu, jinak se ztratí stopa.
+    const { error: markErr } = await admin.from("stripe_events")
       .update({ status, error, booking_id: bookingId })
       .eq("id", event.id);
+    if (markErr) console.error("stripe-webhook: denik se nezapsal", event.id, status, markErr.message);
   };
 
   const reject = async (reason: string, bookingId: string | null = null) => {
@@ -157,7 +172,7 @@ Deno.serve(async (req) => {
   if (bookingId) {
     const { data: bk, error: bkErr } = await admin
       .from("bookings")
-      .select("id, spots, status, payment_status, payment_amount, payment_ref")
+      .select("id, name, email, spots, status, payment_status, payment_amount, payment_ref, lesson:lessons(title, starts_at, duration_min)")
       .eq("id", bookingId)
       .maybeSingle();
     if (bkErr) return await retry("booking_lookup_failed: " + bkErr.message);
@@ -172,6 +187,12 @@ Deno.serve(async (req) => {
       }
 
       // --- kontroly, bez kterých se nic neoznačí jako zaplacené ---
+      // Zrušená rezervace: místo už může být obsazené někým jiným, takže ji
+      // zpátky neoživujeme. Peníze ve Stripu zůstaly a musí se vrátit ručně —
+      // proto vlastní důvod, ať se to v adminu pozná od běžného odmítnutí.
+      if (bk.status === "cancelled") {
+        return await reject("booking_cancelled_refund_needed", bookingId);
+      }
       if (obj?.payment_status !== "paid") {
         return await reject("payment_status_not_paid:" + String(obj?.payment_status), bookingId);
       }
@@ -210,6 +231,14 @@ Deno.serve(async (req) => {
       }).eq("id", bookingId);
       if (payErr) return await retry("booking_paid_update_failed: " + payErr.message);
 
+      // Potvrzení s QR kódem. Zařazení do fronty MUSÍ projít — když se
+      // nepovede, vracíme 5xx a Stripe událost pošle znovu. Radši událost
+      // zpracovat dvakrát (zápisy jsou idempotentní) než nechat zaplaceného
+      // hosta bez vstupenky, což je přesně to, co se dělo dřív.
+      const mailErr = await enqueue(admin, [bookingEmail(bk as any, env("SITE_URL", "https://www.jogaskralicky.cz/"))]);
+      if (mailErr) return await retry("email_enqueue_failed: " + mailErr.message);
+      sendInBackground(admin);
+
       await mark("processed", null, bookingId);
       return ok();
     }
@@ -219,6 +248,15 @@ Deno.serve(async (req) => {
       if (bk.payment_status === "paid") {
         await mark("skipped", "already_paid", bookingId);
         return ok("already_paid");
+      }
+      // Musí jít o TU platbu, kterou k rezervaci vedeme. Host, kterému první
+      // brána propadla a hned si otevřel druhou, má v payment_ref už tu novou —
+      // a propadlá stará by mu jinak pustila místo zpátky do nabídky přímo
+      // uprostřed placení. Stripe navíc nezaručuje pořadí doručení, takže se
+      // starší událost může objevit až po novější.
+      if (bk.payment_ref && obj?.id && bk.payment_ref !== obj.id) {
+        await mark("skipped", "stale_session", bookingId);
+        return ok("stale_session");
       }
       const { error: failErr } = await admin.from("bookings").update({
         payment_status: "failed",
@@ -271,8 +309,23 @@ Deno.serve(async (req) => {
       expires_at: expiresAt,
     }));
 
-    const { error: vErr } = await admin.from("vouchers").upsert(rows, { onConflict: "code" });
+    // ZÁMĚRNĚ insert-ignore, NE upsert. Vystavení smí řádek založit, ale
+    // nikdy ne přepsat: upsert by při opakovaném doručení události vrátil
+    // redeemed na false a posunul expires_at o rok. Uplatnění a expiraci
+    // řídí výhradně RPC redeem_voucher (supabase/vouchers-lifecycle.sql).
+    const { error: vErr } = await admin
+      .from("vouchers")
+      .upsert(rows, { onConflict: "code", ignoreDuplicates: true });
     if (vErr) return await retry("voucher_upsert_failed: " + vErr.message);
+
+    // Jeden e-mail na každý poukaz — každý je samostatný dárek, takže se dá
+    // rovnou přeposlat obdarovanému. Bez e-mailové adresy nemáme kam poslat;
+    // kódy pak host uvidí aspoň na návratové stránce.
+    if (email) {
+      const mailErr = await enqueue(admin, rows.map((r) => voucherEmail(r.code, email, r.amount)));
+      if (mailErr) return await retry("voucher_email_enqueue_failed: " + mailErr.message);
+      sendInBackground(admin);
+    }
 
     await mark("processed", null, null);
     return ok();

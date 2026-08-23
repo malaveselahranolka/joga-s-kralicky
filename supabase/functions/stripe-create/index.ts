@@ -55,10 +55,18 @@ Deno.serve(async (req) => {
     // Prodluž držení místa a zároveň ověř, že místa pořád jsou. Když mezitím
     // rezervace propadla a lekce se naplnila, platbu vůbec nezakládáme —
     // ať host neplatí za místo, které už není.
-    const { data: hold } = await admin.rpc("hold_booking", {
+    const { data: hold, error: holdErr } = await admin.rpc("hold_booking", {
       p_id: booking_id,
       p_minutes: SESSION_MINUTES + 5,
     });
+    // Když se držení nepovede ZALOŽIT (spadlá databáze, chyba RPC), nevíme,
+    // jestli místo pořád je. Dřív se chyba zahodila a host šel platit naslepo
+    // — mohl zaplatit za lekci, která se mezitím naplnila. Radši ho na bránu
+    // nepustíme a řekneme mu, ať to zkusí za chvíli.
+    if (holdErr) {
+      console.error("stripe-create: hold_booking selhal", booking_id, holdErr.message);
+      return json({ ok: false, error: "hold_failed" }, 503);
+    }
     if (hold && hold.ok === false) {
       return json({ ok: false, error: hold.error || "hold_failed" }, 409);
     }
@@ -96,6 +104,21 @@ Deno.serve(async (req) => {
     const t = lessonTitle.toLowerCase();
     const photo = t.includes("děti") ? "rabbit-6.jpg" : "rabbit-1.jpg";
 
+    // Idempotency okno proti dvojkliku: dva požadavky na tutéž rezervaci
+    // v témže dvouminutovém okně dostanou jednu session, ne dvě.
+    //
+    // expires_at se POČÍTÁ ZE ZAČÁTKU OKNA, ne z aktuálního času. Dřív se
+    // bralo Date.now(), takže dva kliky vteřinu po sobě poslaly stejný klíč
+    // s jinými parametry — Stripe to odmítl a záložní větev vyrobila druhou
+    // session. Ze začátku okna vyjde oběma stejné číslo.
+    //
+    // +3 minuty jsou rezerva: Stripe vyžaduje platnost aspoň 30 minut do
+    // budoucna a začátek okna může být až 2 minuty v minulosti.
+    const BUCKET_MS = 2 * 60 * 1000;
+    const bucket = Math.floor(Date.now() / BUCKET_MS);
+    const idem = `booking:${bk.id}:${bucket}`;
+    const expiresAt = Math.floor((bucket * BUCKET_MS) / 1000) + (SESSION_MINUTES + 3) * 60;
+
     const params: any = {
       mode: "payment",
       customer_email: bk.email,
@@ -104,7 +127,7 @@ Deno.serve(async (req) => {
       // POZOR: tohle přebíjí Settings → Payment methods ve Stripe Dashboardu.
       // Chceš někdy přidat další způsob platby? Přidej ho sem do seznamu.
       payment_method_types: ["card"],
-      expires_at: Math.floor(Date.now() / 1000) + SESSION_MINUTES * 60,
+      expires_at: expiresAt,
       line_items: [{
         quantity: qty,
         price_data: {
@@ -153,26 +176,24 @@ Deno.serve(async (req) => {
       wallet_options: { link: { display: "never" } },
     };
 
-    // Idempotency key proti dvojkliku: dva požadavky na tutéž rezervaci v témže
-    // dvouminutovém okně dostanou jednu session, ne dvě.
-    //
-    // Okno je schválně krátké. Hlavní pojistku proti dvěma platitelným session
-    // dělá kontrola „už máme otevřenou session?" výš; tenhle klíč řeší jen
-    // závod dvou skoro současných požadavků. Delší okno by škodilo: Stripe si
-    // odpověď ke klíči pamatuje 24 h, takže po vypršení session bychom hostovi
-    // vrátili tu starou, propadlou.
-    //
-    // Druhý pokus (bez extras) musí mít jiný klíč — Stripe stejný klíč
-    // s jinými parametry odmítne.
-    const bucket = Math.floor(Date.now() / (2 * 60 * 1000));
-    const idem = `booking:${bk.id}:${bucket}`;
-
+    // Okno je schválně krátké: Stripe si odpověď ke klíči pamatuje 24 h, takže
+    // po delším okně bychom hostovi vraceli starou, už propadlou session.
     let session;
     try {
       session = await stripe.checkout.sessions.create(
         { ...params, ...extras }, { idempotencyKey: `${idem}:a` },
       );
-    } catch (_e) {
+    } catch (e: any) {
+      // Idempotency chybu NESMÍME řešit novým klíčem. Znamená, že tentýž
+      // požadavek už běží nebo doběhl — druhý klíč by na jednu rezervaci
+      // vyrobil DRUHOU platitelnou session a host by mohl zaplatit dvakrát.
+      // Pošleme ho o kolo zpět; napodruhé ho chytne kontrola „už máme
+      // otevřenou session?" nahoře a dostane tu původní.
+      if (e?.type === "idempotency_error") {
+        return json({ ok: false, error: "payment_in_progress" }, 409);
+      }
+      // Jiná chyba = nejspíš Stripe nepřijal branding_settings. Založíme
+      // bránu bez ozdob — radši základní vzhled než žádná platba.
       session = await stripe.checkout.sessions.create(
         params, { idempotencyKey: `${idem}:b` },
       );
@@ -181,15 +202,31 @@ Deno.serve(async (req) => {
     // Tenhle zápis je důležitý: payment_ref je pouto mezi rezervací a platbou
     // a stripe-webhook i stripe-confirm podle něj kontrolují, že platba patří
     // k téhle rezervaci. Když se nepovede, radši hosta na bránu nepustíme.
-    const { error: refErr } = await admin.from("bookings").update({
+    // Zápis je podmíněný stavem, který jsme viděli na začátku. Kdyby mezitím
+    // stihl payment_ref přepsat souběžný požadavek, neprojde nám a nepřepíšeme
+    // ho — jinak by první zaplacená session skončila jako session_mismatch
+    // a host by měl zaplaceno, ale rezervaci ne.
+    let claim = admin.from("bookings").update({
       payment_status: "pending",
       payment_amount: unit * qty,
       payment_ref: session.id,
       payment_method: "online",
     }).eq("id", bk.id);
+    claim = bk.payment_ref
+      ? claim.eq("payment_ref", bk.payment_ref)
+      : claim.is("payment_ref", null);
+
+    const { data: claimed, error: refErr } = await claim.select("id");
     if (refErr) {
       console.error("stripe-create: payment_ref se neuložil", bk.id, session.id, refErr.message);
       return json({ ok: false, error: "booking_update_failed" }, 500);
+    }
+    if (!claimed || claimed.length !== 1) {
+      // Platbu si mezitím zabral někdo jiný. Tuhle session zavřeme, ať po nás
+      // nezůstane druhá platitelná brána, a pošleme hosta o kolo zpět.
+      console.warn("stripe-create: rezervaci mezitim zabrala jina platba", bk.id, session.id);
+      try { await stripe.checkout.sessions.expire(session.id); } catch (_e) { /* už zavřená */ }
+      return json({ ok: false, error: "payment_in_progress" }, 409);
     }
 
     return json({ ok: true, url: session.url, amount_czk: entryCzk * qty, spots: qty });
