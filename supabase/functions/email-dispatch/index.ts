@@ -20,8 +20,9 @@
 //      )
 //    $$);
 //
-//  Nasazuj S ověřováním JWT (výchozí) — volá se z adminu s přihlášením
-//  majitelky, ne z internetu.
+//  Volat ji smí jen majitelka. Pozor: samotné `verify_jwt` na to nestačí —
+//  anon klíč je taky platné JWT a je veřejně v supabase-config.js. Proto se
+//  níž ověřuje konkrétní přihlášený uživatel proti OWNER_EMAIL.
 //
 //  Secrets: EMAILJS_PRIVATE_KEY (viz ../_shared/email.ts)
 // =====================================================================
@@ -35,11 +36,38 @@ const cors = {
 };
 const env = (n: string, d = "") => Deno.env.get(n) ?? d;
 
+// Musí sedět s public.is_owner() v supabase/schema.sql.
+const OWNER_EMAIL = env("OWNER_EMAIL", "kovacikovabarbora71@gmail.com");
+
+// Vrátí e-mail přihlášeného uživatele, nebo null. Token ověřuje Supabase,
+// my mu jen podáme hlavičku — vlastní dekódování JWT by bylo k ničemu,
+// protože podpis si stejně musí zkontrolovat někdo jiný.
+async function callerEmail(req: Request): Promise<string | null> {
+  const auth = req.headers.get("Authorization") ?? "";
+  const token = auth.replace(/^Bearer\s+/i, "").trim();
+  if (!token) return null;
+  try {
+    const anon = createClient(env("SUPABASE_URL"), env("SUPABASE_ANON_KEY"), {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
+    const { data, error } = await anon.auth.getUser(token);
+    if (error) return null;
+    return data?.user?.email ?? null;
+  } catch (_e) {
+    return null;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
 
   const json = (b: unknown, s = 200) =>
     new Response(JSON.stringify(b), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
+
+  const who = await callerEmail(req);
+  if (!who || who.toLowerCase() !== OWNER_EMAIL.toLowerCase()) {
+    return json({ ok: false, error: "forbidden" }, 403);
+  }
 
   // Bez privátního klíče se nedá odeslat nic. Říkáme to rovnou a nahlas,
   // ať se v adminu pozná, že nejde o zaseknutou frontu, ale o chybějící

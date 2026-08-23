@@ -121,7 +121,7 @@ grant  execute on function public.unredeem_voucher(text) to authenticated, servi
 -- ---------------------------------------------------------------------
 create table if not exists public.stripe_events (
   id          text primary key,          -- evt_… od Stripu
-  type        text,                      -- checkout.session.completed, …
+  type        text not null,             -- checkout.session.completed, …
   status      text not null default 'processing',
                                          -- processing | processed | rejected
                                          -- | ignored | skipped | failed
@@ -135,9 +135,23 @@ create index if not exists stripe_events_status_idx  on public.stripe_events (st
 
 alter table public.stripe_events enable row level security;
 
-drop policy if exists stripe_events_owner_read on public.stripe_events;
-create policy stripe_events_owner_read on public.stripe_events
-  for select using (public.is_owner());
+drop policy if exists stripe_events_owner_all on public.stripe_events;
+create policy stripe_events_owner_all on public.stripe_events
+  for all using (public.is_owner()) with check (public.is_owner());
+
+-- ---------------------------------------------------------------------
+-- 5) SROVNÁNÍ STARŠÍCH DATABÁZÍ
+--    Tabulka stripe_events vznikla v produkci ručně, dřív než pro ni bylo
+--    DDL v repu — a měla výchozí stav 'processed'. To je nebezpečné: řádek
+--    vložený bez stavu by se tvářil jako hotová událost, i když se nikdy
+--    nezpracovala, a druhé doručení by ji pak přeskočilo jako duplicitu.
+--    Webhook stav vždycky vyplňuje sám, takže se to nikdy neprojevilo,
+--    ale spoléhat na to nechceme.
+--
+--    Na čerstvé databázi jsou tyhle příkazy prázdné (create table výš už
+--    to nastaví správně), na té existující srovnají rozdíl.
+-- ---------------------------------------------------------------------
+alter table public.stripe_events alter column status set default 'processing';
 
 -- Hotovo. Poukaz teď nejde oživit ani prodloužit opakovanou platbou
 -- a webhook má tabulku, kterou k idempotenci potřebuje.

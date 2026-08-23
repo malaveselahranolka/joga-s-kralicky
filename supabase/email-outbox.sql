@@ -78,25 +78,31 @@ security definer
 set search_path = public
 as $$
 begin
+  -- Přes CTE, ne `return query update ...` — RETURN QUERY čeká dotaz,
+  -- ne měnící příkaz, a takhle zapsané by to nešlo ani vytvořit.
   return query
-  update public.email_outbox o
-     set attempts        = o.attempts + 1,
-         next_attempt_at = now() + case o.attempts
-                                     when 0 then interval '1 minute'
-                                     when 1 then interval '5 minutes'
-                                     when 2 then interval '30 minutes'
-                                     else        interval '2 hours'
-                                   end,
-         status          = case when o.attempts + 1 >= 5 then 'failed' else 'pending' end
-   where o.id in (
-     select id from public.email_outbox
-      where status = 'pending'
-        and next_attempt_at <= now()
-      order by created_at
-      limit greatest(1, least(coalesce(p_limit, 10), 50))
-      for update skip locked
-   )
-  returning o.*;
+  with vybrane as (
+    select id from public.email_outbox
+     where status = 'pending'
+       and next_attempt_at <= now()
+     order by created_at
+     limit greatest(1, least(coalesce(p_limit, 10), 50))
+     for update skip locked
+  ), zabrane as (
+    update public.email_outbox o
+       set attempts        = o.attempts + 1,
+           next_attempt_at = now() + case o.attempts
+                                       when 0 then interval '1 minute'
+                                       when 1 then interval '5 minutes'
+                                       when 2 then interval '30 minutes'
+                                       else        interval '2 hours'
+                                     end,
+           status          = case when o.attempts + 1 >= 5 then 'failed' else 'pending' end
+      from vybrane v
+     where o.id = v.id
+    returning o.*
+  )
+  select * from zabrane;
 end;
 $$;
 
