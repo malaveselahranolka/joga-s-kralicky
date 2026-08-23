@@ -251,6 +251,10 @@
     --forest-deep: #1E2920;
     --clover: #6E8A4E;
     --carrot: #D2854A;
+    /* jen pro drobný text — značkové odstíny výš na malé písmo nemají
+       dost kontrastu (zelená 3,35:1, oranžová 2,52:1 proti 4,5:1 dle WCAG AA) */
+    --clover-text: #5C7341;
+    --carrot-text: #975F35;
     --line: #E3DFD3;
     --line-soft: #ECE8DE;
     /* hand-drawn bunny ears, used as an inline mask so it takes the eyebrow's colour */
@@ -322,7 +326,7 @@
   .eyebrow {
     display: inline-flex; align-items: center; gap: .1rem;
     font-size: var(--fs-eyebrow); font-weight: 600; letter-spacing: .04em;
-    color: var(--clover);
+    color: var(--clover-text);
   }
   /* hand-drawn bunny ears — the studio's quiet signature; inherits colour via currentColor */
   .eyebrow::before {
@@ -419,7 +423,7 @@
   }
   .nav-links.open { transform: translateY(0); }
   .nav-links a { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: clamp(1.35rem, 1.05rem + 1vw, 1.8rem); letter-spacing: -.02em; color: var(--ink); padding: .42rem 0; transition: color .25s var(--ease), transform .25s var(--ease-out); }
-  .nav-links a:hover { color: var(--clover); transform: translateX(4px); }
+  .nav-links a:hover { color: var(--clover-text); transform: translateX(4px); }
   .nav-links .menu-cta { color: var(--cream); justify-content: center; margin-top: 1.1rem; font-size: 1rem; padding: .9em 1.5em; }
   .nav-links .menu-cta:hover { color: var(--cream); transform: none; }
 
@@ -497,7 +501,7 @@
   .rp-label {
     display: inline-flex; align-items: center; gap: .8rem;
     font-size: .76rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
-    color: var(--clover);
+    color: var(--clover-text);
   }
   .rp-label::before { content: ""; width: clamp(2.2rem, 4vw, 3.4rem); height: 2px; border-radius: 999px; background: var(--carrot); }
   .rp-text h3 { margin-top: clamp(1rem, 1.9vw, 1.4rem); font-size: clamp(1.7rem, .95rem + 2.4vw, 2.9rem); letter-spacing: -.04em; line-height: 1.05; max-width: 16ch; }
@@ -536,7 +540,7 @@
   .l-body { padding: clamp(1.4rem, 2.4vw, 2rem); display: flex; flex-direction: column; flex: 1; }
   .l-top { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
   .l-top h3 { font-size: clamp(1.35rem, 1.1rem + .9vw, 1.9rem); color: var(--cream); }
-  .l-price { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: 1.15rem; color: var(--carrot); white-space: nowrap; }
+  .l-price { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: 1.15rem; color: var(--carrot-text); white-space: nowrap; }
   .l-meta { list-style: none; display: flex; flex-wrap: wrap; gap: .45rem; padding: 0; margin: 1rem 0 0; }
   .l-meta li { font-size: .82rem; font-weight: 600; padding: .35em .8em; border-radius: 999px; background: rgba(255,255,255,.1); color: rgba(255,255,255,.88); }
   .l-desc { margin-top: 1.1rem; color: rgba(255,255,255,.8); font-size: .98rem; }
@@ -649,13 +653,13 @@
   /* ---------- FAQ ---------- */
   .faq { background: var(--paper); }
   .faq-wrap { display: grid; grid-template-columns: .82fr 1.18fr; gap: clamp(2rem, 5vw, 4rem); align-items: start; }
-  .faq-cue { display: inline-flex; align-items: center; gap: .55rem; margin-top: 1.6rem; font-size: .9rem; font-weight: 600; color: var(--clover); }
+  .faq-cue { display: inline-flex; align-items: center; gap: .55rem; margin-top: 1.6rem; font-size: .9rem; font-weight: 600; color: var(--clover-text); }
   .faq-cue svg { animation: cueDown 2.6s var(--ease-breath) infinite; }
   @keyframes cueDown { 0%, 65%, 100% { transform: translateY(0); opacity: .85; } 82% { transform: translateY(5px); opacity: 1; } }
   .faq-list { border-top: 1px solid var(--line); }
   .faq-item { border-bottom: 1px solid var(--line); }
   .faq-q { width: 100%; text-align: left; background: none; border: 0; cursor: pointer; font-family: "Schibsted Grotesk"; font-weight: 500; font-size: clamp(1.05rem, 1rem + .35vw, 1.22rem); color: var(--ink); padding: 1.3rem 3rem 1.3rem 0; position: relative; display: flex; transition: color .25s var(--ease); }
-  .faq-q:hover { color: var(--clover); }
+  .faq-q:hover { color: var(--clover-text); }
   .faq-q .ic { position: absolute; right: 0; top: 50%; margin-top: -11px; width: 22px; height: 22px; transition: transform .42s var(--ease-out); color: var(--clover); }
   .faq-item.open .faq-q .ic { transform: rotate(135deg); }
   .faq-a { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .42s var(--ease-out); }
@@ -672,7 +676,7 @@
   .visit-addr span { display: block; font-family: "Hanken Grotesk"; font-weight: 400; font-size: .95rem; color: var(--ink-soft); margin-top: .4rem; letter-spacing: 0; }
   .contact-list { display: grid; gap: .85rem; margin-top: 1.6rem; padding-top: 1.5rem; border-top: 1px solid var(--line); }
   .contact-list a, .contact-list p { display: inline-flex; align-items: center; gap: .7rem; font-weight: 600; color: var(--ink); transition: color .25s var(--ease); }
-  .contact-list a:hover { color: var(--clover); }
+  .contact-list a:hover { color: var(--clover-text); }
   .contact-list svg { color: var(--clover); flex: none; }
   .contact-list .plain { font-weight: 400; color: var(--ink-soft); }
   .visit-card .btn { margin-top: auto; align-self: flex-start; }
@@ -688,13 +692,13 @@
   .foot .socials { display: flex; gap: .6rem; margin-top: 1.3rem; }
   .foot .socials a { width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,.2); display: grid; place-items: center; color: #fff; transition: background-color .3s var(--ease), transform .18s var(--ease-out); }
   .foot .socials a:hover { background: rgba(255,255,255,.12); transform: translateY(-2px); }
-  .foot-col h5 { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: 1rem; color: #fff; margin: 0 0 1rem; }
+  .foot-col h3 { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: 1rem; color: #fff; margin: 0 0 1rem; }
   .foot-col a { display: block; padding: .35rem 0; font-size: .92rem; transition: color .3s var(--ease); }
   .foot-col a:hover { color: #fff; }
   .foot-contact { color: #fff; font-family: "Schibsted Grotesk"; font-weight: 500; font-size: 1.05rem; }
   .foot-bottom { margin-top: 2rem; padding-top: 1.6rem; border-top: 1px solid rgba(255,255,255,.14); display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; font-size: .85rem; }
   .foot-news { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4rem 2.4rem; align-items: center; margin-top: 2.8rem; padding-top: 2.2rem; border-top: 1px solid rgba(255,255,255,.14); }
-  .foot-news h5 { font-family: "Schibsted Grotesk", sans-serif; font-weight: 600; font-size: 1.18rem; color: #fff; margin: 0; letter-spacing: -.02em; }
+  .foot-news h3 { font-family: "Schibsted Grotesk", sans-serif; font-weight: 600; font-size: 1.18rem; color: #fff; margin: 0; letter-spacing: -.02em; }
   .foot-news p { margin-top: .45rem; font-size: .9rem; color: rgba(255,255,255,.7); max-width: 40ch; }
   .fn-field { display: flex; gap: .6rem; flex-wrap: wrap; }
   .fn-field input { flex: 1 1 220px; min-width: 0; font-family: inherit; font-size: 1rem; color: var(--ink); padding: .9em 1.15em; border-radius: 999px; border: 1px solid rgba(255,255,255,.22); background: rgba(255,255,255,.96); transition: box-shadow .3s var(--ease), border-color .3s var(--ease); }
@@ -714,15 +718,19 @@
   .lightbox .lb-close:active { transform: scale(.94); }
   .lightbox .lb-close:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 
+  /* skip link — pro klávesnici a odečítače, myší ho nikdo neuvidí */
+  .skip-link { position: absolute; left: -9999px; top: 0; z-index: 200; background: var(--forest); color: var(--cream); padding: .8em 1.2em; border-radius: 0 0 var(--r-md, 10px) 0; font-weight: 600; }
+  .skip-link:focus { left: 0; }
+
   /* ---------- motion primitives ---------- */
   /* calm "breath" entrances; the pop variant is stronger and used where a photo
      should land with a bit of weight (reasons cards) */
-  .reveal { opacity: 0; transform: translateY(28px); transition: opacity .8s var(--ease-out), transform .9s var(--ease-out); transition-delay: var(--rv-d, 0s); }
-  .reveal.in { opacity: 1; transform: none; }
+  html.js .reveal { opacity: 0; transform: translateY(28px); transition: opacity .8s var(--ease-out), transform .9s var(--ease-out); transition-delay: var(--rv-d, 0s); }
+  html.js .reveal.in { opacity: 1; transform: none; }
 
   /* hero load animation (staggered rise) */
   @keyframes heroRise { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
-  .hero-eyebrow, .hero h1, .hero .hero-sub, .hero-actions { opacity: 0; animation: heroRise .9s var(--ease-out) both; }
+  html.js .hero-eyebrow, html.js .hero h1, html.js .hero .hero-sub, html.js .hero-actions { opacity: 0; animation: heroRise .9s var(--ease-out) both; }
   .hero-eyebrow { animation-delay: .05s; }
   .hero h1 { animation-delay: .14s; }
   .hero .hero-sub { animation-delay: .4s; }
@@ -771,7 +779,7 @@
   html.lite .sglow { opacity: .5; }
 
   @media (prefers-reduced-motion: reduce) {
-    .reveal { opacity: 1; transform: none; }
+    html.js .reveal { opacity: 1; transform: none; }
     .hero-eyebrow, .hero h1, .hero .hero-sub, .hero-actions { opacity: 1; animation: none; }
     .hero h1 .wi { transform: none; animation: none; }
     .deck-anim .hd-card { opacity: 1; animation: none; transform: rotate(var(--rot)); }
@@ -847,8 +855,10 @@
   }
 </style>
 <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
+<script>document.documentElement.classList.add('js');</script>
 </head>
 <body id="top">
+<a class="skip-link" href="#obsah">Přeskočit na obsah</a>
 <div id="progress" aria-hidden="true"></div>
 
 <!-- ============ NAV ============ -->
@@ -883,7 +893,7 @@
   <a class="btn btn-primary menu-cta" href="rezervace.html">Rezervovat lekci <span class="arrow">→</span></a>
 </nav>
 
-<main>
+<main id="obsah">
   <!-- ============ HERO ============ -->
   <section class="hero" id="hero">
     <div class="hero-bg">
@@ -1013,8 +1023,8 @@
             <p class="l-desc">Naše klasika. Pomalý pohyb a dech, u každé pozice se ukáže i jednodušší varianta.</p>
             <div class="l-run">
               <div><b>0–10 min</b><span>Přijdete, zujete se, dostanete čaj.</span></div>
-              <div><b>10–55 min</b><span>Pomalá hatha. Lektorka vede, nikdo neopravuje.</span></div>
-              <div><b>55–75 min</b><span>Savasana a sál se otevře králíkům. Vybírají si sami.</span></div>
+              <div><b>10–40 min</b><span>Pomalá hatha. Lektorka vede, nikdo neopravuje.</span></div>
+              <div><b>40–60 min</b><span>Savasana a sál se otevře králíkům. Vybírají si sami.</span></div>
             </div>
             <div class="l-cta"><a class="btn btn-light" href="rezervace.html">Rezervovat Hathu <span class="arrow">→</span></a></div>
           </div>
@@ -1035,8 +1045,8 @@
             <p class="l-desc">Víc her než ásan. Děti se učí jedinou věc: být tak klidné, aby k nim někdo přišel dobrovolně. Funguje to i na rodiče.</p>
             <div class="l-run">
               <div><b>0–10 min</b><span>Jak se ke králíkovi přiblížit, aby neutekl.</span></div>
-              <div><b>10–35 min</b><span>Pozice se zvířecími jmény, hry a hodně smíchu.</span></div>
-              <div><b>35–45 min</b><span>Klid na dece, mrkev a mazlení.</span></div>
+              <div><b>10–40 min</b><span>Pozice se zvířecími jmény, hry a hodně smíchu.</span></div>
+              <div><b>40–60 min</b><span>Klid na dece, mrkev a mazlení.</span></div>
             </div>
             <div class="l-cta"><a class="btn btn-light" href="rezervace.html">Rezervovat sobotu <span class="arrow">→</span></a></div>
           </div>
@@ -1265,7 +1275,7 @@
   <div class="wrap">
     <div class="foot-grid">
       <div class="brand-cell">
-        <a class="brand" href="#top"><img decoding="async" class="mark" src="assets/logo.svg" alt="" width="34" height="34" /> <span class="word">Jóga&nbsp;s&nbsp;králíčky</span></a>
+        <a class="brand" href="#top" aria-label="Jóga s králíčky — nahoru na začátek stránky"><img decoding="async" class="mark" src="assets/logo.svg" alt="" width="34" height="34" /> <span class="word">Jóga&nbsp;s&nbsp;králíčky</span></a>
         <p class="ftag">Studio klidu, kde tempo udávají králíci. Fit&amp;Fun Studio Ostrava, Tovární 486/7, Ostrava-Mariánské Hory.</p>
         <div class="socials">
           <a href="https://www.instagram.com/zooterapie_joga" target="_blank" rel="noopener me" aria-label="Instagram"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
@@ -1273,13 +1283,13 @@
         </div>
       </div>
       <nav class="foot-col" aria-label="Web">
-        <h5>Studio</h5>
+        <h3>Studio</h3>
         <a href="#proc">Proč se lidi vracejí</a>
         <a href="#lekce">Lekce</a>
         <a href="#kralicci">Králíčci</a>
       </nav>
       <nav class="foot-col" aria-label="Více">
-        <h5>Více</h5>
+        <h3>Více</h3>
         <a href="#faq">Časté dotazy</a>
         <a href="#kontakt">Kde nás najdete</a>
         <a href="rezervace.html">Rezervace</a>
@@ -1292,7 +1302,7 @@
         <a href="admin.html" rel="nofollow">Správa (pro studio)</a>
       </nav>
       <div class="foot-col">
-        <h5>Ozvěte se</h5>
+        <h3>Ozvěte se</h3>
         <a class="foot-contact" href="mailto:info@jogaskralicky.cz">info@jogaskralicky.cz</a>
         <a class="foot-contact" href="tel:+420603340860" style="margin-top:.6rem">+420 603 340 860</a>
         <a href="https://www.google.com/maps/search/?api=1&amp;query=Fit%26Fun+Studio+Ostrava%2C+Tovární+486%2F7%2C+709+00+Ostrava-Mariánské+Hory" target="_blank" rel="noopener" style="margin-top:.6rem">Tovární 486/7, Ostrava-Mariánské Hory</a>
@@ -1300,7 +1310,7 @@
     </div>
     <form class="foot-news" id="newsForm" novalidate>
       <div class="fn-text">
-        <h5>Klidná pošta, žádný spam</h5>
+        <h3>Klidná pošta, žádný spam</h3>
         <p><span data-cms="newsletter-text">Občas pošleme nové termíny, akce a pár fotek králíků. Odhlásíte se jedním kliknutím. Přihlášením souhlasíte se</span> <a href="zasady-osobnich-udaju.html" style="color:inherit;text-decoration:underline">zpracováním e-mailu</a>.</p>
       </div>
       <div class="fn-field">
@@ -1339,19 +1349,30 @@
   const toggle = document.getElementById('menuToggle');
   const navLinksEl = document.getElementById('navLinks');
   const navBackdrop = document.getElementById('navBackdrop');
-  function setMenu(open) {
+  function setMenu(open, returnFocus) {
     nav.classList.toggle('open', open);
     navLinksEl.classList.toggle('open', open);
     navBackdrop.classList.toggle('open', open);
     document.body.style.overflow = open ? 'hidden' : '';
     toggle.setAttribute('aria-expanded', String(open));
     toggle.setAttribute('aria-label', open ? 'Zavřít menu' : 'Otevřít menu');
+    // zavřené menu ven z fokusového pořadí i z odečítače
+    navLinksEl.inert = !open;
+    if (open) {
+      const first = navLinksEl.querySelector('a');
+      if (first) first.focus();
+    } else if (returnFocus) {
+      toggle.focus();
+    }
   }
   if (toggle) {
-    toggle.addEventListener('click', () => setMenu(!nav.classList.contains('open')));
-    navBackdrop.addEventListener('click', () => setMenu(false));
-    navLinksEl.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => setMenu(false)));
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && nav.classList.contains('open')) setMenu(false); });
+    navLinksEl.inert = true;   // výchozí stav: menu je zavřené
+    toggle.addEventListener('click', () => setMenu(!nav.classList.contains('open'), true));
+    navBackdrop.addEventListener('click', () => setMenu(false, true));
+    // Po kliknutí na odkaz fokus NEvracíme — uživatel odchází na jinou
+    // sekci a hodit ho zpátky na hamburger by ho jen zmátlo.
+    navLinksEl.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => setMenu(false, false)));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && nav.classList.contains('open')) setMenu(false, true); });
   }
 
   // ============ REVEAL (stagger uvnitř jedné skupiny, ne všechno naráz) ============

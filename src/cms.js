@@ -1,4 +1,3 @@
-import {createDataAttribute, enableVisualEditing} from '@sanity/visual-editing'
 
 const params = new URLSearchParams(window.location.search)
 
@@ -27,17 +26,31 @@ const select = (selector, root = document) => root.querySelector(selector)
 const selectAll = (selector, root = document) => [...root.querySelectorAll(selector)]
 const clean = (value) => (value == null ? '' : String(value))
 
-function editAttribute(path) {
-  return createDataAttribute({
+// Editor se natahuje AŽ V REŽIMU ÚPRAV a dynamickým importem, takže ho
+// esbuild odloží do vlastního souboru. Veřejná návštěva si o něj nikdy
+// neřekne — dřív ho stahoval každý (231 KB po síti, prakticky nevyužitých).
+let editor = null
+
+async function loadEditor() {
+  try {
+    editor = await import('@sanity/visual-editing')
+    editor.enableVisualEditing({zIndex: 9999})
+  } catch (error) {
+    console.warn('Vizuální editaci se nepodařilo zapnout.', error)
+    editor = null
+  }
+}
+
+// data-sanity atributy jsou jen pro klikací překryv ve Studiu. Návštěvníkovi
+// k ničemu nejsou, takže mu je do stránky nepíšeme.
+function annotate(element, path) {
+  if (!editing || !editor || !element || !path) return
+  element.setAttribute('data-sanity', editor.createDataAttribute({
     id: 'siteContent',
     type: 'siteContent',
     path,
     baseUrl: studioUrl,
-  }).toString()
-}
-
-function annotate(element, path) {
-  if (element && path) element.setAttribute('data-sanity', editAttribute(path))
+  }).toString())
 }
 
 function setText(target, value, path) {
@@ -58,10 +71,41 @@ function setLeadingText(element, value, path) {
   annotate(element, path)
 }
 
-function setImage(element, image, alt, path) {
+// ---------------------------------------------------------------------
+//  OBRÁZKY ZE SANITY
+//  asset.url je originál tak, jak ho někdo nahrál — klidně 1536×2048.
+//  Vykreslí se ale jako 48px ikona nebo 360px náhled. Sanity CDN umí
+//  zmenšit, snížit kvalitu i vybrat formát (auto=format → WebP/AVIF)
+//  přímo v adrese, takže ke každému obrázku dopíšeme žebříček šířek
+//  a prohlížeč si podle sizes vezme jen tu, kterou fakt potřebuje.
+//
+//  fit=max = nikdy nezvětšovat nad originál a nezasahovat do ořezu.
+// ---------------------------------------------------------------------
+const SANITY_CDN = 'https://cdn.sanity.io/'
+const isSanity = (url) => typeof url === 'string' && url.startsWith(SANITY_CDN)
+
+function sizedUrl(url, width) {
+  if (!isSanity(url)) return url
+  return `${url}?w=${width}&q=72&auto=format&fit=max`
+}
+
+function srcsetFor(url, widths) {
+  if (!isSanity(url)) return ''
+  return widths.map((w) => `${sizedUrl(url, w)} ${w}w`).join(', ')
+}
+
+// Kdyby přišel obrázek odjinud než ze Sanity, srcset se nenastaví a chová
+// se to přesně jako dřív — jen se nic nezmenší.
+function setImage(element, image, alt, path, opts = {}) {
   const url = image?.asset?.url
   if (!element || !url) return
-  element.src = clean(url)
+  const widths = opts.widths || [400, 800, 1200]
+  element.src = sizedUrl(url, widths[widths.length - 1])
+  const set = srcsetFor(url, widths)
+  if (set) {
+    element.srcset = set
+    element.sizes = opts.sizes || '100vw'
+  }
   if (alt != null) element.alt = clean(alt)
   annotate(element, path)
 }
@@ -105,10 +149,12 @@ function applyContent(data) {
   setText('[data-cms="hero-title-start"]', data.heroTitleStart, 'heroTitleStart')
   setText('[data-cms="hero-title-end"]', data.heroTitleEnd, 'heroTitleEnd')
   setText('.hero-sub', data.heroSubtitle, 'heroSubtitle')
-  setImage(select('.hero-bg img'), data.heroImage, 'Hlavní fotografie lekce jógy', 'heroImage')
+  setImage(select('.hero-bg img'), data.heroImage, 'Hlavní fotografie lekce jógy', 'heroImage',
+    {widths: [640, 960, 1280, 1920], sizes: '100vw'})
   selectAll('.hero-deck img').forEach((image, index) => {
     const item = data.heroDeck?.[index]
-    if (item) setImage(image, item, '', itemPath('heroDeck', item, 'asset'))
+    if (item) setImage(image, item, '', itemPath('heroDeck', item, 'asset'),
+      {widths: [200, 400, 600], sizes: '(max-width: 720px) 45vw, 220px'})
   })
 
   setText('.nav-cta', data.navReservationLabel, 'navReservationLabel')
@@ -134,7 +180,8 @@ function applyContent(data) {
     setText(select('.rp-label', panel), item.label, `${base}.label`)
     setText(select('h3', panel), item.title, `${base}.title`)
     setText(select('.rp-text p', panel), item.body, `${base}.body`)
-    setImage(select('.rp-pic img', panel), item.image, item.alt, `${base}.image`)
+    setImage(select('.rp-pic img', panel), item.image, item.alt, `${base}.image`,
+      {widths: [420, 840, 1260], sizes: '(max-width: 900px) 92vw, 440px'})
   })
 
   setText('.lessons .section-head h2', data.lessonsTitle, 'lessonsTitle')
@@ -158,7 +205,8 @@ function applyContent(data) {
       setText(select('span', row), timeline.text, `${rowBase}.text`)
     })
     setLeadingText(select('.l-cta a', card), `${item.buttonLabel} `, `${base}.buttonLabel`)
-    setImage(select('.l-pic img', card), item.image, item.alt, `${base}.image`)
+    setImage(select('.l-pic img', card), item.image, item.alt, `${base}.image`,
+      {widths: [440, 880, 1320], sizes: '(max-width: 900px) 92vw, 460px'})
   })
 
   setText('.gal-intro h2', data.galleryTitle, 'galleryTitle')
@@ -170,8 +218,11 @@ function applyContent(data) {
     if (!item) return
     const base = itemPath('galleryItems', item)
     const image = select('img', button)
-    setImage(image, item.image, item.alt, `${base}.image`)
-    button.dataset.full = clean(item.image?.asset?.url)
+    setImage(image, item.image, item.alt, `${base}.image`,
+      {widths: [400, 800, 1200], sizes: '(max-width: 720px) 70vw, 400px'})
+    // lightbox ukazuje fotku přes celou obrazovku, ale 1600 px stačí i na
+    // retinu — originál 1536×2048 by byl jen zbytečně těžký
+    button.dataset.full = clean(sizedUrl(item.image?.asset?.url, 1600))
     annotate(button, `${base}.image`)
     const note = button.closest('.gal-big')?.querySelector('.bun-note')
     if (note && item.note) setText(note, item.note, `${base}.note`)
@@ -187,7 +238,8 @@ function applyContent(data) {
     const who = select('.who', card)
     setLeadingText(who, item.name, `${base}.name`)
     setText(select('.who span', card), item.detail, `${base}.detail`)
-    if (item.image) setImage(select('.pic img', card), item.image, item.alt, `${base}.image`)
+    if (item.image) setImage(select('.pic img', card), item.image, item.alt, `${base}.image`,
+      {widths: [160, 320, 480], sizes: '160px'})
   })
 
   setText('.community .eyebrow', data.communityEyebrow, 'communityEyebrow')
@@ -196,7 +248,8 @@ function applyContent(data) {
   setText('.community-note', data.communityNote, 'communityNote')
   selectAll('.community-faces img').forEach((image, index) => {
     const item = data.communityFaces?.[index]
-    if (item) setImage(image, item, '', itemPath('communityFaces', item, 'asset'))
+    if (item) setImage(image, item, '', itemPath('communityFaces', item, 'asset'),
+      {widths: [48, 96, 144], sizes: '48px'})
   })
   const nudge = select('.cta-nudge')
   if (nudge) {
@@ -244,7 +297,12 @@ function applyContent(data) {
 
 async function loadContent() {
   try {
-    const response = await fetch('/api/content', {cache: 'no-store', credentials: 'same-origin'})
+    // V editačním režimu chceme vždy čerstvá data, jinak si necháme
+    // posloužit edge cache (viz Cache-Control v api/content.js).
+    const response = await fetch(editing ? '/api/content?preview=1' : '/api/content', {
+      cache: editing ? 'no-store' : 'default',
+      credentials: 'same-origin',
+    })
     if (!response.ok) throw new Error(`CMS API odpovědělo ${response.status}`)
     const data = await response.json()
     applyContent(data)
@@ -253,14 +311,16 @@ async function loadContent() {
   }
 }
 
-loadContent()
-
+// V režimu úprav musí být editor načtený DŘÍV, než se obsah vykreslí —
+// jinak by prvky z prvního průchodu zůstaly bez data-sanity a nešly by
+// ve Studiu naklikat.
 if (editing) {
-  window.setInterval(() => {
-    if (document.visibilityState === 'visible') loadContent()
-  }, 1500)
-}
-
-if (editing) {
-  enableVisualEditing({zIndex: 9999})
+  loadEditor().then(() => {
+    loadContent()
+    window.setInterval(() => {
+      if (document.visibilityState === 'visible') loadContent()
+    }, 1500)
+  })
+} else {
+  loadContent()
 }

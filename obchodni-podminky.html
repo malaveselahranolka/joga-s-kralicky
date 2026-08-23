@@ -42,12 +42,15 @@
     --paper: #F1EEE5; --cream: #F7F4EC; --surface: #FFFFFF;
     --ink: #1E231C; --ink-soft: #5C6357;
     --forest: #2C3B2E; --clover: #6E8A4E; --carrot: #D2854A;
+    /* jen pro drobný text — značkové odstíny výš nemají na malé písmo dost
+       kontrastu (zelená 3,35:1, oranžová 2,52:1 proti 4,5:1 dle WCAG AA) */
+    --clover-text: #5C7341; --carrot-text: #975F35;
     --line: #E3DFD3; --r-lg: 22px;
   }
   *, *::before, *::after { box-sizing: border-box; }
   body { margin: 0; font-family: "Hanken Grotesk", system-ui, sans-serif; color: var(--ink); background: var(--paper); line-height: 1.7; -webkit-font-smoothing: antialiased; }
   h1, h2, h3 { font-family: "Schibsted Grotesk", system-ui, sans-serif; font-weight: 600; line-height: 1.15; letter-spacing: -.02em; }
-  a { color: var(--clover); }
+  a { color: var(--clover-text); }
   .wrap { width: min(100% - 2.4rem, 760px); margin-inline: auto; }
 
   header.bar { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--paper) 92%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
@@ -66,7 +69,7 @@
   li { margin-bottom: .5rem; }
   .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: clamp(1.2rem, 3vw, 1.8rem); margin: 1.4rem 0; }
   .todo { background: color-mix(in srgb, var(--carrot) 12%, var(--surface)); border: 1px solid color-mix(in srgb, var(--carrot) 40%, var(--line)); }
-  .todo strong { color: var(--carrot); }
+  .todo strong { color: var(--carrot-text); }
   .note { background: color-mix(in srgb, var(--clover) 10%, var(--surface)); border-left: 3px solid var(--clover); border-radius: 0 10px 10px 0; padding: 1rem 1.2rem; margin: 1.2rem 0; }
   table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .95rem; }
   th, td { text-align: left; padding: .7rem .6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
@@ -81,8 +84,8 @@
 
 <header class="bar">
   <div class="wrap bar-inner">
-    <a class="brand" href="index.html"><img src="assets/logo.svg" alt="" width="32" height="32" /> Jóga&nbsp;s&nbsp;králíčky</a>
-    <a class="home-link" href="index.html">← Zpět na web</a>
+    <a class="brand" href="/"><img src="assets/logo.svg" alt="" width="32" height="32" /> Jóga&nbsp;s&nbsp;králíčky</a>
+    <a class="home-link" href="/">← Zpět na web</a>
   </div>
 </header>
 
@@ -141,6 +144,7 @@
     <ul>
       <li>Poukaz platí na jeden vstup na lekci a koupit jich jde víc naráz. Kód přijde e-mailem hned po zaplacení, i s QR kódem.</li>
       <li><strong>Platnost je 12 měsíců od zakoupení.</strong> Poukaz platí na kteroukoliv lekci z naší nabídky.</li>
+      <li>Termín si obdarovaný domluví e-mailem na info@jogaskralicky.cz — napíše kód a vybranou lekci, my mu místo zapíšeme a potvrdíme. Online rezervační formulář kód poukazu nepřijímá, proto tudy ne.</li>
       <li>Poukaz uplatní obdarovaný přímo ve studiu — stačí ukázat QR kód nebo nadiktovat kód.</li>
       <li>Poukaz nelze směnit zpět za peníze a nevyplácíme z něj hotovost.</li>
       <li>Poukaz je přenosný, může ho uplatnit kdokoliv, kdo ho má.</li>
@@ -175,7 +179,7 @@
 
 <footer class="foot">
   <div class="wrap">
-    <a href="index.html">Domů</a>
+    <a href="/">Domů</a>
     <a href="zasady-osobnich-udaju.html">Zásady zpracování osobních údajů</a>
     <a href="rezervace.html">Rezervace</a>
     <p style="margin-top:1rem">© 2026 Jóga s králíčky · Fit&Fun Studio Ostrava, Tovární 486/7, 709 00 Ostrava-Mariánské Hory</p>

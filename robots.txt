@@ -1,5 +1,14 @@
 # https://www.jogaskralicky.cz/
 # Vyhledávače i AI asistenty jsou vítáni. Interní stránky ne.
+#
+# POZOR na to, jak robots.txt funguje: robot se řídí JEDINOU skupinou —
+# tou nejpřesnější, která na něj sedí. Když má GPTBot vlastní skupinu,
+# pravidla z `User-agent: *` ho už vůbec nezajímají. Proto musí mít každá
+# jmenovitá skupina svůj vlastní seznam Disallow; dřív tu měly jen
+# `Allow: /`, takže si směly stáhnout i admin a cizí vstupenky.
+#
+# A hlavně: tohle není zabezpečení, jen slušnost. Kdo pravidla ignoruje,
+# stránku si stáhne stejně — admin proto chrání přihlášení a databáze RLS.
 
 User-agent: *
 Allow: /
@@ -12,20 +21,50 @@ Disallow: /studio/
 # AI vyhledávače — chceme, aby nás citovaly
 User-agent: GPTBot
 Allow: /
+Disallow: /admin.html
+Disallow: /vstupenka.html
+Disallow: /api/
+Disallow: /studio
+Disallow: /studio/
 
 User-agent: OAI-SearchBot
 Allow: /
+Disallow: /admin.html
+Disallow: /vstupenka.html
+Disallow: /api/
+Disallow: /studio
+Disallow: /studio/
 
 User-agent: ChatGPT-User
 Allow: /
+Disallow: /admin.html
+Disallow: /vstupenka.html
+Disallow: /api/
+Disallow: /studio
+Disallow: /studio/
 
 User-agent: PerplexityBot
 Allow: /
+Disallow: /admin.html
+Disallow: /vstupenka.html
+Disallow: /api/
+Disallow: /studio
+Disallow: /studio/
 
 User-agent: ClaudeBot
 Allow: /
+Disallow: /admin.html
+Disallow: /vstupenka.html
+Disallow: /api/
+Disallow: /studio
+Disallow: /studio/
 
 User-agent: Google-Extended
 Allow: /
+Disallow: /admin.html
+Disallow: /vstupenka.html
+Disallow: /api/
+Disallow: /studio
+Disallow: /studio/
 
 Sitemap: https://www.jogaskralicky.cz/sitemap.xml

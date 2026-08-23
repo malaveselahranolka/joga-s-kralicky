@@ -1,5 +1,5 @@
 import {build} from 'esbuild'
-import {copyFileSync, cpSync, existsSync, mkdirSync, rmSync} from 'node:fs'
+import {copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync} from 'node:fs'
 import {join} from 'node:path'
 import {spawnSync} from 'node:child_process'
 
@@ -36,17 +36,64 @@ for (const file of files) {
 }
 cpSync(join(root, 'assets'), join(output, 'assets'), {recursive: true})
 
+// ---------------------------------------------------------------------
+//  SITEMAP: lastmod podle poslední změny v gitu
+//
+//  Datumy v sitemap.xml byly napsané ručně, takže se po každé úpravě
+//  rozešly se skutečností — všech osm adres hlásilo tentýž den, i když
+//  se soubory měnily později. Vyhledávač tomu pak přestane věřit
+//  a datum ignoruje. Bereme ho radši z commitu, který se souboru
+//  naposledy dotkl.
+//
+//  Kdyby git nebyl po ruce (stažený archiv, jiné CI), necháme datum
+//  tak, jak je v souboru — build kvůli tomu nikdy nespadne.
+// ---------------------------------------------------------------------
+function lastCommitDate(file) {
+  try {
+    const r = spawnSync('git', ['log', '-1', '--format=%cs', '--', file], {cwd: root, encoding: 'utf8'})
+    const out = (r.stdout || '').trim()
+    return /^\d{4}-\d{2}-\d{2}$/.test(out) ? out : null
+  } catch (_e) {
+    return null
+  }
+}
+
+const sitemapPath = join(output, 'sitemap.xml')
+if (existsSync(sitemapPath)) {
+  const origin = 'https://www.jogaskralicky.cz'
+  let xml = readFileSync(sitemapPath, 'utf8')
+  let touched = 0
+  xml = xml.replace(
+    /<loc>([^<]+)<\/loc>(\s*)<lastmod>[^<]*<\/lastmod>/g,
+    (whole, loc, gap) => {
+      // adresa → soubor v repozitáři ('/' je index.html)
+      const rel = loc.replace(origin, '').replace(/^\//, '') || 'index.html'
+      const date = existsSync(join(root, rel)) ? lastCommitDate(rel) : null
+      if (!date) return whole
+      touched += 1
+      return `<loc>${loc}</loc>${gap}<lastmod>${date}</lastmod>`
+    },
+  )
+  writeFileSync(sitemapPath, xml)
+  console.log(`Sitemap: lastmod dopočítán z gitu u ${touched} adres.`)
+}
+
+// splitting + esm: vizuální editor se vejde do vlastního souboru, který si
+// veřejná stránka nevyžádá. Bez toho by ho dynamický import jen vložil zpátky
+// do hlavního balíku a nic bychom neušetřili.
+// (index.html načítá cms.js jako <script type="module">, takže esm sedí.)
 await build({
   absWorkingDir: root,
   entryPoints: ['./src/cms.js'],
   bundle: true,
-  format: 'iife',
+  format: 'esm',
+  splitting: true,
   minify: true,
   sourcemap: true,
-  outfile: 'cms.js',
+  outdir: output,
+  entryNames: '[name]',
+  chunkNames: 'chunks/[name]-[hash]',
 })
-copyFileSync(join(root, 'cms.js'), join(output, 'cms.js'))
-copyFileSync(join(root, 'cms.js.map'), join(output, 'cms.js.map'))
 
 const bin = join(root, 'node_modules', '.bin', process.platform === 'win32' ? 'sanity.cmd' : 'sanity')
 const result = spawnSync(bin, ['build', join(output, 'studio'), '--yes'], {
