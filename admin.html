@@ -240,6 +240,7 @@
       <button class="tab" role="tab" aria-selected="false" data-tab="scan">Odbavení</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="news">Newsletter</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="vouchers">Poukazy</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="emails">E-maily</button>
     </div>
 
     <!-- DASHBOARD -->
@@ -267,7 +268,7 @@
         </div>
         <div style="display:flex;gap:.7rem;flex-wrap:wrap">
           <a class="btn btn-primary" href="studio/" target="_blank" rel="noopener">Upravit obsah</a>
-          <a class="btn btn-ghost" href="index.html" target="_blank" rel="noopener">Otevřít veřejný web</a>
+          <a class="btn btn-ghost" href="/" target="_blank" rel="noopener">Otevřít veřejný web</a>
         </div>
       </div>
     </section>
@@ -294,7 +295,7 @@
             <div><label for="lf-date">Datum</label><input id="lf-date" type="date" required /></div>
             <div><label for="lf-time">Čas</label><input id="lf-time" type="time" required /></div>
             <div><label for="lf-dur">Délka (min)</label><input id="lf-dur" type="number" min="15" step="5" value="60" required /></div>
-            <div><label for="lf-cap">Kapacita</label><input id="lf-cap" type="number" min="1" max="40" value="12" required /></div>
+            <div><label for="lf-cap">Kapacita</label><input id="lf-cap" type="number" min="1" max="40" value="10" required /></div>
             <div class="field-wide"><label for="lf-note">Poznámka (nepovinné)</label><input id="lf-note" placeholder="např. jen pro začátečníky" /></div>
           </div>
           <div class="form-actions">
@@ -427,6 +428,31 @@
       </div>
       <div class="rows" id="voucherRows"></div>
     </section>
+
+    <!-- E-MAILY -->
+    <section class="panel" id="panel-emails" role="tabpanel">
+      <div class="panel-head">
+        <h2>Odeslané e-maily</h2>
+        <div style="display:flex;gap:.5rem">
+          <button class="btn btn-primary btn-sm" id="dispatchEmails">Zkusit odeslat čekající</button>
+          <button class="btn btn-ghost btn-sm" id="refreshEmails">Obnovit</button>
+        </div>
+      </div>
+      <p class="hint" style="margin:-.4rem 0 1rem">
+        Potvrzení rezervací a kódy poukazů posílá server. Když se odeslání
+        nepovede, zůstane e-mail tady a zkusí se znovu — nic se neztratí.
+      </p>
+      <div class="stat-row" id="emailStats"></div>
+      <div class="toolbar">
+        <label style="margin:0">Zobrazit:</label>
+        <select id="emailFilter">
+          <option value="problem">Čekající a nedoručené</option>
+          <option value="all">Všechny</option>
+          <option value="sent">Doručené</option>
+        </select>
+      </div>
+      <div class="rows" id="emailRows"></div>
+    </section>
   </div>
 </div>
 
@@ -445,7 +471,7 @@
 
   const $ = (id) => document.getElementById(id);
   const loginScreen = $('loginScreen'), app = $('app');
-  let lessons = [], bookings = [], subscribers = [], vouchers = [], editingId = null;
+  let lessons = [], bookings = [], subscribers = [], vouchers = [], emails = [], editingId = null;
 
   // helpers ------------------------------------------------------------
   const cap = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
@@ -510,18 +536,21 @@
 
   // data ---------------------------------------------------------------
   async function loadAll() {
-    const [lr, br, nr, vr] = await Promise.all([
+    const [lr, br, nr, vr, er] = await Promise.all([
       sb.from('lessons').select('*').order('starts_at', { ascending: true }),
       sb.from('bookings').select('*').order('created_at', { ascending: false }),
-      // newsletter/poukazy jsou nepovinné — pokud tabulka ještě není, nevadí
+      // newsletter/poukazy/fronta e-mailů jsou nepovinné — když tabulka
+      // ještě není (nespuštěné SQL), panel zůstane prázdný a zbytek jede
       sb.from('newsletter_subscribers').select('*').order('created_at', { ascending: false }),
-      sb.from('vouchers').select('*').order('created_at', { ascending: false })
+      sb.from('vouchers').select('*').order('created_at', { ascending: false }),
+      sb.from('email_outbox').select('*').order('created_at', { ascending: false }).limit(200)
     ]);
     if (lr.error || br.error) { toast('Načtení dat selhalo'); return; }
     lessons = lr.data || []; bookings = br.data || [];
     subscribers = nr && !nr.error ? (nr.data || []) : [];
     vouchers = vr && !vr.error ? (vr.data || []) : [];
-    renderDash(); renderLessons(); renderBookings(); fillLessonSelects(); renderNews(); renderVouchers();
+    emails = er && !er.error ? (er.data || []) : [];
+    renderDash(); renderLessons(); renderBookings(); fillLessonSelects(); renderNews(); renderVouchers(); renderEmails();
   }
 
   // tabs ---------------------------------------------------------------
@@ -668,17 +697,16 @@
   });
 
   // generování týdne z rozvrhu ----------------------------------------
+  // MUSÍ sedět s tím, co web slibuje na homepage: Hatha v úterý, ve čtvrtek
+  // a v sobotu, dětská lekce v sobotu od 9:30. Obojí 60 minut, max 10 míst.
+  // Generátor tu dřív vyráběl 75 minut, 12 míst a lekce („Ranní protažení",
+  // „Soumrak & restorativní"), které se na webu vůbec neprodávají — host pak
+  // v nabídce viděl něco jiného, než co si o pár klepnutí dřív přečetl.
   const WEEKLY = [
-    { d: 1, t: '07:30', title: 'Ranní protažení', dur: 60, cap: 12 },
-    { d: 2, t: '18:00', title: 'Hatha s králíčky', dur: 75, cap: 12 },
-    { d: 2, t: '19:45', title: 'Hatha s králíčky', dur: 75, cap: 12 },
-    { d: 3, t: '07:30', title: 'Ranní protažení', dur: 60, cap: 12 },
-    { d: 4, t: '18:00', title: 'Hatha s králíčky', dur: 75, cap: 12 },
-    { d: 5, t: '07:30', title: 'Ranní protažení', dur: 60, cap: 12 },
-    { d: 5, t: '17:30', title: 'Soumrak & restorativní', dur: 60, cap: 12 },
-    { d: 6, t: '09:30', title: 'Děti & králíci', dur: 45, cap: 10 },
-    { d: 6, t: '11:00', title: 'Hatha s králíčky', dur: 75, cap: 12 },
-    { d: 0, t: '19:30', title: 'Soumrak & restorativní', dur: 60, cap: 12 }
+    { d: 2, t: '18:00', title: 'Hatha s králíčky', dur: 60, cap: 10 },
+    { d: 4, t: '18:00', title: 'Hatha s králíčky', dur: 60, cap: 10 },
+    { d: 6, t: '09:30', title: 'Děti & králíci',   dur: 60, cap: 10 },
+    { d: 6, t: '11:00', title: 'Hatha s králíčky', dur: 60, cap: 10 }
   ];
   $('genWeekBtn').addEventListener('click', async () => {
     // následujících 7 dní počínaje zítřkem
@@ -793,37 +821,147 @@
   // poukazy -----------------------------------------------------------
   $('refreshVouchers').addEventListener('click', loadAll);
   $('voucherFilter').addEventListener('change', renderVouchers);
+  // Poukaz platí 12 měsíců. Dřív se platnost nikde nekontrolovala, takže
+  // admin u dveří ukázal „Platný" i na kódu z předloňska.
+  const vExpired = (v) => !!(v && v.expires_at && new Date(v.expires_at).getTime() <= Date.now());
+
+  // Uplatnění NIKDY nedělej přímým UPDATE. Podmínka „ještě neuplatněný a ještě
+  // platný" musí být uvnitř dotazu, jinak ji dva současné skeny obejdou oba.
+  // Funkci zakládá supabase/vouchers-lifecycle.sql.
+  async function voucherRpc(code, redeem) {
+    const { data, error } = await sb.rpc(redeem ? 'redeem_voucher' : 'unredeem_voucher', { p_code: code });
+    if (error) return { ok: false, error: 'rpc_failed' };
+    return data || { ok: false, error: 'rpc_failed' };
+  }
+  const voucherErrText = (r) => ({
+    already_redeemed: 'Poukaz už byl uplatněn.',
+    expired: 'Poukaz propadl, platnost už vypršela.',
+    unknown: 'Takový kód neznáme.',
+    not_redeemed: 'Poukaz uplatněný není, není co vracet.',
+    forbidden: 'Na tuhle akci nemáte právo.',
+  }[r && r.error] || 'Akce selhala');
+
+  // ---- fronta odchozích e-mailů ------------------------------------
+  function renderEmails() {
+    const cekaji = emails.filter((e) => e.status === 'pending');
+    const vzdane = emails.filter((e) => e.status === 'failed');
+    $('emailStats').innerHTML = stat(emails.filter((e) => e.status === 'sent').length, 'doručených') +
+      stat(cekaji.length, 'čekají') +
+      stat(vzdane.length, 'nedoručených');
+
+    const f = $('emailFilter').value;
+    let list = emails.slice();
+    if (f === 'problem') list = list.filter((e) => e.status !== 'sent');
+    else if (f === 'sent') list = list.filter((e) => e.status === 'sent');
+
+    if (!emails.length) {
+      $('emailRows').innerHTML = '<div class="empty">Zatím nic. Až spustíš ' +
+        '<strong>supabase/email-outbox.sql</strong> a někdo zaplatí, objeví se tu ' +
+        'každé odeslané potvrzení i každý poukaz.</div>';
+      return;
+    }
+
+    $('emailRows').innerHTML = list.length ? list.map((e) => {
+      const pill = e.status === 'sent' ? '<span class="pill pill-ok">Doručeno</span>'
+        : (e.status === 'failed' ? '<span class="pill pill-cancel">Nedoručeno</span>'
+                                 : '<span class="pill">Čeká</span>');
+      const co = e.kind === 'voucher' ? 'Dárkový poukaz' : 'Potvrzení rezervace';
+      const kdy = e.status === 'sent' && e.sent_at ? fmtDT(e.sent_at) : fmtDT(e.created_at);
+      const pokusy = e.attempts ? ' · ' + e.attempts + '. pokus' : '';
+      return '<div class="row' + (e.status === 'failed' ? ' is-cancelled' : '') + '">' +
+        '<div class="main"><div class="ttl">' + co + ' ' + pill + '</div>' +
+        '<div class="sub">' + esc(e.to_email) + ' · ' + kdy + pokusy + '</div>' +
+        (e.last_error ? '<div class="sub" style="color:var(--carrot-text)">' + esc(e.last_error) + '</div>' : '') +
+        '</div>' +
+        '<div class="acts">' + (e.status === 'sent' ? ''
+          : '<button class="btn btn-primary btn-sm" data-resend="' + e.id + '">Poslat znovu</button>') +
+        '</div></div>';
+    }).join('') : '<div class="empty">Pro tento výběr tu nic není.</div>';
+  }
+
+  // Vlastní rozeslání dělá Edge funkce email-dispatch — jen ona zná
+  // privátní klíč EmailJS. Prohlížeč jí jen řekne „projdi frontu".
+  async function runDispatch(btn) {
+    const keep = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = 'Odesílám…'; }
+    try {
+      const { data: sess } = await sb.auth.getSession();
+      const token = sess && sess.session ? sess.session.access_token : null;
+      const r = await fetch(String(window.SUPABASE_URL).replace(/\/$/, '') + '/functions/v1/email-dispatch', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: window.SUPABASE_ANON_KEY,
+          Authorization: 'Bearer ' + (token || window.SUPABASE_ANON_KEY)
+        },
+        body: JSON.stringify({ limit: 25 })
+      });
+      const body = await r.json().catch(() => null);
+      if (body && body.ok) {
+        toast(body.sent ? ('Odesláno: ' + body.sent) : 'Nic k odeslání');
+      } else if (body && body.error === 'emailjs_private_key_not_set') {
+        // Nejčastější stav hned po nasazení — ať je z hlášky poznat, co dělat.
+        alert('Server zatím e-maily posílat neumí.\n\n' + (body.hint || ''));
+      } else {
+        toast('Rozeslání selhalo');
+      }
+    } catch (e) {
+      toast('Rozeslání selhalo');
+    }
+    if (btn) { btn.disabled = false; btn.textContent = keep; }
+    await loadAll();
+  }
+
+  $('dispatchEmails').addEventListener('click', (e) => runDispatch(e.currentTarget));
+  $('refreshEmails').addEventListener('click', loadAll);
+  $('emailFilter').addEventListener('change', renderEmails);
+  $('emailRows').addEventListener('click', async (e) => {
+    const btn = e.target.closest('button[data-resend]'); if (!btn) return;
+    btn.disabled = true;
+    const { data, error } = await sb.rpc('retry_email', { p_id: btn.dataset.resend });
+    if (error || !(data && data.ok)) { btn.disabled = false; toast('Nepodařilo se zařadit znovu'); return; }
+    await runDispatch(null);
+  });
+
   function renderVouchers() {
-    const active = vouchers.filter((v) => !v.redeemed);
-    $('voucherStats').innerHTML = stat(active.length, 'neuplatněných') +
+    const active = vouchers.filter((v) => !v.redeemed && !vExpired(v));
+    $('voucherStats').innerHTML = stat(active.length, 'platných') +
       stat(vouchers.filter((v) => v.redeemed).length, 'uplatněných') +
+      stat(vouchers.filter((v) => !v.redeemed && vExpired(v)).length, 'propadlých') +
       stat(vouchers.length, 'celkem prodáno');
     const f = $('voucherFilter').value;
     let list = vouchers.slice();
-    if (f === 'active') list = list.filter((v) => !v.redeemed);
+    if (f === 'active') list = list.filter((v) => !v.redeemed && !vExpired(v));
     else if (f === 'redeemed') list = list.filter((v) => v.redeemed);
     if (!vouchers.length) {
-      $('voucherRows').innerHTML = '<div class="empty">Zatím žádné prodané poukazy. Až spustíš <strong>supabase/vouchers.sql</strong> a někdo koupí poukaz, objeví se tu.</div>';
+      $('voucherRows').innerHTML = '<div class="empty">Zatím žádné prodané poukazy. Až spustíš <strong>supabase/vouchers.sql</strong> i <strong>supabase/vouchers-lifecycle.sql</strong> a někdo koupí poukaz, objeví se tu.</div>';
       return;
     }
     $('voucherRows').innerHTML = list.length ? list.map((v) => {
       const kc = v.amount ? (v.amount / 100 | 0) + ' Kč' : '';
-      return '<div class="row' + (v.redeemed ? ' is-cancelled' : '') + '">' +
+      const dead = vExpired(v);
+      const pill = v.redeemed ? '<span class="pill pill-cancel">Uplatněno</span>'
+        : (dead ? '<span class="pill pill-cancel">Propadl</span>' : '<span class="pill pill-ok">Platný</span>');
+      const till = v.expires_at ? ' · ' + (dead ? 'propadl ' : 'platí do ') + fmtDT(v.expires_at) : '';
+      return '<div class="row' + (v.redeemed || dead ? ' is-cancelled' : '') + '">' +
         '<div class="main"><div class="ttl" style="font-family:monospace;letter-spacing:.04em">' + esc(v.code) +
-          (v.redeemed ? ' <span class="pill pill-cancel">Uplatněno</span>' : ' <span class="pill pill-ok">Platný</span>') + '</div>' +
-        '<div class="sub">' + (v.email ? esc(v.email) + ' · ' : '') + (kc ? kc + ' · ' : '') + fmtDT(v.created_at) + '</div></div>' +
+          ' ' + pill + '</div>' +
+        '<div class="sub">' + (v.email ? esc(v.email) + ' · ' : '') + (kc ? kc + ' · ' : '') + fmtDT(v.created_at) + till + '</div></div>' +
         '<div class="acts">' + (v.redeemed
-          ? '<button class="btn btn-ghost btn-sm" data-unredeem="' + v.id + '">Vrátit platnost</button>'
-          : '<button class="btn btn-primary btn-sm" data-redeem="' + v.id + '">Označit uplatněno</button>') +
+          ? '<button class="btn btn-ghost btn-sm" data-unredeem="' + esc(v.code) + '">Vrátit platnost</button>'
+          : (dead ? '' : '<button class="btn btn-primary btn-sm" data-redeem="' + esc(v.code) + '">Označit uplatněno</button>')) +
         '</div></div>';
     }).join('') : '<div class="empty">Pro tento výběr nejsou žádné poukazy.</div>';
   }
   $('voucherRows').addEventListener('click', async (e) => {
     const btn = e.target.closest('button'); if (!btn) return;
-    const id = btn.dataset.redeem || btn.dataset.unredeem; if (!id) return;
-    const redeemed = !!btn.dataset.redeem;
-    const { error } = await sb.from('vouchers').update({ redeemed, redeemed_at: redeemed ? new Date().toISOString() : null }).eq('id', id);
-    if (error) toast('Akce selhala'); else { toast(redeemed ? 'Označeno uplatněno' : 'Platnost vrácena'); await loadAll(); }
+    const code = btn.dataset.redeem || btn.dataset.unredeem; if (!code) return;
+    const redeem = !!btn.dataset.redeem;
+    btn.disabled = true;
+    const r = await voucherRpc(code, redeem);
+    if (!r.ok) { btn.disabled = false; toast(voucherErrText(r)); return; }
+    toast(redeem ? 'Označeno uplatněno' : 'Platnost vrácena');
+    await loadAll();
   });
 
   function fillLessonSelects() {
@@ -1038,10 +1176,16 @@
     if (v.redeemed) {
       scanCard('scan-bad', scanIco.no, 'Poukaz už byl uplatněn',
         who + (v.redeemed_at ? '<div class="sub">' + fmtDT(v.redeemed_at) + '</div>' : ''),
-        '<button class="btn btn-ghost btn-sm" data-unredeem="' + v.id + '">Vrátit platnost</button>');
+        '<button class="btn btn-ghost btn-sm" data-unredeem="' + esc(v.code) + '">Vrátit platnost</button>');
+    } else if (vExpired(v)) {
+      // Platnost je 12 měsíců podle obchodních podmínek. Tuhle větev tu dřív
+      // nebyla, takže propadlý kód se u dveří tvářil jako úplně v pořádku.
+      scanCard('scan-bad', scanIco.no, 'Poukaz propadl',
+        who + '<div class="sub">Platnost skončila ' + fmtDT(v.expires_at) + '</div>');
     } else {
-      scanCard('scan-yes', scanIco.ok, 'Poukaz platí', who,
-        '<button class="btn btn-primary btn-sm" data-redeem="' + v.id + '">Označit uplatněno</button>');
+      scanCard('scan-yes', scanIco.ok, 'Poukaz platí',
+        who + (v.expires_at ? '<div class="sub">Platí do ' + fmtDT(v.expires_at) + '</div>' : ''),
+        '<button class="btn btn-primary btn-sm" data-redeem="' + esc(v.code) + '">Označit uplatněno</button>');
     }
   }
 
@@ -1068,16 +1212,15 @@
     if (btn.dataset.paid) { await applyBookingAction(btn); await showScan(btn.dataset.paid); return; }
 
     // uplatnění / vrácení dárkového poukazu rovnou od dveří
-    const vid = btn.dataset.redeem || btn.dataset.unredeem;
-    if (vid) {
-      const redeemed = !!btn.dataset.redeem;
-      const known = vouchers.find((x) => x.id === vid);   // kód si podrž, seznam se přenačte
-      const { error } = await sb.from('vouchers')
-        .update({ redeemed, redeemed_at: redeemed ? new Date().toISOString() : null }).eq('id', vid);
-      if (error) { toast('Akce selhala'); return; }
-      toast(redeemed ? 'Poukaz uplatněn' : 'Platnost vrácena');
+    const vcode = btn.dataset.redeem || btn.dataset.unredeem;
+    if (vcode) {
+      const redeem = !!btn.dataset.redeem;
+      btn.disabled = true;
+      const r = await voucherRpc(vcode, redeem);
+      if (!r.ok) { toast(voucherErrText(r)); await loadAll(); await showVoucherScan(vcode); return; }
+      toast(redeem ? 'Poukaz uplatněn' : 'Platnost vrácena');
       await loadAll();
-      if (known) await showVoucherScan(known.code);
+      await showVoucherScan(vcode);
     }
   });
 })();

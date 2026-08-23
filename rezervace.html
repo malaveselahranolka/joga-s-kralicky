@@ -48,6 +48,9 @@
     --paper: #F1EEE5; --cream: #F7F4EC; --surface: #FFFFFF;
     --ink: #1E231C; --ink-soft: #5C6357;
     --forest: #2C3B2E; --forest-deep: #1E2920; --clover: #6E8A4E; --carrot: #D2854A;
+    /* jen pro drobný text — značkové odstíny výš nemají na malé písmo dost
+       kontrastu (zelená 3,35:1, oranžová 2,52:1 proti 4,5:1 dle WCAG AA) */
+    --clover-text: #5C7341; --carrot-text: #975F35;
     --line: #E3DFD3; --line-soft: #ECE8DE;
     --r-xl: 30px; --r-lg: 22px; --r-md: 14px;
     --ease: cubic-bezier(.22,.61,.36,1); --ease-spring: cubic-bezier(.34,1.4,.5,1);
@@ -79,9 +82,9 @@
 
   main { padding: clamp(2.4rem, 5vw, 4rem) 0 5rem; }
   .page-head { text-align: center; max-width: 44ch; margin: 0 auto clamp(2rem, 4vw, 3rem); }
-  .eyebrow { display: inline-block; font-size: .82rem; font-weight: 600; letter-spacing: .04em; color: var(--clover); margin-bottom: .8rem; }
+  .eyebrow { display: inline-block; font-size: .82rem; font-weight: 600; letter-spacing: .04em; color: var(--clover-text); margin-bottom: .8rem; }
   .eyebrow::before { content: "/ "; opacity: .7; }
-  .page-head h1 { font-size: clamp(2rem, 1.4rem + 2.4vw, 3.2rem); }
+  .page-head h1, .page-head h2 { font-size: clamp(2rem, 1.4rem + 2.4vw, 3.2rem); }
   .page-head p { margin-top: 1rem; color: var(--ink-soft); font-size: clamp(1.02rem, 1rem + .3vw, 1.15rem); }
 
   /* ---------- step 1: termíny ---------- */
@@ -104,9 +107,9 @@
   .slot .meta .place { margin-top: .4rem; }
   .slot .meta .place .val { font-family: "Hanken Grotesk"; font-weight: 500; font-size: .92rem; color: var(--ink-soft); }
   .slot .book { text-align: center; }
-  .slot .cap { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: 1.05rem; color: var(--clover); margin-bottom: .5rem; }
+  .slot .cap { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: 1.05rem; color: var(--clover-text); margin-bottom: .5rem; }
   .slot .cap b { font-size: 1.35rem; }
-  .slot.full .cap { color: var(--carrot); }
+  .slot.full .cap { color: var(--carrot-text); }
 
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; font-family: inherit; font-size: 1rem; font-weight: 600; padding: .8em 1.5em; border-radius: 999px; border: 1px solid transparent; cursor: pointer; transition: transform .3s var(--ease), background-color .3s var(--ease), box-shadow .3s var(--ease); }
   .btn:focus-visible { outline: 2px solid var(--clover); outline-offset: 3px; }
@@ -120,7 +123,7 @@
   .slot .book .btn { padding: .6em 1.3em; }
 
   /* ---------- step 2: form ---------- */
-  .back { display: inline-flex; align-items: center; gap: .5rem; font-weight: 600; color: var(--carrot); margin-bottom: 1.4rem; transition: gap .3s var(--ease); }
+  .back { display: inline-flex; align-items: center; gap: .5rem; font-weight: 600; color: var(--carrot-text); margin-bottom: 1.4rem; transition: gap .3s var(--ease); }
   .back:hover { gap: .8rem; }
   .summary { display: flex; align-items: center; gap: clamp(1rem, 3vw, 2.4rem); flex-wrap: wrap; justify-content: center; text-align: left; margin: 0 auto 2rem; max-width: 760px; }
   .summary .blk .lbl { font-size: .72rem; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-soft); }
@@ -139,7 +142,7 @@
     background-repeat: no-repeat; background-position: right 1.05em center; background-size: 12px; padding-right: 2.6em;
     transition: border-color .3s var(--ease), box-shadow .3s var(--ease); }
   .field select:focus { outline: none; border-color: var(--forest); box-shadow: 0 0 0 3px color-mix(in srgb, var(--forest) 18%, transparent); }
-  .field .err { display: none; color: var(--carrot); font-size: .8rem; font-weight: 700; margin-top: .35rem; }
+  .field .err { display: none; color: var(--carrot-text); font-size: .8rem; font-weight: 700; margin-top: .35rem; }
   .show-errors .field.invalid .err { display: block; }
 
   .rowline { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin: 1.6rem 0; padding: 1.3rem 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
@@ -156,7 +159,7 @@
 
   .consent { display: flex; align-items: flex-start; gap: .6rem; font-size: .92rem; color: var(--ink-soft); margin-bottom: 1.4rem; }
   .consent input { margin-top: .25rem; width: 18px; height: 18px; accent-color: var(--forest); flex: none; }
-  .consent a { color: var(--clover); text-decoration: underline; }
+  .consent a { color: var(--clover-text); text-decoration: underline; }
   .submit-wrap { text-align: center; }
   .submit-wrap .btn { width: 100%; max-width: 380px; justify-content: center; font-size: 1.05rem; padding: 1em 1.6em; }
   .note { margin-top: .9rem; font-size: .85rem; color: var(--ink-soft); text-align: center; }
@@ -211,10 +214,10 @@
 
 <header class="bar">
   <div class="wrap bar-inner">
-    <a class="brand" href="index.html" aria-label="Jóga s králíčky — domů">
+    <a class="brand" href="/" aria-label="Jóga s králíčky — domů">
       <img src="assets/logo.svg" alt="" width="32" height="32" /> Jóga&nbsp;s&nbsp;králíčky
     </a>
-    <a class="home-link" href="index.html">
+    <a class="home-link" href="/">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18 9 12l6-6"/></svg>
       Zpět na web
     </a>
@@ -260,16 +263,16 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18 9 12l6-6"/></svg>
         Zpět na výběr termínu
       </a>
-      <div class="page-head" style="margin-bottom:1.6rem"><h1>Rezervace</h1></div>
+      <div class="page-head" style="margin-bottom:1.6rem"><h2>Rezervace</h2></div>
 
       <div class="summary" id="summary"></div>
 
       <form class="form-card" id="bookForm" novalidate>
         <div class="grid2">
-          <div class="field"><label for="f-first">Vaše jméno</label><input id="f-first" autocomplete="given-name" placeholder="Jméno" required /><span class="err">Doplňte jméno.</span></div>
-          <div class="field"><label for="f-last">Vaše příjmení</label><input id="f-last" autocomplete="family-name" placeholder="Příjmení" required /><span class="err">Doplňte příjmení.</span></div>
+          <div class="field"><label for="f-first">Vaše jméno</label><input id="f-first" autocomplete="given-name" placeholder="Jméno" required aria-describedby="e-first" /><span class="err" id="e-first">Doplňte jméno.</span></div>
+          <div class="field"><label for="f-last">Vaše příjmení</label><input id="f-last" autocomplete="family-name" placeholder="Příjmení" required aria-describedby="e-last" /><span class="err" id="e-last">Doplňte příjmení.</span></div>
           <div class="field"><label for="f-tel">Váš telefon <span style="font-weight:400;color:var(--ink-soft)">(nepovinné)</span></label><input id="f-tel" type="tel" autocomplete="tel" placeholder="777 888 999" /></div>
-          <div class="field"><label for="f-email">Váš email</label><input id="f-email" type="email" autocomplete="email" placeholder="vas@email.cz" required /><span class="err">Zkontrolujte e-mail.</span></div>
+          <div class="field"><label for="f-email">Váš email</label><input id="f-email" type="email" autocomplete="email" placeholder="vas@email.cz" required aria-describedby="e-email" /><span class="err" id="e-email">Zkontrolujte e-mail.</span></div>
         </div>
 
         <div class="rowline">
@@ -305,6 +308,8 @@
 
         <label class="consent"><input type="checkbox" id="f-consent" required />
           <span>Souhlasím se <a href="zasady-osobnich-udaju.html" target="_blank" rel="noopener">zpracováním osobních údajů</a> a s <a href="obchodni-podminky.html" target="_blank" rel="noopener">obchodními podmínkami</a> za účelem rezervace.</span></label>
+
+        <p class="err" id="formSummary" role="alert" style="display:none;margin-bottom:.9rem"></p>
 
         <div class="submit-wrap">
           <button class="btn btn-primary" type="submit" id="submitBtn">Rezervovat a zaplatit <span class="arrow">→</span></button>
@@ -396,18 +401,23 @@
     if (code === 'full') return 'Mezitím se místa zaplnila — rezervaci proto nelze zaplatit. Vyberte prosím jiný termín.';
     if (code === 'already_paid') return 'Tahle rezervace už je zaplacená.';
     if (code === 'booking_cancelled' || code === 'unavailable') return 'Tahle rezervace už neplatí. Založte prosím novou.';
+    if (code === 'payment_in_progress') return 'Platbu k téhle rezervaci už zakládáme. Počkejte chviličku a klepněte na Zaplatit ještě jednou — otevře se ta rozdělaná, ne druhá.';
+    if (code === 'hold_failed') return 'Zrovna se nedaří ověřit, jestli je místo volné. Zkuste to prosím za chvíli znovu — nechceme vás nechat zaplatit za obsazenou lekci.';
     if (code === 'gateway_down') return 'Platební bránu se teď nedaří otevřít. Napište nám prosím na info@jogaskralicky.cz — rezervaci pro víc osob vyřídíme ručně.';
     return 'Platební bránu se nepodařilo otevřít. Zkuste to prosím znovu, nebo nám napište na info@jogaskralicky.cz.';
   };
 
   // Po návratu z platby se rovnou zeptáme Stripu, jestli je zaplaceno, a stav
   // zapíšeme. Webhook zůstává jako druhá cesta — ale nečekáme jen na něj.
+  // Vrací { paid, serverEmail }. serverEmail = server e-maily rozesílá sám
+  // (má EMAILJS_PRIVATE_KEY), takže prohlížeč už žádný posílat nesmí —
+  // jinak by hostovi přišel dvakrát.
   async function confirmPayment(sessionId) {
-    if (!CONFIGURED || !sessionId) return false;
+    if (!CONFIGURED || !sessionId) return { paid: false, serverEmail: false };
     try {
       const { body } = await fnPost('stripe-confirm', { session_id: sessionId });
-      return !!(body && body.paid);
-    } catch (e) { return false; }
+      return { paid: !!(body && body.paid), serverEmail: !!(body && body.serverEmail) };
+    } catch (e) { return { paid: false, serverEmail: false }; }
   }
 
   // EmailJS — potvrzení rezervace (nepovinné; bez konfigurace rezervace běží dál)
@@ -442,6 +452,17 @@
     $('stepForm').classList.toggle('hidden', which !== 'form');
     $('stepDone').classList.toggle('hidden', which !== 'done');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Krok se dřív jen odscrolloval. Kdo nevidí, o výměně obsahu nevěděl —
+    // fokus zůstal na tlačítku, které už na stránce nebylo. Přesouváme ho
+    // na nadpis nového kroku; tabindex="-1" ho udělá zaměřitelným, ale
+    // nepustí ho do běžného pořadí při tabování.
+    const box = $(which === 'pick' ? 'stepPick' : (which === 'form' ? 'stepForm' : 'stepDone'));
+    const head = box && box.querySelector('h1, h2');
+    if (head) {
+      head.setAttribute('tabindex', '-1');
+      try { head.focus({ preventScroll: true }); } catch (e) { head.focus(); }
+    }
   }
 
   function stateBox(icon, title, html, acts) {
@@ -554,11 +575,35 @@
     const form = $('bookForm');
     form.classList.add('show-errors');
     const first = $('f-first'), last = $('f-last'), email = $('f-email'), consent = $('f-consent');
+    const summary = $('formSummary');
     let ok = true, firstBad = null;
-    [[first, !first.value.trim()], [last, !last.value.trim()], [email, !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.value.trim())]]
-      .forEach(([f, bad]) => { f.closest('.field').classList.toggle('invalid', bad); if (bad && !firstBad) { firstBad = f; ok = false; } });
-    if (!consent.checked) { ok = false; if (!firstBad) firstBad = consent; }
-    if (!ok) { if (firstBad) firstBad.focus(); return; }
+    const bads = [];
+    [[first, !first.value.trim(), 'jméno'], [last, !last.value.trim(), 'příjmení'],
+     [email, !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.value.trim()), 'e-mail']]
+      .forEach(([f, bad, what]) => {
+        f.closest('.field').classList.toggle('invalid', bad);
+        // aria-invalid je to jediné, z čeho odečítač pozná, že je pole špatně.
+        // Barevný rámeček mu nic neřekne.
+        f.setAttribute('aria-invalid', bad ? 'true' : 'false');
+        if (bad) { bads.push(what); if (!firstBad) { firstBad = f; ok = false; } }
+      });
+    if (!consent.checked) {
+      ok = false; bads.push('souhlas se zpracováním údajů');
+      consent.setAttribute('aria-invalid', 'true');
+      if (!firstBad) firstBad = consent;
+    } else {
+      consent.setAttribute('aria-invalid', 'false');
+    }
+    if (!ok) {
+      // role="alert" na souhrnu zajistí, že se hláška přečte hned,
+      // i když fokus zrovna letí na první špatné pole
+      summary.textContent = 'Zkontrolujte prosím: ' + bads.join(', ') + '.';
+      summary.style.display = 'block';
+      if (firstBad) firstBad.focus();
+      return;
+    }
+    summary.style.display = 'none';
+    summary.textContent = '';
 
     sending = true;
     const btn = $('submitBtn'); btn.disabled = true; const label = btn.innerHTML; btn.textContent = 'Odesílám…';
@@ -716,12 +761,19 @@
     };
     if (platba === 'ok') {
       stateBox('info', 'Ověřujeme platbu…', '<p>Chviličku strpení, ptáme se platební brány na potvrzení.</p>', '');
-      let paid = await confirmPayment(q.get('session_id') || '');
+      const confirmed = await confirmPayment(q.get('session_id') || '');
+      let paid = confirmed.paid;
       if (!paid) paid = await paidInDb(lastId);
       if (!paid) { await new Promise((r) => setTimeout(r, 2500)); paid = await paidInDb(lastId); }
       if (paid) {
-        // Potvrzení s QR kódem odchází až teď — až když je zaplaceno.
-        if (pending) { sendConfirmation(pending.mail); ls.del('pendingBooking'); }
+        // E-mail posílá server (stripe-webhook / stripe-confirm) a má na to
+        // frontu s opakováním, takže se neztratí, ani když host tuhle stránku
+        // vůbec neotevře. Prohlížeč přiskočí jen tehdy, když server posílat
+        // neumí — dokud se nedoplní EMAILJS_PRIVATE_KEY.
+        if (pending) {
+          if (!confirmed.serverEmail) sendConfirmation(pending.mail);
+          ls.del('pendingBooking');
+        }
         stateBox('ok', 'Zaplaceno ✓',
           (pending ? '<p class="big">' + pending.summary + '</p>' : '') +
           '<p>Děkujeme, platba je potvrzená a místo je vaše. QR kód pro vstup máte v potvrzovacím e-mailu — ve studiu ho jen ukážete.</p>',
@@ -763,7 +815,7 @@
           ? ('Poslali jsme ' + (many ? 'je' : 'ho') + ' i na ' + esc(em) + '.')
           : ('Uložte si ' + (many ? 'je' : 'ho') + ' prosím (opište nebo udělejte screenshot).')) + '</p>',
         '<a class="btn btn-ghost" href="rezervace.html">Zpět na termíny</a>');
-      if (VOUCHER_EMAIL_OK && em) {
+      if (VOUCHER_EMAIL_OK && em && !(vb && vb.serverEmail)) {
         // Jeden e-mail na každý poukaz — každý je samostatný dárek, takže se
         // dá rovnou přeposlat obdarovanému. QR kóduje samotný kód poukazu,
         // čtečka v adminu ho pozná stejně jako vstupenku.
@@ -778,7 +830,10 @@
                 qr_url: 'https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data=' + encodeURIComponent(c)
               });
             } catch (e) { /* jeden neodeslaný e-mail nesmí shodit zbytek */ }
-            if (i < codes.length - 1) await new Promise((r) => setTimeout(r, 700)); // limity EmailJS
+            // EmailJS pouští 1 požadavek za vteřinu. Dřív tu bylo 700 ms,
+            // takže při nákupu víc poukazů část e-mailů limit odmítl —
+            // a chyba se spolkla o pár řádků níž.
+            if (i < codes.length - 1) await new Promise((r) => setTimeout(r, 1100));
           }
         })();
       }
