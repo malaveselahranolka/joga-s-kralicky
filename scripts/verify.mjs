@@ -76,7 +76,10 @@ const FAKTA = {delkaMin: 60, kapacita: 10, cenaKc: 499}
 const ZAKAZANE = [
   [/Sedmdesát pět minut/i, 'stará délka lekce (75 min)'],
   [/(?<!60 až )\b75 minut\b/, 'stará délka lekce (75 min)'],
-  [/maximálně dvanácti/i, 'stará kapacita (12 osob)'],
+  // Chytá VŠECHNY tvary, ne jen „maximálně dvanácti". Presne tenhle
+  // uzky vzor propasl popisek fotky u poukazu, kde stalo „Maximálně
+  // dvanáct lidí" — o dvanácti u nás nikdy nemluvíme legitimně.
+  [/dvanáct/i, 'stará kapacita (12 osob)'],
   [/max 12 míst/i, 'stará kapacita (12 míst)'],
   [/230\s*(\+|hodnocení|klidných)/i, 'nedoložená statistika (230 hostů/hodnocení)'],
 ]
