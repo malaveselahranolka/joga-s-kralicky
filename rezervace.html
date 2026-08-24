@@ -520,7 +520,7 @@
           '<div class="info"><img class="thumb" src="' + thumbFor(l.title) + '" alt="" loading="lazy" />' +
             '<div class="meta"><div class="lbl">Lekce</div><div class="val">' + esc(l.title) + '</div>' +
             '<div class="place"><div class="lbl">Místo</div><div class="val">' + PLACE + '</div></div></div></div>' +
-          '<div class="book"><div class="cap"><b>' + Math.max(l.remaining, 0) + '</b>/' + l.capacity + '</div>' +
+          '<div class="book"><div class="cap"><b>' + Math.min(l.capacity - l.remaining, l.capacity) + '</b>/' + l.capacity + '</div>' +
             (full ? '<button class="btn btn-ghost" disabled>Obsazeno</button>'
                   : '<button class="btn btn-primary" data-id="' + l.id + '">Rezervovat</button>') +
           '</div></div>';
