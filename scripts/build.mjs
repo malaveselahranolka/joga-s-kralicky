@@ -29,6 +29,7 @@ const files = [
   'zasady-osobnich-udaju.html',
   'payment-config.js',
   'supabase-config.js',
+  'google8760dad4313e888f.html',
 ]
 
 for (const file of files) {
