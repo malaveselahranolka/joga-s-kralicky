@@ -30,6 +30,7 @@ const files = [
   'payment-config.js',
   'supabase-config.js',
   'google8760dad4313e888f.html',
+  'llms.txt',
 ]
 
 for (const file of files) {

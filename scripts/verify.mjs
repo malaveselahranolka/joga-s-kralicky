@@ -89,7 +89,7 @@ const ZAKAZANE = [
   [/\bz\s+desítky\b/i, 'starý počet králíků (10)'],
 ]
 
-for (const page of [...PUBLIC_PAGES, 'scripts/seed-content.mjs']) {
+for (const page of [...PUBLIC_PAGES, 'scripts/seed-content.mjs', 'llms.txt']) {
   if (!existsSync(join(root, page))) continue
   const text = read(page)
   for (const [re, popis] of ZAKAZANE) {
