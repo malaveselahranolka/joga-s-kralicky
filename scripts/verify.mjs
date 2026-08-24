@@ -68,7 +68,7 @@ for (const page of ALL_PAGES) {
 //     ve strukturovaných datech, v CMS seedu i v generátoru rozvrhu.
 //     Stačí je změnit na jednom místě a web začne lhát.
 // ---------------------------------------------------------------------
-const FAKTA = {delkaMin: 60, kapacita: 10, cenaKc: 499}
+const FAKTA = {delkaMin: 60, kapacita: 10, cenaKc: 499, kraliku: 7}
 
 // Zakázané formulace = staré hodnoty, které se nesmí vrátit.
 // Články o štěňatech smí psát o obecném trhu ("60 až 75 minut"), proto
@@ -82,6 +82,11 @@ const ZAKAZANE = [
   [/dvanáct/i, 'stará kapacita (12 osob)'],
   [/max 12 míst/i, 'stará kapacita (12 míst)'],
   [/230\s*(\+|hodnocení|klidných)/i, 'nedoložená statistika (230 hostů/hodnocení)'],
+  // Kapacita je deset MÍST, králíků je ale sedm. Obě desítky se v textu
+  // potkávají, tak hlídáme jen tu, která patří ke králíkům — „deset lidí",
+  // „deset míst" i „o deset minut dřív" musí projít.
+  [/\b(deset|deseti|10)\s+králí/i, 'starý počet králíků (10)'],
+  [/\bz\s+desítky\b/i, 'starý počet králíků (10)'],
 ]
 
 for (const page of [...PUBLIC_PAGES, 'scripts/seed-content.mjs']) {

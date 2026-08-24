@@ -66,17 +66,17 @@ const keyed = (key, value) => ({_key: key, ...value})
 const document = {
   _id: 'siteContent',
   _type: 'siteContent',
-  pageTitle: 'Jóga s králíčky — jóga s deseti králíky, Ostrava',
-  pageDescription: 'Hodina jógy v Ostravě, při které vám mezi pozice hopsají domácí králíci. Bez výkonu, bez zrcadel — jen dech a deset chlupatých rozptýlení. Vstup 499 Kč, Fit&Fun Studio Ostrava.',
+  pageTitle: 'Jóga s králíčky — jóga se sedmi králíky, Ostrava',
+  pageDescription: 'Hodina jógy v Ostravě, při které vám mezi pozice hopsají domácí králíci. Bez výkonu, bez zrcadel — jen dech a sedm chlupatých rozptýlení. Vstup 499 Kč, Fit&Fun Studio Ostrava.',
   shareDescription: 'Hodina jógy, po které vám na klíně usne králík. Fit&Fun Studio Ostrava, vstup 499 Kč.',
   shareImage: image('assets/photos/yoga-1.webp'),
 
   navReservationLabel: 'Rezervovat',
   reservationLabel: 'Rezervovat lekci',
   heroLocation: 'Fit&Fun Studio Ostrava',
-  heroTitleStart: 'Míň jógy, víc králíků',
-  heroTitleEnd: 'a přesně proto to funguje',
-  heroSubtitle: 'Hodina jemné jógy, po které se po sále volně rozeběhne deset chlupatých učitelů zpomalení.',
+  heroTitleStart: 'Jóga s králíčky v Ostravě',
+  heroTitleEnd: 'míň jógy, víc králíčků',
+  heroSubtitle: 'Hodina jemné jógy, po které se po sále volně rozeběhne sedm chlupatých učitelů zpomalení.',
   heroImage: image('assets/photos/yoga-5.webp'),
   heroDeck: [
     image('assets/photos/rabbit-1.webp', 'hero-rabbit-1'),
@@ -161,7 +161,7 @@ const document = {
   ],
 
   galleryTitle: 'Lektoři, kteří nikdy nespěchají',
-  galleryLead: 'Každý z desítky má jméno, povahu i svůj oblíbený kout sálu. Čtyři z nich poznáte hned při první lekci.',
+  galleryLead: 'Každý ze sedmi má jméno, povahu i svůj oblíbený kout sálu. Čtyři z nich poznáte hned při první lekci.',
   galleryHint: 'Scrollujte, galerie jede do strany',
   galleryButtonLabel: 'Chci je poznat',
   galleryItems: [
@@ -190,9 +190,9 @@ const document = {
   ],
 
   communityEyebrow: 'Přidejte se',
-  communityTitle: 'Deset králíků čeká, až zpomalíte i vy',
+  communityTitle: 'Sedm králíků čeká, až zpomalíte i vy',
   communityBody: 'Vstup stojí 499 Kč a platí se online rovnou při rezervaci, takže máte místo jisté hned. Žádné čekání na potvrzení.',
-  communityNote: 'Deset králíčků · každý s vlastním jménem',
+  communityNote: 'Sedm králíčků · každý s vlastním jménem',
   communityNudge: 'Ještě otázky?',
   communityNudgeLink: 'Sjeďte o kousek níž',
   communityFaces: [

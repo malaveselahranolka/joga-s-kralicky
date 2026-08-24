@@ -57,17 +57,23 @@ async function zapis(mutations) {
 const CIL = {
   // Titulek a popisek stránky. V CMS zůstaly verze z doby před SEO úpravami
   // a v prohlížeči přepisovaly ty novější z HTML.
-  pageTitle: 'Jóga s králíčky Ostrava — jóga se zvířaty, 10 králíků na lekci',
-  pageDescription: 'Jóga se zvířaty v Ostravě — hodina jemné hathy, při které vám mezi pozice hopsá deset domácích králíků. Bez výkonu, bez zrcadel. Vstup 499 Kč, Fit&Fun Studio, Ostrava-Mariánské Hory. Rezervace online.',
+  pageTitle: 'Jóga s králíčky Ostrava — jóga se zvířaty, 7 králíků na lekci',
+  pageDescription: 'Jóga se zvířaty v Ostravě — hodina jemné hathy, při které vám mezi pozice hopsá sedm domácích králíků. Bez výkonu, bez zrcadel. Vstup 499 Kč, Fit&Fun Studio, Ostrava-Mariánské Hory. Rezervace online.',
 
-  heroSubtitle: 'Hodina jemné jógy, po které se po sále volně rozeběhne deset roztomilých králíčků.',
+  // H1 se dřív nehlídal vůbec, a právě proto se rozešel nejvíc: v CMS
+  // z něj byla obecná wellness věta bez jediného klíčového slova
+  // („Víc než jóga — hlubší uvolnění pro tělo i duši“).
+  heroTitleStart: 'Jóga s králíčky v Ostravě',
+  heroTitleEnd: 'míň jógy, víc králíčků',
+
+  heroSubtitle: 'Hodina jemné jógy, po které se po sále volně rozeběhne sedm roztomilých králíčků.',
   lessonsTitle: 'Dvě lekce. Obě končí králíčkem na podložce.',
   lessonsLead: 'Máme jednu lekci pro dospělé a jednu pro děti s rodičem. Vyberte si a rezervujte rovnou tady.',
   galleryTitle: 'Králíčci, kteří nikdy nespěchají',
 
   // Dřív „10 chlupatých lektorů · 230+ klidných hostů“. To číslo hostů je
   // stejně nepodložené jako hodnocení, která jsme kvůli tomu odstranili.
-  communityNote: 'Deset králíčků · každý s vlastním jménem',
+  communityNote: 'Sedm králíčků · každý s vlastním jménem',
 }
 
 // Položky polí se dohledávají podle pořadí, _key se zachovává.
