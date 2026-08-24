@@ -17,3 +17,8 @@ serve.mjs
 # nikdy necommitovat tajne klice
 token.txt
 *.token
+
+# docasne soubory z auditu (screenshoty prohlizece)
+*.png
+!assets/**/*.png
+.playwright-mcp/
