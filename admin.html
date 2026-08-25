@@ -462,6 +462,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script src="supabase-config.js?v=2"></script>
+<script src="datum.js?v=1"></script>
 <script>
 (function () {
   const CONFIGURED = /^https:\/\/.+\.supabase\.co/.test(window.SUPABASE_URL || '') &&
@@ -475,7 +476,9 @@
 
   // helpers ------------------------------------------------------------
   const cap = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
-  const fmtDT = (iso) => cap(new Date(iso).toLocaleString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' }));
+  // Pražský čas — admin může být otevřený odkudkoli, ale lekce se koná
+  // v Ostravě. Viz datum.js.
+  const fmtDT = (iso) => cap(CAS.denVTydnu(iso)) + ' ' + CAS.datum(iso) + ' ' + CAS.cas(iso);
   const esc = (s) => (s == null ? '' : String(s)).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2600); }
   // propadlé nezaplacené rezervace místo neblokují — stejně to počítá i web
@@ -588,18 +591,19 @@
 
   // lessons ------------------------------------------------------------
   const lessonWrap = $('lessonFormWrap');
-  $('newLessonBtn').addEventListener('click', () => { editingId = null; $('lessonFormTitle').textContent = 'Nová lekce'; $('lessonForm').reset(); $('lf-dur').value = 60; $('lf-cap').value = 12; lessonWrap.classList.add('open'); $('lf-title').focus(); });
+  $('newLessonBtn').addEventListener('click', () => { editingId = null; $('lessonFormTitle').textContent = 'Nová lekce'; $('lessonForm').reset(); $('lf-dur').value = 60; $('lf-cap').value = 10; lessonWrap.classList.add('open'); $('lf-title').focus(); });
   $('lessonCancel').addEventListener('click', () => lessonWrap.classList.remove('open'));
   $('lessonFilter').addEventListener('change', renderLessons);
 
   $('lessonForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const [y, m, d] = $('lf-date').value.split('-').map(Number);
-    const [hh, mm] = $('lf-time').value.split(':').map(Number);
-    const starts = new Date(y, m - 1, d, hh, mm);
-    if (isNaN(starts)) { toast('Doplňte datum a čas'); return; }
+    // Zadaný čas je PRAŽSKÝ, ne čas počítače majitelky. Dřív se bral
+    // new Date(y, m-1, d, hh, mm), takže zadání z notebooku v jiném
+    // pásmu založilo lekci na jiný okamžik, než co bylo ve formuláři.
+    const startsISO = CAS.zPrahyNaISO($('lf-date').value, $('lf-time').value);
+    if (!startsISO) { toast('Doplňte datum a čas'); return; }
     const payload = {
-      title: $('lf-title').value.trim(), starts_at: starts.toISOString(),
+      title: $('lf-title').value.trim(), starts_at: startsISO,
       duration_min: parseInt($('lf-dur').value, 10), capacity: parseInt($('lf-cap').value, 10),
       note: $('lf-note').value.trim() || null
     };
@@ -674,22 +678,43 @@
       editingId = id; $('lessonFormTitle').textContent = 'Upravit lekci';
       const dt = new Date(l.starts_at);
       $('lf-title').value = l.title;
-      $('lf-date').value = dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0');
-      $('lf-time').value = String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
+      $('lf-date').value = CAS.proInputDate(l.starts_at);
+      $('lf-time').value = CAS.proInputTime(l.starts_at);
       $('lf-dur').value = l.duration_min; $('lf-cap').value = l.capacity; $('lf-note').value = l.note || '';
       lessonWrap.classList.add('open'); lessonWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
     } else if (btn.dataset.cancel) {
-      const b = bookedFor(id);
-      if (!confirm('Zrušit lekci „' + l.title + '“ (' + fmtDT(l.starts_at) + ')?' + (b ? '\n\nMá ' + b + ' rezervovaných míst — nezapomeňte hosty informovat.' : ''))) return;
-      const { error } = await sb.from('lessons').update({ status: 'cancelled' }).eq('id', id);
-      if (error) { toast('Nepodařilo se zrušit'); return; }
-      toast('Lekce zrušena'); await loadAll();
+      // Zrušení jde přes RPC zrus_lekci, ne přes prostý update stavu:
+      // databáze u toho rovnou zařadí hostům omluvný e-mail do fronty.
+      // Dřív se jen vypsalo „nezapomeňte hosty informovat“ a dál nic —
+      // kdo zaplatil, mohl přijet do studia na zrušenou lekci.
+      const hostu = bookings.filter((x) => x.lesson_id === id && x.status !== 'cancelled').length;
+      const zaplacenych = bookings.filter((x) => x.lesson_id === id && x.status !== 'cancelled' && x.payment_status === 'paid').length;
+      if (!confirm('Zrušit lekci „' + l.title + '“ (' + fmtDT(l.starts_at) + ')?'
+        + (hostu ? '\n\nHostů s rezervací: ' + hostu + (zaplacenych ? ' (z toho ' + zaplacenych + ' zaplacených)' : '')
+                 + '\nVšem odejde e-mail, že se lekce nekoná.' : '')
+        + (zaplacenych ? '\n\nVrácení peněz e-mail neslibuje automaticky — píše, že se ozvete do dvou pracovních dnů.' : ''))) return;
+      const { data: vysl, error } = await sb.rpc('zrus_lekci', { p_lesson_id: id });
+      if (error || !vysl || !vysl.ok) { toast('Nepodařilo se zrušit'); return; }
+      toast(vysl.zarazeno ? ('Lekce zrušena, e-mailů odchází: ' + vysl.zarazeno) : 'Lekce zrušena');
+      await loadAll();
+      // Ať e-maily neleží ve frontě až do dalšího běhu cronu.
+      runDispatch(null);
     } else if (btn.dataset.reopen) {
       const { error } = await sb.from('lessons').update({ status: 'active' }).eq('id', id);
       if (error) { toast('Akce selhala'); return; }
       toast('Lekce obnovena'); await loadAll();
     } else if (btn.dataset.del) {
-      if (!confirm('Trvale smazat lekci „' + l.title + '“ i s jejími rezervacemi? Tuto akci nelze vrátit.')) return;
+      // Cizi klic je nove ON DELETE RESTRICT, takze lekci s rezervacemi
+      // databaze smazat nenecha. Driv byla CASCADE a s lekci mizely
+      // i zaplacene rezervace.
+      const maRez = bookings.some((x) => x.lesson_id === id);
+      if (maRez) {
+        alert('Na tuhle lekci jsou rezervace, takže ji nelze smazat.\n\n'
+            + 'Použijte „Zrušit lekci“ — hosté si pak na stavu rezervace přečtou, '
+            + 'že se nekoná, a zaplacené rezervace zůstanou v evidenci.');
+        return;
+      }
+      if (!confirm('Trvale smazat lekci „' + l.title + '“? Tuto akci nelze vrátit.')) return;
       const { error } = await sb.from('lessons').delete().eq('id', id);
       if (error) { toast('Mazání selhalo'); return; }
       toast('Lekce smazána'); await loadAll();
@@ -709,14 +734,19 @@
     { d: 6, t: '11:00', title: 'Hatha s králíčky', dur: 60, cap: 10 }
   ];
   $('genWeekBtn').addEventListener('click', async () => {
-    // následujících 7 dní počínaje zítřkem
+    // Následujících 7 dní počínaje zítřkem. Časy v rozvrhu výš jsou
+    // PRAŽSKÉ — dřív se skládaly přes dt.setHours(), tedy v pásmu počítače
+    // majitelky, takže vygenerovat týden z notebooku v jiném pásmu by
+    // založilo lekce o hodiny vedle.
     const rows = [];
     for (let i = 1; i <= 7; i++) {
-      const day = new Date(); day.setHours(0, 0, 0, 0); day.setDate(day.getDate() + i);
-      WEEKLY.filter((w) => w.d === day.getDay()).forEach((w) => {
-        const [hh, mm] = w.t.split(':').map(Number);
-        const dt = new Date(day); dt.setHours(hh, mm, 0, 0);
-        const iso = dt.toISOString();
+      const den = new Date(Date.now() + i * 86400000);
+      const denKlic = CAS.klicDne(den);                    // 'YYYY-MM-DD' v Praze
+      const dow = new Date(denKlic + 'T12:00:00Z').getUTCDay();  // poledne = bezpečně týž den
+      WEEKLY.filter((w) => w.d === dow).forEach((w) => {
+        const iso = CAS.zPrahyNaISO(denKlic, w.t);
+        if (!iso) return;
+        const dt = new Date(iso);
         const exists = lessons.some((l) => l.title === w.title && Math.abs(new Date(l.starts_at) - dt) < 60000);
         if (!exists) rows.push({ title: w.title, starts_at: iso, duration_min: w.dur, capacity: w.cap });
       });
@@ -1017,7 +1047,11 @@
           (cancelled
             ? '<button class="btn btn-ghost btn-sm" data-restore="' + b.id + '">Obnovit</button>'
             : payActionBtn(b) + '<button class="btn btn-danger btn-sm" data-cancelb="' + b.id + '">Zrušit</button>') +
-          '<button class="btn btn-danger btn-sm" data-delb="' + b.id + '">Smazat</button>' +
+          (payCat(b) === 'paid'
+            // Zaplacenou rezervaci nemazeme — je to ucetni doklad a penize
+            // ve Stripu po ni zustanou. Zruseni misto uvolni stejne.
+            ? '<span class="muted" style="font-size:.78rem">zaplacené nelze smazat</span>'
+            : '<button class="btn btn-danger btn-sm" data-delb="' + b.id + '">Smazat</button>') +
         '</div></div>';
     }).join('') : '<div class="empty">Pro tento výběr nejsou žádné rezervace.</div>';
   }
@@ -1047,7 +1081,13 @@
     } else if (btn.dataset.delb) {
       if (confirm('Trvale smazat tuto rezervaci?')) {
         const { error } = await sb.from('bookings').delete().eq('id', id);
-        if (error) toast('Mazání selhalo'); else { toast('Rezervace smazána'); await loadAll(); }
+        // Databaze ma zamek proti mazani zaplacenych (trigger
+        // zakaz_smazani_zaplacene). Kdyby sem stara zalozka poslala
+        // zaplacenou rezervaci, at majitelka vidi duvod, ne syrovou chybu.
+        if (error) toast(/restrict|zaplacena/i.test(error.message || '')
+          ? 'Zaplacenou rezervaci nelze smazat — zrušte ji místo toho'
+          : 'Mazání selhalo');
+        else { toast('Rezervace smazána'); await loadAll(); }
       }
     }
     return true;

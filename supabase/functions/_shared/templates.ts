@@ -184,11 +184,73 @@ export function voucherMail(p: Record<string, string>): MailOut {
   return { subject: `Dárkový poukaz ${p.code || ""}`.trim(), html, text };
 }
 
+// ---------------------------------------------------------------------
+//  ZRUŠENÍ LEKCE
+//  params: name, lesson, datetime, spots, price, zaplaceno ('1' | '')
+//
+//  Když majitelka zruší lekci, hosté se to dřív nedozvěděli vůbec —
+//  admin jen připomněl „nezapomeňte hosty informovat“. Host, který
+//  zaplatil, tak mohl klidně přijet do studia na lekci, co se nekoná.
+//
+//  Text schválně nic neslibuje o penězích automaticky: vratky se řeší
+//  ručně, takže e-mail říká, že se ozveme, a nabídne obě obvyklé cesty
+//  (náhradní termín / poukaz), jak je má i obchodní řád.
+// ---------------------------------------------------------------------
+export function cancelMail(p: Record<string, string>): MailOut {
+  const firstName = String(p.name || "").trim().split(/\s+/)[0] || "";
+  const zaplaceno = String(p.zaplaceno || "") === "1";
+
+  const html = shell(
+    `${p.lesson || "Lekce"} ${p.datetime || ""} se bohužel nekoná.`,
+    `<p style="margin:0 0 14px;">${firstName ? `Dobrý den, ${esc(firstName)},` : "Dobrý den,"}</p>
+     <p style="margin:0 0 22px;">moc nás to mrzí, ale <strong>tuhle lekci musíme zrušit</strong>. Nepřijíždějte prosím do studia.</p>
+     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-top:1px solid ${LINE};border-bottom:1px solid ${LINE};padding:4px 0;">
+       ${row("Zrušená lekce", p.lesson)}
+       ${row("Původní termín", p.datetime)}
+       ${row("Míst", p.spots)}
+     </table>
+     ${zaplaceno
+       ? `<p style="margin:22px 0 0;">Vstupné máte zaplacené${p.price ? ` (${esc(p.price)})` : ""}. Ozveme se vám do dvou pracovních dnů a domluvíme se — buď vás <strong>přesuneme na jiný termín</strong>, vystavíme <strong>dárkový poukaz v plné hodnotě</strong>, nebo vám peníze vrátíme zpět na kartu. Vyberete si vy.</p>`
+       : `<p style="margin:22px 0 0;">Rezervace nebyla zaplacená, takže se nic nestrhlo a nemusíte nic řešit.</p>`}
+     <p style="margin:20px 0 0;">Nejbližší volné termíny najdete na
+       <a href="https://www.jogaskralicky.cz/rezervace.html" style="color:${FOREST};font-weight:600;">jogaskralicky.cz/rezervace</a>.</p>
+     <p style="margin:24px 0 0;font-size:13px;color:${INK_SOFT};">Omlouváme se za komplikace. Kdyby cokoliv, stačí odepsat na tenhle e-mail.</p>`,
+  );
+
+  const text = [
+    firstName ? `Dobrý den, ${firstName},` : "Dobrý den,",
+    "",
+    "moc nás to mrzí, ale tuhle lekci musíme zrušit. Nepřijíždějte prosím do studia.",
+    "",
+    p.lesson ? `Zrušená lekce: ${p.lesson}` : null,
+    p.datetime ? `Původní termín: ${p.datetime}` : null,
+    p.spots ? `Míst: ${p.spots}` : null,
+    "",
+    zaplaceno
+      ? `Vstupné máte zaplacené${p.price ? ` (${p.price})` : ""}. Ozveme se do dvou pracovních dnů a domluvíme se — náhradní termín, dárkový poukaz v plné hodnotě, nebo vrácení peněz na kartu.`
+      : "Rezervace nebyla zaplacená, takže se nic nestrhlo a nemusíte nic řešit.",
+    "",
+    "Nejbližší volné termíny: https://www.jogaskralicky.cz/rezervace.html",
+    "",
+    "Omlouváme se za komplikace. Kdyby cokoliv, stačí odepsat na tenhle e-mail.",
+    "",
+    "Jóga s králíčky, Fit&Fun Studio, Tovární 486/7, Ostrava-Mariánské Hory",
+    "info@jogaskralicky.cz, +420 603 340 860",
+  ].filter((l) => l !== null).join("\n");
+
+  return {
+    subject: p.datetime ? `Zrušená lekce — ${p.datetime}` : "Zrušená lekce",
+    html,
+    text,
+  };
+}
+
 // Fronta nese u každého řádku `kind`, takže se podle něj vybírá šablona.
 // Neznámý druh raději shodí odeslání, než aby poslal prázdný e-mail —
 // řádek zůstane ve frontě a je vidět, že se s ním něco děje.
 export function renderMail(kind: string, params: Record<string, string>): MailOut | null {
   if (kind === "booking") return bookingMail(params);
   if (kind === "voucher") return voucherMail(params);
+  if (kind === "cancel") return cancelMail(params);
   return null;
 }

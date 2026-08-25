@@ -12,6 +12,20 @@
       }
     },
     {
+      "//": "joga-s-kralicky.vercel.app vracela 200 s hlavickou index,follow, tedy druha plne prochazitelna kopie tehoz webu. Kanonicky odkaz v HTML to tlumil, ale spolehlivejsi je pustit robota jen na jednu adresu. Podminka je schvalne na PRESNY host, ne na 'vsechno krome www': cil presmerovani ji nikdy nesplni, takze z tohohle pravidla nejde vyrobit smycku, a nahledove adresy z vetvi (joga-s-kralicky-<hash>-....vercel.app) se pod nej nevejdou a zustavaji pouzitelne. Apex jogaskralicky.cz uz na www presmerovava Vercel sam.",
+      "has": [
+        {
+          "type": "host",
+          "value": "joga-s-kralicky\\.vercel\\.app"
+        }
+      ],
+      "src": "/(.*)",
+      "status": 308,
+      "headers": {
+        "Location": "https://www.jogaskralicky.cz/$1"
+      }
+    },
+    {
       "src": "/(.*)",
       "continue": true,
       "headers": {

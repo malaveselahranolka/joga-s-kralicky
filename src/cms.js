@@ -96,18 +96,56 @@ function srcsetFor(url, widths) {
 
 // Kdyby přišel obrázek odjinud než ze Sanity, srcset se nenastaví a chová
 // se to přesně jako dřív — jen se nic nezmenší.
+//  VÝMĚNA AŽ PO DEKÓDOVÁNÍ
+//
+//  Dřív se `element.src` přepsalo rovnou. Prohlížeč tím dostal obrázek,
+//  který ještě nemá vykreslený, a na okamžik nechal na jeho místě prázdno.
+//  U hlavní fotky na domovské stránce to Chrome počítal jako posun
+//  rozvržení a vyrobilo to CLS 0,65 při limitu 0,10 — tedy propadlé
+//  Core Web Vitals na celém webu.
+//
+//  Naměřeno: /api/content dorazilo v 506 ms, fotka ze Sanity v 586 ms,
+//  posun nastal v 617 ms. Přímá souvislost.
+//
+//  Teď se nová fotka natáhne a dekóduje mimo stránku a do DOM se dosadí
+//  až hotová. Do té doby v layoutu zůstává ta z HTML, takže není co
+//  posunout. Když dekódování selže (starý prohlížeč, chyba sítě),
+//  dosadíme ji stejně — horší je žádná fotka než posun.
 function setImage(element, image, alt, path, opts = {}) {
   const url = image?.asset?.url
   if (!element || !url) return
   const widths = opts.widths || [400, 800, 1200]
-  element.src = sizedUrl(url, widths[widths.length - 1])
+  const src = sizedUrl(url, widths[widths.length - 1])
   const set = srcsetFor(url, widths)
-  if (set) {
-    element.srcset = set
-    element.sizes = opts.sizes || '100vw'
-  }
+  const sizes = opts.sizes || '100vw'
+
   if (alt != null) element.alt = clean(alt)
   annotate(element, path)
+
+  // Stejná fotka už tam je — nesahat na ni.
+  if (element.getAttribute('src') === src) return
+
+  const dosadit = () => {
+    element.src = src
+    if (set) {
+      element.srcset = set
+      element.sizes = sizes
+    }
+  }
+
+  const predloha = new Image()
+  if (set) {
+    predloha.srcset = set
+    predloha.sizes = sizes
+  }
+  predloha.src = src
+
+  if (typeof predloha.decode === 'function') {
+    predloha.decode().then(dosadit, dosadit)
+  } else {
+    predloha.onload = dosadit
+    predloha.onerror = dosadit
+  }
 }
 
 function itemPath(field, item, child) {

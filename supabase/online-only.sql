@@ -82,14 +82,33 @@ declare
   remaining int;
   new_id    uuid;
   hold_min  constant int := 35;   -- musí sedět s payment-config.js (holdMinutes)
+  max_spots constant int := 4;    -- musí sedět s payment-config.js (maxSpots)
   hold_till timestamptz;
+  v_name    text := btrim(coalesce(p_name, ''));
+  v_email   text := lower(btrim(coalesce(p_email, '')));
+  v_phone   text := nullif(btrim(coalesce(p_phone, '')), '');
 begin
-  -- na jedno jméno smí být víc lidí; strop drží i CHECK na tabulce (1–8)
-  if p_spots is null or p_spots < 1 or p_spots > 8 then
+  if p_spots is null or p_spots < 1 or p_spots > max_spots then
     return json_build_object('ok', false, 'error', 'invalid_spots');
   end if;
-  if coalesce(btrim(p_name), '') = '' or coalesce(btrim(p_email), '') = '' then
+
+  -- Dřív stačilo neprázdné pole. Teď musí jméno i e-mail dávat smysl,
+  -- ať se přes veřejné RPC nedá zakládat balast.
+  if char_length(v_name) < 2 or char_length(v_name) > 100 then
     return json_build_object('ok', false, 'error', 'missing_contact');
+  end if;
+  if char_length(v_email) > 200 or v_email !~ '^[^@[:space:]]+@[^@[:space:]]+.[a-z]{2,}$' then
+    return json_build_object('ok', false, 'error', 'missing_contact');
+  end if;
+  if v_phone is not null and char_length(v_phone) > 40 then
+    return json_build_object('ok', false, 'error', 'missing_contact');
+  end if;
+
+  -- Brzda proti smyčce (definice v supabase/provoz-a-brzdy.sql). Je až
+  -- za validací, ať se počítadlo nedá vytočit nesmyslnými vstupy,
+  -- a před zápisem, ať se nic nezaloží.
+  if public.rezervace_prilis_casto(v_email, p_lesson_id) then
+    return json_build_object('ok', false, 'error', 'too_many_requests');
   end if;
 
   select * into l from public.lessons where id = p_lesson_id for update;
@@ -110,7 +129,7 @@ begin
   hold_till := now() + make_interval(mins => hold_min);
 
   insert into public.bookings (lesson_id, name, email, phone, spots, status, payment_status, hold_expires_at)
-    values (p_lesson_id, btrim(p_name), btrim(p_email), nullif(btrim(p_phone), ''), p_spots,
+    values (p_lesson_id, v_name, v_email, v_phone, p_spots,
             'confirmed', 'pending', hold_till)
     returning id into new_id;
 

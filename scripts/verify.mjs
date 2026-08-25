@@ -225,6 +225,44 @@ for (const page of PUBLIC_PAGES) {
 }
 
 // ---------------------------------------------------------------------
+//  10) ČAS LEKCE SE NESMÍ BRÁT Z PÁSMA PROHLÍŽEČE
+//
+//  Lekce se koná v Ostravě, takže její čas je pražský bez ohledu na to,
+//  odkud se na web někdo dívá. Dřív se formátoval přes dt.getHours(),
+//  což vrací hodinu podle počítače návštěvníka — prohlížeč v pásmu
+//  Europe/London ukazoval „09:30" u lekce, která začíná v 10:30. Server
+//  přitom posílá v e-mailu tvrdě pražský čas, takže hostovi chodily dva
+//  různé časy pro tutéž rezervaci.
+//
+//  Převod žije jedině v datum.js (globální CAS). Tahle kontrola hlídá,
+//  aby se místní čas nevrátil zadními vrátky.
+//
+//  Výjimka: vstupenka.html zobrazuje lhůtu na zaplacení („držíme do…“),
+//  a ta je pro hosta záměrně v jeho vlastním čase. Je označená komentářem.
+// ---------------------------------------------------------------------
+const CAS_STRANKY = ['rezervace.html', 'vstupenka.html', 'admin.html']
+const CAS_ZAKAZANE = /\.(getHours|getMinutes|getDate|getMonth|getFullYear|getDay)\(\)|toDateString\(\)/
+
+for (const page of CAS_STRANKY) {
+  if (!existsSync(join(root, page))) continue
+  const html = read(page)
+  if (!/src="datum\.js/.test(html)) fail(page, 'nenačítá datum.js, ale pracuje s časem lekce')
+
+  html.split(/\r?\n/).forEach((radek, i) => {
+    if (!CAS_ZAKAZANE.test(radek)) return
+    if (/^\s*(\/\/|\*|<!--)/.test(radek)) return          // komentář
+    if (/ZÁMĚRNĚ v místním čase|holdTxt/.test(radek)) return
+    fail(page, `řádek ${i + 1}: čas z pásma prohlížeče — použij CAS z datum.js\n      ${radek.trim().slice(0, 96)}`)
+  })
+}
+
+// datum.js musí zůstat v seznamu souborů, které build kopíruje ven —
+// jinak by se stránky na produkci načetly bez něj a spadly na CAS undefined.
+if (!read('scripts/build.mjs').includes("'datum.js'")) {
+  fail('scripts/build.mjs', 'datum.js chybí v seznamu kopírovaných souborů')
+}
+
+// ---------------------------------------------------------------------
 //  VÝSLEDEK
 // ---------------------------------------------------------------------
 if (problems.length) {
