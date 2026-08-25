@@ -263,6 +263,53 @@ if (!read('scripts/build.mjs').includes("'datum.js'")) {
 }
 
 // ---------------------------------------------------------------------
+//  11) VERCEL.JSON MUSÍ PROJÍT JEJICH SCHÉMATEM
+//
+//  Vercel konfiguraci validuje přísně a neznámý klíč odmítne JEŠTĚ PŘED
+//  buildem — nasazení skončí chybou bez jediného řádku v logu, takže se
+//  špatně hledá. Přesně to se stalo, když sem někdo (já) přidal do routy
+//  klíč "//" jako komentář:
+//
+//      The `vercel.json` schema validation failed with the following
+//      message: `routes[1]` should NOT have additional property `//`
+//
+//  JSON komentáře nemá a Vercel je nesnese ani jako klíč. Vysvětlivky
+//  proto patří sem do skriptu nebo do commitu, ne do konfigurace.
+//
+//  Kontrolujeme jen `routes`, protože tam se sahá nejčastěji. Seznam je
+//  z dokumentace Vercelu k project configuration.
+// ---------------------------------------------------------------------
+const ROUTE_KLICE = new Set([
+  'src', 'dest', 'headers', 'methods', 'continue', 'caseSensitive',
+  'check', 'status', 'has', 'missing', 'locale', 'middlewarePath', 'handle',
+])
+
+try {
+  const vercel = JSON.parse(read('vercel.json'))
+  for (const [i, route] of (vercel.routes || []).entries()) {
+    for (const klic of Object.keys(route)) {
+      if (!ROUTE_KLICE.has(klic)) {
+        fail('vercel.json', `routes[${i}] má klíč "${klic}", který Vercel neuznává — nasazení spadne ještě před buildem`)
+      }
+    }
+  }
+  // Přesměrování na kanonickou doménu nesmí chytat samo sebe, jinak
+  // vznikne nekonečná smyčka a web přestane být dostupný.
+  for (const [i, route] of (vercel.routes || []).entries()) {
+    const cil = route.headers?.Location || ''
+    if (!cil.includes('www.jogaskralicky.cz')) continue
+    const hosty = (route.has || []).filter((h) => h.type === 'host')
+    if (!hosty.length) {
+      fail('vercel.json', `routes[${i}] přesměrovává na kanonickou doménu bez podmínky na host — hrozí smyčka`)
+    } else if (hosty.some((h) => new RegExp(h.value).test('www.jogaskralicky.cz'))) {
+      fail('vercel.json', `routes[${i}] přesměrovává na www.jogaskralicky.cz, ale jeho podmínka na host sedí i na www — smyčka`)
+    }
+  }
+} catch (e) {
+  fail('vercel.json', `nejde přečíst jako JSON — ${e.message}`)
+}
+
+// ---------------------------------------------------------------------
 //  VÝSLEDEK
 // ---------------------------------------------------------------------
 if (problems.length) {
