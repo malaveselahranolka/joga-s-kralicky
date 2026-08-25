@@ -133,19 +133,38 @@ function setImage(element, image, alt, path, opts = {}) {
     }
   }
 
+  // Čekáme na `onload`, ne na `decode()`.
+  //
+  // decode() vypadá jako správný nástroj, ale u obrázku, který není
+  // v dokumentu, a k tomu se `srcset`, se v prohlížečích na Chromiu
+  // nedočkáte — obrázek se stáhne (complete = true, naturalWidth sedí),
+  // jenže slib nikdy nedoběhne ani neselže. Ověřeno na živém webu:
+  // decode() vypršelo po 4 s, zatímco onload doběhl normálně.
+  //
+  // Stálo to za to zjistit: první verze téhle opravy na decode() čekala,
+  // takže se ŽÁDNÁ fotka z CMS nedosadila. CLS sice spadlo na nulu, ale
+  // jen proto, že se nic neměnilo.
+  //
+  // onload stačí: v tu chvíli je obrázek stažený a rozměry známé, takže
+  // dosazení do stránky vykreslí rovnou z cache, bez prázdného okamžiku.
+  let hotovo = false
+  const dosaditJednou = () => {
+    if (hotovo) return
+    hotovo = true
+    dosadit()
+  }
+
   const predloha = new Image()
   if (set) {
     predloha.srcset = set
     predloha.sizes = sizes
   }
+  predloha.onload = dosaditJednou
+  predloha.onerror = dosaditJednou
+  // Pojistka: kdyby se obrázek zasekl na síti, ať kvůli němu fotka z CMS
+  // nezůstane nedosazená navždy. Posun rozvržení je pak menší zlo.
+  setTimeout(dosaditJednou, 8000)
   predloha.src = src
-
-  if (typeof predloha.decode === 'function') {
-    predloha.decode().then(dosadit, dosadit)
-  } else {
-    predloha.onload = dosadit
-    predloha.onerror = dosadit
-  }
 }
 
 function itemPath(field, item, child) {
