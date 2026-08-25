@@ -17,22 +17,30 @@
 //
 //  ---------------------------------------------------------------------
 //  SECRETS
-//    EMAILJS_PRIVATE_KEY   ← JEDINÉ, co je opravdu tajné a musí se doplnit
-//                            (EmailJS → Account → Security → Private Key,
-//                             tamtéž zapnout API požadavky mimo prohlížeč)
 //
-//  Zbytek má výchozí hodnoty shodné se supabase-config.js, protože to jsou
-//  veřejné identifikátory — jsou stejně vidět v HTML. Přepsat je ale jde:
+//  Doporučená cesta — Resend (podoba e-mailů je v ./templates.ts):
+//    RESEND_API_KEY     re_… z resend.com, až bude doména ověřená
+//    EMAIL_FROM         výchozí „Jóga s králíčky <info@jogaskralicky.cz>"
+//    EMAIL_REPLY_TO     výchozí info@jogaskralicky.cz
+//
+//  Původní cesta — EmailJS (šablony žijí u nich ve webovém editoru):
+//    EMAILJS_PRIVATE_KEY   Account → Security → Private Key, tamtéž
+//                          zapnout API požadavky mimo prohlížeč
 //    EMAILJS_PUBLIC_KEY, EMAILJS_SERVICE_ID,
 //    EMAILJS_TEMPLATE_ID, EMAILJS_VOUCHER_TEMPLATE_ID
+//      — veřejné identifikátory, výchozí hodnoty sedí se supabase-config.js
 //
-//  BEZ PRIVÁTNÍHO KLÍČE SE NIC NEROZBIJE: fronta se plní dál, jen se z ní
-//  neodesílá, a v adminu je vidět proč. Prohlížeč posílá jako dosud.
+//  Je-li nastavený RESEND_API_KEY, vyhrává Resend. Jinak se posílá přes
+//  EmailJS. Není-li ani jedno, NIC SE NEROZBIJE: fronta se plní dál, jen
+//  se z ní neodesílá, a v adminu je vidět proč.
 // =====================================================================
+
+import { renderMail } from "./templates.ts";
 
 const env = (n: string, d = "") => Deno.env.get(n) ?? d;
 
 const EMAILJS_API = "https://api.emailjs.com/api/v1.0/email/send";
+const RESEND_API = "https://api.resend.com/emails";
 
 export const emailConfig = () => ({
   privateKey: env("EMAILJS_PRIVATE_KEY"),
@@ -42,7 +50,41 @@ export const emailConfig = () => ({
   voucherTemplate: env("EMAILJS_VOUCHER_TEMPLATE_ID", "template_0biilyq"),
 });
 
-export const emailReady = () => !!emailConfig().privateKey;
+// ---------------------------------------------------------------------
+//  KDO E-MAIL ODEŠLE
+//
+//  Dva dodavatelé, ne z rozmaru — je to přechodová cesta. EmailJS byl
+//  postavený na kontaktní formuláře v prohlížeči a na tenhle provoz už
+//  nestačí: free plán má 200 požadavků MĚSÍČNĚ na všechno dohromady
+//  (rezervace, každý poukaz zvlášť, každý odběratel newsletteru), a omezení
+//  odesílání na vlastní doménu je u něj placená funkce. Dokud tedy posílal
+//  prohlížeč, musel být jeho veřejný klíč v HTML a poslat si přes něj e-mail
+//  mohl kdokoli z libovolné domény.
+//
+//  Resend to řeší obojí: klíč je jen na serveru, limit je řádově jinde
+//  a e-mail se podepisuje DKIM na jogaskralicky.cz.
+//
+//  Přepínač je schválně podle přítomnosti klíče, ne podle nějakého
+//  EMAIL_PROVIDER=… . Nasazení téhle verze samo o sobě nic nemění: dokud
+//  RESEND_API_KEY není nastavený, posílá se dál přes EmailJS přesně jako
+//  dosud. Přepne se to doplněním jednoho secretu a stejně tak se to dá
+//  vrátit jeho smazáním.
+// ---------------------------------------------------------------------
+export const resendConfig = () => ({
+  apiKey: env("RESEND_API_KEY"),
+  // MUSÍ být adresa na ověřené doméně, jinak Resend odeslání odmítne.
+  from: env("EMAIL_FROM", "Jóga s králíčky <info@jogaskralicky.cz>"),
+  // Odpovědi hosta ať chodí do skutečné schránky u Seznamu, ne do prázdna.
+  replyTo: env("EMAIL_REPLY_TO", "info@jogaskralicky.cz"),
+});
+
+export const emailProvider = (): "resend" | "emailjs" | null => {
+  if (resendConfig().apiKey) return "resend";
+  if (emailConfig().privateKey) return "emailjs";
+  return null;
+};
+
+export const emailReady = () => emailProvider() !== null;
 
 // ---------------------------------------------------------------------
 //  ČESKÉ FORMÁTOVÁNÍ
@@ -172,31 +214,73 @@ export async function enqueue(admin: any, rows: any[]) {
 
 // ---------------------------------------------------------------------
 //  SAMOTNÉ ODESLÁNÍ
-//  EmailJS má limit 1 požadavek za sekundu. Držíme 1100 ms — prohlížeč
-//  měl 700 ms, což limit překračovalo, takže kdo koupil víc poukazů,
-//  o část kódů přišel a chyba se spolkla.
+//  Pauza mezi e-maily se řídí limitem dodavatele. EmailJS pouští jeden
+//  požadavek za sekundu (držíme 1100 ms — prohlížeč měl 700 ms, což limit
+//  překračoval, takže kdo koupil víc poukazů, o část kódů přišel a chyba
+//  se spolkla). Resend pouští dva za sekundu, takže stačí polovina.
 // ---------------------------------------------------------------------
-const RATE_MS = 1100;
+const rateMs = () => emailProvider() === "resend" ? 600 : 1100;
 
-async function sendOne(templateId: string, params: unknown): Promise<string | null> {
+type OutboxRow = {
+  kind: string;
+  to_email: string;
+  template_id: string;
+  params: Record<string, string>;
+};
+
+async function sendViaResend(row: OutboxRow): Promise<string | null> {
+  const c = resendConfig();
+  const mail = renderMail(row.kind, row.params || {});
+  // Neznámý druh e-mailu neumíme vykreslit. Vracíme chybu místo prázdné
+  // zprávy — řádek zůstane ve frontě a v adminu je vidět proč.
+  if (!mail) return `resend_unknown_kind: ${row.kind}`;
+
+  const res = await fetch(RESEND_API, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${c.apiKey}`,
+    },
+    body: JSON.stringify({
+      from: c.from,
+      to: [row.to_email],
+      reply_to: c.replyTo,
+      subject: mail.subject,
+      html: mail.html,
+      text: mail.text,
+    }),
+  });
+
+  if (res.ok) return null;
+  const detail = await res.text().catch(() => "");
+  return `resend_${res.status}: ${detail.slice(0, 200)}`;
+}
+
+async function sendViaEmailJs(row: OutboxRow): Promise<string | null> {
   const c = emailConfig();
-  if (!c.privateKey) return "emailjs_private_key_not_set";
-
   const res = await fetch(EMAILJS_API, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({
       service_id: c.serviceId,
-      template_id: templateId,
+      template_id: row.template_id,
       user_id: c.publicKey,
       accessToken: c.privateKey,   // bez něj EmailJS požadavek mimo prohlížeč odmítne
-      template_params: params,
+      template_params: row.params,
     }),
   });
 
   if (res.ok) return null;
   const detail = await res.text().catch(() => "");
   return `emailjs_${res.status}: ${detail.slice(0, 200)}`;
+}
+
+async function sendOne(row: OutboxRow): Promise<string | null> {
+  switch (emailProvider()) {
+    case "resend":  return await sendViaResend(row);
+    case "emailjs": return await sendViaEmailJs(row);
+    default:        return "email_provider_not_configured";
+  }
 }
 
 // ---------------------------------------------------------------------
@@ -210,7 +294,7 @@ export async function dispatch(admin: any, limit = 10) {
 
   if (!emailReady()) {
     // Fronta se plní dál, jen se z ní neodesílá. V adminu je vidět proč.
-    out.skipped = "emailjs_private_key_not_set";
+    out.skipped = "email_provider_not_configured";
     return out;
   }
 
@@ -228,7 +312,7 @@ export async function dispatch(admin: any, limit = 10) {
     const row = rows[i];
     let err: string | null;
     try {
-      err = await sendOne(row.template_id, row.params);
+      err = await sendOne(row);
     } catch (e) {
       err = "network: " + String(e).slice(0, 200);
     }
@@ -242,7 +326,7 @@ export async function dispatch(admin: any, limit = 10) {
       await admin.rpc("mark_email_sent", {p_id: row.id});
     }
 
-    if (i < rows.length - 1) await new Promise((r) => setTimeout(r, RATE_MS));
+    if (i < rows.length - 1) await new Promise((r) => setTimeout(r, rateMs()));
   }
 
   return out;

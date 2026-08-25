@@ -75,10 +75,10 @@ Deno.serve(async (req) => {
   if (!emailReady()) {
     return json({
       ok: false,
-      error: "emailjs_private_key_not_set",
-      hint: "Supabase → Edge Functions → Secrets: doplň EMAILJS_PRIVATE_KEY " +
-            "(EmailJS → Account → Security → Private Key; tamtéž povol API " +
-            "požadavky mimo prohlížeč).",
+      error: "email_provider_not_configured",
+      hint: "Supabase → Edge Functions → Secrets: doplň RESEND_API_KEY " +
+            "(resend.com, po ověření domény jogaskralicky.cz). Případně " +
+            "EMAILJS_PRIVATE_KEY, chceš-li zůstat u EmailJS.",
     }, 503);
   }
 

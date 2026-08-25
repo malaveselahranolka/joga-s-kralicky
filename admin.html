@@ -879,8 +879,8 @@
     }).join('') : '<div class="empty">Pro tento výběr tu nic není.</div>';
   }
 
-  // Vlastní rozeslání dělá Edge funkce email-dispatch — jen ona zná
-  // privátní klíč EmailJS. Prohlížeč jí jen řekne „projdi frontu".
+  // Vlastní rozeslání dělá Edge funkce email-dispatch — jen ona zná klíč
+  // k odesílací službě. Prohlížeč jí jen řekne „projdi frontu".
   async function runDispatch(btn) {
     const keep = btn ? btn.textContent : '';
     if (btn) { btn.disabled = true; btn.textContent = 'Odesílám…'; }
@@ -899,7 +899,7 @@
       const body = await r.json().catch(() => null);
       if (body && body.ok) {
         toast(body.sent ? ('Odesláno: ' + body.sent) : 'Nic k odeslání');
-      } else if (body && body.error === 'emailjs_private_key_not_set') {
+      } else if (body && (body.error === 'email_provider_not_configured' || body.error === 'emailjs_private_key_not_set')) {
         // Nejčastější stav hned po nasazení — ať je z hlášky poznat, co dělat.
         alert('Server zatím e-maily posílat neumí.\n\n' + (body.hint || ''));
       } else {
