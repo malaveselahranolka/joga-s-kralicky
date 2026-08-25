@@ -76,9 +76,8 @@ Deno.serve(async (req) => {
     return json({
       ok: false,
       error: "email_provider_not_configured",
-      hint: "Supabase → Edge Functions → Secrets: doplň RESEND_API_KEY " +
-            "(resend.com, po ověření domény jogaskralicky.cz). Případně " +
-            "EMAILJS_PRIVATE_KEY, chceš-li zůstat u EmailJS.",
+      hint: "Supabase → Edge Functions → Secrets: doplň BREVO_API_KEY " +
+            "(app.brevo.com → SMTP & API, po ověření domény jogaskralicky.cz).",
     }, 503);
   }
 
