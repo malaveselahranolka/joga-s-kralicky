@@ -101,6 +101,12 @@
   .is-void .dot { background: var(--ink-soft); color: #fff; }
 
   .acts { display: flex; gap: .7rem; justify-content: center; flex-wrap: wrap; margin-top: 1.6rem; }
+  .storno { margin-top: 2.6rem; padding-top: 1.6rem; border-top: 1px solid var(--line); text-align: center; }
+  .storno h2 { font-size: 1.05rem; margin-bottom: .5rem; }
+  .storno p { font-size: .95rem; color: var(--ink-soft); }
+  .storno p + p { margin-top: .7rem; }
+  .storno a { color: var(--clover-text); font-weight: 600; }
+  .storno .storno-pravidla { font-size: .86rem; line-height: 1.6; max-width: 46ch; margin-inline: auto; }
   .msg { max-width: 480px; margin: 0 auto; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-xl); box-shadow: var(--sh-1); padding: 2rem; text-align: center; }
   .msg h2 { font-size: 1.4rem; margin-bottom: .6rem; }
   .msg p { color: var(--ink-soft); }
@@ -142,6 +148,24 @@
     <div id="out"></div>
 
     <div class="acts" id="acts"></div>
+
+    <!-- Host, který potřebuje termín zrušit nebo přesunout, tu dřív nenašel
+         nic — obchodní podmínky ho posílají na e-mail, ale stránka o tom
+         mlčela a kontakt nenabízela. Kdo neví, co dělat, většinou nedělá
+         nic a prostě nedorazí; místo pak propadne oběma stranám. -->
+    <section class="storno">
+      <h2>Potřebujete termín změnit?</h2>
+      <p>
+        Napište nám na <a href="mailto:info@jogaskralicky.cz?subject=Zm%C4%9Bna%20rezervace">info@jogaskralicky.cz</a>
+        nebo zavolejte na <a href="tel:+420603340860">+420&nbsp;603&nbsp;340&nbsp;860</a>.
+      </p>
+      <p class="storno-pravidla">
+        Dáte-li nám vědět <strong>víc než 24 hodin předem</strong>, přesuneme vás zdarma na jiný termín
+        nebo vystavíme poukaz v plné hodnotě. Později už místo zpravidla nestihneme obsadit a vstupné
+        propadá — ale ozvěte se, zkusíme najít řešení. Podrobně v
+        <a href="obchodni-podminky.html">obchodních podmínkách</a>.
+      </p>
+    </section>
   </div>
 </main>
 

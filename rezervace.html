@@ -148,7 +148,10 @@
   .rowline { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin: 1.6rem 0; padding: 1.3rem 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
   .rowline .lbl { font-size: .82rem; font-weight: 700; color: var(--ink-soft); }
   .stepper { display: inline-flex; align-items: center; gap: .4rem; border: 1px solid var(--line); border-radius: 999px; padding: .25rem; background: var(--surface); }
-  .stepper button { width: 2.2rem; height: 2.2rem; border-radius: 50%; border: 0; background: var(--forest); color: var(--cream); font-size: 1.3rem; line-height: 1; cursor: pointer; display: grid; place-items: center; transition: background-color .3s var(--ease), transform .2s var(--ease); }
+  /* 2.75rem = 44 px, což je nejmenší dotykový cíl, který Google i WCAG
+     považují za pohodlný. Dřív tu bylo 2.2rem (35 px) a na mobilu se do
+     plusu a minusu trefoval člověk s většími prsty jen ob jednou. */
+  .stepper button { width: 2.75rem; height: 2.75rem; border-radius: 50%; border: 0; background: var(--forest); color: var(--cream); font-size: 1.3rem; line-height: 1; cursor: pointer; display: grid; place-items: center; transition: background-color .3s var(--ease), transform .2s var(--ease); }
   .stepper button:hover:not(:disabled) { background: var(--forest-deep); }
   .stepper button:active:not(:disabled) { transform: scale(.92); }
   .stepper button:disabled { opacity: .3; cursor: not-allowed; }
@@ -234,7 +237,12 @@
         <h1>Aktuální termíny</h1>
         <p>Vyberte si termín a rezervujte místo. Vstup se platí online hned při rezervaci — kapacita je malá, tak se vyplatí být rychlí.</p>
       </div>
-      <div id="dayList"></div>
+      <!-- Termíny sem při buildu dosadí scripts/build.mjs (značka níž).
+           Bez toho by v HTML nebylo ani jedno datum a vyhledávače ani AI
+           asistenti by nevěděli, kdy se cvičí — kalendář se totiž dotahuje
+           ze Supabase až v prohlížeči. Klientský JS tenhle obsah po načtení
+           přepíše živými daty, takže návštěvník vidí aktuální obsazenost. -->
+      <div id="dayList"><!--TERMINY--></div>
 
       <div id="voucherCard" class="voucher-card hidden">
         <div class="vc-info">
@@ -624,6 +632,7 @@
       restore();
       const code = data && data.error;
       if (code === 'full') { alert('Mezitím se místa zaplnila. Vyberte prosím jiný termín nebo méně míst.'); await load(); showStep('pick'); }
+      else if (code === 'too_many_requests') alert('Založili jste hodně rezervací za sebou. Počkejte prosím pár minut, nebo nám napište na info@jogaskralicky.cz.');
       else if (code === 'unavailable') { alert('Tento termín už není dostupný. Načítám aktuální nabídku…'); await load(); showStep('pick'); }
       else alert('Rezervaci se nepodařilo uložit. Zkuste to prosím znovu, nebo nám napište na info@jogaskralicky.cz.');
       return;

@@ -683,17 +683,38 @@
       $('lf-dur').value = l.duration_min; $('lf-cap').value = l.capacity; $('lf-note').value = l.note || '';
       lessonWrap.classList.add('open'); lessonWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
     } else if (btn.dataset.cancel) {
-      const b = bookedFor(id);
-      if (!confirm('Zrušit lekci „' + l.title + '“ (' + fmtDT(l.starts_at) + ')?' + (b ? '\n\nMá ' + b + ' rezervovaných míst — nezapomeňte hosty informovat.' : ''))) return;
-      const { error } = await sb.from('lessons').update({ status: 'cancelled' }).eq('id', id);
-      if (error) { toast('Nepodařilo se zrušit'); return; }
-      toast('Lekce zrušena'); await loadAll();
+      // Zrušení jde přes RPC zrus_lekci, ne přes prostý update stavu:
+      // databáze u toho rovnou zařadí hostům omluvný e-mail do fronty.
+      // Dřív se jen vypsalo „nezapomeňte hosty informovat“ a dál nic —
+      // kdo zaplatil, mohl přijet do studia na zrušenou lekci.
+      const hostu = bookings.filter((x) => x.lesson_id === id && x.status !== 'cancelled').length;
+      const zaplacenych = bookings.filter((x) => x.lesson_id === id && x.status !== 'cancelled' && x.payment_status === 'paid').length;
+      if (!confirm('Zrušit lekci „' + l.title + '“ (' + fmtDT(l.starts_at) + ')?'
+        + (hostu ? '\n\nHostů s rezervací: ' + hostu + (zaplacenych ? ' (z toho ' + zaplacenych + ' zaplacených)' : '')
+                 + '\nVšem odejde e-mail, že se lekce nekoná.' : '')
+        + (zaplacenych ? '\n\nVrácení peněz e-mail neslibuje automaticky — píše, že se ozvete do dvou pracovních dnů.' : ''))) return;
+      const { data: vysl, error } = await sb.rpc('zrus_lekci', { p_lesson_id: id });
+      if (error || !vysl || !vysl.ok) { toast('Nepodařilo se zrušit'); return; }
+      toast(vysl.zarazeno ? ('Lekce zrušena, e-mailů odchází: ' + vysl.zarazeno) : 'Lekce zrušena');
+      await loadAll();
+      // Ať e-maily neleží ve frontě až do dalšího běhu cronu.
+      runDispatch(null);
     } else if (btn.dataset.reopen) {
       const { error } = await sb.from('lessons').update({ status: 'active' }).eq('id', id);
       if (error) { toast('Akce selhala'); return; }
       toast('Lekce obnovena'); await loadAll();
     } else if (btn.dataset.del) {
-      if (!confirm('Trvale smazat lekci „' + l.title + '“ i s jejími rezervacemi? Tuto akci nelze vrátit.')) return;
+      // Cizi klic je nove ON DELETE RESTRICT, takze lekci s rezervacemi
+      // databaze smazat nenecha. Driv byla CASCADE a s lekci mizely
+      // i zaplacene rezervace.
+      const maRez = bookings.some((x) => x.lesson_id === id);
+      if (maRez) {
+        alert('Na tuhle lekci jsou rezervace, takže ji nelze smazat.\n\n'
+            + 'Použijte „Zrušit lekci“ — hosté si pak na stavu rezervace přečtou, '
+            + 'že se nekoná, a zaplacené rezervace zůstanou v evidenci.');
+        return;
+      }
+      if (!confirm('Trvale smazat lekci „' + l.title + '“? Tuto akci nelze vrátit.')) return;
       const { error } = await sb.from('lessons').delete().eq('id', id);
       if (error) { toast('Mazání selhalo'); return; }
       toast('Lekce smazána'); await loadAll();
@@ -1026,7 +1047,11 @@
           (cancelled
             ? '<button class="btn btn-ghost btn-sm" data-restore="' + b.id + '">Obnovit</button>'
             : payActionBtn(b) + '<button class="btn btn-danger btn-sm" data-cancelb="' + b.id + '">Zrušit</button>') +
-          '<button class="btn btn-danger btn-sm" data-delb="' + b.id + '">Smazat</button>' +
+          (payCat(b) === 'paid'
+            // Zaplacenou rezervaci nemazeme — je to ucetni doklad a penize
+            // ve Stripu po ni zustanou. Zruseni misto uvolni stejne.
+            ? '<span class="muted" style="font-size:.78rem">zaplacené nelze smazat</span>'
+            : '<button class="btn btn-danger btn-sm" data-delb="' + b.id + '">Smazat</button>') +
         '</div></div>';
     }).join('') : '<div class="empty">Pro tento výběr nejsou žádné rezervace.</div>';
   }
@@ -1056,7 +1081,13 @@
     } else if (btn.dataset.delb) {
       if (confirm('Trvale smazat tuto rezervaci?')) {
         const { error } = await sb.from('bookings').delete().eq('id', id);
-        if (error) toast('Mazání selhalo'); else { toast('Rezervace smazána'); await loadAll(); }
+        // Databaze ma zamek proti mazani zaplacenych (trigger
+        // zakaz_smazani_zaplacene). Kdyby sem stara zalozka poslala
+        // zaplacenou rezervaci, at majitelka vidi duvod, ne syrovou chybu.
+        if (error) toast(/restrict|zaplacena/i.test(error.message || '')
+          ? 'Zaplacenou rezervaci nelze smazat — zrušte ji místo toho'
+          : 'Mazání selhalo');
+        else { toast('Rezervace smazána'); await loadAll(); }
       }
     }
     return true;

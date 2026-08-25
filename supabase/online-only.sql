@@ -104,6 +104,13 @@ begin
     return json_build_object('ok', false, 'error', 'missing_contact');
   end if;
 
+  -- Brzda proti smyčce (definice v supabase/provoz-a-brzdy.sql). Je až
+  -- za validací, ať se počítadlo nedá vytočit nesmyslnými vstupy,
+  -- a před zápisem, ať se nic nezaloží.
+  if public.rezervace_prilis_casto(v_email, p_lesson_id) then
+    return json_build_object('ok', false, 'error', 'too_many_requests');
+  end if;
+
   select * into l from public.lessons where id = p_lesson_id for update;
   if not found or l.status <> 'active' or l.starts_at <= now() then
     return json_build_object('ok', false, 'error', 'unavailable');
