@@ -44,20 +44,41 @@ create policy booking_sources_owner_all on public.booking_sources
   using (public.is_owner())
   with check (public.is_owner());
 
--- Návštěvník smí jen vložit řádek k rezervaci, která existuje a vznikla
--- v posledních 15 minutách — tedy k té své. Nic nečte a nic nemění.
+-- Návštěvník smí vložit řádek jen k rezervaci, která vznikla v posledních
+-- 15 minutách — tedy k té své. Nic nečte a nic nemění.
+--
+-- POZOR na to, jak se ta podmínka ptá. Dřív tu stálo přímo
+--     exists (select 1 from public.bookings b where b.id = ... and ...)
+-- což nefunguje: podmínky v RLS se vyhodnocují právy VOLAJÍCÍHO a na
+-- public.bookings je RLS puštěná jen pro majitelku. Anonymní návštěvník
+-- tam neviděl ani vlastní čerstvou rezervaci, dotaz vrátil prázdno a zápis
+-- se odmítl. Chyba se schovávala v tom, že web zápis dělá mimo hlavní tok
+-- a výsledek zahazuje, takže se navenek nijak neprojevila.
+--
+-- Odpověď musí dát funkce, která se přes RLS podívat smí. Vrací jen ano/ne
+-- k předloženému UUID; kdo ho nemá, nedozví se nic, a UUID je náhodné.
+create or replace function public.booking_je_cerstva(p_id uuid)
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.bookings b
+    where b.id = p_id
+      and b.created_at > now() - interval '15 minutes'
+  )
+$$;
+
+revoke execute on function public.booking_je_cerstva(uuid) from public;
+grant execute on function public.booking_je_cerstva(uuid) to anon, authenticated;
+
 drop policy if exists booking_sources_anon_insert on public.booking_sources;
 create policy booking_sources_anon_insert on public.booking_sources
   for insert
   to anon, authenticated
-  with check (
-    exists (
-      select 1
-      from public.bookings b
-      where b.id = booking_sources.booking_id
-        and b.created_at > now() - interval '15 minutes'
-    )
-  );
+  with check (public.booking_je_cerstva(booking_sources.booking_id));
 
 -- Zápis ano, čtení ne. Kdo nemá SELECT, nevytáhne si seznam booking_id.
 grant insert on public.booking_sources to anon, authenticated;
