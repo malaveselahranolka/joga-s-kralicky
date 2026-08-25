@@ -29,6 +29,7 @@ const files = [
   'zasady-osobnich-udaju.html',
   'payment-config.js',
   'supabase-config.js',
+  'datum.js',
   'google8760dad4313e888f.html',
   'llms.txt',
 ]

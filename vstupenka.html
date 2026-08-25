@@ -148,6 +148,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js?v=2"></script>
 <script src="payment-config.js?v=4"></script>
+<script src="datum.js?v=1"></script>
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
@@ -158,9 +159,10 @@
   const esc = (s) => (s == null ? '' : String(s)).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const two = (n) => String(n).padStart(2, '0');
   const cap = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
-  const fmtTime = (d) => two(d.getHours()) + ':' + two(d.getMinutes());
-  const fmtDate = (d) => two(d.getDate()) + '. ' + two(d.getMonth() + 1) + '. ' + d.getFullYear();
-  const fmtDow = (d) => d.toLocaleDateString('cs-CZ', { weekday: 'long' });
+  // Pražský čas, ne pásmo prohlížeče — viz datum.js.
+  const fmtTime = (d) => CAS.cas(d);
+  const fmtDate = (d) => CAS.datum(d);
+  const fmtDow = (d) => CAS.denVTydnu(d);
   const spotsTxt = (n) => n + (n === 1 ? ' místo' : (n < 5 ? ' místa' : ' míst'));
 
   const id = (location.hash || '').replace(/^#/, '').trim();
@@ -242,9 +244,12 @@
     }
     return { cls: 'is-open', icon: info, lbl: 'Nezaplaceno', note: 'Vstup se platí online, na místě se neplatí.' };
   }
+  // ZÁMĚRNĚ v místním čase prohlížeče, na rozdíl od času lekce výš.
+  // Tohle je lhůta pro hosta („do kdy musím zaplatit"), ne čas konání —
+  // hostovi v jiném pásmu má ukázat jeho hodiny, ne pražské.
   const holdTxt = (t) => {
     const d = new Date(t.hold_expires_at);
-    return two(d.getHours()) + ':' + two(d.getMinutes());
+    return two(d.getHours()) + ':' + two(d.getMinutes());   // ZÁMĚRNĚ v místním čase
   };
 
   function render(t) {

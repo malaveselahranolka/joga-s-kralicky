@@ -334,6 +334,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="supabase-config.js?v=2"></script>
 <script src="payment-config.js?v=4"></script>
+<script src="datum.js?v=1"></script>
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
@@ -432,9 +433,12 @@
   const cap = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
   const esc = (s) => (s == null ? '' : String(s)).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const two = (n) => String(n).padStart(2, '0');
-  const fmtTime = (dt) => two(dt.getHours()) + ':' + two(dt.getMinutes());
-  const fmtDate = (dt) => two(dt.getDate()) + '. ' + two(dt.getMonth() + 1) + '. ' + dt.getFullYear();
-  const fmtDow = (dt) => dt.toLocaleDateString('cs-CZ', { weekday: 'long' });
+  // Čas lekce je VŽDYCKY pražský — viz datum.js. Dřív se tu bralo
+  // dt.getHours(), tedy pásmo počítače hosta, takže návštěvník odjinud
+  // viděl jinou hodinu, než jakou mu pak přišla v potvrzovacím e-mailu.
+  const fmtTime = (dt) => CAS.cas(dt);
+  const fmtDate = (dt) => CAS.datum(dt);
+  const fmtDow = (dt) => CAS.denVTydnu(dt);
   const spotsTxt = (n) => n + (n === 1 ? ' místo' : (n < 5 ? ' místa' : ' míst'));
 
   // Úložiště prohlížeče umí vyhodit chybu (přísné nastavení cookies,
@@ -504,7 +508,7 @@
   function renderDays() {
     const groups = new Map();
     lessons.forEach((l) => {
-      const key = l.dt.toDateString();
+      const key = CAS.klicDne(l.dt);   // pražský den, ne den podle prohlížeče
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key).push(l);
     });
