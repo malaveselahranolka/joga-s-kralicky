@@ -1,10 +1,10 @@
 // =====================================================================
 //  Odesílání e-mailů ze serveru — sdílené pro stripe-webhook a email-dispatch
 //
-//  POŘÁD JE TO EMAILJS a pořád tytéž šablony jako dřív. Změnilo se JEN to,
-//  odkud se odeslání spouští.
+//  Odesílá se přes Resend, nebo — dokud není jeho klíč nastavený — přes
+//  původní EmailJS. Vybírá se to podle přítomnosti klíče, viz níž.
 //
-//  Dřív ho spouštěl prohlížeč na návratové stránce po platbě. To znamená,
+//  Dřív odeslání spouštěl prohlížeč na návratové stránce po platbě. To znamená,
 //  že e-mail vznikl jedině tehdy, když se zákazník po platbě opravdu vrátil
 //  na náš web, ve stejném prohlížeči, a stránka doběhla. Zavřel záložku?
 //  Zaplatil na mobilu a potvrzení otevřel na notebooku? EmailJS na vteřinu
@@ -17,22 +17,34 @@
 //
 //  ---------------------------------------------------------------------
 //  SECRETS
-//    EMAILJS_PRIVATE_KEY   ← JEDINÉ, co je opravdu tajné a musí se doplnit
-//                            (EmailJS → Account → Security → Private Key,
-//                             tamtéž zapnout API požadavky mimo prohlížeč)
 //
-//  Zbytek má výchozí hodnoty shodné se supabase-config.js, protože to jsou
-//  veřejné identifikátory — jsou stejně vidět v HTML. Přepsat je ale jde:
+//  Současná cesta — Brevo (podoba e-mailů je v ./templates.ts):
+//    BREVO_API_KEY      xkeysib-… z app.brevo.com → SMTP & API → API Keys
+//    EMAIL_FROM         výchozí „Jóga s králíčky <info@jogaskralicky.cz>"
+//    EMAIL_REPLY_TO     výchozí info@jogaskralicky.cz
+//
+//  Připravená náhrada — Resend (stejné šablony, jiné API):
+//    RESEND_API_KEY     re_… — POUŽITELNÉ AŽ PO PŘESUNU DNS, viz níž
+//
+//  Původní cesta — EmailJS (šablony žijí u nich ve webovém editoru):
+//    EMAILJS_PRIVATE_KEY   Account → Security → Private Key, tamtéž
+//                          zapnout API požadavky mimo prohlížeč
 //    EMAILJS_PUBLIC_KEY, EMAILJS_SERVICE_ID,
 //    EMAILJS_TEMPLATE_ID, EMAILJS_VOUCHER_TEMPLATE_ID
+//      — veřejné identifikátory, výchozí hodnoty sedí se supabase-config.js
 //
-//  BEZ PRIVÁTNÍHO KLÍČE SE NIC NEROZBIJE: fronta se plní dál, jen se z ní
-//  neodesílá, a v adminu je vidět proč. Prohlížeč posílá jako dosud.
+//  Pořadí preference: Brevo → Resend → EmailJS, podle toho, který klíč
+//  existuje. Není-li žádný, NIC SE NEROZBIJE: fronta se plní dál, jen se
+//  z ní neodesílá, a v adminu je vidět proč.
 // =====================================================================
+
+import { renderMail } from "./templates.ts";
 
 const env = (n: string, d = "") => Deno.env.get(n) ?? d;
 
 const EMAILJS_API = "https://api.emailjs.com/api/v1.0/email/send";
+const RESEND_API = "https://api.resend.com/emails";
+const BREVO_API = "https://api.brevo.com/v3/smtp/email";
 
 export const emailConfig = () => ({
   privateKey: env("EMAILJS_PRIVATE_KEY"),
@@ -42,7 +54,60 @@ export const emailConfig = () => ({
   voucherTemplate: env("EMAILJS_VOUCHER_TEMPLATE_ID", "template_0biilyq"),
 });
 
-export const emailReady = () => !!emailConfig().privateKey;
+// ---------------------------------------------------------------------
+//  KDO E-MAIL ODEŠLE
+//
+//  Tři možnosti, ne z rozmaru — je to přechodová cesta a zároveň pojistka.
+//
+//  EMAILJS byl postavený na kontaktní formuláře v prohlížeči a na tenhle
+//  provoz už nestačí: free plán má 200 požadavků MĚSÍČNĚ na všechno
+//  dohromady (rezervace, každý poukaz zvlášť, každý odběratel newsletteru),
+//  a omezení odesílání na vlastní doménu je u něj placená funkce. Dokud
+//  tedy posílal prohlížeč, musel být jeho veřejný klíč v HTML a poslat si
+//  přes něj e-mail mohl kdokoli z libovolné domény.
+//
+//  BREVO je současná cesta. Ověření domény mu stačí přes TXT záznamy
+//  (Brevo code + DKIM + DMARC) — a to je jediné, co jde přidat v DNS
+//  panelu u emailprofi, kde doména bydlí.
+//
+//  RESEND je hotový a odzkoušený, ale nepoužitelný: kromě TXT vyžaduje
+//  i MX záznam na subdoméně `send`, a ten si v tom panelu přidat nejde
+//  (typ MX tam v nabídce není a stávající MX jsou zamčené). Doména u něj
+//  proto zůstala ve stavu `pending`. Nechávám ho tu pro případ, že se DNS
+//  jednou přestěhuje jinam — pak stačí prohodit secret.
+//
+//  Přepínač je schválně podle přítomnosti klíče, ne podle nějakého
+//  EMAIL_PROVIDER=… . Pořadí níž je zároveň pořadím preference.
+// ---------------------------------------------------------------------
+
+// Odesílatel je společný všem dodavatelům. Drží se v jednom tvaru
+// „Jméno <adresa>"; Brevo ho potřebuje rozložený, tak se níž rozebere.
+export const senderConfig = () => ({
+  // MUSÍ být adresa na ověřené doméně, jinak dodavatel odeslání odmítne.
+  from: env("EMAIL_FROM", "Jóga s králíčky <info@jogaskralicky.cz>"),
+  // Odpovědi hosta ať chodí do skutečné schránky u Seznamu, ne do prázdna.
+  replyTo: env("EMAIL_REPLY_TO", "info@jogaskralicky.cz"),
+});
+
+// „Jóga s králíčky <info@jogaskralicky.cz>" → {name, email}
+// Bez jména vrátí prázdný name a celý řetězec jako adresu.
+export function parseFrom(s: string): {name: string; email: string} {
+  const m = /^\s*(.*?)\s*<\s*([^>]+)\s*>\s*$/.exec(s);
+  if (m) return {name: m[1].replace(/^"|"$/g, ""), email: m[2]};
+  return {name: "", email: s.trim()};
+}
+
+export const brevoConfig = () => ({ apiKey: env("BREVO_API_KEY") });
+export const resendConfig = () => ({ apiKey: env("RESEND_API_KEY") });
+
+export const emailProvider = (): "brevo" | "resend" | "emailjs" | null => {
+  if (brevoConfig().apiKey) return "brevo";
+  if (resendConfig().apiKey) return "resend";
+  if (emailConfig().privateKey) return "emailjs";
+  return null;
+};
+
+export const emailReady = () => emailProvider() !== null;
 
 // ---------------------------------------------------------------------
 //  ČESKÉ FORMÁTOVÁNÍ
@@ -172,31 +237,111 @@ export async function enqueue(admin: any, rows: any[]) {
 
 // ---------------------------------------------------------------------
 //  SAMOTNÉ ODESLÁNÍ
-//  EmailJS má limit 1 požadavek za sekundu. Držíme 1100 ms — prohlížeč
-//  měl 700 ms, což limit překračovalo, takže kdo koupil víc poukazů,
-//  o část kódů přišel a chyba se spolkla.
+//  Pauza mezi e-maily se řídí limitem dodavatele. EmailJS pouští jeden
+//  požadavek za sekundu (držíme 1100 ms — prohlížeč měl 700 ms, což limit
+//  překračoval, takže kdo koupil víc poukazů, o část kódů přišel a chyba
+//  se spolkla). Resend pouští dva za sekundu, takže stačí polovina.
 // ---------------------------------------------------------------------
-const RATE_MS = 1100;
+const rateMs = () => {
+  switch (emailProvider()) {
+    case "brevo":  return 350;
+    case "resend": return 600;
+    default:       return 1100;
+  }
+};
 
-async function sendOne(templateId: string, params: unknown): Promise<string | null> {
+type OutboxRow = {
+  kind: string;
+  to_email: string;
+  template_id: string;
+  params: Record<string, string>;
+};
+
+async function sendViaBrevo(row: OutboxRow): Promise<string | null> {
+  const mail = renderMail(row.kind, row.params || {});
+  // Neznámý druh e-mailu neumíme vykreslit. Vracíme chybu místo prázdné
+  // zprávy — řádek zůstane ve frontě a v adminu je vidět proč.
+  if (!mail) return `brevo_unknown_kind: ${row.kind}`;
+
+  const s = senderConfig();
+  const from = parseFrom(s.from);
+
+  const res = await fetch(BREVO_API, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      // Brevo nepoužívá Bearer, ale vlastní hlavičku.
+      "api-key": brevoConfig().apiKey,
+    },
+    body: JSON.stringify({
+      sender: from.name ? {name: from.name, email: from.email} : {email: from.email},
+      to: [{email: row.to_email}],
+      replyTo: {email: s.replyTo},
+      subject: mail.subject,
+      htmlContent: mail.html,
+      textContent: mail.text,
+    }),
+  });
+
+  // Úspěch je 201 Created, ne 200 — proto res.ok, ne rovnost na 200.
+  if (res.ok) return null;
+  const detail = await res.text().catch(() => "");
+  return `brevo_${res.status}: ${detail.slice(0, 200)}`;
+}
+
+async function sendViaResend(row: OutboxRow): Promise<string | null> {
+  const mail = renderMail(row.kind, row.params || {});
+  if (!mail) return `resend_unknown_kind: ${row.kind}`;
+
+  const s = senderConfig();
+  const res = await fetch(RESEND_API, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${resendConfig().apiKey}`,
+    },
+    body: JSON.stringify({
+      from: s.from,
+      to: [row.to_email],
+      reply_to: s.replyTo,
+      subject: mail.subject,
+      html: mail.html,
+      text: mail.text,
+    }),
+  });
+
+  if (res.ok) return null;
+  const detail = await res.text().catch(() => "");
+  return `resend_${res.status}: ${detail.slice(0, 200)}`;
+}
+
+async function sendViaEmailJs(row: OutboxRow): Promise<string | null> {
   const c = emailConfig();
-  if (!c.privateKey) return "emailjs_private_key_not_set";
-
   const res = await fetch(EMAILJS_API, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({
       service_id: c.serviceId,
-      template_id: templateId,
+      template_id: row.template_id,
       user_id: c.publicKey,
       accessToken: c.privateKey,   // bez něj EmailJS požadavek mimo prohlížeč odmítne
-      template_params: params,
+      template_params: row.params,
     }),
   });
 
   if (res.ok) return null;
   const detail = await res.text().catch(() => "");
   return `emailjs_${res.status}: ${detail.slice(0, 200)}`;
+}
+
+async function sendOne(row: OutboxRow): Promise<string | null> {
+  switch (emailProvider()) {
+    case "brevo":   return await sendViaBrevo(row);
+    case "resend":  return await sendViaResend(row);
+    case "emailjs": return await sendViaEmailJs(row);
+    default:        return "email_provider_not_configured";
+  }
 }
 
 // ---------------------------------------------------------------------
@@ -210,7 +355,7 @@ export async function dispatch(admin: any, limit = 10) {
 
   if (!emailReady()) {
     // Fronta se plní dál, jen se z ní neodesílá. V adminu je vidět proč.
-    out.skipped = "emailjs_private_key_not_set";
+    out.skipped = "email_provider_not_configured";
     return out;
   }
 
@@ -228,7 +373,7 @@ export async function dispatch(admin: any, limit = 10) {
     const row = rows[i];
     let err: string | null;
     try {
-      err = await sendOne(row.template_id, row.params);
+      err = await sendOne(row);
     } catch (e) {
       err = "network: " + String(e).slice(0, 200);
     }
@@ -242,7 +387,7 @@ export async function dispatch(admin: any, limit = 10) {
       await admin.rpc("mark_email_sent", {p_id: row.id});
     }
 
-    if (i < rows.length - 1) await new Promise((r) => setTimeout(r, RATE_MS));
+    if (i < rows.length - 1) await new Promise((r) => setTimeout(r, rateMs()));
   }
 
   return out;

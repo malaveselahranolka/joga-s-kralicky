@@ -842,21 +842,27 @@
     else if (voucher === 'zrus') stateBox('info', 'Nákup poukazu zrušen', '<p>Poukaz jsi nekoupil — nic se nestrhlo. Klidně to zkus znovu.</p>', '<a class="btn btn-ghost" href="rezervace.html">Zpět na termíny</a>');
   })();
 
-  // Kdyby se platba potvrdila až po odchodu ze stránky (webhook doběhl později),
-  // pošleme potvrzení s QR při příští návštěvě — ať host nezůstane bez e-mailu.
+  // Úklid zbytku po platbě z minulé návštěvy.
+  //
+  // Dřív odsud prohlížeč potvrzení SÁM POSÍLAL, pro případ že webhook doběhl
+  // až po odchodu ze stránky. To dávalo smysl, dokud server posílat neuměl.
+  // Jenže tahle větev se na rozdíl od hlavního návratu z platby neptala na
+  // serverEmail — takže jakmile server posílat začal, host s pozůstatkem
+  // v localStorage dostal potvrzení podruhé.
+  //
+  // Teď už jen uklidíme značku. O samotné odeslání se stará fronta
+  // public.email_outbox, která to zkouší opakovaně a nezávisle na tom,
+  // jestli se host na web ještě někdy vrátí.
   async function flushPendingConfirmation() {
-    if (!CONFIGURED || !EMAIL_OK) return;
+    if (!CONFIGURED) return;
     let p = null;
     try { p = JSON.parse(ls.get('pendingBooking') || 'null'); } catch (e) { return; }
-    if (!p || !p.id || !p.mail) return;
+    if (!p || !p.id) return;
     try {
       const { data } = await sb.rpc('get_ticket', { p_id: p.id });
-      if (data && data.payment_status === 'paid') {
-        ls.del('pendingBooking');
-        sendConfirmation(p.mail);
-      } else if (data && (data.status === 'cancelled' || (data.payment_status !== 'pending' && data.payment_status !== 'paid'))) {
-        ls.del('pendingBooking');   // propadlo, není co posílat
-      }
+      const done = data && (data.payment_status === 'paid' || data.status === 'cancelled' ||
+        (data.payment_status !== 'pending' && data.payment_status !== 'paid'));
+      if (done) ls.del('pendingBooking');
     } catch (e) { /* zkusí se příště */ }
   }
 

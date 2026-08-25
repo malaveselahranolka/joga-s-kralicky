@@ -20,11 +20,20 @@
 //      )
 //    $$);
 //
-//  Volat ji smí jen majitelka. Pozor: samotné `verify_jwt` na to nestačí —
-//  anon klíč je taky platné JWT a je veřejně v supabase-config.js. Proto se
-//  níž ověřuje konkrétní přihlášený uživatel proti OWNER_EMAIL.
+//  Volat ji smí jen majitelka, NEBO pg_cron přes service_role klíč.
 //
-//  Secrets: EMAILJS_PRIVATE_KEY (viz ../_shared/email.ts)
+//  Pozor: samotné `verify_jwt` na majitelku nestačí — anon klíč je taky
+//  platné JWT a je veřejně v supabase-config.js. Proto se níž u běžných
+//  uživatelů ověřuje konkrétní přihlášený e-mail proti OWNER_EMAIL.
+//
+//  service_role klíč naproti tomu žádného přihlášeného uživatele nemá —
+//  auth.getUser() by na něj vždycky vrátil chybu. Rozeznáváme ho podle
+//  role v tělu JWT. Bezpečné bez dalšího ověřování podpisu: Supabase brána
+//  s verify_jwt=true propustí dál jen požadavek s platně podepsaným JWT,
+//  takže v okamžiku, kdy sem kód doběhne, je podpis už ověřený a payload
+//  čteme jen kvůli obsahu, ne kvůli důvěryhodnosti.
+//
+//  Secrets: BREVO_API_KEY (viz ../_shared/email.ts)
 // =====================================================================
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { dispatch, emailReady } from "../_shared/email.ts";
@@ -39,22 +48,36 @@ const env = (n: string, d = "") => Deno.env.get(n) ?? d;
 // Musí sedět s public.is_owner() v supabase/schema.sql.
 const OWNER_EMAIL = env("OWNER_EMAIL", "kovacikovabarbora71@gmail.com");
 
-// Vrátí e-mail přihlášeného uživatele, nebo null. Token ověřuje Supabase,
-// my mu jen podáme hlavičku — vlastní dekódování JWT by bylo k ničemu,
-// protože podpis si stejně musí zkontrolovat někdo jiný.
-async function callerEmail(req: Request): Promise<string | null> {
+function decodeJwtRole(token: string): string | null {
+  try {
+    const part = token.split(".")[1];
+    const b64 = part.replace(/-/g, "+").replace(/_/g, "/");
+    const pad = b64.length % 4 ? "=".repeat(4 - (b64.length % 4)) : "";
+    const json = atob(b64 + pad);
+    return JSON.parse(json)?.role ?? null;
+  } catch (_e) {
+    return null;
+  }
+}
+
+// true = smí spustit rozeslání. Buď je to service_role (pg_cron, admin
+// skript), nebo přihlášená majitelka.
+async function callerAllowed(req: Request): Promise<boolean> {
   const auth = req.headers.get("Authorization") ?? "";
   const token = auth.replace(/^Bearer\s+/i, "").trim();
-  if (!token) return null;
+  if (!token) return false;
+
+  if (decodeJwtRole(token) === "service_role") return true;
+
   try {
     const anon = createClient(env("SUPABASE_URL"), env("SUPABASE_ANON_KEY"), {
       global: { headers: { Authorization: `Bearer ${token}` } },
     });
     const { data, error } = await anon.auth.getUser(token);
-    if (error) return null;
-    return data?.user?.email ?? null;
+    if (error) return false;
+    return (data?.user?.email ?? "").toLowerCase() === OWNER_EMAIL.toLowerCase();
   } catch (_e) {
-    return null;
+    return false;
   }
 }
 
@@ -64,8 +87,7 @@ Deno.serve(async (req) => {
   const json = (b: unknown, s = 200) =>
     new Response(JSON.stringify(b), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
 
-  const who = await callerEmail(req);
-  if (!who || who.toLowerCase() !== OWNER_EMAIL.toLowerCase()) {
+  if (!(await callerAllowed(req))) {
     return json({ ok: false, error: "forbidden" }, 403);
   }
 
@@ -75,10 +97,9 @@ Deno.serve(async (req) => {
   if (!emailReady()) {
     return json({
       ok: false,
-      error: "emailjs_private_key_not_set",
-      hint: "Supabase → Edge Functions → Secrets: doplň EMAILJS_PRIVATE_KEY " +
-            "(EmailJS → Account → Security → Private Key; tamtéž povol API " +
-            "požadavky mimo prohlížeč).",
+      error: "email_provider_not_configured",
+      hint: "Supabase → Edge Functions → Secrets: doplň BREVO_API_KEY " +
+            "(app.brevo.com → SMTP & API, po ověření domény jogaskralicky.cz).",
     }, 503);
   }
 
