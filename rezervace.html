@@ -199,6 +199,10 @@
   .vc-count { display: flex; align-items: center; justify-content: space-between; gap: .8rem; }
   .vc-lbl { font-size: .88rem; font-weight: 600; color: rgba(255,255,255,.85); }
   .vc-count .stepper { background: rgba(255,255,255,.96); border-color: rgba(255,255,255,.25); }
+  /* .voucher-card nastavuje color: cream na celou kartu, takze cislo v pocitadle
+     dedilo kremovou na skoro bilem pozadi steppru — bylo neviditelne a zakaznik
+     nevidel, kolik poukazu kupuje. Barvu textu proto vracime zpet na inkoust. */
+  .vc-count .stepper .val { color: var(--ink); }
   @media (max-width: 720px) { .voucher-card { grid-template-columns: 1fr; } }
 
   @media (max-width: 720px) {
