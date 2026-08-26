@@ -37,8 +37,12 @@ const env = (n: string, d = "") => Deno.env.get(n) ?? d;
 // Stripe čeká na naši odpověď a odesílání e-mailů je pomalé (EmailJS má
 // limit 1 požadavek za sekundu). Pustíme ho tedy na pozadí a odpovíme hned.
 // Co se nestihne, zůstane ve frontě a vezme si to dispatcher nebo admin.
-function sendInBackground(admin: unknown) {
-  const job = dispatch(admin, 3).catch((e) =>
+// `limit` je počet e-mailů, které se zkusí odeslat hned. U poukazů je to
+// jeden na každý kód, takže při nákupu pěti poukazů musí ven pět — s pevnou
+// trojkou by dva zůstaly ve frontě a dorazily až s dalším během cronu,
+// tedy klidně o pět minut později.
+function sendInBackground(admin: unknown, limit = 3) {
+  const job = dispatch(admin, Math.max(1, Math.min(limit, 25))).catch((e) =>
     console.error("stripe-webhook: rozeslani na pozadi selhalo", String(e)));
   // @ts-ignore EdgeRuntime existuje jen v Supabase runtime
   if (typeof EdgeRuntime !== "undefined" && EdgeRuntime?.waitUntil) EdgeRuntime.waitUntil(job);
@@ -324,7 +328,7 @@ Deno.serve(async (req) => {
     if (email) {
       const mailErr = await enqueue(admin, rows.map((r) => voucherEmail(r.code, email, r.amount)));
       if (mailErr) return await retry("voucher_email_enqueue_failed: " + mailErr.message);
-      sendInBackground(admin);
+      sendInBackground(admin, rows.length);
     }
 
     await mark("processed", null, null);

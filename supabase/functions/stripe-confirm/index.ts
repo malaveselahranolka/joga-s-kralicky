@@ -39,8 +39,12 @@ const env = (n: string, d = "") => Deno.env.get(n) ?? d;
 
 // Zákazník čeká na odpověď a odesílání je pomalé (EmailJS: 1 požadavek za
 // vteřinu). Pustíme ho na pozadí; co se nestihne, vezme si dispatcher.
-function sendInBackground(admin: unknown) {
-  const job = dispatch(admin, 3).catch((e) =>
+// `limit` je počet e-mailů, které se zkusí odeslat hned. U poukazů je to
+// jeden na každý kód, takže při nákupu pěti poukazů musí ven pět — s pevnou
+// trojkou by dva zůstaly ve frontě a dorazily až s dalším během cronu,
+// tedy klidně o pět minut později.
+function sendInBackground(admin: unknown, limit = 3) {
+  const job = dispatch(admin, Math.max(1, Math.min(limit, 25))).catch((e) =>
     console.error("stripe-confirm: rozeslani na pozadi selhalo", String(e)));
   // @ts-ignore EdgeRuntime existuje jen v Supabase runtime
   if (typeof EdgeRuntime !== "undefined" && EdgeRuntime?.waitUntil) EdgeRuntime.waitUntil(job);
@@ -126,7 +130,7 @@ Deno.serve(async (req) => {
       if (email) {
         const mailErr = await enqueue(admin, rows.map((r) => voucherEmail(r.code, email, r.amount)));
         if (mailErr) return json({ ok: false, error: "voucher_email_enqueue_failed", detail: mailErr.message }, 500);
-        sendInBackground(admin);
+        sendInBackground(admin, rows.length);
       }
 
       // serverEmail říká prohlížeči, jestli má mlčet (posíláme my)
