@@ -594,8 +594,15 @@
     display: flex; align-items: center; justify-content: space-between;
     gap: 1.4rem 2.5rem; flex-wrap: wrap;
   }
-  .gift-copy { flex: 1 1 24rem; min-width: 0; }
-  .gift-kicker { display: inline-block; font-size: .74rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--clover-text); }
+  .gift-copy { flex: 1 1 22rem; min-width: 0; }
+  /* fotka jako razítko na lístku — stejný snímek jako v hero decku, takže
+     je v tu chvíli už stažený a nestojí to ani bajt navíc */
+  .gift-photo {
+    flex: none; width: clamp(66px, 7vw, 86px); height: clamp(66px, 7vw, 86px);
+    border-radius: 50%; object-fit: cover; object-position: 32% 28%;
+    border: 3px solid #fff; box-shadow: 0 8px 18px -8px rgba(30,35,28,.5);
+  }
+  .gift-kicker { display: inline-block; font-size: .88rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--clover-text); }
   /* .on-dark přebarvuje h3 i p na krémovou; tahle karta je ale světlý ostrůvek
      uvnitř tmavé sekce, tak barvy vracíme zpět — vyšší specificita je záměr */
   .on-dark .gift h3 { color: var(--forest); margin-top: .55rem; font-size: clamp(1.25rem, 1.05rem + .8vw, 1.75rem); letter-spacing: -.02em; }
@@ -628,6 +635,7 @@
       background-size: 13px 4px; background-repeat: repeat-x;
     }
     .gift-stub img { width: 28px; height: 28px; }
+    .gift-photo { width: 58px; height: 58px; }
     .gift .btn { width: 100%; }
   }
 
@@ -1135,9 +1143,10 @@
 
       <div class="gift reveal">
         <div class="gift-main">
+          <img class="gift-photo" decoding="async" src="assets/photos/rabbit-1-320.webp" alt="Králíček si bere pamlsek z ruky" width="320" height="427" loading="lazy" />
           <div class="gift-copy">
             <span class="gift-kicker">Dárkový poukaz</span>
-            <h3>Nebo ji darujte dál</h3>
+            <h3>Darujte zážitek</h3>
             <p>Kód přijde e-mailem hned po zaplacení. Platí 12 měsíců a termín si obdarovaný vybere sám.</p>
           </div>
           <a class="btn btn-primary" href="darkovy-poukaz.html">Koupit poukaz <span class="arrow">→</span></a>
