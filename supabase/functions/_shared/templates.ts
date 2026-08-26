@@ -1,19 +1,20 @@
 // =====================================================================
-//  HTML podoba odchozích e-maylů
+//  HTML podoba odchozích e-mailů
 //
 //  Dokud se posílalo přes EmailJS, žila tahle část mimo repozitář — v jejich
 //  webovém editoru šablon. To mělo tři nepříjemné důsledky: nešlo to
 //  verzovat, nešlo to zkontrolovat před nasazením a hlavně to znamenalo,
 //  že jsme na tom dodavateli viseli i obsahem, ne jen doručením.
 //
-//  Tady jsou ty samé dva e-maily napsané v kódu. Vstupem jsou přesně ta
-//  pole, která už teď leží v email_outbox.params, takže se nic nemigruje —
-//  fronta zůstává, jak je, a starým řádkům se nic nestane.
+//  Vstupem jsou přesně ta pole, která leží v email_outbox.params, takže se
+//  nic nemigruje — fronta zůstává, jak je, a starým řádkům se nic nestane.
 //
 //  PRAVIDLA PRO HTML V E-MAILECH (proto to vypadá jako web z roku 2005):
 //    * layout na <table>, ne flex/grid — Outlook nic jiného spolehlivě neumí
 //    * styly inline, ne v <style> — Gmail <style> v některých případech zahodí
 //    * žádný JavaScript, žádné externí CSS, obrázky jen jako <img src="https://…">
+//    * žádný gradient na barevném bloku se světlým textem — Gmail v tmavém
+//      režimu pozadí přebarví, ale text ne, a nadpis zmizí
 //    * všechno musí dávat smysl i bez obrázků (Seznam i Gmail je defaultně
 //      blokují, dokud odesílatele neznají) — proto je kód poukazu i jako text
 // =====================================================================
@@ -29,7 +30,7 @@ const esc = (s: unknown) =>
   String(s ?? "").replace(/[&<>"]/g, (c) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
 
-// Obálka, kterou sdílí oba e-maily. `preheader` je text, co se v seznamu
+// Obálka, kterou sdílí všechny e-maily. `preheader` je text, co se v seznamu
 // zpráv ukáže hned za předmětem — když ho nenastavíme, klient tam nacpe
 // první větu HTML, což bývá „Zobrazit v prohlížeči" nebo prázdno.
 function shell(preheader: string, body: string): string {
@@ -152,6 +153,8 @@ export function bookingMail(p: Record<string, string>): MailOut {
 // ---------------------------------------------------------------------
 //  DÁRKOVÝ POUKAZ
 //  params: code, amount, qr_url
+//  Posílá se JEDEN e-mail na KAŽDÝ zakoupený poukaz — každý je samostatný
+//  dárek, takže se dá rovnou přeposlat obdarovanému.
 // ---------------------------------------------------------------------
 export function voucherMail(p: Record<string, string>): MailOut {
   const html = shell(
@@ -159,7 +162,7 @@ export function voucherMail(p: Record<string, string>): MailOut {
     `<p style="margin:0 0 14px;">Dobrý den,</p>
      <p style="margin:0 0 22px;">děkujeme za nákup. Tohle je dárkový poukaz na jednu lekci jógy s králíčky — obdarovaný ho uplatní přímo ve studiu, stačí ukázat kód.</p>
      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-       <tr><td align="center" style="background:${FOREST};border-radius:14px;padding:26px 18px;">
+       <tr><td align="center" bgcolor="${FOREST}" style="background:${FOREST};border-radius:14px;padding:26px 18px;">
          <div style="font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(247,244,236,0.7);">Kód poukazu</div>
          <div style="margin-top:10px;font-family:'Courier New',Courier,monospace;font-size:29px;font-weight:700;letter-spacing:0.06em;color:${CREAM};">${esc(p.code)}</div>
          ${p.amount ? `<div style="margin-top:10px;font-size:14px;color:rgba(247,244,236,0.85);">Hodnota ${esc(p.amount)}</div>` : ""}

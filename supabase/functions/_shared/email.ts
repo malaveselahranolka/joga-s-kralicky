@@ -206,6 +206,8 @@ export function bookingEmail(bk: Booking, siteUrl: string) {
   };
 }
 
+// Jeden poukaz = jeden e-mail. order_key nese kód, takže je pro každý
+// poukaz jiný a při nákupu více kusů se založí tolik zpráv, kolik je kódů.
 export function voucherEmail(code: string, email: string, amountHaleru: number) {
   return {
     order_key: `voucher:${code}`,
