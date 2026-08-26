@@ -86,7 +86,7 @@ const isSanity = (url) => typeof url === 'string' && url.startsWith(SANITY_CDN)
 
 function sizedUrl(url, width) {
   if (!isSanity(url)) return url
-  return `${url}?w=${width}&q=72&auto=format&fit=max`
+  return `${url}?w=${width}&q=62&auto=format&fit=max`
 }
 
 function srcsetFor(url, widths) {
@@ -211,7 +211,7 @@ function applyContent(data) {
   selectAll('.hero-deck img').forEach((image, index) => {
     const item = data.heroDeck?.[index]
     if (item) setImage(image, item, '', itemPath('heroDeck', item, 'asset'),
-      {widths: [200, 400, 600], sizes: '(max-width: 720px) 45vw, 220px'})
+      {widths: [150, 220, 320, 460], sizes: '(max-width: 980px) 130px, 152px'})
   })
 
   setText('.nav-cta', data.navReservationLabel, 'navReservationLabel')
@@ -238,7 +238,7 @@ function applyContent(data) {
     setText(select('h3', panel), item.title, `${base}.title`)
     setText(select('.rp-text p', panel), item.body, `${base}.body`)
     setImage(select('.rp-pic img', panel), item.image, item.alt, `${base}.image`,
-      {widths: [420, 840, 1260], sizes: '(max-width: 900px) 92vw, 440px'})
+      {widths: [420, 630, 840, 1260], sizes: '(max-width: 900px) 92vw, 440px'})
   })
 
   setText('.lessons .section-head h2', data.lessonsTitle, 'lessonsTitle')
@@ -263,7 +263,7 @@ function applyContent(data) {
     })
     setLeadingText(select('.l-cta a', card), `${item.buttonLabel} `, `${base}.buttonLabel`)
     setImage(select('.l-pic img', card), item.image, item.alt, `${base}.image`,
-      {widths: [440, 880, 1320], sizes: '(max-width: 900px) 92vw, 460px'})
+      {widths: [440, 660, 880, 1320], sizes: '(max-width: 900px) 92vw, 460px'})
   })
 
   setText('.gal-intro h2', data.galleryTitle, 'galleryTitle')
@@ -276,7 +276,7 @@ function applyContent(data) {
     const base = itemPath('galleryItems', item)
     const image = select('img', button)
     setImage(image, item.image, item.alt, `${base}.image`,
-      {widths: [400, 800, 1200], sizes: '(max-width: 720px) 70vw, 400px'})
+      {widths: [400, 560, 800, 1200], sizes: '(max-width: 720px) 70vw, 400px'})
     // lightbox ukazuje fotku přes celou obrazovku, ale 1600 px stačí i na
     // retinu — originál 1536×2048 by byl jen zbytečně těžký
     button.dataset.full = clean(sizedUrl(item.image?.asset?.url, 1600))
