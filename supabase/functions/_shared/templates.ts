@@ -38,6 +38,8 @@ function shell(preheader: string, body: string): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="x-apple-disable-message-reformatting">
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light only">
 <title>Jóga s králíčky</title>
 </head>
 <body style="margin:0;padding:0;background:${PAPER};">
@@ -45,7 +47,7 @@ function shell(preheader: string, body: string): string {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${PAPER};">
 <tr><td align="center" style="padding:28px 12px;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background:#FFFFFF;border:1px solid ${LINE};border-radius:16px;overflow:hidden;box-shadow:0 12px 32px rgba(30,35,28,0.12);">
-    <tr><td style="background:${FOREST};background-image:linear-gradient(135deg,#3C4F37 0%,${FOREST} 65%);padding:24px 28px;">
+    <tr><td bgcolor="${FOREST}" style="background:${FOREST};padding:24px 28px;">
       <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
         <td style="padding-right:12px;">
           <img src="https://www.jogaskralicky.cz/assets/logo-email.png" width="40" height="40" alt="" style="display:block;width:40px;height:40px;border-radius:50%;border:2px solid rgba(247,244,236,0.4);">
