@@ -554,6 +554,83 @@
   .l-cta { margin-top: 1.6rem; }
   .l-body .btn { width: 100%; }
 
+  /* ---------- dárkový poukaz: vstup z domovské stránky ----------
+     Nákup zůstává na jednom místě (darkovy-poukaz.html → rezervace.html#voucherCard),
+     tady je jen vstup do něj — ať web nemá dvě různá místa, kde se kupuje totéž.
+     Karta je ZÁMĚRNĚ světlá: .lessons má forest-deep pozadí, takže tmavá
+     varianta z rezervace.html by v něm splynula.
+     Přerušovaný okraj je vypůjčený z .code-box — „čárkovaně" v tomhle projektu
+     už znamená poukaz, takže karta čte jako utrhávací kupón. */
+  .gift {
+    --stub: clamp(9rem, 14vw, 12rem);
+    --notch: 18px;
+    margin-top: clamp(2.6rem, 5vw, 4rem);
+    display: grid; grid-template-columns: 1fr var(--stub); align-items: stretch;
+    border-radius: var(--r-xl);
+    /* Zrno navrch gradientu — bez něj je karta plocha, s ním papír.
+       Je to vrstva pozadí, ne pseudo-prvek: ten by se přes mix-blend-mode
+       propsal i do tlačítka, které leží nad ním. */
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.06'/%3E%3C/svg%3E"),
+      radial-gradient(125% 165% at 0% 0%, #FFFEFA 0%, var(--cream) 50%, #EFEADE 100%);
+    box-shadow: 0 28px 54px -26px rgba(0,0,0,.62), inset 0 1px 0 rgba(255,255,255,.8);
+    /* Vyseknuté půlkruhy na perforaci. Musí to být OPRAVDOVÉ díry (mask),
+       ne kolečka v barvě pozadí — .lessons::before pokládá přes forest-deep
+       dva radiální přesvity, takže plnou barvou bych se netrefil.
+       Když prohlížeč mask neumí, zůstane zaoblená karta s čárkovanou linkou. */
+    -webkit-mask:
+      radial-gradient(circle var(--notch) at right var(--stub) top 0, transparent 98%, #000 100%),
+      radial-gradient(circle var(--notch) at right var(--stub) bottom 0, transparent 98%, #000 100%);
+    -webkit-mask-composite: source-in;
+    mask:
+      radial-gradient(circle var(--notch) at right var(--stub) top 0, transparent 98%, #000 100%),
+      radial-gradient(circle var(--notch) at right var(--stub) bottom 0, transparent 98%, #000 100%);
+    mask-composite: intersect;
+  }
+  /* text vlevo, tlačítko vpravo u perforace — jinak zůstane uprostřed karty
+     mrtvé místo a útržek s cenou visí odtržený od výzvy k akci */
+  .gift-main {
+    padding: clamp(1.6rem, 3vw, 2.3rem) clamp(1.6rem, 3vw, 2.4rem);
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1.4rem 2.5rem; flex-wrap: wrap;
+  }
+  .gift-copy { flex: 1 1 24rem; min-width: 0; }
+  .gift-kicker { display: inline-block; font-size: .74rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--clover-text); }
+  /* .on-dark přebarvuje h3 i p na krémovou; tahle karta je ale světlý ostrůvek
+     uvnitř tmavé sekce, tak barvy vracíme zpět — vyšší specificita je záměr */
+  .on-dark .gift h3 { color: var(--forest); margin-top: .55rem; font-size: clamp(1.25rem, 1.05rem + .8vw, 1.75rem); letter-spacing: -.02em; }
+  .on-dark .gift p { margin-top: .6rem; color: var(--ink-soft); font-size: .95rem; line-height: 1.6; max-width: 52ch; }
+  .gift .btn { flex: none; }
+  /* útržek: perforace vlevo, cena je na něm ta hlavní věc */
+  .gift-stub {
+    position: relative; background: rgba(110,138,78,.07);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: .4rem; padding: 1.2rem .8rem; text-align: center;
+  }
+  /* Skutečné kulaté perforace místo čárkované linky. Utrhávací lístek má
+     dírky, ne čárky — je to ten detail, po kterém to teprve sedne. */
+  .gift-stub::before {
+    content: ""; position: absolute; left: -2px; top: 12px; bottom: 12px; width: 4px;
+    background-image: radial-gradient(circle at center, var(--clover) 42%, transparent 46%);
+    background-size: 4px 13px; background-repeat: repeat-y; opacity: .6;
+  }
+  .gift-stub img { width: 34px; height: 34px; opacity: .9; }
+  .gift-price { font-family: "Schibsted Grotesk", sans-serif; font-weight: 700; font-size: clamp(1.75rem, 1.2rem + 1.5vw, 2.45rem); line-height: 1; letter-spacing: -.025em; color: var(--carrot-text); display: inline-flex; align-items: baseline; gap: .16em; }
+  .gift-cur { font-size: .48em; font-weight: 600; letter-spacing: 0; }
+  .gift-note { font-size: .76rem; color: var(--ink-soft); letter-spacing: .01em; }
+  @media (max-width: 640px) {
+    /* na mobilu je útržek pruh dole — perforace se otočí a zoubky vypínáme,
+       jejich pozice se váže na šířku útržku, která tu už neplatí */
+    .gift { grid-template-columns: 1fr; -webkit-mask: none; mask: none; }
+    .gift-stub { flex-direction: row; gap: .75rem; padding: .95rem 1rem; }
+    .gift-stub::before {
+      left: 14px; right: 14px; top: -2px; bottom: auto; width: auto; height: 4px;
+      background-size: 13px 4px; background-repeat: repeat-x;
+    }
+    .gift-stub img { width: 28px; height: 28px; }
+    .gift .btn { width: 100%; }
+  }
+
   /* ---------- rabbit gallery: the section pins and the photos pan sideways ----------
      Sticky + a tall spacer gives the same pinned scrub as a ScrollTrigger pin,
      without pulling a library onto a static page. Only transform is animated. */
@@ -1054,6 +1131,22 @@
             <div class="l-cta"><a class="btn btn-light" href="rezervace.html">Rezervovat sobotu <span class="arrow">→</span></a></div>
           </div>
         </article>
+      </div>
+
+      <div class="gift reveal">
+        <div class="gift-main">
+          <div class="gift-copy">
+            <span class="gift-kicker">Dárkový poukaz</span>
+            <h3>Nebo ji darujte dál</h3>
+            <p>Kód přijde e-mailem hned po zaplacení. Platí 12 měsíců a termín si obdarovaný vybere sám.</p>
+          </div>
+          <a class="btn btn-primary" href="darkovy-poukaz.html">Koupit poukaz <span class="arrow">→</span></a>
+        </div>
+        <div class="gift-stub">
+          <img decoding="async" src="assets/logo.svg" alt="" width="38" height="38" loading="lazy" />
+          <span class="gift-price">499<span class="gift-cur">Kč</span></span>
+          <span class="gift-note">jedna lekce</span>
+        </div>
       </div>
     </div>
   </section>
