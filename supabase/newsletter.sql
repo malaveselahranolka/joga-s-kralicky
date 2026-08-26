@@ -49,6 +49,12 @@ begin
   on conflict (lower(email)) do update
     set unsubscribed = false;       -- opětovné přihlášení znovu aktivuje
 
+  -- Uvítací e-mail jen napoprvé — order_key drží unikát, takže opětovné
+  -- přihlášení po odhlášení už druhý welcome e-mail nepošle.
+  insert into public.email_outbox (order_key, kind, to_email, template_id, params)
+    values ('welcome:' || e, 'welcome', e, 'n/a', jsonb_build_object('email', e))
+  on conflict (order_key) do nothing;
+
   return json_build_object('ok', true);
 end;
 $$;

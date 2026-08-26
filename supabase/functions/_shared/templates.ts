@@ -44,9 +44,16 @@ function shell(preheader: string, body: string): string {
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${esc(preheader)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${PAPER};">
 <tr><td align="center" style="padding:28px 12px;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background:#FFFFFF;border:1px solid ${LINE};border-radius:16px;overflow:hidden;">
-    <tr><td style="background:${FOREST};padding:22px 28px;">
-      <span style="font-family:Georgia,'Times New Roman',serif;font-size:19px;font-weight:600;color:${CREAM};letter-spacing:-0.01em;">Jóga s králíčky</span>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background:#FFFFFF;border:1px solid ${LINE};border-radius:16px;overflow:hidden;box-shadow:0 12px 32px rgba(30,35,28,0.12);">
+    <tr><td style="background:${FOREST};background-image:linear-gradient(135deg,#3C4F37 0%,${FOREST} 65%);padding:24px 28px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+        <td style="padding-right:12px;">
+          <img src="https://www.jogaskralicky.cz/assets/logo-email.png" width="40" height="40" alt="" style="display:block;width:40px;height:40px;border-radius:50%;border:2px solid rgba(247,244,236,0.4);">
+        </td>
+        <td style="vertical-align:middle;">
+          <span style="font-family:Georgia,'Times New Roman',serif;font-size:19px;font-weight:600;color:${CREAM};letter-spacing:-0.01em;">Jóga s králíčky</span>
+        </td>
+      </tr></table>
     </td></tr>
     <tr><td style="padding:30px 28px 34px;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:${INK};">
 ${body}
@@ -245,6 +252,38 @@ export function cancelMail(p: Record<string, string>): MailOut {
   };
 }
 
+// ---------------------------------------------------------------------
+//  UVÍTÁNÍ V NEWSLETTERU
+//  params: email
+// ---------------------------------------------------------------------
+export function welcomeMail(p: Record<string, string>): MailOut {
+  const unsubUrl = `https://www.jogaskralicky.cz/?unsub=${encodeURIComponent(p.email || "")}`;
+
+  const html = shell(
+    "Jste přihlášeni — občas pošleme nové termíny a pár fotek králíků.",
+    `<p style="margin:0 0 14px;">Dobrý den,</p>
+     <p style="margin:0 0 22px;">díky za přihlášení k odběru novinek. Nebudeme vás zahlcovat — občas pošleme <strong>nové termíny</strong>, <strong>akce</strong> a pár <strong>fotek králíků</strong> ze studia.</p>
+     <p style="margin:0;">Volné termíny na lekce najdete kdykoliv na
+       <a href="https://www.jogaskralicky.cz/rezervace.html" style="color:${FOREST};font-weight:600;">jogaskralicky.cz/rezervace</a>.</p>
+     <p style="margin:26px 0 0;font-size:12px;color:${INK_SOFT};">Odhlásit se můžete kdykoliv jedním kliknutím: <a href="${esc(unsubUrl)}" style="color:${INK_SOFT};">odhlásit odběr</a>.</p>`,
+  );
+
+  const text = [
+    "Dobrý den,",
+    "",
+    "díky za přihlášení k odběru novinek. Nebudeme vás zahlcovat — občas pošleme nové termíny, akce a pár fotek králíků ze studia.",
+    "",
+    "Volné termíny: https://www.jogaskralicky.cz/rezervace.html",
+    "",
+    `Odhlásit se můžete kdykoliv: ${unsubUrl}`,
+    "",
+    "Jóga s králíčky, Fit&Fun Studio, Tovární 486/7, Ostrava-Mariánské Hory",
+    "info@jogaskralicky.cz, +420 603 340 860",
+  ].join("\n");
+
+  return { subject: "Vítejte v newsletteru Jóga s králíčky", html, text };
+}
+
 // Fronta nese u každého řádku `kind`, takže se podle něj vybírá šablona.
 // Neznámý druh raději shodí odeslání, než aby poslal prázdný e-mail —
 // řádek zůstane ve frontě a je vidět, že se s ním něco děje.
@@ -252,5 +291,6 @@ export function renderMail(kind: string, params: Record<string, string>): MailOu
   if (kind === "booking") return bookingMail(params);
   if (kind === "voucher") return voucherMail(params);
   if (kind === "cancel") return cancelMail(params);
+  if (kind === "welcome") return welcomeMail(params);
   return null;
 }
