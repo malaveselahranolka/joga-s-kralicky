@@ -598,11 +598,11 @@
   /* fotka jako razítko na lístku — stejný snímek jako v hero decku, takže
      je v tu chvíli už stažený a nestojí to ani bajt navíc */
   .gift-photo {
-    flex: none; width: clamp(66px, 7vw, 86px); height: clamp(66px, 7vw, 86px);
-    border-radius: 50%; object-fit: cover; object-position: 32% 28%;
-    border: 3px solid #fff; box-shadow: 0 8px 18px -8px rgba(30,35,28,.5);
+    flex: none; width: clamp(84px, 9vw, 112px); aspect-ratio: 3/4; height: auto;
+    border-radius: var(--r-lg); object-fit: cover; object-position: 34% 26%;
+    border: 3px solid #fff; box-shadow: 0 10px 22px -10px rgba(30,35,28,.55);
   }
-  .gift-kicker { display: inline-block; font-size: .88rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--clover-text); }
+  .gift-kicker { display: inline-block; font-size: clamp(.95rem, .85rem + .3vw, 1.1rem); font-weight: 700; letter-spacing: .13em; text-transform: uppercase; color: var(--clover-text); }
   /* .on-dark přebarvuje h3 i p na krémovou; tahle karta je ale světlý ostrůvek
      uvnitř tmavé sekce, tak barvy vracíme zpět — vyšší specificita je záměr */
   .on-dark .gift h3 { color: var(--forest); margin-top: .55rem; font-size: clamp(1.25rem, 1.05rem + .8vw, 1.75rem); letter-spacing: -.02em; }
@@ -635,7 +635,7 @@
       background-size: 13px 4px; background-repeat: repeat-x;
     }
     .gift-stub img { width: 28px; height: 28px; }
-    .gift-photo { width: 58px; height: 58px; }
+    .gift-photo { width: 68px; border-radius: var(--r-md); }
     .gift .btn { width: 100%; }
   }
 
