@@ -89,6 +89,17 @@
   .fill-lbl { font-size: .8rem; color: var(--ink-soft); margin-top: .3rem; display: flex; justify-content: space-between; }
   .full .fill-bar > span { background: var(--carrot); }
 
+  /* marketingové zdroje */
+  .source-list { display: grid; gap: .8rem; }
+  .source-row { background: var(--cloud); border: 1px solid var(--line); border-radius: var(--r-md); padding: 1rem 1.2rem; }
+  .source-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+  .source-name { font-family: "Fraunces"; font-size: 1.14rem; }
+  .source-meta { color: var(--ink-soft); font-size: .84rem; margin-top: .12rem; }
+  .source-pct { font-family: "Fraunces"; font-size: 1.35rem; line-height: 1.1; white-space: nowrap; }
+  .source-bar { height: 9px; border-radius: 99px; background: var(--line); overflow: hidden; margin-top: .75rem; }
+  .source-bar > span { display: block; height: 100%; border-radius: inherit; background: var(--clover); }
+  .source-missing { color: var(--ink-soft); font-size: .88rem; padding: .85rem 1rem; border: 1px dashed var(--line); border-radius: var(--r-md); }
+
   /* lists / rows */
   .rows { display: grid; gap: .6rem; }
   .row { background: var(--cloud); border: 1px solid var(--line); border-radius: var(--r-md); padding: .9rem 1.1rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
@@ -237,6 +248,7 @@
       <button class="tab" role="tab" aria-selected="false" data-tab="content">Obsah webu</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="lessons">Lekce</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="bookings">Rezervace</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="sources">Zdroje</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="scan">Odbavení</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="news">Newsletter</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="vouchers">Poukazy</button>
@@ -353,6 +365,19 @@
       </div>
       <p class="muted" id="paySummary" style="margin:-.4rem 0 1rem;font-size:.86rem"></p>
       <div class="rows" id="bookingRows"></div>
+    </section>
+
+    <!-- ZDROJE ZÁKAZNÍKŮ -->
+    <section class="panel" id="panel-sources" role="tabpanel">
+      <div class="panel-head">
+        <h2>Jak se o nás dozvěděli</h2>
+        <button class="btn btn-ghost btn-sm" id="refreshSources">Obnovit</button>
+      </div>
+      <p class="muted" style="margin:-.4rem 0 1.3rem;font-size:.88rem">
+        Počítají se potvrzené rezervace. Procenta u jednotlivých zdrojů jsou z lidí, kteří otázku vyplnili.
+      </p>
+      <div class="stat-row" id="sourceSummary"></div>
+      <div class="source-list" id="sourceRows"></div>
     </section>
 
     <!-- NEWSLETTER -->
@@ -472,7 +497,7 @@
 
   const $ = (id) => document.getElementById(id);
   const loginScreen = $('loginScreen'), app = $('app');
-  let lessons = [], bookings = [], subscribers = [], vouchers = [], emails = [], editingId = null;
+  let lessons = [], bookings = [], subscribers = [], vouchers = [], emails = [], bookingSourceStats = [], sourceStatsError = false, editingId = null;
 
   // helpers ------------------------------------------------------------
   const cap = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
@@ -539,21 +564,24 @@
 
   // data ---------------------------------------------------------------
   async function loadAll() {
-    const [lr, br, nr, vr, er] = await Promise.all([
+    const [lr, br, nr, vr, er, sr] = await Promise.all([
       sb.from('lessons').select('*').order('starts_at', { ascending: true }),
       sb.from('bookings').select('*').order('created_at', { ascending: false }),
-      // newsletter/poukazy/fronta e-mailů jsou nepovinné — když tabulka
-      // ještě není (nespuštěné SQL), panel zůstane prázdný a zbytek jede
+      // newsletter/poukazy/fronta e-mailů i marketingový přehled jsou
+      // nepovinné — když databázová část ještě není nasazená, zbytek jede dál
       sb.from('newsletter_subscribers').select('*').order('created_at', { ascending: false }),
       sb.from('vouchers').select('*').order('created_at', { ascending: false }),
-      sb.from('email_outbox').select('*').order('created_at', { ascending: false }).limit(200)
+      sb.from('email_outbox').select('*').order('created_at', { ascending: false }).limit(200),
+      sb.from('booking_source_stats').select('source,bookings,spots,first_seen,last_seen').order('bookings', { ascending: false })
     ]);
     if (lr.error || br.error) { toast('Načtení dat selhalo'); return; }
     lessons = lr.data || []; bookings = br.data || [];
     subscribers = nr && !nr.error ? (nr.data || []) : [];
     vouchers = vr && !vr.error ? (vr.data || []) : [];
     emails = er && !er.error ? (er.data || []) : [];
-    renderDash(); renderLessons(); renderBookings(); fillLessonSelects(); renderNews(); renderVouchers(); renderEmails();
+    sourceStatsError = !!(sr && sr.error);
+    bookingSourceStats = sr && !sr.error ? (sr.data || []) : [];
+    renderDash(); renderLessons(); renderBookings(); fillLessonSelects(); renderSources(); renderNews(); renderVouchers(); renderEmails();
   }
 
   // tabs ---------------------------------------------------------------
@@ -764,6 +792,64 @@
   $('bookingCancel').addEventListener('click', () => bookingWrap.classList.remove('open'));
   $('bookingFilter').addEventListener('change', renderBookings);
   $('payFilter').addEventListener('change', renderBookings);
+
+  // marketingové zdroje -----------------------------------------------
+  const SOURCE_LABELS = {
+    google: 'Google',
+    doporuceni: 'Doporučení od známých',
+    instagram: 'Instagram',
+    facebook: 'Facebook',
+    darek: 'Dárkový poukaz',
+    media: 'Článek, rádio nebo televize',
+    jinak: 'Jinak'
+  };
+  const bookingWord = (n) => n === 1 ? 'rezervace' : (n >= 2 && n <= 4 ? 'rezervace' : 'rezervací');
+  const spotWord = (n) => n === 1 ? 'místo' : (n >= 2 && n <= 4 ? 'místa' : 'míst');
+
+  $('refreshSources').addEventListener('click', loadAll);
+  function renderSources() {
+    if (sourceStatsError) {
+      $('sourceSummary').innerHTML = '';
+      $('sourceRows').innerHTML = '<div class="empty">Přehled zatím není aktivní. V Supabase spusťte soubor <strong>supabase/attribution.sql</strong>; potom se tu existující odpovědi objeví automaticky.</div>';
+      return;
+    }
+
+    const rows = bookingSourceStats.map((r) => ({
+      source: String(r.source || 'neuvedeno'),
+      bookings: Number(r.bookings) || 0,
+      spots: Number(r.spots) || 0
+    }));
+    const total = rows.reduce((sum, r) => sum + r.bookings, 0);
+    const missing = rows.find((r) => r.source === 'neuvedeno');
+    const missingCount = missing ? missing.bookings : 0;
+    const answered = Math.max(0, total - missingCount);
+    const responseRate = total ? Math.round(answered / total * 100) : 0;
+
+    $('sourceSummary').innerHTML =
+      stat(total, 'potvrzených rezervací') +
+      stat(answered, 'vyplněných odpovědí') +
+      stat(responseRate + ' %', 'míra vyplnění');
+
+    const known = rows.filter((r) => r.source !== 'neuvedeno' && r.bookings > 0)
+      .sort((a, b) => b.bookings - a.bookings);
+    const list = known.map((r) => {
+      const pct = answered ? Math.round(r.bookings / answered * 100) : 0;
+      const label = SOURCE_LABELS[r.source] || r.source;
+      return '<div class="source-row">' +
+        '<div class="source-top"><div><div class="source-name">' + esc(label) + '</div>' +
+        '<div class="source-meta">' + r.bookings + ' ' + bookingWord(r.bookings) + ' · ' +
+          r.spots + ' ' + spotWord(r.spots) + '</div></div>' +
+        '<div class="source-pct">' + pct + ' %</div></div>' +
+        '<div class="source-bar" aria-label="' + esc(label) + ': ' + pct + ' procent odpovědí"><span style="width:' + pct + '%"></span></div>' +
+        '</div>';
+    }).join('');
+
+    const missingHtml = total
+      ? '<div class="source-missing"><strong>Bez odpovědi:</strong> ' + missingCount + ' z ' + total + ' ' + bookingWord(total) + '.</div>'
+      : '';
+    $('sourceRows').innerHTML = list || '<div class="empty">Zatím nikdo otázku nevyplnil.</div>';
+    if (missingHtml) $('sourceRows').insertAdjacentHTML('beforeend', missingHtml);
+  }
 
   // newsletter ---------------------------------------------------------
   $('refreshNews').addEventListener('click', loadAll);
