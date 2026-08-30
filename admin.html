@@ -378,6 +378,9 @@
       </p>
       <div class="stat-row" id="sourceSummary"></div>
       <div class="source-list" id="sourceRows"></div>
+
+      <h3 style="margin:2rem 0 .9rem">Kdo uvedl jaký zdroj</h3>
+      <div class="rows" id="sourcePeople"></div>
     </section>
 
     <!-- NEWSLETTER -->
@@ -497,7 +500,7 @@
 
   const $ = (id) => document.getElementById(id);
   const loginScreen = $('loginScreen'), app = $('app');
-  let lessons = [], bookings = [], subscribers = [], vouchers = [], emails = [], bookingSourceStats = [], sourceStatsError = false, editingId = null;
+  let lessons = [], bookings = [], subscribers = [], vouchers = [], emails = [], bookingSourceStats = [], bookingSources = [], sourceStatsError = false, sourceDetailsError = false, editingId = null;
 
   // helpers ------------------------------------------------------------
   const cap = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
@@ -564,7 +567,7 @@
 
   // data ---------------------------------------------------------------
   async function loadAll() {
-    const [lr, br, nr, vr, er, sr] = await Promise.all([
+    const [lr, br, nr, vr, er, sr, sdr] = await Promise.all([
       sb.from('lessons').select('*').order('starts_at', { ascending: true }),
       sb.from('bookings').select('*').order('created_at', { ascending: false }),
       // newsletter/poukazy/fronta e-mailů i marketingový přehled jsou
@@ -572,7 +575,9 @@
       sb.from('newsletter_subscribers').select('*').order('created_at', { ascending: false }),
       sb.from('vouchers').select('*').order('created_at', { ascending: false }),
       sb.from('email_outbox').select('*').order('created_at', { ascending: false }).limit(200),
-      sb.from('booking_source_stats').select('source,bookings,spots,first_seen,last_seen').order('bookings', { ascending: false })
+      sb.from('booking_source_stats').select('source,bookings,spots,first_seen,last_seen').order('bookings', { ascending: false }),
+      // Detail je chráněný RLS: číst ho smí jen přihlášená majitelka.
+      sb.from('booking_sources').select('booking_id,source,created_at').order('created_at', { ascending: false })
     ]);
     if (lr.error || br.error) { toast('Načtení dat selhalo'); return; }
     lessons = lr.data || []; bookings = br.data || [];
@@ -581,6 +586,8 @@
     emails = er && !er.error ? (er.data || []) : [];
     sourceStatsError = !!(sr && sr.error);
     bookingSourceStats = sr && !sr.error ? (sr.data || []) : [];
+    sourceDetailsError = !!(sdr && sdr.error);
+    bookingSources = sdr && !sdr.error ? (sdr.data || []) : [];
     renderDash(); renderLessons(); renderBookings(); fillLessonSelects(); renderSources(); renderNews(); renderVouchers(); renderEmails();
   }
 
@@ -811,6 +818,7 @@
     if (sourceStatsError) {
       $('sourceSummary').innerHTML = '';
       $('sourceRows').innerHTML = '<div class="empty">Přehled zatím není aktivní. V Supabase spusťte soubor <strong>supabase/attribution.sql</strong>; potom se tu existující odpovědi objeví automaticky.</div>';
+      $('sourcePeople').innerHTML = '';
       return;
     }
 
@@ -849,6 +857,27 @@
       : '';
     $('sourceRows').innerHTML = list || '<div class="empty">Zatím nikdo otázku nevyplnil.</div>';
     if (missingHtml) $('sourceRows').insertAdjacentHTML('beforeend', missingHtml);
+
+    if (sourceDetailsError) {
+      $('sourcePeople').innerHTML = '<div class="empty">Konkrétní odpovědi se nepodařilo načíst. Přehledné součty výše zůstávají dostupné.</div>';
+      return;
+    }
+
+    const people = bookingSources.map((s) => {
+      const booking = bookings.find((b) => b.id === s.booking_id);
+      return booking && booking.status === 'confirmed' ? { source: s.source, booking: booking } : null;
+    }).filter(Boolean);
+
+    $('sourcePeople').innerHTML = people.length ? people.map((item) => {
+      const b = item.booking;
+      const lesson = lessons.find((l) => l.id === b.lesson_id);
+      const label = SOURCE_LABELS[item.source] || item.source;
+      const lessonText = lesson ? esc(lesson.title) + ' · ' + fmtDT(lesson.starts_at) : 'Lekce už není v evidenci';
+      return '<div class="row">' +
+        '<div class="main"><div class="ttl">' + esc(b.name) + ' <span class="pill pill-ok">' + esc(label) + '</span></div>' +
+        '<div class="sub">' + lessonText + ' · ' + b.spots + ' ' + spotWord(b.spots) + '</div></div>' +
+        '</div>';
+    }).join('') : '<div class="empty">Zatím tu není žádná konkrétní odpověď.</div>';
   }
 
   // newsletter ---------------------------------------------------------
