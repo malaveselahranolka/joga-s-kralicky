@@ -369,7 +369,11 @@
   const $ = (id) => document.getElementById(id);
   const PLACE = 'Fit&Fun Studio Ostrava, Tovární 486/7, 709 00 Ostrava-Mariánské Hory';
   const THUMB = 'assets/photos/rabbit-1.webp';
-  const thumbFor = (title) => {
+  // obrázek lekce: přednost má fotka nahraná v adminu (sloupec image_url),
+  // jinak vybereme podle názvu lekce
+  const thumbFor = (lesson) => {
+    if (lesson && lesson.image_url) return lesson.image_url;
+    const title = lesson && lesson.title;
     const t = (title || '').toLowerCase();
     if (t.includes('ranní')) return 'assets/photos/yoga-7.webp';
     if (t.includes('děti')) return 'assets/photos/rabbit-6.webp';
@@ -550,7 +554,7 @@
         const full = l.remaining <= 0;
         return '<div class="slot' + (full ? ' full' : '') + '">' +
           '<div class="time"><span class="rng">' + fmtTime(l.dt) + ' – ' + fmtTime(end) + '</span><span class="dur">' + l.duration_min + ' min</span></div>' +
-          '<div class="info"><img class="thumb" src="' + thumbFor(l.title) + '" alt="" loading="lazy" />' +
+          '<div class="info"><img class="thumb" src="' + esc(thumbFor(l)) + '" alt="" loading="lazy" />' +
             '<div class="meta"><div class="lbl">Lekce</div><div class="val">' + esc(l.title) + '</div>' +
             '<div class="place"><div class="lbl">Místo</div><div class="val">' + PLACE + '</div></div></div></div>' +
           '<div class="book"><div class="cap"><b>' + Math.min(l.capacity - l.remaining, l.capacity) + '</b>/' + l.capacity + '</div>' +
@@ -588,7 +592,7 @@
     $('summary').innerHTML =
       '<div class="blk"><div class="lbl">Termín</div><div class="big">' + fmtDate(chosen.dt) + '</div>' +
         '<div class="sub">' + cap(fmtDow(chosen.dt)) + ' · ' + fmtTime(chosen.dt) + ' – ' + fmtTime(end) + '</div></div>' +
-      '<img class="thumb" src="' + thumbFor(chosen.title) + '" alt="" />' +
+      '<img class="thumb" src="' + esc(thumbFor(chosen)) + '" alt="" />' +
       '<div class="blk"><div class="lbl">Lekce</div><div class="big">' + esc(chosen.title) + '</div>' +
         '<div class="sub" style="color:var(--ink-soft)">' + PLACE + '</div></div>';
     updateSpots();

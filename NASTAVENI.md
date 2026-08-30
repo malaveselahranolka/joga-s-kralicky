@@ -114,7 +114,7 @@ Aby hostovi po rezervaci přišel potvrzovací e-mail (a tobě kopie). Bez tohot
 ### Admin (`tvuj-web/admin.html`)
 - Přihlas se e-mailem a heslem z kroku 3.
 - **Přehled** — nejbližší lekce a jejich obsazenost.
-- **Lekce** — *+ Přidat lekci* (datum, čas, délka, kapacita), nebo *Vygenerovat příští týden z rozvrhu* (vytvoří lekce podle standardního týdenního rozvrhu). Lekce lze upravit, **zrušit** (zmizí z webu, ale vidíš přihlášené, koho informovat) nebo smazat.
+- **Lekce** — *+ Přidat lekci* (datum, čas, délka, kapacita, **obrázek**), nebo *Vygenerovat příští týden z rozvrhu* (vytvoří lekce podle standardního týdenního rozvrhu). Lekce lze upravit, **zrušit** (zmizí z webu, ale vidíš přihlášené, koho informovat) nebo smazat.
 - **Rezervace** — vidíš, kdo se přihlásil; rezervaci můžeš **zrušit** (místa se vrátí) nebo přidat **ruční rezervaci** (telefonický host).
 
 ### Veřejná stránka
@@ -176,6 +176,10 @@ V Supabase → **SQL Editor** → **New query** spusť postupně:
 
 *(Když jsi `tickets.sql` a `schema.sql` spustil dřív, nevadí — `online-only.sql`
 je jen přepíše novější verzí.)*
+
+> Pokud už máš zapnuté **obrázky u lekcí**, spusť po `online-only.sql` ještě
+> jednou **`supabase/lesson-images.sql`** — jinak obrázky z webu zmizí
+> (`online-only.sql` přepíše pohled `public_lessons` bez nich).
 
 ### C) Nasazení funkcí + tajné klíče (Supabase Dashboard, bez CLI)
 **Edge Functions → Secrets** nastav:
@@ -414,6 +418,44 @@ opíšeš krátký kód rezervace (host ho vidí na stránce stavu rezervace).
 
 > Kamera funguje jen na **https** (GitHub Pages ano) nebo na `localhost`.
 > Poprvé se prohlížeč zeptá na povolení — dej **Povolit**.
+
+---
+
+## Obrázek u lekce
+
+U každé lekce může být vlastní fotka. Zobrazí se v **Rezervacích** —
+v seznamu termínů i v souhrnu, když si host vybere termín.
+
+### Zapnutí (jednorázově)
+
+Supabase → **SQL Editor** → **New query** → vlož celý obsah souboru
+**`supabase/lesson-images.sql`** → **Run**.
+Přidá k lekci políčko na obrázek a založí úložiště `lesson-images`.
+
+> V ostrém projektu (`mglopjlgpfpturvqtjcj`) už je tohle SQL spuštěné —
+> tenhle krok je jen pro případ, že bys zakládala databázi znovu.
+
+> Kdyby ta část o úložišti skončila chybou o oprávnění, založ kbelík ručně:
+> Supabase → **Storage** → **New bucket** → název `lesson-images`,
+> zaškrtni **Public bucket**. Pak spusť SQL znovu.
+
+Dokud SQL nespustíš, políčko na obrázek se v adminu vůbec neukáže
+a všechno ostatní funguje beze změny.
+
+### Jak se obrázek přidá
+
+Admin → **Lekce** → *+ Přidat lekci* (nebo *Upravit* u existující) →
+sekce **Obrázek lekce**:
+
+- **Nahrát fotku** — vybereš soubor z počítače nebo mobilu. Obrázek se
+  automaticky zmenší (ať se web načítá rychle) a nahraje do úložiště.
+- **Vybrat z fotek webu** — vybereš z fotek, které už na webu jsou.
+- **Odebrat obrázek** — vrátí se výchozí fotka.
+
+Obrázek se uloží až tlačítkem **Uložit lekci**.
+
+> Bez obrázku to funguje dál: web sám vybere fotku podle názvu lekce
+> (ranní / děti / soumrak / hatha), jinak výchozí králíčky.
 
 ---
 

@@ -124,6 +124,23 @@
   .collapse { max-height: 0; overflow: hidden; transition: max-height .4s var(--ease); }
   .collapse.open { max-height: 600px; }
   .attendees.collapse.open { max-height: 1200px; }
+  #lessonFormWrap.collapse.open { max-height: 1500px; }
+
+  /* obrázek u lekce */
+  .imgpick { display: flex; gap: .9rem; align-items: flex-start; flex-wrap: wrap; }
+  .imgpick-prev { width: 92px; height: 92px; border-radius: var(--r-md); object-fit: cover; border: 1px solid var(--line); background: color-mix(in srgb, var(--ink) 5%, var(--cloud)); flex: none; }
+  .imgpick-empty { width: 92px; height: 92px; border-radius: var(--r-md); border: 1px dashed var(--line); display: grid; place-items: center; text-align: center; font-size: .72rem; line-height: 1.25; color: var(--ink-soft); padding: .4rem; flex: none; }
+  .imgpick-side { flex: 1 1 260px; min-width: 0; }
+  .imgpick-acts { display: flex; gap: .4rem; flex-wrap: wrap; }
+  .imgpick-acts .btn { cursor: pointer; }
+  .imgpick-note { font-size: .8rem; color: var(--ink-soft); margin: .5rem 0 0; }
+  .imgpick-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(74px, 1fr)); gap: .5rem; }
+  .imgpick-gallery.collapse.open { max-height: 240px; overflow-y: auto; margin-top: .8rem; padding: .2rem; }
+  .imgpick-gallery button { padding: 0; border: 2px solid transparent; border-radius: var(--r-md); background: none; cursor: pointer; line-height: 0; }
+  .imgpick-gallery button:hover { border-color: var(--clover); }
+  .imgpick-gallery img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: calc(var(--r-md) - 2px); }
+  .row-thumb { width: 46px; height: 46px; border-radius: 12px; object-fit: cover; border: 1px solid var(--line); flex: none; }
+  [hidden] { display: none !important; }
 
   /* attendees (kdo je přihlášený na lekci) */
   .lesson-block { margin-bottom: .6rem; }
@@ -309,6 +326,23 @@
             <div><label for="lf-dur">Délka (min)</label><input id="lf-dur" type="number" min="15" step="5" value="60" required /></div>
             <div><label for="lf-cap">Kapacita</label><input id="lf-cap" type="number" min="1" max="40" value="10" required /></div>
             <div class="field-wide"><label for="lf-note">Poznámka (nepovinné)</label><input id="lf-note" placeholder="např. jen pro začátečníky" /></div>
+            <div class="field-wide" id="lf-imgfield">
+              <label>Obrázek lekce (nepovinné)</label>
+              <div class="imgpick">
+                <img class="imgpick-prev" id="lf-imgprev" alt="Náhled obrázku lekce" hidden />
+                <div class="imgpick-empty" id="lf-imgempty">bez obrázku</div>
+                <div class="imgpick-side">
+                  <div class="imgpick-acts">
+                    <label class="btn btn-ghost btn-sm" for="lf-imgfile">Nahrát fotku</label>
+                    <input id="lf-imgfile" type="file" accept="image/*" hidden />
+                    <button class="btn btn-ghost btn-sm" type="button" id="lf-imggal">Vybrat z fotek webu</button>
+                    <button class="btn btn-ghost btn-sm" type="button" id="lf-imgclear" hidden>Odebrat obrázek</button>
+                  </div>
+                  <p class="imgpick-note" id="lf-imgnote">Ukáže se u lekce v rezervacích. Bez obrázku se použije výchozí fotka podle názvu lekce.</p>
+                </div>
+              </div>
+              <div class="imgpick-gallery collapse" id="lf-gallery"></div>
+            </div>
           </div>
           <div class="form-actions">
             <button class="btn btn-primary" type="submit" id="lessonSubmit">Uložit lekci</button>
@@ -588,7 +622,21 @@
     bookingSourceStats = sr && !sr.error ? (sr.data || []) : [];
     sourceDetailsError = !!(sdr && sdr.error);
     bookingSources = sdr && !sdr.error ? (sdr.data || []) : [];
+    if (lessons.length) applyImageSupport('image_url' in lessons[0]);
+    else probeImageSupport();
     renderDash(); renderLessons(); renderBookings(); fillLessonSelects(); renderSources(); renderNews(); renderVouchers(); renderEmails();
+  }
+
+  // umí databáze obrázek u lekce? (sloupec přidává supabase/lesson-images.sql)
+  let imagesReady = true;
+  async function probeImageSupport() {
+    const { error } = await sb.from('lessons').select('image_url').limit(1);
+    applyImageSupport(!error);
+  }
+  function applyImageSupport(ok) {
+    imagesReady = ok;
+    $('lf-imgfield').hidden = !ok;
+    if (!ok) lessonImage = null;
   }
 
   // tabs ---------------------------------------------------------------
@@ -626,7 +674,114 @@
 
   // lessons ------------------------------------------------------------
   const lessonWrap = $('lessonFormWrap');
-  $('newLessonBtn').addEventListener('click', () => { editingId = null; $('lessonFormTitle').textContent = 'Nová lekce'; $('lessonForm').reset(); $('lf-dur').value = 60; $('lf-cap').value = 10; lessonWrap.classList.add('open'); $('lf-title').focus(); });
+  $('newLessonBtn').addEventListener('click', () => { editingId = null; $('lessonFormTitle').textContent = 'Nová lekce'; $('lessonForm').reset(); $('lf-dur').value = 60; $('lf-cap').value = 10; setLessonImage(null); lessonWrap.classList.add('open'); $('lf-title').focus(); });
+  $('lessonCancel').addEventListener('click', () => lessonWrap.classList.remove('open'));
+  $('lessonFilter').addEventListener('change', renderLessons);
+
+  // obrázek lekce ------------------------------------------------------
+  //  Fotku buď nahrajete z počítače (uloží se do úložiště lesson-images),
+  //  nebo vyberete z fotek, které už na webu jsou.
+  const IMG_BUCKET = 'lesson-images';
+  const STOCK_PHOTOS = [
+    'yoga-1', 'yoga-2', 'yoga-3', 'yoga-4', 'yoga-5', 'yoga-6', 'yoga-7', 'yoga-8',
+    'yoga-9', 'yoga-10', 'yoga-11', 'yoga-12',
+    'rabbit-1', 'rabbit-2', 'rabbit-3', 'rabbit-4', 'rabbit-5', 'rabbit-6', 'rabbit-7'
+  ].map((n) => 'assets/photos/' + n + '.webp');
+  let lessonImage = null;
+
+  function setLessonImage(url) {
+    lessonImage = url || null;
+    const prev = $('lf-imgprev');
+    prev.hidden = !lessonImage;
+    if (lessonImage) prev.src = lessonImage;
+    $('lf-imgempty').hidden = !!lessonImage;
+    $('lf-imgclear').hidden = !lessonImage;
+  }
+
+  $('lf-imgclear').addEventListener('click', () => { setLessonImage(null); $('lf-imgnote').textContent = 'Obrázek odebraný — po uložení se použije výchozí fotka.'; });
+
+  $('lf-imggal').addEventListener('click', () => {
+    const g = $('lf-gallery');
+    if (!g.dataset.filled) {
+      g.innerHTML = STOCK_PHOTOS.map((p) => '<button type="button" data-photo="' + p + '"><img src="' + p + '" alt="" loading="lazy" /></button>').join('');
+      g.dataset.filled = '1';
+    }
+    g.classList.toggle('open');
+  });
+
+  $('lf-gallery').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-photo]'); if (!b) return;
+    setLessonImage(b.dataset.photo);
+    $('lf-gallery').classList.remove('open');
+    $('lf-imgnote').textContent = 'Fotka vybraná. Uloží se spolu s lekcí.';
+  });
+
+  $('lf-imgfile').addEventListener('change', async (e) => {
+    const file = e.target.files && e.target.files[0]; if (!file) return;
+    e.target.value = '';   // ať jde nahrát tentýž soubor znovu
+    if (!/^image\//.test(file.type)) { toast('Vyberte prosím obrázek'); return; }
+    const note = $('lf-imgnote');
+    note.textContent = 'Zpracovávám obrázek…';
+    try {
+      const small = await shrinkImage(file, 1000, 0.78);
+      note.textContent = 'Nahrávám…';
+      let url;
+      try {
+        url = await uploadLessonImage(small);
+      } catch (err) {
+        // úložiště není nastavené (nebo je nedostupné) — obrázek uložíme
+        // rovnou do lekce, jen ho kvůli velikosti ještě zmenšíme
+        const tiny = await shrinkImage(file, 700, 0.62);
+        url = await blobToDataUrl(tiny);
+      }
+      setLessonImage(url);
+      note.textContent = 'Obrázek připravený. Uloží se spolu s lekcí.';
+    } catch (err) {
+      note.textContent = 'Obrázek se nepodařilo načíst. Zkuste jiný soubor.';
+      toast('Obrázek se nepodařilo načíst');
+    }
+  });
+
+  // zmenšení a komprese v prohlížeči — ať se web načítá rychle
+  function shrinkImage(file, maxSide, quality) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.max(1, Math.round(img.width * scale));
+        c.height = Math.max(1, Math.round(img.height * scale));
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        c.toBlob((blob) => {
+          if (blob) { resolve(blob); return; }
+          c.toBlob((jpg) => jpg ? resolve(jpg) : reject(new Error('convert')), 'image/jpeg', quality);
+        }, 'image/webp', quality);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('load')); };
+      img.src = url;
+    });
+  }
+
+  async function uploadLessonImage(blob) {
+    const ext = blob.type === 'image/jpeg' ? 'jpg' : 'webp';
+    const name = 'lekce-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
+    const { error } = await sb.storage.from(IMG_BUCKET).upload(name, blob, { contentType: blob.type, cacheControl: '31536000' });
+    if (error) throw error;
+    const { data } = sb.storage.from(IMG_BUCKET).getPublicUrl(name);
+    if (!data || !data.publicUrl) throw new Error('no_url');
+    return data.publicUrl;
+  }
+
+  function blobToDataUrl(blob) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result);
+      r.onerror = () => reject(new Error('read'));
+      r.readAsDataURL(blob);
+    });
+  }
   $('lessonCancel').addEventListener('click', () => lessonWrap.classList.remove('open'));
   $('lessonFilter').addEventListener('change', renderLessons);
 
@@ -642,9 +797,18 @@
       duration_min: parseInt($('lf-dur').value, 10), capacity: parseInt($('lf-cap').value, 10),
       note: $('lf-note').value.trim() || null
     };
-    const res = editingId
-      ? await sb.from('lessons').update(payload).eq('id', editingId)
-      : await sb.from('lessons').insert(payload);
+    if (imagesReady) payload.image_url = lessonImage;
+    const save = () => editingId
+      ? sb.from('lessons').update(payload).eq('id', editingId)
+      : sb.from('lessons').insert(payload);
+    let res = await save();
+    // databáze ještě nezná sloupec image_url — uložíme lekci bez obrázku
+    if (res.error && /image_url/.test(res.error.message || '')) {
+      applyImageSupport(false);
+      delete payload.image_url;
+      res = await save();
+      if (!res.error) toast('Lekce uložena bez obrázku — spusťte supabase/lesson-images.sql');
+    }
     if (res.error) { toast('Uložení selhalo'); return; }
     toast(editingId ? 'Lekce upravena' : 'Lekce přidána');
     lessonWrap.classList.remove('open'); editingId = null;
@@ -665,6 +829,7 @@
         : '<span class="pill pill-ok">' + (l.capacity - b) + ' volných</span>';
       return '<div class="lesson-block">' +
         '<div class="row' + (cancelled ? ' is-cancelled' : '') + '">' +
+        (l.image_url ? '<img class="row-thumb" src="' + esc(l.image_url) + '" alt="" loading="lazy" />' : '') +
         '<div class="main"><div class="ttl">' + esc(l.title) + ' ' + pill + '</div>' +
         '<div class="sub">' + fmtDT(l.starts_at) + ' · ' + l.duration_min + ' min · ' + b + '/' + l.capacity + ' míst' + (l.note ? ' · ' + esc(l.note) : '') + '</div></div>' +
         '<div class="acts">' +
@@ -716,6 +881,8 @@
       $('lf-date').value = CAS.proInputDate(l.starts_at);
       $('lf-time').value = CAS.proInputTime(l.starts_at);
       $('lf-dur').value = l.duration_min; $('lf-cap').value = l.capacity; $('lf-note').value = l.note || '';
+      setLessonImage(l.image_url || null);
+      $('lf-imgnote').textContent = 'Ukáže se u lekce v rezervacích. Bez obrázku se použije výchozí fotka podle názvu lekce.';
       lessonWrap.classList.add('open'); lessonWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
     } else if (btn.dataset.cancel) {
       // Zrušení jde přes RPC zrus_lekci, ne přes prostý update stavu:
