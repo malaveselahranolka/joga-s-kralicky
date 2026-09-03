@@ -889,6 +889,14 @@
   html.lite .breathe { animation: none; }
   html.lite .aurora { filter: blur(46px); opacity: .26; }
   html.lite .sglow { opacity: .5; }
+  /* backdrop-filter je při scrollování to nejdražší, co na stránce je:
+     prohlížeč musí každý snímek znovu rozmazat pruh pod hlavičkou přes
+     celou šířku okna. V úsporném režimu telefonu se na tom scroll láme.
+     Plná barva vypadá skoro stejně a nestojí nic. */
+  html.lite header.nav.scrolled { backdrop-filter: none; background: var(--paper); }
+  /* kreslení šipky mění stroke-dashoffset, což je překreslení SVG v každém
+     snímku — ne posun vrstvy. V lite režimu ji rovnou necháme dokreslenou. */
+  html.lite .cta-arrow path { stroke-dashoffset: 0; }
 
   @media (prefers-reduced-motion: reduce) {
     html.js .reveal { opacity: 1; transform: none; }
@@ -1482,6 +1490,46 @@
     || (navigator.connection && navigator.connection.saveData);
   if (LITE) document.documentElement.classList.add('lite');
 
+  // ============ ÚSPORNÝ REŽIM SE POZNÁ AŽ PODLE NÁSLEDKŮ ============
+  // Na to, jestli má telefon zapnutý úsporný režim (iOS Low Power, Android
+  // spořič baterie), žádné API neexistuje a nejspíš nikdy nebude — je to
+  // údaj o zařízení, který by šel zneužít k otiskování prohlížeče.
+  // Poznat jde ale jeho následek: prohlížeč přiškrtí překreslování na
+  // polovinu. Změříme tedy skutečné snímky během prvního scrollování a když
+  // jich je málo, dozapneme lite režim (vypne blur v hlavičce, dýchání skvrn
+  // a kreslení šipky).
+  //
+  // Jen jedním směrem: co se jednou vypne, už se nezapíná zpátky. Stránka,
+  // která si pod rukama přepíná vzhled sem a tam, je horší než stránka
+  // trvale o něco skromnější. A protože degradace jenom ubírá efekty,
+  // nejhorší možný omyl je, že je web na chvíli klidnější, než musel být.
+  (function () {
+    if (LITE || REDUCE) return;
+    let snimku = 0, prvni = 0, meri = false;
+
+    function vzorek(t) {
+      if (!prvni) prvni = t;
+      snimku++;
+      const ubehlo = t - prvni;
+      if (ubehlo < 1000) { requestAnimationFrame(vzorek); return; }
+      if (snimku / (ubehlo / 1000) < 35) document.documentElement.classList.add('lite');
+      meri = false;
+    }
+
+    function start() {
+      if (meri) return;
+      meri = true;
+      window.removeEventListener('scroll', start);
+      snimku = 0; prvni = 0;
+      requestAnimationFrame(vzorek);
+    }
+
+    // Až po `load`, ať se neměří doskakování obrázků místo scrollování.
+    window.addEventListener('load', () => {
+      window.addEventListener('scroll', start, { passive: true });
+    });
+  })();
+
   // ============ NAV ============
   const nav = document.getElementById('nav');
   nav.classList.toggle('scrolled', window.scrollY > 40);
@@ -1713,23 +1761,44 @@
     let ctaTop = 0, ctaH = 1;
     const glowBoxes = [];
 
+    // POŘADÍ ČTENÍ A ZÁPISŮ JE TU PODSTATNÉ.
+    //
+    // Dřív se `--travel` zapisovalo doprostřed měření: přečti šířku stopy →
+    // zapiš délku pinu → přečti pozici galerie → přečti pozici CTA → přečti
+    // pozice všech světel. Jenže ten zápis mění rozměry stránky, takže si
+    // KAŽDÉ další čtení vynutilo nový přepočet layoutu. Lighthouse to na
+    // mobilu měřil jako 100 ms na jedno zavolání.
+    //
+    // A `measure()` se volá nejen při načtení, ale i při každém `resize`
+    // (na mobilu to spouští i vyjíždějící adresní řádek prohlížeče) a
+    // z ResizeObserveru pokaždé, když doskočí další fotka z CMS a změní
+    // šířku stopy. Odtud to trhání během scrollování ke galerii.
+    //
+    // Teď se ten jediný rozměr měnící zápis udělá jako první a všechno
+    // ostatní se už jen čte — jeden přepočet místo deseti.
     function measure() {
-      vh = window.innerHeight;
-      docMax = Math.max(document.documentElement.scrollHeight - vh, 1);
-      heroEnd = heroEl ? docTop(heroEl) + heroEl.offsetHeight : 0;
+      const pinned = galPinned();
 
       if (galWrap && galTrack) {
-        if (galPinned()) {
-          galTravel = Math.max(galTrack.scrollWidth - window.innerWidth, 0);
+        if (pinned) {
           // stopa ujede celou šířku za kratší scroll, jinak by pin trval věčnost
+          galTravel = Math.max(galTrack.scrollWidth - window.innerWidth, 0);
           galWrap.style.setProperty('--travel', Math.round(galTravel * 0.6) + 'px');
-          galTop = docTop(galWrap);
-          galSpan = Math.max(galWrap.offsetHeight - vh, 1);
         } else {
           galWrap.style.removeProperty('--travel');
           galTrack.style.transform = '';
           galTravel = 0;
         }
+      }
+
+      // odsud níž se už jen čte
+      vh = window.innerHeight;
+      docMax = Math.max(document.documentElement.scrollHeight - vh, 1);
+      heroEnd = heroEl ? docTop(heroEl) + heroEl.offsetHeight : 0;
+
+      if (galWrap && galTrack && pinned) {
+        galTop = docTop(galWrap);
+        galSpan = Math.max(galWrap.offsetHeight - vh, 1);
       }
       if (ctaSec) { ctaTop = docTop(ctaSec); ctaH = Math.max(ctaSec.offsetHeight, 1); }
 
@@ -1738,6 +1807,17 @@
         const sec = g.parentElement;
         glowBoxes.push({ el: g, top: docTop(sec), h: Math.max(sec.offsetHeight, 1) });
       });
+    }
+
+    // Fotky z CMS doskakují jedna po druhé a každá změní šířku stopy. Bez
+    // tohohle by se přeměřovalo tolikrát, kolik je fotek — a to zrovna ve
+    // chvíli, kdy návštěvník scrolluje ke galerii. Takhle se z celé dávky
+    // stane jedno přeměření v nejbližším snímku.
+    let mereniCeka = false;
+    function measureSoon() {
+      if (mereniCeka) return;
+      mereniCeka = true;
+      requestAnimationFrame(() => { mereniCeka = false; measure(); update(); });
     }
 
     let ticking = false;
@@ -1758,7 +1838,9 @@
         if (galBar) galBar.style.transform = 'scaleX(' + gp.toFixed(4) + ')';
       }
 
-      if (ctaLead && !REDUCE) {
+      // V lite režimu se šipka nekreslí — CSS ji nechá rovnou dotaženou.
+      // Zápis --draw by jinak v každém snímku překresloval SVG.
+      if (ctaLead && !REDUCE && !document.documentElement.classList.contains('lite')) {
         const d = clamp((y + vh * 0.88 - ctaTop) / (ctaH * 0.62));
         ctaLead.style.setProperty('--draw', d.toFixed(3));
         if (d > 0.985) ctaLead.classList.add('armed');
@@ -1778,9 +1860,9 @@
     function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(update); } }
 
     window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', () => { measure(); onScroll(); }, { passive: true });
-    window.addEventListener('load', () => { measure(); update(); });
-    if (galTrack && 'ResizeObserver' in window) new ResizeObserver(() => { measure(); update(); }).observe(galTrack);
+    window.addEventListener('resize', measureSoon, { passive: true });
+    window.addEventListener('load', measureSoon);
+    if (galTrack && 'ResizeObserver' in window) new ResizeObserver(measureSoon).observe(galTrack);
     measure(); update();
   })();
 

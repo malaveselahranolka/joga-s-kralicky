@@ -31,6 +31,13 @@
   var MERAK = 'G-0FBG13R4FH';
   var ZASADY = '/zasady-osobnich-udaju.html#cookies';
 
+  // Verze souhlasu. Souhlas platí k tomu, co bylo v zásadách napsané ve chvíli,
+  // kdy ho člověk dal — takže až se rozsah měření podstatně změní (přibude
+  // další nástroj, jiný účel), zvedni tohle číslo. Uložené starší souhlasy tím
+  // pozbudou platnosti a lišta se zeptá znovu. Bez toho by souhlas z roku 2026
+  // tiše pokrýval i něco, o čem tehdy nemohl nikdo vědět.
+  var VERZE = 1;
+
   // ---- uložené rozhodnutí -------------------------------------------
   // Prohlížeč v anonymním okně nebo s vypnutým úložištěm hodí výjimku.
   // Pak se jen zeptáme znovu, což je bezpečnější než spadnout.
@@ -42,7 +49,7 @@
   }
   function zapis(stav) {
     try {
-      window.localStorage.setItem(KLIC, JSON.stringify({stav: stav, datum: new Date().toISOString()}));
+      window.localStorage.setItem(KLIC, JSON.stringify({stav: stav, verze: VERZE, datum: new Date().toISOString()}));
     } catch (e) { /* bez úložiště se zeptáme příště znovu */ }
   }
 
@@ -260,6 +267,8 @@
 
   // ---- start -----------------------------------------------------------
   var rozhodnuti = precti();
+  // Souhlas z jiné verze zásad neplatí — zeptáme se znovu.
+  if (rozhodnuti && rozhodnuti.verze !== VERZE) rozhodnuti = null;
   if (rozhodnuti && rozhodnuti.stav === 'ano') nactiGA();
   else if (!rozhodnuti) {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ukaz);

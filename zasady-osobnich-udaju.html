@@ -96,6 +96,13 @@
   .tbl-wrap { overflow-x: auto; }
   footer.foot { border-top: 1px solid var(--line); padding: 2rem 0 3rem; font-size: .9rem; color: var(--ink-soft); }
   footer.foot a { margin-right: 1.2rem; }
+
+  /* Blur pod lepivou hlavičkou stojí prohlížeč přepočet při každém snímku
+     scrollování. Na telefonu (a hlavně v úsporném režimu) je to nejdražší
+     efekt na stránce, přitom ho za 68 px vysokým pruhem nikdo nepostrádá. */
+  @media (max-width: 760px) {
+    header.bar { backdrop-filter: none; background: var(--paper); }
+  }
 </style>
 <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
 </head>
@@ -112,7 +119,8 @@
   <div class="wrap">
     <h1>Zásady zpracování osobních údajů</h1>
     <p class="lead">Bez balastu: co o vás víme, proč to potřebujeme, komu se to dostane do ruky a jak nám to můžete zakázat.</p>
-    <p class="updated">Účinné od <strong>20. 8. 2026</strong></p>
+    <p class="updated">Účinné od <strong>3. 9. 2026</strong> · předchozí znění platilo od 20. 8. 2026.<br />
+      Co se změnilo: přibylo měření návštěvnosti přes Google Analytics, které běží <strong>jen s vaším souhlasem</strong> — viz oddíl 4. Google jsme doplnili mezi zpracovatele v oddílu 3.</p>
 
     <h2>1. Kdo s vašimi údaji pracuje</h2>
     <p>Správcem osobních údajů je:</p>

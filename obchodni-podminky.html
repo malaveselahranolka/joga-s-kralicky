@@ -81,6 +81,13 @@
   .tbl-wrap { overflow-x: auto; }
   footer.foot { border-top: 1px solid var(--line); padding: 2rem 0 3rem; font-size: .9rem; color: var(--ink-soft); }
   footer.foot a { margin-right: 1.2rem; }
+
+  /* Blur pod lepivou hlavičkou stojí prohlížeč přepočet při každém snímku
+     scrollování. Na telefonu (a hlavně v úsporném režimu) je to nejdražší
+     efekt na stránce, přitom ho za 68 px vysokým pruhem nikdo nepostrádá. */
+  @media (max-width: 760px) {
+    header.bar { backdrop-filter: none; background: var(--paper); }
+  }
 </style>
 <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
 </head>
