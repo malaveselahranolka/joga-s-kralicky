@@ -143,8 +143,11 @@
     '}',
     '.jsk-souhlas.je-videt{opacity:1;transform:none}',
     '.jsk-souhlas p{margin:0;flex:1 1 16rem;font-size:.88rem;line-height:1.45;color:var(--ink,#1E231C)}',
-    '.jsk-souhlas a{color:var(--ink-soft,#5C6357);text-underline-offset:3px;white-space:nowrap}',
-    '.jsk-souhlas a:hover{color:var(--forest,#2C3B2E)}',
+    // Odkaz musí být poznat i bez barvy a mít vůči okolnímu textu kontrast
+    // aspoň 3:1 — tlumená šedá měla 2,57:1 a Lighthouse to právem hlásil.
+    // Podtržení řeší obojí naráz.
+    '.jsk-souhlas a{color:var(--forest,#2C3B2E);text-decoration:underline;text-underline-offset:3px;white-space:nowrap}',
+    '.jsk-souhlas a:hover{text-decoration-thickness:2px}',
     '.jsk-s-akce{display:flex;gap:.45rem;flex:0 0 auto}',
     '.jsk-s-akce button{',
     '  min-width:4.5rem;min-height:2.75rem;padding:.5rem 1.15rem;',
