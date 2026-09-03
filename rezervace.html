@@ -267,7 +267,13 @@
            přepíše živými daty, takže návštěvník vidí aktuální obsazenost. -->
       <div id="dayList"><!--TERMINY--></div>
 
-      <div id="voucherCard" class="voucher-card hidden">
+      <!-- Karta poukazu je vidět rovnou a JS ji naopak SCHOVÁ, když jsou
+           platby vypnuté (payment-config.js → enabled:false). Obráceně to
+           nejde: skripty se načítají s `defer`, takže by se karta odkryla
+           až po prvním vykreslení a odsunula patičku dolů. Lighthouse to
+           měřil jako posun rozvržení 0,39 — na stránce, kde se platí.
+           Bliknutí v nouzovém režimu je menší zlo než trvalé poskakování. -->
+      <div id="voucherCard" class="voucher-card">
         <div class="vc-info">
           <img class="vc-photo" decoding="async" src="assets/photos/rabbit-1-320.webp" alt="Králíček si bere pamlsek z ruky" width="320" height="427" loading="lazy" />
           <div>
@@ -544,7 +550,16 @@ document.addEventListener('DOMContentLoaded', function () {
       $('dayList').innerHTML = '<div class="empty">Online rezervace se připravuje. Zatím nám napište na <a href="mailto:info@jogaskralicky.cz" style="color:var(--clover)">info@jogaskralicky.cz</a> nebo zavolejte na +420 603 340 860.</div>';
       return;
     }
-    $('dayList').innerHTML = '<div class="empty">Načítám termíny…</div>';
+    // Statický seznam termínů z buildu necháme na místě, dokud nedorazí
+    // živá data. Přepsat ho hláškou „Načítám termíny…" znamenalo, že se
+    // obsah stránky nejdřív srazil na jeden řádek a pak zase roztáhl —
+    // a od chvíle, co se skripty načítají s `defer`, se to děje až po
+    // prvním vykreslení, takže se to počítá jako posun rozvržení.
+    // Lighthouse to naměřil jako CLS 0,47 na stránce, kde se platí.
+    // Hlášku ukážeme jen tehdy, když opravdu není co zobrazit.
+    if (!$('dayList').children.length) {
+      $('dayList').innerHTML = '<div class="empty">Načítám termíny…</div>';
+    }
     const { data, error } = await sb.from('public_lessons').select('*').order('starts_at', { ascending: true });
     if (error) { $('dayList').innerHTML = '<div class="empty">Termíny se nepodařilo načíst. Zkuste to prosím za chvíli znovu.</div>'; return; }
     lessons = (data || []).map((l) => ({ ...l, dt: new Date(l.starts_at) }));
@@ -754,8 +769,8 @@ document.addEventListener('DOMContentLoaded', function () {
       czk(VOUCHER_PRICE * vcCount) + ' <span class="arrow">→</span>';
   }
 
+  if (!VOUCHER_ON) $('voucherCard').classList.add('hidden');
   if (VOUCHER_ON) {
-    $('voucherCard').classList.remove('hidden');
     updateVouchers();
     $('vcDec').addEventListener('click', () => { if (vcCount > 1) { vcCount--; updateVouchers(); } });
     $('vcInc').addEventListener('click', () => { if (vcCount < MAX_VOUCHERS) { vcCount++; updateVouchers(); } });
