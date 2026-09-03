@@ -65,6 +65,16 @@
   .tab { background: none; border: 0; border-bottom: 2px solid transparent; padding: .7rem 1.1rem; font-family: inherit; font-size: 1rem; font-weight: 600; color: var(--ink-soft); cursor: pointer; transition: color .2s var(--ease), border-color .2s var(--ease); margin-bottom: -1px; }
   .tab:hover { color: var(--ink); }
   .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--clover); }
+  .tab-alarm { display: inline-block; width: .5rem; height: .5rem; margin-left: .4rem; vertical-align: middle; border-radius: 50%; background: var(--carrot); }
+  .email-poplach {
+    display: flex; flex-wrap: wrap; align-items: center; gap: .8rem 1rem;
+    background: color-mix(in srgb, var(--carrot) 14%, var(--cloud));
+    border: 1px solid color-mix(in srgb, var(--carrot) 45%, var(--line));
+    border-radius: var(--r-md); padding: .9rem 1.1rem;
+    margin: 1.2rem 0 0; font-size: .9rem; line-height: 1.5;
+  }
+  .email-poplach > div { flex: 1 1 20rem; }
+  .email-poplach strong { display: block; color: #9a5a23; }
   .panel { display: none; padding-bottom: 4rem; }
   .panel.active { display: block; }
   .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.4rem; }
@@ -269,7 +279,20 @@
       <button class="tab" role="tab" aria-selected="false" data-tab="scan">Odbavení</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="news">Newsletter</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="vouchers">Poukazy</button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="emails">E-maily</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="emails">E-maily<span class="tab-alarm" id="emailAlarm" hidden></span></button>
+    </div>
+
+    <!-- Poplach z fronty e-mailů. Fronta selhání poctivě zapisuje, ale sama
+         od sebe nikomu nic neřekne — a protože v produkci neběží pg_cron,
+         nezkusí to ani znovu. Zaplacená rezervace tak může skončit bez
+         vstupenky a jediná stopa je řádek v tabulce, do které se nikdo
+         nedívá. Tenhle pruh je vidět na každé záložce. -->
+    <div class="email-poplach" id="emailPoplach" hidden>
+      <div>
+        <strong id="emailPoplachTitulek"></strong>
+        <span id="emailPoplachText"></span>
+      </div>
+      <button class="btn btn-primary btn-sm" id="emailPoplachBtn">Otevřít e-maily</button>
     </div>
 
     <!-- DASHBOARD -->
@@ -428,17 +451,14 @@
       </div>
       <div class="stat-row" id="newsStats"></div>
 
+      <!-- Formulář na rozeslání newsletteru odsud zmizel 3. 9. 2026. Posílal
+           z prohlížeče přes EmailJS a nikdy nefungoval: podmínka vyžadovala
+           vyplněné ID šablony, které zůstalo na zástupné hodnotě, takže
+           tlačítko jen hlásilo „nejdřív nastav šablonu". E-maily dnes odesílá
+           Brevo, kde je i editor kampaní. -->
       <div class="card" style="margin-bottom:1.4rem">
-        <h3 style="margin-bottom:.4rem">Napsat a rozeslat newsletter</h3>
-        <p class="muted" style="font-size:.86rem;margin-bottom:1rem">Rozešle se všem aktivním odběratelům přímo z prohlížeče přes EmailJS. Každý dostane vlastní e-mail s odhlašovacím odkazem. Vyžaduje nastavenou EmailJS newsletter šablonu (viz NASTAVENI.md).</p>
-        <form id="sendNewsForm">
-          <div class="field" style="margin-bottom:1rem"><label for="nl-subject">Předmět</label><input id="nl-subject" required placeholder="např. Nové termíny na červenec 🐰" /></div>
-          <div class="field"><label for="nl-body">Text zprávy</label><textarea id="nl-body" rows="7" required placeholder="Ahoj, tento týden přidáváme…" style="resize:vertical;line-height:1.6"></textarea></div>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit" id="nlSendBtn">Rozeslat odběratelům</button>
-            <span class="muted" id="nlHint" style="align-self:center;font-size:.85rem"></span>
-          </div>
-        </form>
+        <h3 style="margin-bottom:.4rem">Rozeslání newsletteru</h3>
+        <p class="muted" style="font-size:.86rem;margin:0">Newsletter se píše a rozesílá v <strong>Brevu</strong>, kde běží i potvrzení rezervací. Seznam odběratelů si odsud stáhněte tlačítkem <strong>Stáhnout CSV</strong> a naimportujte ho tam do kontaktů.</p>
       </div>
 
       <div class="rows" id="newsRows"></div>
@@ -521,7 +541,6 @@
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script src="supabase-config.js?v=2"></script>
 <script src="datum.js?v=1"></script>
@@ -647,6 +666,12 @@
     $('panel-' + t.dataset.tab).classList.add('active');
     if (t.dataset.tab !== 'scan') scanStop();   // kamera nemá běžet na pozadí
   }));
+
+  // Tlačítko z poplachového pruhu — přepne na záložku E-maily.
+  $('emailPoplachBtn').addEventListener('click', () => {
+    const t = document.querySelector('.tab[data-tab="emails"]');
+    if (t) t.click();
+  });
 
   // dashboard ----------------------------------------------------------
   $('refreshDash').addEventListener('click', loadAll);
@@ -1051,8 +1076,6 @@
   $('refreshNews').addEventListener('click', loadAll);
   function renderNews() {
     const active = subscribers.filter((s) => !s.unsubscribed);
-    const nlHint = $('nlHint');
-    if (nlHint) nlHint.textContent = active.length ? ('Odešle se na ' + active.length + ' odběratelů') : 'Zatím žádní odběratelé';
     $('newsStats').innerHTML = stat(active.length, 'odběratelů') +
       stat(subscribers.length, 'celkem zapsaných') +
       stat(subscribers.filter((s) => s.unsubscribed).length, 'odhlášených');
@@ -1097,39 +1120,6 @@
     }
   });
 
-  // rozeslání newsletteru přímo z adminu přes EmailJS
-  const SITE = 'https://www.jogaskralicky.cz/';
-  const EJS_OK = !!(window.EMAILJS_PUBLIC_KEY && window.EMAILJS_SERVICE_ID && window.EMAILJS_NEWSLETTER_TEMPLATE_ID &&
-    String(window.EMAILJS_NEWSLETTER_TEMPLATE_ID).indexOf('TVUJ_') !== 0 && typeof window.emailjs !== 'undefined');
-  if (EJS_OK) { try { window.emailjs.init({ publicKey: window.EMAILJS_PUBLIC_KEY }); } catch (e) {} }
-
-  $('sendNewsForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const subject = $('nl-subject').value.trim(), message = $('nl-body').value.trim();
-    if (!subject || !message) { toast('Doplňte předmět i text'); return; }
-    if (!EJS_OK) { toast('Nejdřív nastav EmailJS newsletter šablonu (viz NASTAVENI.md)'); return; }
-    const list = subscribers.filter((s) => !s.unsubscribed);
-    if (!list.length) { toast('Nemáš žádné aktivní odběratele'); return; }
-    if (!confirm('Rozeslat newsletter „' + subject + '“ na ' + list.length + ' odběratelů?')) return;
-
-    const btn = $('nlSendBtn'); btn.disabled = true; const label = btn.textContent;
-    let sent = 0, failed = 0;
-    for (const s of list) {
-      btn.textContent = 'Odesílám ' + (sent + failed + 1) + '/' + list.length + '…';
-      try {
-        await window.emailjs.send(window.EMAILJS_SERVICE_ID, window.EMAILJS_NEWSLETTER_TEMPLATE_ID, {
-          to_email: s.email, email: s.email, subject: subject, message: message,
-          unsubscribe_url: SITE + '?unsub=' + encodeURIComponent(s.email)
-        });
-        sent++;
-      } catch (err) { failed++; }
-      await new Promise((r) => setTimeout(r, 700)); // šetrn�� kvůli limitům EmailJS
-    }
-    btn.disabled = false; btn.textContent = label;
-    toast('Odesláno: ' + sent + (failed ? (' · nepovedlo se: ' + failed) : ''));
-    if (sent) $('sendNewsForm').reset();
-  });
-
   // poukazy -----------------------------------------------------------
   $('refreshVouchers').addEventListener('click', loadAll);
   $('voucherFilter').addEventListener('change', renderVouchers);
@@ -1160,6 +1150,24 @@
     $('emailStats').innerHTML = stat(emails.filter((e) => e.status === 'sent').length, 'doručených') +
       stat(cekaji.length, 'čekají') +
       stat(vzdane.length, 'nedoručených');
+
+    // Uvíznuté = čekají, ale čas dalšího pokusu už dávno minul. Bez pg_cron
+    // v produkci se sám nespustí, takže tam takový řádek zůstane napořád.
+    const uviznute = cekaji.filter((e) => e.next_attempt_at && new Date(e.next_attempt_at).getTime() < Date.now() - 15 * 60 * 1000);
+    const poplach = vzdane.length + uviznute.length;
+    $('emailAlarm').hidden = poplach === 0;
+    $('emailPoplach').hidden = poplach === 0;
+    if (poplach) {
+      const kus = (n) => n + (n === 1 ? ' e-mail' : (n < 5 ? ' e-maily' : ' e-mailů'));
+      // Sloveso se musí shodovat s počtem: „1 e-mail čeká", „2 e-maily čekají",
+      // „5 e-mailů čeká". U nedoručených je vazba neosobní a funguje na vše.
+      const ceka = (n) => (n >= 2 && n < 5) ? ' čekají na odeslání déle, než by měly' : ' čeká na odeslání déle, než by měl';
+      $('emailPoplachTitulek').textContent = vzdane.length
+        ? (kus(vzdane.length) + ' se nepodařilo doručit')
+        : (kus(uviznute.length) + ceka(uviznute.length));
+      $('emailPoplachText').textContent = 'Někdo možná zaplatil a nedostal vstupenku. '
+        + 'Otevřete záložku E-maily a zkuste je poslat znovu.';
+    }
 
     const f = $('emailFilter').value;
     let list = emails.slice();

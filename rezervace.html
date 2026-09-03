@@ -370,8 +370,13 @@
      se až po dokončení parsování.
      Druhá půlka opravy je o řádek níž: inline blok se proto NESMÍ pouštět
      rovnou, jinak sáhne na window.supabase dřív, než vůbec existuje. -->
+<!-- EmailJS se odsud odstranil 3. 9. 2026. Potvrzení rezervací i poukazy
+     rozesílá server přes Brevo (fronta email_outbox), prohlížeč z téhle
+     stránky žádný e-mail neodesílá. Dokud tu ta záložní větev byla, stahoval
+     se kvůli ní na každé zobrazení skript z cizí domény, který se v praxi
+     nikdy nezavolal — server hlásí `serverEmail: true`, jakmile je nastavený
+     BREVO_API_KEY. -->
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script defer src="supabase-config.js?v=2"></script>
 <script defer src="payment-config.js?v=4"></script>
 <script defer src="datum.js?v=1"></script>
@@ -454,24 +459,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Po návratu z platby se rovnou zeptáme Stripu, jestli je zaplaceno, a stav
   // zapíšeme. Webhook zůstává jako druhá cesta — ale nečekáme jen na něj.
-  // Vrací { paid, serverEmail }. serverEmail = server e-maily rozesílá sám
-  // (má EMAILJS_PRIVATE_KEY), takže prohlížeč už žádný posílat nesmí —
-  // jinak by hostovi přišel dvakrát.
+  // Vrací { paid, serverEmail }. serverEmail = server má nastaveného
+  // odesílatele (dnes Brevo) a e-maily rozesílá sám. Prohlížeč z nich
+  // neposílá žádný, příznak se používá jen na znění textu na obrazovce.
   async function confirmPayment(sessionId) {
     if (!CONFIGURED || !sessionId) return { paid: false, serverEmail: false };
     try {
       const { body } = await fnPost('stripe-confirm', { session_id: sessionId });
       return { paid: !!(body && body.paid), serverEmail: !!(body && body.serverEmail) };
     } catch (e) { return { paid: false, serverEmail: false }; }
-  }
-
-  // EmailJS — potvrzení rezervace (nepovinné; bez konfigurace rezervace běží dál)
-  const EMAIL_OK = !!(window.EMAILJS_PUBLIC_KEY && window.EMAILJS_SERVICE_ID && window.EMAILJS_TEMPLATE_ID &&
-    String(window.EMAILJS_PUBLIC_KEY).indexOf('TVUJ_') !== 0 && typeof window.emailjs !== 'undefined');
-  if (EMAIL_OK) { try { window.emailjs.init({ publicKey: window.EMAILJS_PUBLIC_KEY }); } catch (e) {} }
-  async function sendConfirmation(params) {
-    if (!EMAIL_OK) return;
-    try { await window.emailjs.send(window.EMAILJS_SERVICE_ID, window.EMAILJS_TEMPLATE_ID, params); } catch (e) {}
   }
 
   const cap = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
@@ -690,36 +686,22 @@ document.addEventListener('DOMContentLoaded', function () {
       ' · ' + spotsTxt(spots);
     const total = PRICE * spots;
 
-    // podklady pro potvrzovací e-mail — pošleme ho až po zaplacení
-    const emailV = email.value.trim();
-    const ticketUrl = new URL(ticketHref(lastBookingId), location.href).href;
-    // QR chodí jen e-mailem, na webu se nekreslí. V e-mailu musí být hostovaný
-    // obrázek (e-mail nespustí JS). Kóduje odkaz na stav rezervace — přesně to,
-    // co čtečka v adminu očekává.
-    const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data=' + encodeURIComponent(ticketUrl);
-    const mail = {
-      email: emailV, to_email: emailV,
-      name: (first.value.trim() + ' ' + last.value.trim()).trim(),
-      lesson: chosen.title,
-      datetime: cap(fmtDow(chosen.dt)) + ' ' + fmtDate(chosen.dt) + ' · ' + fmtTime(chosen.dt) + '–' + fmtTime(end),
-      spots: spotsTxt(spots),
-      price: czk(total),
-      location: PLACE,
-      ticket_url: ticketUrl,
-      qr_url: qrUrl
-    };
     ls.set('lastBooking', lastBookingId);
-    ls.set('pendingBooking', JSON.stringify({ id: lastBookingId, summary: summaryTxt, amount: total, spots: spots, mail: mail }));
+    ls.set('pendingBooking', JSON.stringify({ id: lastBookingId, summary: summaryTxt, amount: total, spots: spots }));
 
     // Nouzový režim (payment-config.js → enabled:false): platby vypnuté.
+    // POZOR: e-maily se zakládají do fronty jen na platební cestě
+    // (stripe-webhook / stripe-confirm), takže v tomhle režimu ŽÁDNÉ
+    // potvrzení neodejde. Dřív to zachraňoval EmailJS z prohlížeče; ten je
+    // pryč, tak to text nesmí slibovat. Host má odkaz na stav rezervace
+    // a majitelka rezervaci vidí ve správě.
     if (!PAY_ON) {
       restore();
       ls.del('pendingBooking');
       stateBox('ok', 'Místo držíme pro vás',
-        '<p class="big">' + summaryTxt + '</p><p>Potvrzení posíláme e-mailem — je v něm i <strong>QR kód</strong>, který ve studiu jen ukážete.</p>',
+        '<p class="big">' + summaryTxt + '</p><p>Rezervaci máme zapsanou. Otevřete si <strong>stav rezervace</strong> a uložte si odkaz — ve studiu podle něj místo najdeme.</p>',
         '<a class="btn btn-ghost" href="' + ticketHref(lastBookingId) + '">Stav rezervace</a>' +
         '<a class="btn btn-ghost" href="rezervace.html">Nová rezervace</a>');
-      sendConfirmation(mail);
       return;
     }
 
@@ -743,8 +725,6 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   // ---- dárkový poukaz ----
-  const VOUCHER_TPL = window.EMAILJS_VOUCHER_TEMPLATE_ID;
-  const VOUCHER_EMAIL_OK = EMAIL_OK && VOUCHER_TPL && String(VOUCHER_TPL).indexOf('TVUJ_') !== 0;
   const VOUCHER_PRICE = Number(PAY.voucherCzk || 499);
   const MAX_VOUCHERS = Math.min(10, Math.max(1, Number(PAY.maxVouchers) || 10));
   let vcCount = 1;
@@ -825,12 +805,10 @@ document.addEventListener('DOMContentLoaded', function () {
       if (!paid) paid = await paidInDb(lastId);
       if (!paid) { await new Promise((r) => setTimeout(r, 2500)); paid = await paidInDb(lastId); }
       if (paid) {
-        // E-mail posílá server (stripe-webhook / stripe-confirm) a má na to
-        // frontu s opakováním, takže se neztratí, ani když host tuhle stránku
-        // vůbec neotevře. Prohlížeč přiskočí jen tehdy, když server posílat
-        // neumí — dokud se nedoplní EMAILJS_PRIVATE_KEY.
+        // E-mail posílá server (stripe-webhook / stripe-confirm) přes Brevo
+        // a má na to frontu s opakováním, takže se neztratí, ani když host
+        // tuhle stránku vůbec neotevře. Prohlížeč do toho nemluví.
         if (pending) {
-          if (!confirmed.serverEmail) sendConfirmation(pending.mail);
           // Měření dokončené platby. `pending` existuje jen napoprvé, klíč
           // navíc hlídá, že se nákup nezapočítá dvakrát po obnovení stránky.
           if (window.jskUdalostJednou) window.jskUdalostJednou(pending.id, 'purchase', {
@@ -883,32 +861,13 @@ document.addEventListener('DOMContentLoaded', function () {
         '<p>Děkujeme! Tady ' + (many ? 'jsou kódy dárkových poukazů' : 'je kód dárkového poukazu') +
         ' — obdarovaný ho uplatní přímo ve studiu:</p>' +
         '<div class="code-list">' + codes.map((c) => '<span class="code-box">' + c + '</span>').join('') + '</div>' +
-        '<p>' + (VOUCHER_EMAIL_OK && em
+        // Věta o e-mailu se řídí tím, co odpověděl server. Dřív stačilo, že
+        // je v prohlížeči nastavený EmailJS — tvrdila by tedy „poslali jsme
+        // je i na…" i ve chvíli, kdy se poukazy nepodařilo nikam odeslat.
+        '<p>' + (em && vb && vb.serverEmail
           ? ('Poslali jsme ' + (many ? 'je' : 'ho') + ' i na ' + esc(em) + '.')
           : ('Uložte si ' + (many ? 'je' : 'ho') + ' prosím (opište nebo udělejte screenshot).')) + '</p>',
         '<a class="btn btn-ghost" href="rezervace.html">Zpět na termíny</a>');
-      if (VOUCHER_EMAIL_OK && em && !(vb && vb.serverEmail)) {
-        // Jeden e-mail na každý poukaz — každý je samostatný dárek, takže se
-        // dá rovnou přeposlat obdarovanému. QR kóduje samotný kód poukazu,
-        // čtečka v adminu ho pozná stejně jako vstupenku.
-        (async () => {
-          for (let i = 0; i < codes.length; i++) {
-            const c = codes[i];
-            try {
-              await window.emailjs.send(window.EMAILJS_SERVICE_ID, VOUCHER_TPL, {
-                email: em, to_email: em,
-                code: c,
-                amount: czk(VOUCHER_PRICE),
-                qr_url: 'https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data=' + encodeURIComponent(c)
-              });
-            } catch (e) { /* jeden neodeslaný e-mail nesmí shodit zbytek */ }
-            // EmailJS pouští 1 požadavek za vteřinu. Dřív tu bylo 700 ms,
-            // takže při nákupu víc poukazů část e-mailů limit odmítl —
-            // a chyba se spolkla o pár řádků níž.
-            if (i < codes.length - 1) await new Promise((r) => setTimeout(r, 1100));
-          }
-        })();
-      }
       ls.del('voucherEmail'); ls.del('voucherCount');
     }
     else if (voucher === 'zrus') stateBox('info', 'Nákup poukazu zrušen', '<p>Poukaz jsi nekoupil — nic se nestrhlo. Klidně to zkus znovu.</p>', '<a class="btn btn-ghost" href="rezervace.html">Zpět na termíny</a>');
@@ -925,7 +884,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // Teď už jen uklidíme značku. O samotné odeslání se stará fronta
   // public.email_outbox, která to zkouší opakovaně a nezávisle na tom,
   // jestli se host na web ještě někdy vrátí.
-  async function flushPendingConfirmation() {
+  async function clearStalePending() {
     if (!CONFIGURED) return;
     let p = null;
     try { p = JSON.parse(ls.get('pendingBooking') || 'null'); } catch (e) { return; }
@@ -939,7 +898,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   const qs = new URLSearchParams(location.search);
-  if (!qs.has('platba') && !qs.has('voucher')) { load(); flushPendingConfirmation(); }
+  if (!qs.has('platba') && !qs.has('voucher')) { load(); clearStalePending(); }
 });
 </script>
 </body>

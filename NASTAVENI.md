@@ -61,53 +61,20 @@ GitHub Pages se aktualizuje do pár minut.
 
 ---
 
-## 6) Potvrzovací e-maily (EmailJS) — nepovinné
+## 6) Potvrzovací e-maily
 
-Aby hostovi po rezervaci přišel potvrzovací e-mail (a tobě kopie). Bez tohoto kroku rezervace fungují normálně, jen se e-mail neodešle.
+**Nic nenastavuješ, tohle už běží.** Potvrzení rezervací, kódy poukazů
+i uvítací e-mail odesílá server přes **Brevo**. Klíč `BREVO_API_KEY` je
+uložený v Supabase (Edge Functions → Secrets), šablony e-mailů leží
+v repozitáři v `supabase/functions/_shared/templates.ts`.
 
-1. Založ si free účet na **https://www.emailjs.com** → **Sign Up**.
-2. **Email Services** → **Add New Service** → vyber **Gmail** (nebo jiný) a připoj svůj e-mail. Zapiš si **Service ID** (např. `service_ab12cd`).
-3. **Email Templates** → **Create New Template**. Nastav pole:
-   - **To Email:** `{{to_email}}`
-   - **From Name:** `Jóga s králíčky`
-   - **Bcc:** `kovacikovabarbora71@gmail.com`  *(sem chodí tvoje kopie — přehled o nových rezervacích)*
-   - **Subject:** `Potvrzení rezervace — Jóga s králíčky`
-   - **Content** — přepni na **Code** (`<>`) a vlož:
-     ```html
-     <p>Dobrý den {{name}},</p>
-     <p>děkujeme za rezervaci! Vaše místo je potvrzené:</p>
-     <p>
-       Lekce: {{lesson}}<br />
-       Kdy: {{datetime}}<br />
-       Počet míst: {{spots}}<br />
-       Kde: {{location}}
-     </p>
-     <p style="text-align:center;margin:24px 0">
-       <img src="{{qr_url}}" alt="QR kód vstupenky" width="260" height="260"
-            style="display:block;margin:0 auto;border:1px solid #E3DFD3;border-radius:12px" />
-       <span style="display:block;margin-top:10px;font-size:14px;color:#5C6357">
-         Tenhle QR kód ukažte ve studiu — je to vaše vstupenka.
-       </span>
-     </p>
-     <p>Stav rezervace a platby: <a href="{{ticket_url}}">{{ticket_url}}</a></p>
-     <p>Těšíme se na vás (a králíci taky).<br />Jóga s králíčky</p>
-     ```
-   Ulož a zapiš si **Template ID** (např. `template_xy34`).
+Odeslané i neodeslané e-maily uvidíš ve správě v záložce **E-maily**.
+Když se něco nepodaří doručit, objeví se nahoře oranžový pruh —
+ten se ukáže na kterékoliv záložce, ať jsi ve správě kdekoliv.
 
-   > Ten obrázek `{{qr_url}}` je **jediné místo, kde host QR kód dostane** —
-   > na webu se QR záměrně nezobrazuje. Bez něj přijde e-mail bez vstupenky.
-4. **Account → General** (nebo **API Keys**) → zkopíruj **Public Key**.
-5. Vlož všechny tři hodnoty do **`supabase-config.js`**:
-   ```js
-   window.EMAILJS_PUBLIC_KEY  = 'sem-public-key';
-   window.EMAILJS_SERVICE_ID  = 'service_ab12cd';
-   window.EMAILJS_TEMPLATE_ID = 'template_xy34';
-   ```
-6. Ulož, commit + push. Hotovo — od teď chodí potvrzení hostovi i tobě.
-
-> Free tarif EmailJS: 200 e-mailů/měsíc. V EmailJS si můžeš v *Account → Security* přidat povolenou doménu webu pro vyšší bezpečnost.
-
----
+> Dřív tuhle práci dělal EmailJS přímo z prohlížeče. **Byl odstraněn
+> 3. 9. 2026** i s klíči v `supabase-config.js` — přestal se používat
+> ve chvíli, kdy začalo posílat Brevo, a jen zdržoval načítání stránek.
 
 ## Jak to používat
 
@@ -283,30 +250,10 @@ měnila, projdi je všechny, jinak se rozbijí návraty z plateb:
 | `index.html` | `og:image`, `og:url`, `canonical` |
 | Stripe → **Payment Links** → poukaz | návratová adresa po zaplacení |
 
-### F) Dárkový poukaz + e-mail s kódem (EmailJS)
-Poukazy se platí přes Stripe (funkce `stripe-voucher`), po zaplacení web ukáže
-**kódy** a pošle je e-mailem. Zákazník si jich může koupit **víc naráz** —
-počet vybere u karty s poukazem a cenu × počet spočítá server.
+### F) Dárkový poukaz + e-mail s kódem
 
-> **Kódy poukazů** vypadají `DK-XKCD1234` (jeden kus) nebo `DK-XKCD1234-1`,
-> `-2`, … (víc kusů). Odvozují se z čísla platby a **stejný výpočet dělá web
-> i funkce `stripe-webhook`** — jinak by host viděl jiné kódy, než máš
-> v adminu. Když ten výpočet měníš, změň ho na obou místech naráz.
-
-1. V EmailJS vytvoř šablonu (pole: `to_email`, `code`, `amount`, `qr_url`),
-   zkopíruj Template ID. **Při nákupu víc kusů chodí jeden e-mail na každý
-   poukaz** — každý je samostatný dárek, dá se rovnou přeposlat obdarovanému.
-
-   Do těla šablony přidej QR kód, ať jde poukaz odbavit čtečkou:
-   ```html
-   <p>Kód poukazu: <strong>{{code}}</strong> ({{amount}})</p>
-   <p><img src="{{qr_url}}" alt="QR kód poukazu" width="220" height="220" /></p>
-   ```
-   QR obsahuje přímo kód poukazu. V adminu ho načteš v záložce **Odbavení**
-   stejně jako vstupenku — ukáže se, jestli poukaz platí, a jedním tlačítkem
-   ho označíš jako uplatněný. Kód jde i opsat ručně.
-2. Do `supabase-config.js`: `window.EMAILJS_VOUCHER_TEMPLATE_ID = 'template_…';`
-3. Prodané poukazy vidíš v adminu → záložka **Poukazy** (odškrtneš „uplatněno").
+Kódy poukazů rozesílá server přes Brevo, stejně jako potvrzení rezervací.
+Šablona je v `supabase/functions/_shared/templates.ts`, nic se nenastavuje.
 
 ### G) Test
 Rezervuj/kup poukaz zkušebně. Ve Stripe **Test mode** zaplať kartou
@@ -339,26 +286,11 @@ Supabase → **SQL Editor → New query → Run**: obsah **`supabase/tickets.sql
 Ověř si, že to prošlo: SQL Editor → `select public.get_ticket('00000000-0000-0000-0000-000000000000');`
 Musí vrátit prázdný řádek, ne chybu „function does not exist".
 
-### B) QR do potvrzovacího e-mailu (POVINNÉ — jinak host QR nedostane)
-Web posílá do EmailJS dvě pole navíc: **`qr_url`** (hotový obrázek QR kódu)
-a **`ticket_url`** (odkaz na stav rezervace). Šablona je musí použít, jinak se
-v e-mailu neobjeví nic.
+### B) QR do potvrzovacího e-mailu
 
-EmailJS → **Email Templates** → tvoje šablona potvrzení → přepni na **Code**
-(`<>`) a vlož do těla e-mailu:
-
-```html
-<p style="text-align:center;margin:24px 0">
-  <img src="{{qr_url}}" alt="QR kód vstupenky" width="260" height="260"
-       style="display:block;margin:0 auto;border:1px solid #E3DFD3;border-radius:12px" />
-  <span style="display:block;margin-top:10px;font-size:14px;color:#5C6357">
-    Tenhle QR kód ukažte ve studiu.
-  </span>
-</p>
-<p>Stav rezervace a platby: <a href="{{ticket_url}}">{{ticket_url}}</a></p>
-```
-
-Pak **Save** a pošli si zkušební rezervaci na vlastní e-mail.
+Nic se nenastavuje. QR kód i odkaz na stav rezervace vkládá do e-mailu
+server — šablona je v repozitáři v `supabase/functions/_shared/templates.ts`
+a odesílá ji Brevo.
 
 > Některé e-mailové aplikace obrázky napoprvé blokují („Zobrazit obrázky").
 > Proto je na stránce stavu rezervace i krátký kód, který stačí nadiktovat.
@@ -502,39 +434,15 @@ V záložce **Rezervace** je i filtr **Platba** a souhrn nad seznamem.
 
 ---
 
-## Rozesílání newsletteru přímo z adminu (EmailJS)
+## Rozesílání newsletteru
 
-Napíšeš zprávu ve **správě** a rozešle se všem odběratelům rovnou z
-prohlížeče přes **EmailJS** (co už používáš na potvrzení rezervací).
-Žádné další služby ani nasazování.
+Newsletter se píše a rozesílá **v Brevu**, kde běží i potvrzení rezervací.
+Ve správě máš v záložce **Newsletter** seznam odběratelů a tlačítko
+**Stáhnout CSV** — ten soubor v Brevu naimportuješ do kontaktů.
 
-### A) Vytvoř newsletter šablonu v EmailJS
-1. Přihlas se na **https://dashboard.emailjs.com** → **Email Templates** → **Create New Template**.
-2. Nastav pole:
-   - **To Email:** `{{to_email}}`
-   - **Subject:** `{{subject}}`
-   - **Content (tělo):** vlož `{{message}}` a dole klidně přidej řádek s odhlášením:
-     `Odhlásit odběr: {{unsubscribe_url}}`
-3. Ulož a zkopíruj **Template ID** (např. `template_abc123`).
-
-### B) Doplň ID do configu
-V souboru **`supabase-config.js`** nastav:
-```js
-window.EMAILJS_NEWSLETTER_TEMPLATE_ID = 'template_abc123';
-```
-Commitni + pushni. (PUBLIC_KEY a SERVICE_ID už tam máš z rezervací.)
-
-### C) Rozeslání
-V adminu → **Newsletter** → **Napsat a rozeslat newsletter**: vyplň
-předmět a text, **Rozeslat odběratelům**. Posílá po jednom (tlačítko
-ukazuje průběh), každý dostane vlastní e-mail i s odhlašovacím odkazem.
-
-> Pozor na limity EmailJS (free tarif ~200 e-mailů/měsíc). Na malý seznam
-> pohodlně stačí; u většího zvaž službu na hromadné rozesílání (Ecomail…)
-> a použij **Stáhnout CSV**.
-> Odhlášení přes odkaz v e-mailu funguje automaticky (`?unsub=` na webu).
-
----
+> Do 3. 9. 2026 tu byl formulář na rozeslání přímo ze správy přes EmailJS.
+> Nikdy nefungoval: vyžadoval vyplněné ID šablony, které zůstalo na
+> zástupné hodnotě, takže tlačítko jen hlásilo „nejdřív nastav šablonu".
 
 ## Kdo vidí data ve správě (vlastník)
 

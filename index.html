@@ -1467,8 +1467,10 @@
      až na DOMContentLoaded, jinak by sáhla na window.supabase dřív, než existuje.
      Zbytek skriptu (animace, měření, parallax) žádnou konfiguraci nepoužívá
      a zůstává beze změny. -->
+<!-- EmailJS se odsud odstranil 3. 9. 2026: skript se stahoval z cizí domény
+     na každé zobrazení homepage a nikdy se nezavolal. E-maily posílá server
+     přes Brevo, prohlížeč z téhle stránky žádný neodesílá. -->
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script defer src="supabase-config.js?v=2"></script>
 <script>
   const REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1793,8 +1795,8 @@
   })();
 
   // ============ Newsletter (patička) ============
-  // Jediné místo na homepage, které potřebuje supabase-js a EmailJS. Ty se
-  // načítají s `defer`, takže tenhle blok musí počkat na DOMContentLoaded.
+  // Jediné místo na homepage, které potřebuje supabase-js. Načítá se
+  // s `defer`, takže tenhle blok musí počkat na DOMContentLoaded.
   document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('newsForm');
     if (!form) return;

@@ -16,15 +16,14 @@ window.SUPABASE_URL      = 'https://mglopjlgpfpturvqtjcj.supabase.co';
 window.SUPABASE_ANON_KEY = 'sb_publishable_fSK0f_Mv-WFaKnvxwTu5BA_NxYV-U9_';
 
 // =====================================================================
-//  Potvrzovací e-maily přes EmailJS  (návod: NASTAVENI.md, sekce E-maily)
-//  Vyplň po založení účtu na https://www.emailjs.com
-//  Dokud zůstanou zástupné hodnoty, rezervace fungují normálně,
-//  jen se neodešle potvrzovací e-mail.
+//  E-maily
+// ---------------------------------------------------------------------
+//  Potvrzení rezervací, poukazy i newsletter odesílá SERVER přes Brevo
+//  (fronta public.email_outbox, klíč BREVO_API_KEY v Supabase secrets).
+//  Prohlížeč žádný e-mail neposílá, proto tu nejsou žádné klíče.
+//
+//  Do 3. 9. 2026 tu ležela konfigurace EmailJS jako záložní cesta
+//  z prohlížeče. Nepoužívala se — server hlásí serverEmail: true,
+//  jakmile je Brevo nastavené — a kvůli ní se na každé zobrazení
+//  rezervace i homepage stahoval skript z cizí domény.
 // =====================================================================
-window.EMAILJS_PUBLIC_KEY  = 'vLh3HLiqUbRBLKmNN';
-window.EMAILJS_SERVICE_ID  = 'service_9n1wtnv';
-window.EMAILJS_TEMPLATE_ID = 'template_iblqvg1';   // potvrzení rezervace
-// Šablona pro rozesílání newsletteru z adminu (pole: subject, message, to_email, unsubscribe_url)
-window.EMAILJS_NEWSLETTER_TEMPLATE_ID = 'TVUJ_NEWSLETTER_TEMPLATE';
-// Šablona pro dárkový poukaz (pole: to_email, code, amount, qr_url)
-window.EMAILJS_VOUCHER_TEMPLATE_ID = 'template_0biilyq';
