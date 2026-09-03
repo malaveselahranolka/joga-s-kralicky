@@ -1,17 +1,12 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-0FBG13R4FH"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-0FBG13R4FH');
-</script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!-- Měření návštěvnosti (Google Analytics) se načte AŽ PO souhlasu.
+     Skript souhlas.js ukáže lištu, uloží rozhodnutí a teprve pak
+     případně natáhne gtag.js. Nepředbíhat ho vlastním script tagem. -->
+<script defer src="/souhlas.js?v=1"></script>
 <title>Jóga s králíčky Ostrava — jóga se zvířaty, 7 králíků na lekci</title>
 <meta name="description" content="Jóga se zvířaty v Ostravě — hodina jemné hathy, při které mezi cvičícími pobíhá sedm domácích králíků. Vstup 499 Kč, Fit&amp;Fun Studio. Rezervace online." />
 <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
@@ -1466,9 +1461,15 @@
   </div>
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script src="supabase-config.js?v=2"></script>
+<!-- `defer` je tu nutnost, ne kosmetika: bez něj Chrome drží první vykreslení,
+     dokud se tyhle skripty nestáhnou z cizí domény. Na homepage je potřebuje
+     jediná věc — přihlášení k newsletteru v patičce. Ta se proto níž spouští
+     až na DOMContentLoaded, jinak by sáhla na window.supabase dřív, než existuje.
+     Zbytek skriptu (animace, měření, parallax) žádnou konfiguraci nepoužívá
+     a zůstává beze změny. -->
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script defer src="supabase-config.js?v=2"></script>
 <script>
   const REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   // slabší / dotyková zařízení: vypnout drahé efekty (blur při reveal, parallax)
@@ -1792,7 +1793,9 @@
   })();
 
   // ============ Newsletter (patička) ============
-  (function () {
+  // Jediné místo na homepage, které potřebuje supabase-js a EmailJS. Ty se
+  // načítají s `defer`, takže tenhle blok musí počkat na DOMContentLoaded.
+  document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('newsForm');
     if (!form) return;
     const input = document.getElementById('news-email');
@@ -1824,11 +1827,16 @@
       try {
         const { data, error } = await sb.rpc('subscribe_newsletter', { p_email: email, p_source: 'web-footer' });
         if (error || !data || !data.ok) setMsg('Něco se nepovedlo. Zkuste to prosím znovu.', 'err');
-        else { setMsg('Hotovo — díky! Klid vám pošleme do schránky.', 'ok'); form.reset(); }
+        else {
+          setMsg('Hotovo — díky! Klid vám pošleme do schránky.', 'ok');
+          form.reset();
+          // Měření: přihlášení k novinkám. Bez souhlasu tiše neudělá nic.
+          if (window.jskUdalost) window.jskUdalost('generate_lead', {method: 'newsletter'});
+        }
       } catch (e2) { setMsg('Něco se nepovedlo. Zkuste to prosím znovu.', 'err'); }
       busy = false; btn.disabled = false; btn.innerHTML = label;
     });
-  })();
+  });
 </script>
 <script type="module" src="cms.js"></script>
 </body>

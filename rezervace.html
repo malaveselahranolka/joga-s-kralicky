@@ -1,17 +1,12 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-0FBG13R4FH"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-0FBG13R4FH');
-</script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!-- Měření návštěvnosti (Google Analytics) se načte AŽ PO souhlasu.
+     Skript souhlas.js ukáže lištu, uloží rozhodnutí a teprve pak
+     případně natáhne gtag.js. Nepředbíhat ho vlastním script tagem. -->
+<script defer src="/souhlas.js?v=1"></script>
 <title>Rezervace lekce jógy s králíčky Ostrava — volné termíny</title>
 <meta name="description" content="Vyberte si termín lekce jógy s králíčky a rezervujte si místo. Fit&amp;Fun Studio Ostrava." />
 <link rel="canonical" href="https://www.jogaskralicky.cz/rezervace.html" />
@@ -368,13 +363,20 @@
   <a href="obchodni-podminky.html" style="color:inherit">Obchodní podmínky</a> · <a href="zasady-osobnich-udaju.html" style="color:inherit">Osobní údaje</a>
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script src="supabase-config.js?v=2"></script>
-<script src="payment-config.js?v=4"></script>
-<script src="datum.js?v=1"></script>
+<!-- POZOR na `defer`: bez něj tyhle skripty zastaví vykreslování stránky,
+     i když stojí až za obsahem. Chrome drží první vykreslení, dokud
+     parser-blocking skript nedoběhne — Lighthouse to na mobilu měřil
+     jako 1 795 ms čekání navíc. S `defer` se stahují souběžně a spustí
+     se až po dokončení parsování.
+     Druhá půlka opravy je o řádek níž: inline blok se proto NESMÍ pouštět
+     rovnou, jinak sáhne na window.supabase dřív, než vůbec existuje. -->
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script defer src="supabase-config.js?v=2"></script>
+<script defer src="payment-config.js?v=4"></script>
+<script defer src="datum.js?v=1"></script>
 <script>
-(function () {
+document.addEventListener('DOMContentLoaded', function () {
   const $ = (id) => document.getElementById(id);
   const PLACE = 'Fit&Fun Studio Ostrava, Tovární 486/7, 709 00 Ostrava-Mariánské Hory';
   const THUMB = 'assets/photos/rabbit-1.webp';
@@ -723,6 +725,11 @@
 
     // Rovnou do platební brány — částku spočítá server jako cena × počet míst.
     btn.textContent = 'Přesměrovávám na platbu…';
+    // Měření: odchod do brány. Bez souhlasu se neodešle nic (viz souhlas.js).
+    if (window.jskUdalost) window.jskUdalost('begin_checkout', {
+      currency: 'CZK', value: total,
+      items: [{ item_id: 'vstup', item_name: 'Vstup na lekci jógy s králíčky', price: PRICE, quantity: spots }],
+    });
     try {
       window.location.href = await startCheckout(lastBookingId);
     } catch (err) {
@@ -778,6 +785,11 @@
       btn.disabled = true; btn.textContent = 'Otevírám platbu…';
       msg.textContent = ''; msg.className = 'vc-msg';
 
+      if (window.jskUdalost) window.jskUdalost('begin_checkout', {
+        currency: 'CZK', value: VOUCHER_PRICE * vcCount,
+        items: [{ item_id: 'poukaz', item_name: 'Dárkový poukaz na lekci', price: VOUCHER_PRICE, quantity: vcCount }],
+      });
+
       const { body } = await fnPost('stripe-voucher', { email: em, count: vcCount });
       if (body && body.ok && body.url) { window.location.href = body.url; return; }
 
@@ -819,6 +831,12 @@
         // neumí — dokud se nedoplní EMAILJS_PRIVATE_KEY.
         if (pending) {
           if (!confirmed.serverEmail) sendConfirmation(pending.mail);
+          // Měření dokončené platby. `pending` existuje jen napoprvé, klíč
+          // navíc hlídá, že se nákup nezapočítá dvakrát po obnovení stránky.
+          if (window.jskUdalostJednou) window.jskUdalostJednou(pending.id, 'purchase', {
+            transaction_id: pending.id, currency: 'CZK', value: pending.amount,
+            items: [{ item_id: 'vstup', item_name: 'Vstup na lekci jógy s králíčky', price: PRICE, quantity: pending.spots }],
+          });
           ls.del('pendingBooking');
         }
         stateBox('ok', 'Zaplaceno ✓',
@@ -853,6 +871,13 @@
       const codes = (vb && vb.ok && Array.isArray(vb.codes) && vb.codes.length)
         ? vb.codes
         : voucherCodes(sid, n);
+
+      // Klíčem je ID platební relace: poukazy nemají číslo rezervace a
+      // návratová adresa se dá obnovit stejně snadno jako u vstupu.
+      if (window.jskUdalostJednou) window.jskUdalostJednou(sid, 'purchase', {
+        transaction_id: sid, currency: 'CZK', value: VOUCHER_PRICE * codes.length,
+        items: [{ item_id: 'poukaz', item_name: 'Dárkový poukaz na lekci', price: VOUCHER_PRICE, quantity: codes.length }],
+      });
       const many = codes.length > 1;
       stateBox('ok', many ? 'Poukazy jsou zaplacené 🐰' : 'Poukaz je zaplacený 🐰',
         '<p>Děkujeme! Tady ' + (many ? 'jsou kódy dárkových poukazů' : 'je kód dárkového poukazu') +
@@ -915,7 +940,7 @@
 
   const qs = new URLSearchParams(location.search);
   if (!qs.has('platba') && !qs.has('voucher')) { load(); flushPendingConfirmation(); }
-})();
+});
 </script>
 </body>
 </html>

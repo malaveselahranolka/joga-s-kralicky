@@ -1,5 +1,5 @@
 import {build} from 'esbuild'
-import {copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync} from 'node:fs'
+import {copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync} from 'node:fs'
 import {join} from 'node:path'
 import {spawnSync} from 'node:child_process'
 
@@ -30,6 +30,7 @@ const files = [
   'payment-config.js',
   'supabase-config.js',
   'datum.js',
+  'souhlas.js',
   'google8760dad4313e888f.html',
   'llms.txt',
 ]
@@ -130,11 +131,14 @@ if (existsSync(rezervacePath)) {
       const c = prazskeCasti(l.starts_at)
       const konec = prazskeCasti(new Date(new Date(l.starts_at).getTime() + (l.duration_min || 60) * 60000))
       const dow = den[new Date(`${c.year}-${c.month}-${c.day}T12:00:00Z`).getUTCDay()]
-      const volno = Number(l.remaining) > 0
+      // Obsazenost se sem ZÁMĚRNĚ nepíše. Tenhle seznam je snímek k okamžiku
+      // nasazení, takže by tvrdil „volných míst: 10 z 10" i u lekce, která je
+      // mezitím ze tří čtvrtin plná — a přesně tuhle větu si přečte Google
+      // a AI asistent, protože živá čísla dosadí až JS v prohlížeči.
+      // Datum, čas, cena a místo se mezi nasazeními nemění, ta se uvést dají.
       return `        <li>
           <strong>${escHtml(l.title)}</strong> — ${dow} ${c.day}. ${c.month}. ${c.year},
           ${c.hour}:${c.minute}–${konec.hour}:${konec.minute} ·
-          ${volno ? `volných míst: ${l.remaining} z ${l.capacity}` : 'obsazeno'} ·
           ${cena} Kč · ${escHtml(misto)}
         </li>`
     }).join('\n')
@@ -202,19 +206,29 @@ if (existsSync(sitemapPath)) {
   const origin = 'https://www.jogaskralicky.cz'
   let xml = readFileSync(sitemapPath, 'utf8')
   let touched = 0
+  let zaloha = 0
   xml = xml.replace(
     /<loc>([^<]+)<\/loc>(\s*)<lastmod>[^<]*<\/lastmod>/g,
     (whole, loc, gap) => {
       // adresa → soubor v repozitáři ('/' je index.html)
       const rel = loc.replace(origin, '').replace(/^\//, '') || 'index.html'
-      const date = existsSync(join(root, rel)) ? lastCommitDate(rel) : null
-      if (!date) return whole
-      touched += 1
+      const soubor = join(root, rel)
+      if (!existsSync(soubor)) return whole
+      // Na Vercelu se zdroják rozbaluje z archivu, ne z gitu — `git log` tam
+      // nemá co číst a vrací prázdno. Tichým důsledkem bylo, že se v produkci
+      // nikdy nepřepsalo ani jedno datum a sitemapa tvrdila 2026-08-20,
+      // zatímco stránky se měnily o dva týdny později. Proto ten záložní
+      // údaj z data souboru: po rozbalení archivu odpovídá nasazení, což je
+      // pravdivější než datum zamrzlé v repozitáři.
+      const zGitu = lastCommitDate(rel)
+      const date = zGitu || statSync(soubor).mtime.toISOString().slice(0, 10)
+      if (zGitu) touched += 1
+      else zaloha += 1
       return `<loc>${loc}</loc>${gap}<lastmod>${date}</lastmod>`
     },
   )
   writeFileSync(sitemapPath, xml)
-  console.log(`Sitemap: lastmod dopočítán z gitu u ${touched} adres.`)
+  console.log(`Sitemap: lastmod z gitu u ${touched} adres, ze souboru u ${zaloha}.`)
 }
 
 // splitting + esm: vizuální editor se vejde do vlastního souboru, který si
