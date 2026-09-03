@@ -64,6 +64,12 @@ a:hover { color: var(--clover); }
   backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--line);
 }
+/* Blur pod lepivou hlavičkou stojí prohlížeč přepočet při každém snímku
+   scrollování. Na telefonu (a hlavně v úsporném režimu) je to nejdražší
+   efekt na stránce, přitom ho za úzkým pruhem nikdo nepostrádá. */
+@media (max-width: 760px) {
+  .nav { backdrop-filter: none; background: var(--paper); }
+}
 .nav-inner {
   display: flex; align-items: center; justify-content: space-between; gap: 1rem;
   padding: .8rem 0;

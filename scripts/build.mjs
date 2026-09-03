@@ -1,5 +1,5 @@
 import {build} from 'esbuild'
-import {copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync} from 'node:fs'
+import {copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync} from 'node:fs'
 import {join} from 'node:path'
 import {spawnSync} from 'node:child_process'
 
@@ -30,6 +30,7 @@ const files = [
   'payment-config.js',
   'supabase-config.js',
   'datum.js',
+  'souhlas.js',
   'google8760dad4313e888f.html',
   'llms.txt',
 ]
@@ -100,6 +101,18 @@ function prazskeCasti(iso) {
 const escHtml = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => (
   {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]))
 
+// Musí vracet totéž co thumbFor() v rezervace.html, jinak by se po načtení
+// JS vyměnil obrázek za jiný a stránka by kvůli tomu problikla.
+function nahled(l) {
+  if (l && l.image_url) return l.image_url
+  const t = String((l && l.title) || '').toLowerCase()
+  if (t.includes('ranní')) return 'assets/photos/yoga-7.webp'
+  if (t.includes('děti')) return 'assets/photos/rabbit-6.webp'
+  if (t.includes('soumrak') || t.includes('restorativ')) return 'assets/photos/yoga-4.webp'
+  if (t.includes('hatha')) return 'assets/photos/yoga-11.webp'
+  return 'assets/photos/rabbit-1.webp'
+}
+
 async function nactiTerminy() {
   const cfg = readFileSync(join(root, 'supabase-config.js'), 'utf8')
   const url = (cfg.match(/SUPABASE_URL\s*=\s*'([^']+)'/) || [])[1]
@@ -126,27 +139,51 @@ if (existsSync(rezervacePath)) {
     const misto = 'Fit&Fun Studio Ostrava, Tovární 486/7, 709 00 Ostrava-Mariánské Hory'
     const cena = 499
 
-    const radky = terminy.map((l) => {
+    // MARKUP SE SCHVÁLNĚ SHODUJE S TÍM, CO VYKRESLÍ renderDays() V PROHLÍŽEČI.
+    //
+    // Dřív tu byl obyčejný <ul> se dvěma řádky. Klientský JS ho po načtení
+    // nahradil plnými kartami s fotkami, které jsou několikanásobně vyšší —
+    // takže se celá stránka pod seznamem posunula dolů. Dokud byl skript
+    // parser-blocking, stihlo se to před prvním vykreslením a nikomu to
+    // nevadilo; s `defer` se to děje až po něm a Lighthouse to měřil jako
+    // posun rozvržení 0,47 na stránce, kde se platí.
+    //
+    // Když má statický seznam stejný tvar, je výměna výškově neutrální na
+    // jakékoli šířce okna — žádné dopočítávání min-height, které by se
+    // rozešlo s realitou při první změně stylů.
+    //
+    // Obsazenost a stav „Obsazeno" se sem ZÁMĚRNĚ nepíšou: tohle je snímek
+    // k okamžiku nasazení a přesně tuhle větu si přečte Google i AI asistent.
+    // Místo čísel drží výšku nezlomitelná mezera; živá čísla dosadí JS.
+    // `data-id` tu je proto, aby tlačítko fungovalo hned, jak se JS načte —
+    // obsluha kliknutí visí na #dayList, ne na jednotlivých tlačítkách.
+    const skupiny = new Map()
+    for (const l of terminy) {
       const c = prazskeCasti(l.starts_at)
-      const konec = prazskeCasti(new Date(new Date(l.starts_at).getTime() + (l.duration_min || 60) * 60000))
-      const dow = den[new Date(`${c.year}-${c.month}-${c.day}T12:00:00Z`).getUTCDay()]
-      const volno = Number(l.remaining) > 0
-      return `        <li>
-          <strong>${escHtml(l.title)}</strong> — ${dow} ${c.day}. ${c.month}. ${c.year},
-          ${c.hour}:${c.minute}–${konec.hour}:${konec.minute} ·
-          ${volno ? `volných míst: ${l.remaining} z ${l.capacity}` : 'obsazeno'} ·
-          ${cena} Kč · ${escHtml(misto)}
-        </li>`
-    }).join('\n')
+      const klic = `${c.year}-${c.month}-${c.day}`
+      if (!skupiny.has(klic)) skupiny.set(klic, [])
+      skupiny.get(klic).push(l)
+    }
 
-    const html = `
-      <section class="terminy-staticke">
-        <h2>Vypsané termíny</h2>
-        <ul>
-${radky}
-        </ul>
-        <p>Obsazenost se načte aktuální po otevření stránky. Vstup se platí online při rezervaci.</p>
-      </section>`
+    const html = [...skupiny.values()].map((items) => {
+      const c0 = prazskeCasti(items[0].starts_at)
+      const dow = den[new Date(`${c0.year}-${c0.month}-${c0.day}T12:00:00Z`).getUTCDay()]
+      const sloty = items.map((l) => {
+        const c = prazskeCasti(l.starts_at)
+        const konec = prazskeCasti(new Date(new Date(l.starts_at).getTime() + (l.duration_min || 60) * 60000))
+        return `<div class="slot">`
+          + `<div class="time"><span class="rng">${c.hour}:${c.minute} – ${konec.hour}:${konec.minute}</span>`
+          + `<span class="dur">${l.duration_min || 60} min</span></div>`
+          + `<div class="info"><img class="thumb" src="${escHtml(nahled(l))}" alt="" loading="lazy" />`
+          + `<div class="meta"><div class="lbl">Lekce</div><div class="val">${escHtml(l.title)}</div>`
+          + `<div class="place"><div class="lbl">Místo</div><div class="val">${escHtml(misto)}</div></div></div></div>`
+          + `<div class="book"><div class="cap">&nbsp;</div>`
+          + `<button class="btn btn-primary" data-id="${escHtml(l.id)}">Rezervovat</button></div></div>`
+      }).join('')
+      return `<div class="day-group"><div class="day-head">`
+        + `<span class="date">${c0.day}. ${c0.month}. ${c0.year}</span>`
+        + `<span class="dow">${dow}</span></div>${sloty}</div>`
+    }).join('')
 
     const udalosti = terminy.map((l) => ({
       '@context': 'https://schema.org',
@@ -202,19 +239,29 @@ if (existsSync(sitemapPath)) {
   const origin = 'https://www.jogaskralicky.cz'
   let xml = readFileSync(sitemapPath, 'utf8')
   let touched = 0
+  let zaloha = 0
   xml = xml.replace(
     /<loc>([^<]+)<\/loc>(\s*)<lastmod>[^<]*<\/lastmod>/g,
     (whole, loc, gap) => {
       // adresa → soubor v repozitáři ('/' je index.html)
       const rel = loc.replace(origin, '').replace(/^\//, '') || 'index.html'
-      const date = existsSync(join(root, rel)) ? lastCommitDate(rel) : null
-      if (!date) return whole
-      touched += 1
+      const soubor = join(root, rel)
+      if (!existsSync(soubor)) return whole
+      // Na Vercelu se zdroják rozbaluje z archivu, ne z gitu — `git log` tam
+      // nemá co číst a vrací prázdno. Tichým důsledkem bylo, že se v produkci
+      // nikdy nepřepsalo ani jedno datum a sitemapa tvrdila 2026-08-20,
+      // zatímco stránky se měnily o dva týdny později. Proto ten záložní
+      // údaj z data souboru: po rozbalení archivu odpovídá nasazení, což je
+      // pravdivější než datum zamrzlé v repozitáři.
+      const zGitu = lastCommitDate(rel)
+      const date = zGitu || statSync(soubor).mtime.toISOString().slice(0, 10)
+      if (zGitu) touched += 1
+      else zaloha += 1
       return `<loc>${loc}</loc>${gap}<lastmod>${date}</lastmod>`
     },
   )
   writeFileSync(sitemapPath, xml)
-  console.log(`Sitemap: lastmod dopočítán z gitu u ${touched} adres.`)
+  console.log(`Sitemap: lastmod z gitu u ${touched} adres, ze souboru u ${zaloha}.`)
 }
 
 // splitting + esm: vizuální editor se vejde do vlastního souboru, který si

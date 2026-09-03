@@ -1,17 +1,12 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-0FBG13R4FH"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-0FBG13R4FH');
-</script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!-- Měření návštěvnosti (Google Analytics) se načte AŽ PO souhlasu.
+     Skript souhlas.js ukáže lištu, uloží rozhodnutí a teprve pak
+     případně natáhne gtag.js. Nepředbíhat ho vlastním script tagem. -->
+<script defer src="/souhlas.js?v=1"></script>
 <title>Stav rezervace — Jóga s králíčky</title>
 <meta name="robots" content="noindex" />
 <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
@@ -128,6 +123,13 @@
     header.bar, .acts, .page-head p, body::after { display: none; }
     body { background: #fff; }
     .ticket { box-shadow: none; border: 1px solid var(--line); }
+  }
+
+  /* Blur pod lepivou hlavičkou stojí prohlížeč přepočet při každém snímku
+     scrollování. Na telefonu (a hlavně v úsporném režimu) je to nejdražší
+     efekt na stránce, přitom ho za 68 px vysokým pruhem nikdo nepostrádá. */
+  @media (max-width: 760px) {
+    header.bar { backdrop-filter: none; background: var(--paper); }
   }
 </style>
 <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
