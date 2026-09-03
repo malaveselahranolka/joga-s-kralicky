@@ -128,45 +128,40 @@
   // ---- lišta ---------------------------------------------------------
   var STYL = [
     '.jsk-souhlas{',
-    '  position:fixed;left:1.25rem;bottom:1.25rem;z-index:900;',
-    '  width:min(26rem,calc(100vw - 2.5rem));',
-    '  box-sizing:border-box;padding:1.15rem 1.25rem 1.1rem;',
+    '  position:fixed;left:1rem;right:1rem;bottom:1rem;z-index:900;',
+    '  max-width:44rem;margin-inline:auto;',
+    '  display:flex;align-items:center;justify-content:space-between;',
+    '  gap:.75rem 1.25rem;flex-wrap:wrap;',
+    '  box-sizing:border-box;padding:.75rem .9rem .75rem 1.1rem;',
     '  background:var(--surface,#FFFFFF);color:var(--ink,#1E231C);',
     '  border:1px solid var(--line,#E3DFD3);',
-    '  border-radius:20px 24px 20px 26px;',
-    '  box-shadow:0 1px 2px rgba(30,41,32,.07),0 14px 34px -14px rgba(30,41,32,.42);',
+    '  border-radius:16px 18px 16px 20px;',
+    '  box-shadow:0 1px 2px rgba(30,41,32,.07),0 12px 28px -14px rgba(30,41,32,.4);',
     '  font-family:"Hanken Grotesk",system-ui,sans-serif;',
-    '  opacity:0;transform:translateY(10px);',
-    '  transition:opacity .26s var(--ease,cubic-bezier(.22,.61,.36,1)),transform .26s var(--ease,cubic-bezier(.22,.61,.36,1));',
+    '  opacity:0;transform:translateY(8px);',
+    '  transition:opacity .24s var(--ease,cubic-bezier(.22,.61,.36,1)),transform .24s var(--ease,cubic-bezier(.22,.61,.36,1));',
     '}',
     '.jsk-souhlas.je-videt{opacity:1;transform:none}',
-    '.jsk-souhlas h2{',
-    '  font-family:"Schibsted Grotesk",system-ui,sans-serif;',
-    '  font-size:1.02rem;font-weight:600;letter-spacing:-.01em;',
-    '  margin:0 0 .35rem;line-height:1.3;color:var(--forest,#2C3B2E);',
-    '}',
-    '.jsk-souhlas p{margin:0 0 .9rem;font-size:.88rem;line-height:1.55;color:var(--ink-soft,#5C6357)}',
-    '.jsk-s-akce{display:flex;gap:.5rem;flex-wrap:wrap}',
+    '.jsk-souhlas p{margin:0;flex:1 1 16rem;font-size:.88rem;line-height:1.45;color:var(--ink,#1E231C)}',
+    '.jsk-souhlas a{color:var(--ink-soft,#5C6357);text-underline-offset:3px;white-space:nowrap}',
+    '.jsk-souhlas a:hover{color:var(--forest,#2C3B2E)}',
+    '.jsk-s-akce{display:flex;gap:.45rem;flex:0 0 auto}',
     '.jsk-s-akce button{',
-    '  flex:1 1 8rem;min-height:2.75rem;padding:.55rem 1.1rem;',
+    '  min-width:4.5rem;min-height:2.75rem;padding:.5rem 1.15rem;',
     '  font-family:"Hanken Grotesk",system-ui,sans-serif;',
-    '  font-size:.92rem;font-weight:600;line-height:1.2;',
+    '  font-size:.9rem;font-weight:600;line-height:1.2;',
     '  border-radius:999px;cursor:pointer;',
-    '  transition:background-color .22s var(--ease,ease),border-color .22s var(--ease,ease),transform .18s var(--ease,ease);',
+    '  transition:background-color .2s var(--ease,ease),border-color .2s var(--ease,ease);',
     '}',
     '.jsk-s-ano{background:var(--forest,#2C3B2E);color:var(--cream,#F7F4EC);border:1px solid var(--forest,#2C3B2E)}',
     '.jsk-s-ano:hover{background:var(--forest-deep,#1E2920);border-color:var(--forest-deep,#1E2920)}',
     '.jsk-s-ne{background:transparent;color:var(--ink,#1E231C);border:1px solid var(--line,#E3DFD3)}',
     '.jsk-s-ne:hover{border-color:var(--forest,#2C3B2E);background:var(--cream,#F7F4EC)}',
-    '.jsk-s-akce button:active{transform:translateY(1px)}',
-    '.jsk-souhlas a{',
-    '  display:inline-block;margin-top:.75rem;font-size:.8rem;',
-    '  color:var(--ink-soft,#5C6357);text-underline-offset:3px;',
-    '}',
-    '.jsk-souhlas a:hover{color:var(--forest,#2C3B2E)}',
     '.jsk-souhlas :focus-visible{outline:2px solid var(--clover,#6E8A4E);outline-offset:3px;border-radius:999px}',
     '@media (max-width:560px){',
-    '  .jsk-souhlas{left:.75rem;right:.75rem;bottom:.75rem;width:auto}',
+    '  .jsk-souhlas{left:.6rem;right:.6rem;bottom:.6rem;padding:.8rem .9rem}',
+    '  .jsk-s-akce{flex:1 1 100%}',
+    '  .jsk-s-akce button{flex:1 1 0}',
     '}',
     '@media (prefers-reduced-motion:reduce){',
     '  .jsk-souhlas{transition:none;opacity:1;transform:none}',
@@ -199,12 +194,16 @@
     lista.setAttribute('role', 'region');
     lista.setAttribute('aria-label', 'Souhlas se statistikami návštěvnosti');
 
-    var h = document.createElement('h2');
-    h.textContent = 'Můžeme počítat návštěvy?';
-
+    // Text schválně na jednu větu. Souhlas musí být informovaný, ne dlouhý —
+    // stačí říct, CO se měří, a dát odkaz na podrobnosti. Delší vysvětlování
+    // v liště stejně nikdo nečte a na telefonu zabere půl obrazovky.
     var p = document.createElement('p');
-    p.textContent = 'Google Analytics nám ukáže, kolik lidí na web přišlo a odkud. '
-      + 'Bez vašeho souhlasu se vůbec nespustí. Rezervace i platba fungují tak jako tak.';
+    p.textContent = 'Měříme návštěvnost přes Google Analytics. Souhlasíte? ';
+
+    var odkaz = document.createElement('a');
+    odkaz.href = ZASADY;
+    odkaz.textContent = 'Podrobnosti';
+    p.appendChild(odkaz);
 
     var akce = document.createElement('div');
     akce.className = 'jsk-s-akce';
@@ -212,26 +211,20 @@
     var ano = document.createElement('button');
     ano.type = 'button';
     ano.className = 'jsk-s-ano';
-    ano.textContent = 'Souhlasím';
+    ano.textContent = 'Ano';
     ano.addEventListener('click', function () { zapis('ano'); nactiGA(); schovej(); });
 
     var ne = document.createElement('button');
     ne.type = 'button';
     ne.className = 'jsk-s-ne';
-    ne.textContent = 'Nechci';
+    ne.textContent = 'Ne';
     ne.addEventListener('click', function () { zapis('ne'); schovej(); });
 
     akce.appendChild(ano);
     akce.appendChild(ne);
 
-    var odkaz = document.createElement('a');
-    odkaz.href = ZASADY;
-    odkaz.textContent = 'Co přesně sbíráme';
-
-    lista.appendChild(h);
     lista.appendChild(p);
     lista.appendChild(akce);
-    lista.appendChild(odkaz);
 
     // Na začátek stránky, ne na konec: lišta se tím dostane hned na začátek
     // pořadí tabulátoru, takže se k rozhodnutí dostane i ten, kdo nemyší.
