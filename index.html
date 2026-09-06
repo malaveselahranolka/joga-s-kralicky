@@ -752,20 +752,25 @@
   .gal-bar span { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, var(--clover), var(--carrot)); transform: scaleX(0); transform-origin: 0 50%; }
   .gal-hint { font-size: .84rem; color: var(--ink-soft); white-space: nowrap; }
 
-  /* ---------- lite: žádné scroll-jacking, jen normální tažení prstem ----------
-     Pin+pan vázaný na window.scrollY je za nízkého obnovování (úsporný režim,
-     slabší telefony) trhaný — snímky dobíhají scroll se zpožděním, kdežto
-     nativní vodorovné táhnutí prstem jede plynule na compositoru bez ohledu
-     na to, kolik snímků za vteřinu stránka stihne přepočítat. V .lite se
-     proto pin ruší a stopa se stává obyčejným posouvatelným pásem. */
-  .lite .gal-wrap { height: auto; }
-  .lite .gal-sticky { position: static; height: auto; }
-  .lite .gal-view {
+  /* ---------- gal-lite: žádné scroll-jacking, jen normální tažení prstem ----------
+     Pin zůstává zapnutý defaultně i na mobilu — je to schválně, galerie má
+     jet přišpendlená všude, kde na to prohlížeč stačí. Přepíná se JEN podle
+     skutečně naměřeného FPS (viz níž), ne podle .lite (to se zapíná i pro
+     každý dotykový telefon bez ohledu na výkon a shodilo by pin úplně
+     všude). Pin+pan vázaný na window.scrollY je za nízkého obnovování
+     (úsporný režim, slabší telefon) trhaný — snímky dobíhají scroll se
+     zpožděním, kdežto nativní vodorovné táhnutí prstem jede plynule na
+     compositoru bez ohledu na to, kolik snímků za vteřinu stránka stihne
+     přepočítat. Teprve když se to skutečně změří, stopa se stane obyčejným
+     posouvatelným pásem. */
+  .gal-lite .gal-wrap { height: auto; }
+  .gal-lite .gal-sticky { position: static; height: auto; }
+  .gal-lite .gal-view {
     overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain;
     scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch;
   }
-  .lite .gal-track > * { scroll-snap-align: start; }
-  .lite .gal-bar { visibility: hidden; }
+  .gal-lite .gal-track > * { scroll-snap-align: start; }
+  .gal-lite .gal-bar { visibility: hidden; }
 
   /* ---------- testimonials ---------- */
   .reference { background: var(--cream); overflow: hidden; border-top: 1px solid var(--line-soft); }
@@ -1563,8 +1568,15 @@
   // která si pod rukama přepíná vzhled sem a tam, je horší než stránka
   // trvale o něco skromnější. A protože degradace jenom ubírá efekty,
   // nejhorší možný omyl je, že je web na chvíli klidnější, než musel být.
+  //
+  // Měří se i na zařízeních, kde je LITE už zapnuté synchronně (dotykové
+  // telefony) — galerie s králíčky má zůstat přišpendlená (pin + scroll-jack)
+  // úplně všude, kde na to prohlížeč reálně stačí, a drtivá většina telefonů
+  // stačí. Teprve naměřené nízké FPS (skutečný projev úsporného režimu nebo
+  // fakt slabého hardwaru) galerii přepne na obyčejný posouvatelný pás —
+  // viz .gal-lite v CSS a `galPinned` níž.
   (function () {
-    if (LITE || REDUCE) return;
+    if (REDUCE) return;
     let snimku = 0, prvni = 0, meri = false;
 
     function vzorek(t) {
@@ -1574,6 +1586,7 @@
       if (ubehlo < 1000) { requestAnimationFrame(vzorek); return; }
       if (snimku / (ubehlo / 1000) < 35) {
         document.documentElement.classList.add('lite');
+        document.documentElement.classList.add('gal-lite');
         // přepočítat rozvržení galerie hned, ne až při dalším resize —
         // jinak zůstane přišpendlená ještě jednu návštěvu scrollování
         window.dispatchEvent(new Event('resize'));
@@ -1819,7 +1832,7 @@
       if (REDUCE) ctaLead.style.setProperty('--draw', 1);
     }
 
-    const galPinned = () => !REDUCE && !document.documentElement.classList.contains('lite');
+    const galPinned = () => !REDUCE && !document.documentElement.classList.contains('gal-lite');
 
     let vh = 0, docMax = 1, heroEnd = 0;
     let galTop = 0, galSpan = 1, galTravel = 0;
