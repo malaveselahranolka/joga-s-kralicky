@@ -752,6 +752,26 @@
   .gal-bar span { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, var(--clover), var(--carrot)); transform: scaleX(0); transform-origin: 0 50%; }
   .gal-hint { font-size: .84rem; color: var(--ink-soft); white-space: nowrap; }
 
+  /* ---------- gal-lite: žádné scroll-jacking, jen normální tažení prstem ----------
+     Pin zůstává zapnutý defaultně i na mobilu — je to schválně, galerie má
+     jet přišpendlená všude, kde na to prohlížeč stačí. Přepíná se JEN podle
+     skutečně naměřeného FPS (viz níž), ne podle .lite (to se zapíná i pro
+     každý dotykový telefon bez ohledu na výkon a shodilo by pin úplně
+     všude). Pin+pan vázaný na window.scrollY je za nízkého obnovování
+     (úsporný režim, slabší telefon) trhaný — snímky dobíhají scroll se
+     zpožděním, kdežto nativní vodorovné táhnutí prstem jede plynule na
+     compositoru bez ohledu na to, kolik snímků za vteřinu stránka stihne
+     přepočítat. Teprve když se to skutečně změří, stopa se stane obyčejným
+     posouvatelným pásem. */
+  .gal-lite .gal-wrap { height: auto; }
+  .gal-lite .gal-sticky { position: static; height: auto; }
+  .gal-lite .gal-view {
+    overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch;
+  }
+  .gal-lite .gal-track > * { scroll-snap-align: start; }
+  .gal-lite .gal-bar { visibility: hidden; }
+
   /* ---------- testimonials ---------- */
   .reference { background: var(--cream); overflow: hidden; border-top: 1px solid var(--line-soft); }
   .ref-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 1.4rem 2rem; flex-wrap: wrap; }
@@ -1062,7 +1082,7 @@
   <!-- ============ HERO ============ -->
   <section class="hero" id="hero">
     <div class="hero-bg">
-      <img decoding="async" src="assets/photos/yoga-5.webp" alt="Lektorka v pomalé pozici v prosvětleném sále" fetchpriority="high" width="1500" height="1000" />
+      <img decoding="async" src="assets/photos/yoga-5.webp" alt="Skupina cvičí v předklonu na podložkách, mezi nohama pobíhají dva králíci" fetchpriority="high" width="1500" height="1000" />
     </div>
     <div class="aurora breathe" aria-hidden="true" style="width:520px;height:520px;right:-120px;top:16%;background:radial-gradient(circle, rgba(210,133,74,.55), transparent 70%)"></div>
     <div class="aurora breathe" aria-hidden="true" style="width:420px;height:420px;left:-100px;bottom:8%;background:radial-gradient(circle, rgba(110,138,78,.5), transparent 70%);animation-delay:-5.5s"></div>
@@ -1175,7 +1195,7 @@
         <article class="lesson reveal">
           <div class="l-pic">
             <span class="l-tag">Pro dospělé</span>
-            <img decoding="async" src="assets/photos/yoga-6.webp" alt="Skupina cvičí v sále na podložkách" loading="lazy" width="1500" height="1000" />
+            <img decoding="async" src="assets/photos/yoga-6.webp" alt="Cvičenka v pozici na kolenou krmí mrkví šedého králíka" loading="lazy" width="1500" height="1000" />
           </div>
           <div class="l-body">
             <div class="l-top">
@@ -1265,7 +1285,7 @@
 
             <div class="gal-hero">
               <button class="rshot" type="button" data-full="assets/photos/yoga-6.webp">
-                <img decoding="async" src="assets/photos/yoga-6.webp" alt="Skupina cvičí v sále na podložkách" loading="lazy" width="1500" height="1000" />
+                <img decoding="async" src="assets/photos/yoga-6.webp" alt="Cvičenka v pozici na kolenou krmí mrkví šedého králíka" loading="lazy" width="1500" height="1000" />
               </button>
             </div>
 
@@ -1280,8 +1300,8 @@
               <button class="rshot" type="button" data-full="assets/photos/yoga-3.webp">
                 <img decoding="async" src="assets/photos/yoga-3-768.webp" alt="Cvičenka v pozici na podložce v sále" loading="lazy" width="768" height="512" />
               </button>
-              <button class="rshot" type="button" data-full="assets/photos/yoga-12.webp">
-                <img decoding="async" src="assets/photos/yoga-12-768.webp" alt="Cvičenka v záklonu" loading="lazy" width="768" height="614" />
+              <button class="rshot" type="button" data-full="assets/photos/yoga-13.webp">
+                <img decoding="async" src="assets/photos/yoga-13-768.webp" alt="Dvě cvičenky krmí šedého králíka mrkví" loading="lazy" width="768" height="512" />
               </button>
             </div>
 
@@ -1548,8 +1568,15 @@
   // která si pod rukama přepíná vzhled sem a tam, je horší než stránka
   // trvale o něco skromnější. A protože degradace jenom ubírá efekty,
   // nejhorší možný omyl je, že je web na chvíli klidnější, než musel být.
+  //
+  // Měří se i na zařízeních, kde je LITE už zapnuté synchronně (dotykové
+  // telefony) — galerie s králíčky má zůstat přišpendlená (pin + scroll-jack)
+  // úplně všude, kde na to prohlížeč reálně stačí, a drtivá většina telefonů
+  // stačí. Teprve naměřené nízké FPS (skutečný projev úsporného režimu nebo
+  // fakt slabého hardwaru) galerii přepne na obyčejný posouvatelný pás —
+  // viz .gal-lite v CSS a `galPinned` níž.
   (function () {
-    if (LITE || REDUCE) return;
+    if (REDUCE) return;
     let snimku = 0, prvni = 0, meri = false;
 
     function vzorek(t) {
@@ -1557,7 +1584,13 @@
       snimku++;
       const ubehlo = t - prvni;
       if (ubehlo < 1000) { requestAnimationFrame(vzorek); return; }
-      if (snimku / (ubehlo / 1000) < 35) document.documentElement.classList.add('lite');
+      if (snimku / (ubehlo / 1000) < 35) {
+        document.documentElement.classList.add('lite');
+        document.documentElement.classList.add('gal-lite');
+        // přepočítat rozvržení galerie hned, ne až při dalším resize —
+        // jinak zůstane přišpendlená ještě jednu návštěvu scrollování
+        window.dispatchEvent(new Event('resize'));
+      }
       meri = false;
     }
 
@@ -1799,7 +1832,7 @@
       if (REDUCE) ctaLead.style.setProperty('--draw', 1);
     }
 
-    const galPinned = () => !REDUCE;
+    const galPinned = () => !REDUCE && !document.documentElement.classList.contains('gal-lite');
 
     let vh = 0, docMax = 1, heroEnd = 0;
     let galTop = 0, galSpan = 1, galTravel = 0;
