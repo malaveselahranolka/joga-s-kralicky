@@ -500,7 +500,7 @@
   .hero-bg::after { content: ""; position: absolute; inset: 0; z-index: 2; background: linear-gradient(180deg, rgba(20,24,18,.62) 0%, rgba(20,24,18,.26) 30%, rgba(20,24,18,.5) 66%, rgba(20,24,18,.9) 100%); }
   /* Jemný zelený nádech přes fotku, ať hero drží barvu studia. Vlastní
      vrstva, aby tmavý přechod výš dál dělal jen čitelnost textu. */
-  .hero-bg::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(165deg, rgba(110,138,78,.34) 0%, rgba(44,59,46,.22) 55%, rgba(44,59,46,.32) 100%); mix-blend-mode: multiply; }
+  .hero-bg::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(165deg, rgba(110,138,78,.52) 0%, rgba(44,59,46,.36) 55%, rgba(44,59,46,.48) 100%); mix-blend-mode: multiply; }
   .hero .wrap { padding-bottom: clamp(2.4rem, 5vw, 4.5rem); }
   .hero-eyebrow { color: #fff; opacity: .88; }
   .hero-eyebrow::before { background-color: var(--carrot); }
@@ -1012,8 +1012,10 @@
        odtlačí jeho i pás pod ním ke spodní hraně. */
     .hero-eyebrow, .hero .hero-sub { display: none; }
     /* Nadpis začíná až pod králíkem na fotce — nad ním má zůstat vidět
-       ta část snímku, kvůli které tam fotka je. */
+       ta část snímku, kvůli které tam fotka je. Fotka je proto posunutá výš,
+       aby králíček nezůstal schovaný za textem. */
     .hero h1 { max-width: none; margin-top: 40vh; }
+    .hero-bg img { top: -30%; }
     .hero { justify-content: flex-start; }
     .hero .wrap { flex: 1; display: flex; flex-direction: column; }
     /* padding drží odstup od nadpisu i ve chvíli, kdy `auto` vyjde na nulu
