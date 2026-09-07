@@ -86,7 +86,7 @@ const isSanity = (url) => typeof url === 'string' && url.startsWith(SANITY_CDN)
 
 function sizedUrl(url, width) {
   if (!isSanity(url)) return url
-  return `${url}?w=${width}&q=62&auto=format&fit=max`
+  return `${url}?w=${width}&q=85&auto=format&fit=max`
 }
 
 function srcsetFor(url, widths) {
@@ -275,8 +275,14 @@ function applyContent(data) {
     if (!item) return
     const base = itemPath('galleryItems', item)
     const image = select('img', button)
-    setImage(image, item.image, item.alt, `${base}.image`,
-      {widths: [400, 560, 800, 1200], sizes: '(max-width: 720px) 70vw, 400px'})
+    // gal-hero fotky jedou přes celou výšku pásu (--shot-h × 3/2, až ~735px
+    // na desktopu) — širší box než big/stack (~365px), takže potřebují
+    // vlastní, větší žebříček šířek. Jinak prohlížeč věří danému `sizes` a
+    // natáhne příliš malý obrázek, který je pak na retině rozmazaný.
+    const isHero = !!button.closest('.gal-hero')
+    setImage(image, item.image, item.alt, `${base}.image`, isHero
+      ? {widths: [500, 750, 1100, 1500], sizes: '(max-width: 720px) 90vw, 735px'}
+      : {widths: [400, 560, 800, 1200], sizes: '(max-width: 720px) 70vw, 400px'})
     // lightbox ukazuje fotku přes celou obrazovku, ale 1600 px stačí i na
     // retinu — originál 1536×2048 by byl jen zbytečně těžký
     button.dataset.full = clean(sizedUrl(item.image?.asset?.url, 1600))
