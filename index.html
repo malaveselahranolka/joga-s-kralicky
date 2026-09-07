@@ -493,7 +493,10 @@
   .hero { position: relative; min-height: 100svh; display: flex; flex-direction: column; justify-content: flex-end; color: #fff; overflow: hidden; padding: 96px 0 0; }
   .hero-bg { position: absolute; inset: 0; z-index: -2; overflow: hidden; }
   .hero-bg img { width: 100%; height: 132%; object-fit: cover; position: relative; top: -16%; will-change: transform; }
-  .hero-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20,24,18,.62) 0%, rgba(20,24,18,.26) 30%, rgba(20,24,18,.5) 66%, rgba(20,24,18,.9) 100%); }
+  .hero-bg::after { content: ""; position: absolute; inset: 0; z-index: 2; background: linear-gradient(180deg, rgba(20,24,18,.62) 0%, rgba(20,24,18,.26) 30%, rgba(20,24,18,.5) 66%, rgba(20,24,18,.9) 100%); }
+  /* Jemný zelený nádech přes fotku, ať hero drží barvu studia. Vlastní
+     vrstva, aby tmavý přechod výš dál dělal jen čitelnost textu. */
+  .hero-bg::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(165deg, rgba(110,138,78,.34) 0%, rgba(44,59,46,.22) 55%, rgba(44,59,46,.32) 100%); mix-blend-mode: multiply; }
   .hero .wrap { padding-bottom: clamp(2.4rem, 5vw, 4.5rem); }
   .hero-eyebrow { color: #fff; opacity: .88; }
   .hero-eyebrow::before { background-color: var(--carrot); }
@@ -998,6 +1001,10 @@
     .proof-note { margin-left: 0; flex-basis: 100%; }
   }
   @media (max-width: 640px) {
+    /* Na telefonu zůstává v hero jen nadpis a tlačítko — na malé obrazovce
+       si nadpis, popisek i řádek nad ním konkurují a nic z toho nevynikne. */
+    .hero-eyebrow, .hero .hero-sub { display: none; }
+    .hero h1 { max-width: none; }
     .nav-quick { display: none; }
     .nav-cta { padding: .5em 1.05em; font-size: .85rem; }
     /* mobile navbar keeps the mark only — the wordmark eats the whole bar */

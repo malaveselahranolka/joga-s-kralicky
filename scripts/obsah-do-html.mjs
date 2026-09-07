@@ -62,6 +62,13 @@ export function obsahDoHtml(html, o) {
   const heroPreload = root.querySelector('link[rel="preload"][as="image"]')
   if (heroPreload && o.heroImage) heroPreload.setAttribute('href', o.heroImage)
 
+  root.querySelectorAll('.hero-deck img').forEach((img, i) => {
+    const item = o.heroDeck?.[i]
+    if (!item) return
+    if (item.image) img.setAttribute('src', item.image)
+    if (item.alt != null) img.setAttribute('alt', esc(item.alt))
+  })
+
   text(root, '.reasons .section-head .eyebrow', o.reasonsEyebrow)
   text(root, '.reasons .section-head h2', o.reasonsTitle)
   text(root, '.reasons .section-head .lead', o.reasonsLead)
@@ -117,15 +124,36 @@ export function obsahDoHtml(html, o) {
     }
   })
 
+  image(root, '.gift-photo', o.giftImage, o.giftImageAlt)
+
   text(root, '.gal-intro h2', o.galleryTitle)
   text(root, '.gal-intro .lead', o.galleryLead)
   text(root, '.gal-hint', o.galleryHint)
   leadingText(root, '.gal-foot .btn', o.galleryButtonLabel)
 
+  // Náhled v pásu a fotka v lightboxu jsou dva různé soubory (menší a plná
+  // verze). Když se v CMS vymění fotka, přijde jen jeden soubor — použije se
+  // na obojí, takže se lightbox nikdy neotevře s cizí fotkou.
+  root.querySelectorAll('.gal-track .rshot').forEach((button, i) => {
+    const item = o.galleryItems?.[i]
+    if (!item) return
+    const img = button.querySelector('img')
+    if (img) {
+      if (item.image) img.setAttribute('src', item.image)
+      if (item.alt != null) img.setAttribute('alt', esc(item.alt))
+    }
+    const plna = item.full || item.image
+    if (plna) button.setAttribute('data-full', plna)
+  })
+
   text(root, '.community .eyebrow', o.communityEyebrow)
   text(root, '.community h2', o.communityTitle)
   text(root, '.community .wrap > p:not(.community-note):not(.cta-nudge)', o.communityBody)
   text(root, '.community-note', o.communityNote)
+  root.querySelectorAll('.community-faces img').forEach((img, i) => {
+    const item = o.communityFaces?.[i]
+    if (item?.image) img.setAttribute('src', item.image)
+  })
   leadingText(root, '.cta-nudge', o.communityNudge)
   text(root, '.cta-nudge a', o.communityNudgeLink)
 

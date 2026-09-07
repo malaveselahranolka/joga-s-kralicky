@@ -1594,6 +1594,10 @@
       ['Odstavec pod nadpisem', 'heroSubtitle', 'text'],
       ['Hlavní fotka', 'heroImage', 'foto'],
       ['Popis hlavní fotky (pro čtečky a Google)', 'heroImageAlt'],
+      ...[0, 1, 2].flatMap((i) => [
+        ['Nakloněná fotka ' + (i + 1), 'heroDeck.' + i + '.image', 'foto'],
+        ['Popis fotky ' + (i + 1), 'heroDeck.' + i + '.alt'],
+      ]),
     ]],
     ['Proč se lidé vracejí', [
       ['Text nad nadpisem', 'reasonsEyebrow'],
@@ -1637,6 +1641,14 @@
       ['Úvodní odstavec', 'galleryLead', 'text'],
       ['Nápověda u posuvníku', 'galleryHint'],
       ['Text tlačítka', 'galleryButtonLabel'],
+      ...Array.from({length: 13}, (_, i) => i).flatMap((i) => [
+        ['Fotka ' + (i + 1), 'galleryItems.' + i + '.image', 'foto'],
+        ['Popis fotky ' + (i + 1), 'galleryItems.' + i + '.alt'],
+      ]),
+    ]],
+    ['Dárkový poukaz (na hlavní straně)', [
+      ['Fotka u poukazu', 'giftImage', 'foto'],
+      ['Popis fotky', 'giftImageAlt'],
     ]],
     ['Přidejte se (zelený pruh)', [
       ['Text nad nadpisem', 'communityEyebrow'],
@@ -1645,6 +1657,7 @@
       ['Řádek pod fotkami', 'communityNote'],
       ['Otázka nad odkazem', 'communityNudge'],
       ['Text odkazu', 'communityNudgeLink'],
+      ...[0, 1, 2, 3].map((i) => ['Kolečko s králíčkem ' + (i + 1), 'communityFaces.' + i + '.image', 'foto']),
     ]],
     ['Časté dotazy', [
       ['Nadpis sekce', 'faqTitle'],
@@ -1752,6 +1765,10 @@
           const odpoved = await r.json();
           if (!r.ok) throw new Error(odpoved.error || 'nahrání selhalo');
           zapis(el.dataset.foto, odpoved.cesta);
+          // Fotka v galerii má vedle náhledu i plnou verzi pro lightbox.
+          // Bez tohohle by se po výměně otevírala pořád ta stará.
+          const rodic = el.dataset.foto.replace(/\.image$/, '.full');
+          if (rodic !== el.dataset.foto && cti(rodic) != null) zapis(rodic, odpoved.cesta);
           const nahled = document.getElementById('o-' + el.dataset.foto.replace(/\./g, '-') + '-nahled');
           if (nahled) nahled.src = URL.createObjectURL(soubor);
           zprava('Fotka nahraná. Nezapomeňte uložit.', 'ok');
