@@ -281,8 +281,6 @@ function applyContent(data) {
     // retinu — originál 1536×2048 by byl jen zbytečně těžký
     button.dataset.full = clean(sizedUrl(item.image?.asset?.url, 1600))
     annotate(button, `${base}.image`)
-    const note = button.closest('.gal-big')?.querySelector('.bun-note')
-    if (note && item.note) setText(note, item.note, `${base}.note`)
   })
 
   setText('.reference .section-head h2', data.referencesTitle, 'referencesTitle')
