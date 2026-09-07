@@ -5,18 +5,10 @@
   "type": "module",
   "scripts": {
     "build": "node --env-file-if-exists=.env.local scripts/build.mjs",
-    "studio": "sanity dev --host 127.0.0.1",
-    "seed": "node --env-file=.env.local scripts/seed-content.mjs",
-    "sync-content": "node --env-file-if-exists=.env.local scripts/sync-content.mjs",
     "verify": "node scripts/verify.mjs"
   },
   "dependencies": {
-    "@sanity/client": "7.26.2",
-    "@sanity/vision": "6.10.1",
-    "@sanity/visual-editing": "6.0.4",
-    "esbuild": "0.28.2",
-    "sanity": "6.10.1",
-    "styled-components": "6.5.3"
+    "node-html-parser": "^7.0.1"
   },
   "overrides": {
     "@vercel/frameworks": {

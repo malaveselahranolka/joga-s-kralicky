@@ -1,0 +1,253 @@
+{
+  "pageTitle": "Jóga s králíčky Ostrava — jóga se zvířaty, 7 králíků na lekci",
+  "pageDescription": "Jóga se zvířaty v Ostravě — hodina jemné hathy, při které vám mezi pozice hopsá sedm domácích králíků. Bez výkonu, bez zrcadel. Vstup 499 Kč, Fit&Fun Studio, Ostrava-Mariánské Hory. Rezervace online.",
+  "shareDescription": "Hodina jógy, po které vám na klíně usne králík. Fit&Fun Studio Ostrava, vstup 499 Kč.",
+  "heroLocation": "Fit&Fun Studio Ostrava",
+  "heroTitleStart": "Jóga s králíčky v Ostravě",
+  "heroTitleEnd": "míň jógy, víc králíčků",
+  "heroSubtitle": "Lekce jógy v Ostravě, při které mezi vámi pobíhá sedm králíčků. Poznávají vás, nechají se pohladit a vy na chvíli zapomenete na všechny starosti.",
+  "heroImage": "assets/photos/yoga-5.webp",
+  "heroImageAlt": "Skupina cvičí v předklonu na podložkách, mezi nohama pobíhají dva králíci",
+  "reasonsEyebrow": "Proč se lidé vracejí",
+  "reasonsTitle": "Jedinečný zážitek, který si zamilujete.",
+  "reasonsLead": "Není to jen o pohybu. Je to o chvíli, kdy se zastavíte a užíváte si přítomnost.",
+  "reasons": [
+    {
+      "label": "Kontakt",
+      "title": "Kontakt s králíčky",
+      "body": "Mazlení, hlazení a chvíle, kdy zapomenete na všechno kolem.",
+      "image": "assets/photos/rabbit-3.webp",
+      "alt": "Klopoušek s dlouhýma ušima zblízka"
+    },
+    {
+      "label": "Mazlík",
+      "title": "Místo pro ty, co nemůžou mít doma mazlíčka",
+      "body": "Přijďte si užít králíčky, i když je doma mít nemůžete. Pohladíte si ho, pomazlíte a užijete si klid, který přináší.",
+      "image": "assets/photos/yoga-4.webp",
+      "alt": "Žena sedí v klidu na podložce ve světlém sále"
+    },
+    {
+      "label": "Děti",
+      "title": "Pro děti, co milují zvířátka",
+      "body": "Děti se naučí, jak ke králíčkům přistupovat, protáhnou se a užijí si spoustu mazlení s ušatými kamarády.",
+      "image": "assets/photos/rabbit-6.webp",
+      "alt": "Šedý a hnědý králík odpočívají v chýši"
+    },
+    {
+      "label": "Jedinečnost",
+      "title": "Zážitek, který jinde nenajdete",
+      "body": "Hodina na kterou budete ještě dlouho vzpomínat.",
+      "image": "assets/photos/rabbit-2.webp",
+      "alt": "Dva králíci si spolu pochutnávají na trávě"
+    }
+  ],
+  "lessonsTitle": "Pro dospělé i pro nejmenší",
+  "lessonsLead": "Máme jednu lekci pro dospělé a jednu pro děti s rodičem. Obě vedeme v Ostravě-Mariánských Horách — vyberte si a rezervujte rovnou tady.",
+  "lessons": [
+    {
+      "tag": "Pro dospělé",
+      "title": "Jóga s králíčky",
+      "price": "499 Kč",
+      "meta": [
+        "60 minut",
+        "So.",
+        "max 10 míst",
+        "i pro úplné začátečníky"
+      ],
+      "description": "Zacvičte si, užijte si mazlení s králíčky a nechte starosti za dveřmi.",
+      "timeline": [
+        {
+          "time": "0–5 min",
+          "text": "Seznámení s králíčky"
+        },
+        {
+          "time": "5–40 min",
+          "text": "Jóga vedená lektorkou"
+        },
+        {
+          "time": "40–60 min",
+          "text": "Mazlení, hlazení a focení s králíčky"
+        }
+      ],
+      "buttonLabel": "Rezervovat",
+      "image": "assets/photos/yoga-6.webp",
+      "alt": "Skupina cvičí v sále na podložkách"
+    },
+    {
+      "tag": "Pro děti od 7 let",
+      "title": "Děti & králíčci",
+      "price": "499 Kč",
+      "meta": [
+        "60 minut",
+        "-",
+        "max 10 míst",
+        "dítě s rodičem"
+      ],
+      "description": "Děti se naučí králíčky pohladit, nakrmit a při tom se i hezky protáhnout.",
+      "timeline": [
+        {
+          "time": "0–10 min",
+          "text": "Jak se ke králíkovi přiblížit, aby neutekl."
+        },
+        {
+          "time": "10–35 min",
+          "text": "Pozice se zvířecími jmény a lehké cvičení."
+        },
+        {
+          "time": "35–60 min",
+          "text": "Krmení, hlazení a focení."
+        }
+      ],
+      "buttonLabel": "Momentálně nevypsané termíny",
+      "image": "assets/photos/yoga-15.webp",
+      "alt": "Chlapec na dětské lekci drží v náručí šedého králíka"
+    }
+  ],
+  "galleryTitle": "Králíčci, kteří vás dostanou do pohody",
+  "galleryLead": "Naši králíčci jsou zvyklí na lidi, pravidelně očkovaní a moc rádi se s vámi seznámí. Někteří jsou odvážnější a přijdou k vám hned, jiní si potřebují chvíli zvykat.",
+  "galleryHint": "Scrollujte, galerie jede do strany",
+  "galleryButtonLabel": "Chci je poznat",
+  "communityEyebrow": "Přidejte se",
+  "communityTitle": "Přijďte si na chvíli odpočinout, odreagovat a nechat starosti za dveřmi.",
+  "communityBody": "Vstup stojí 499 Kč a platí se online rovnou při rezervaci, takže máte místo jisté hned.",
+  "communityNote": "Sedm králíčků · každý s vlastním jménem",
+  "communityNudge": "Ještě otázky?",
+  "communityNudgeLink": "Sjeďte o kousek níž",
+  "faqTitle": "Než přijdete poprvé",
+  "faqIntro": "Šest věcí, na které se lidi ptají nejčastěji, než přijdou poprvé. Nenašli jste odpověď? Napište na",
+  "faqCue": "Rozklikněte kteroukoliv otázku",
+  "faqs": [
+    {
+      "question": "Musím už něco umět?",
+      "answer": "Vůbec ne. Většina hostů přichází úplně bez zkušeností. Lektorka vše ukáže a nabídne jednodušší variantu každé polohy. Jde nám o klid, ne o dokonalý tvar."
+    },
+    {
+      "question": "Nevyruší mě králíci od cvičení?",
+      "answer": "To je celý smysl. Králík nečeká, až dokončíte pozici, jde si po svém a vy se tím pádem taky přestanete honit. Když se k vám zrovna žádný nepřiblíží, není to nic proti vám. Je to jeho rozhodnutí."
+    },
+    {
+      "question": "Co když mám alergii na zvířata?",
+      "answer": "Sál pečlivě větráme a čistíme, přesto při alergii na srst doporučujeme lekci zvážit nebo se poradit s lékařem."
+    },
+    {
+      "question": "Co si mám vzít s sebou?",
+      "answer": "Jen pohodlné oblečení a ponožky. Podložky, dečky i polštáře máme. Cvičíme bez bot a doporučujeme nepoužívat silné parfémy, králíci mají citlivý čich."
+    },
+    {
+      "question": "Jak a kdy se platí?",
+      "answer": "Výhradně online kartou při rezervaci, na místě se neplatí. Vstup stojí 499 Kč za osobu. Když rezervujete víc míst na jedno jméno, brána rovnou spočítá celou částku. Po zaplacení přijde e-mail s QR kódem, který ve studiu jen ukážete. Než platbu dokončíte, držíme vám místo 35 minut."
+    },
+    {
+      "question": "Jsou králíci v pořádku?",
+      "answer": "Jejich pohoda je u nás na prvním místě. Mají vlastní klidové zóny, kam se kdykoliv mohou stáhnout a veterinární péči. Na lekce bereme pouze méně bázlivé jedince."
+    }
+  ],
+  "contactTitle": "Kde nás najdete",
+  "contactLead": "Sídlíme ve Fit&Fun Studiu v Ostravě-Mariánských Horách. Přijďte prosím o deset minut dřív, ať se stihnete v klidu zout a králíci si vás stihnou očichat.",
+  "studioName": "Fit&Fun Studio Ostrava",
+  "studioAddress": "Tovární 486/7, 709 00 Ostrava-Mariánské Hory",
+  "contactEmail": "info@jogaskralicky.cz",
+  "contactPhone": "+420 603 340 860",
+  "contactSchedule": "Lekce: sobota 10:30",
+  "footerTagline": "Studio klidu, kde tempo udávají králíci. Fit&Fun Studio Ostrava, Tovární 486/7, Ostrava-Mariánské Hory.",
+  "newsletterTitle": "Klidná pošta, žádný spam",
+  "newsletterText": "Občas pošleme nové termíny, akce a pár fotek králíků. Odhlásíte se jedním kliknutím. Přihlášením souhlasíte se",
+  "copyright": "© 2026 Jóga s králíčky · Barbora Kovačíková, IČO 29731828. Dýchejte pomalu.",
+  "heroDeck": [
+    {
+      "image": "assets/photos/rabbit-1-320.webp",
+      "alt": "Králík na podložce během lekce jógy s králíčky v Ostravě"
+    },
+    {
+      "image": "assets/photos/rabbit-5-320.webp",
+      "alt": "Domácí králík odpočívá v sále studia jógy se zvířaty"
+    },
+    {
+      "image": "assets/photos/rabbit-4-320.webp",
+      "alt": "Králík s klopenýma ušima mezi cvičenci na lekci jógy"
+    }
+  ],
+  "giftImage": "assets/photos/rabbit-1-320.webp",
+  "giftImageAlt": "Králíček si bere pamlsek z ruky",
+  "communityFaces": [
+    {
+      "image": "assets/photos/rabbit-1-96.webp"
+    },
+    {
+      "image": "assets/photos/rabbit-5-96.webp"
+    },
+    {
+      "image": "assets/photos/rabbit-4-96.webp"
+    },
+    {
+      "image": "assets/photos/rabbit-7-96.webp"
+    }
+  ],
+  "galleryItems": [
+    {
+      "image": "assets/photos/yoga-14.webp",
+      "full": "assets/photos/yoga-14.webp",
+      "alt": "Skupina cvičí v pozici kočky, mezi podložkami pobíhá černý králík"
+    },
+    {
+      "image": "assets/photos/yoga-17-768.webp",
+      "full": "assets/photos/yoga-17.webp",
+      "alt": "Cvičenka krmí mrkví šedého klopoušího králíka"
+    },
+    {
+      "image": "assets/photos/yoga-19-768.webp",
+      "full": "assets/photos/yoga-19.webp",
+      "alt": "Hnědý klopoušatý králík okusuje kousky mrkve"
+    },
+    {
+      "image": "assets/photos/yoga-15.webp",
+      "full": "assets/photos/yoga-15.webp",
+      "alt": "Chlapec na dětské lekci drží v náručí šedého králíka"
+    },
+    {
+      "image": "assets/photos/yoga-20-768.webp",
+      "full": "assets/photos/yoga-20.webp",
+      "alt": "Cvičenka v pruhovaném tričku drží v náručí šedého klopoušího králíka"
+    },
+    {
+      "image": "assets/photos/yoga-21-768.webp",
+      "full": "assets/photos/yoga-21.webp",
+      "alt": "Cvičenka v pozici se zvednutou nohou hladí šedého králíka"
+    },
+    {
+      "image": "assets/photos/yoga-16.webp",
+      "full": "assets/photos/yoga-16.webp",
+      "alt": "Cvičenka v pozici kočky hladí černého králíka na podložce"
+    },
+    {
+      "image": "assets/photos/yoga-22-768.webp",
+      "full": "assets/photos/yoga-22.webp",
+      "alt": "Cvičenka v květovaných legínách krmí mrkví šedého králíka"
+    },
+    {
+      "image": "assets/photos/yoga-23-768.webp",
+      "full": "assets/photos/yoga-23.webp",
+      "alt": "Cvičenka fotí mobilem spolužačku s králíkem v náručí"
+    },
+    {
+      "image": "assets/photos/yoga-18.webp",
+      "full": "assets/photos/yoga-18.webp",
+      "alt": "Černý králík odpočívá na podložce vedle nohou cvičenců"
+    },
+    {
+      "image": "assets/photos/yoga-24-768.webp",
+      "full": "assets/photos/yoga-24.webp",
+      "alt": "Muž krmí mrkví hnědého králíka vedle přepravky"
+    },
+    {
+      "image": "assets/photos/yoga-26-768.webp",
+      "full": "assets/photos/yoga-26.webp",
+      "alt": "Cvičenec v pozici na kolenou krmí mrkví hnědého králíka"
+    },
+    {
+      "image": "assets/photos/yoga-25.webp",
+      "full": "assets/photos/yoga-25.webp",
+      "alt": "Lektorka krmí černého králíka před sedícími cvičenci"
+    }
+  ]
+}
