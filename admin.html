@@ -1592,7 +1592,8 @@
       ['Nadpis — druhá část', 'heroTitleEnd'],
       ['Text nad nadpisem', 'heroLocation'],
       ['Odstavec pod nadpisem', 'heroSubtitle', 'text'],
-      ['Hlavní fotka', 'heroImage', 'foto'],
+      ['Hlavní fotka (počítač)', 'heroImage', 'foto'],
+      ['Hlavní fotka (telefon — na výšku)', 'heroImageMobile', 'foto'],
       ['Popis hlavní fotky (pro čtečky a Google)', 'heroImageAlt'],
       ...[0, 1, 2].flatMap((i) => [
         ['Nakloněná fotka ' + (i + 1), 'heroDeck.' + i + '.image', 'foto'],
@@ -1767,7 +1768,9 @@
           zapis(el.dataset.foto, odpoved.cesta);
           // Fotka v galerii má vedle náhledu i plnou verzi pro lightbox.
           // Bez tohohle by se po výměně otevírala pořád ta stará.
-          const rodic = el.dataset.foto.replace(/\.image$/, '.full');
+          const rodic = el.dataset.foto === 'heroImageMobile'
+            ? 'heroImageMobileSmall'
+            : el.dataset.foto.replace(/\.image$/, '.full');
           if (rodic !== el.dataset.foto && cti(rodic) != null) zapis(rodic, odpoved.cesta);
           const nahled = document.getElementById('o-' + el.dataset.foto.replace(/\./g, '-') + '-nahled');
           if (nahled) nahled.src = URL.createObjectURL(soubor);
