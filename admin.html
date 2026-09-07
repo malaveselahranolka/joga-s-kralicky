@@ -1715,43 +1715,87 @@
     return data.session ? data.session.access_token : null;
   }
 
-  // Fotka z mobilu má klidně 4000 px a 5 MB. Na stránce se zobrazí nanejvýš
-  // v šířce 1600 px a server nic většího než 4 MB nepřijme, tak ji zmenšíme
-  // rovnou tady — majitelka nemusí nic řešit a web se nezpomalí.
-  const MAX_HRANA = 1600;
+  // Fotka z mobilu má klidně 4000 px a přes 10 MB. Server nic většího než
+  // 4 MB nepřijme (Vercel má strop na tělo požadavku), a hlavně by taková
+  // fotka na telefonu zdržovala načtení stránky. Zmenšíme ji proto tady.
+  //
+  // Každý krok má náhradní cestu, protože Safari se chová jinak než Chrome:
+  // neumí volby u createImageBitmap a WebP z canvasu podporuje až od verze 14.
+  // Bez fallbacku končila majitelka na iPhonu u hlášky "the string did not
+  // match the expected pattern", které nešlo rozumět.
+  const MAX_HRANA = 2000;
   const BEZ_UPRAVY = 300 * 1024;
+  const BEZNY_TYP = /^image\/(jpeg|png|webp)$/;
+
+  async function otevriFotku(soubor) {
+    if (typeof createImageBitmap === 'function') {
+      try {
+        return await createImageBitmap(soubor, {imageOrientation: 'from-image'});
+      } catch (_e) { /* starší Safari volby neumí — zkusíme to bez nich */ }
+      try {
+        return await createImageBitmap(soubor);
+      } catch (_e) { /* a když ani to, jdeme přes <img> */ }
+    }
+    const adresa = URL.createObjectURL(soubor);
+    try {
+      const obrazek = new Image();
+      obrazek.src = adresa;
+      await obrazek.decode();
+      return obrazek;
+    } finally {
+      // uvolnit až po vykreslení na canvas nelze, decode() ale drží data v paměti
+      setTimeout(() => URL.revokeObjectURL(adresa), 10000);
+    }
+  }
+
+  async function doBlobu(platno) {
+    for (const [typ, kvalita] of [['image/webp', 0.86], ['image/jpeg', 0.88]]) {
+      const blob = await new Promise((hotovo) => {
+        try { platno.toBlob(hotovo, typ, kvalita); } catch (_e) { hotovo(null); }
+      });
+      // Safari bez podpory WebP vrátí PNG — to je u fotek zbytečně těžké,
+      // tak takový výsledek zahodíme a zkusíme JPEG.
+      if (blob && blob.type === typ) return blob;
+    }
+    return null;
+  }
 
   async function zmensiFotku(soubor) {
-    let bitmapa;
+    const jeBezna = BEZNY_TYP.test(soubor.type);
+    let zdroj;
     try {
-      // from-image = respektovat otočení z EXIFu, jinak by fotky z mobilu
-      // skončily položené na bok
-      bitmapa = await createImageBitmap(soubor, {imageOrientation: 'from-image'});
+      zdroj = await otevriFotku(soubor);
     } catch (_e) {
-      throw new Error('tenhle formát fotky prohlížeč neumí otevřít, uložte ji prosím jako JPG');
+      if (jeBezna && soubor.size <= 4 * 1024 * 1024) return soubor;
+      throw new Error('tuhle fotku prohlížeč neumí otevřít, zkuste ji prosím uložit jako JPG');
     }
-    const hrana = Math.max(bitmapa.width, bitmapa.height);
-    const jeBezna = /^image\/(jpeg|png|webp)$/.test(soubor.type);
+    const sirka = zdroj.width || zdroj.naturalWidth;
+    const vyska = zdroj.height || zdroj.naturalHeight;
+    const hrana = Math.max(sirka, vyska);
+    const uklid = () => { if (typeof zdroj.close === 'function') zdroj.close(); };
+
     if (jeBezna && soubor.size <= BEZ_UPRAVY && hrana <= MAX_HRANA) {
-      bitmapa.close();
+      uklid();
       return soubor;
     }
+
     const pomer = Math.min(1, MAX_HRANA / hrana);
     const platno = document.createElement('canvas');
-    platno.width = Math.round(bitmapa.width * pomer);
-    platno.height = Math.round(bitmapa.height * pomer);
-    platno.getContext('2d').drawImage(bitmapa, 0, 0, platno.width, platno.height);
-    bitmapa.close();
-    const blob = await new Promise((h) => platno.toBlob(h, 'image/webp', 0.82));
+    platno.width = Math.round(sirka * pomer);
+    platno.height = Math.round(vyska * pomer);
+    platno.getContext('2d').drawImage(zdroj, 0, 0, platno.width, platno.height);
+    uklid();
+
+    const blob = await doBlobu(platno);
     if (!blob) {
-      if (jeBezna) return soubor;
-      throw new Error('fotku se nepodařilo připravit, uložte ji prosím jako JPG');
+      if (jeBezna && soubor.size <= 4 * 1024 * 1024) return soubor;
+      throw new Error('fotku se nepodařilo připravit, zkuste ji prosím uložit jako JPG');
     }
-    // U malých obrázků (loga, kolečka) bývá původní soubor lehčí než
+    // U malých obrázků (kolečka, loga) bývá původní soubor lehčí než
     // překódovaná verze — pak nemá smysl kvalitu zahazovat.
     if (jeBezna && blob.size >= soubor.size) return soubor;
-    const jmeno = soubor.name.replace(/\.[^.]+$/, '') + '.webp';
-    return new File([blob], jmeno, {type: 'image/webp'});
+    const pripona = blob.type === 'image/webp' ? '.webp' : '.jpg';
+    return new File([blob], soubor.name.replace(/\.[^.]+$/, '') + pripona, {type: blob.type});
   }
 
   function poleHtml(popis, cesta, typ) {
