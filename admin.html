@@ -1715,17 +1715,31 @@
     return data.session ? data.session.access_token : null;
   }
 
-  // Fotka z mobilu má klidně 4000 px a přes 10 MB. Server nic většího než
-  // 4 MB nepřijme (Vercel má strop na tělo požadavku), a hlavně by taková
-  // fotka na telefonu zdržovala načtení stránky. Zmenšíme ji proto tady.
+  // Fotka z mobilu má klidně 4000 px a přes 10 MB. Zmenšíme ji rovnou tady:
+  // server nic většího než 4 MB nepřijme (Vercel má strop na tělo požadavku)
+  // a hlavně by taková fotka zdržovala načtení stránky.
   //
-  // Každý krok má náhradní cestu, protože Safari se chová jinak než Chrome:
-  // neumí volby u createImageBitmap a WebP z canvasu podporuje až od verze 14.
-  // Bez fallbacku končila majitelka na iPhonu u hlášky "the string did not
-  // match the expected pattern", které nešlo rozumět.
-  const MAX_HRANA = 2000;
+  // Každé místo na webu má vlastní strop podle toho, jak velké se doopravdy
+  // zobrazuje (dvojnásobek kvůli retina displejům). Bez toho skončila fotka
+  // v kartičce široké 130 px jako soubor 1,4 MB — 70× těžší než ta, kterou
+  // nahradila, a vizuálně to nikdo nepozná.
+  const HRANY = [
+    [/^heroImage$/, 1920],
+    [/^heroImageMobile$/, 1100],
+    [/^heroDeck\./, 320],
+    [/^communityFaces\./, 96],
+    [/^giftImage$/, 320],
+    [/^reasons\./, 1260],
+    [/^lessons\./, 1320],
+    [/^galleryItems\./, 1500],
+  ];
   const BEZ_UPRAVY = 300 * 1024;
   const BEZNY_TYP = /^image\/(jpeg|png|webp)$/;
+
+  const hranaPro = (cesta) => (HRANY.find(([vzor]) => vzor.test(cesta || '')) || [null, 1500])[1];
+  // Malé fotky nemají důvod vážit stovky kilobajtů. Rozpočet drží i JPEG
+  // v rozumné velikosti pro případ, že prohlížeč neumí WebP.
+  const rozpocetPro = (hrana) => hrana <= 400 ? 45 * 1024 : hrana <= 900 ? 130 * 1024 : 300 * 1024;
 
   async function otevriFotku(soubor) {
     if (typeof createImageBitmap === 'function') {
@@ -1743,24 +1757,31 @@
       await obrazek.decode();
       return obrazek;
     } finally {
-      // uvolnit až po vykreslení na canvas nelze, decode() ale drží data v paměti
       setTimeout(() => URL.revokeObjectURL(adresa), 10000);
     }
   }
 
-  async function doBlobu(platno) {
-    for (const [typ, kvalita] of [['image/webp', 0.86], ['image/jpeg', 0.88]]) {
-      const blob = await new Promise((hotovo) => {
-        try { platno.toBlob(hotovo, typ, kvalita); } catch (_e) { hotovo(null); }
-      });
-      // Safari bez podpory WebP vrátí PNG — to je u fotek zbytečně těžké,
-      // tak takový výsledek zahodíme a zkusíme JPEG.
-      if (blob && blob.type === typ) return blob;
+  // Safari podporuje WebP z canvasu až od novějších verzí a starší vrátí
+  // potichu PNG — takový výsledek zahodíme a jdeme na JPEG. U obou formátů
+  // ubíráme kvalitu, dokud se soubor nevejde do rozpočtu.
+  async function doBlobu(platno, rozpocet) {
+    let posledni = null;
+    for (const typ of ['image/webp', 'image/jpeg']) {
+      for (const kvalita of [0.86, 0.74, 0.62]) {
+        const blob = await new Promise((hotovo) => {
+          try { platno.toBlob(hotovo, typ, kvalita); } catch (_e) { hotovo(null); }
+        });
+        if (!blob || blob.type !== typ) break;
+        posledni = blob;
+        if (blob.size <= rozpocet) return blob;
+      }
+      if (posledni) return posledni;
     }
-    return null;
+    return posledni;
   }
 
-  async function zmensiFotku(soubor) {
+  async function zmensiFotku(soubor, cesta) {
+    const maxHrana = hranaPro(cesta);
     const jeBezna = BEZNY_TYP.test(soubor.type);
     let zdroj;
     try {
@@ -1774,25 +1795,23 @@
     const hrana = Math.max(sirka, vyska);
     const uklid = () => { if (typeof zdroj.close === 'function') zdroj.close(); };
 
-    if (jeBezna && soubor.size <= BEZ_UPRAVY && hrana <= MAX_HRANA) {
+    if (jeBezna && soubor.size <= Math.min(BEZ_UPRAVY, rozpocetPro(maxHrana)) && hrana <= maxHrana) {
       uklid();
       return soubor;
     }
 
-    const pomer = Math.min(1, MAX_HRANA / hrana);
+    const pomer = Math.min(1, maxHrana / hrana);
     const platno = document.createElement('canvas');
     platno.width = Math.round(sirka * pomer);
     platno.height = Math.round(vyska * pomer);
     platno.getContext('2d').drawImage(zdroj, 0, 0, platno.width, platno.height);
     uklid();
 
-    const blob = await doBlobu(platno);
+    const blob = await doBlobu(platno, rozpocetPro(maxHrana));
     if (!blob) {
       if (jeBezna && soubor.size <= 4 * 1024 * 1024) return soubor;
       throw new Error('fotku se nepodařilo připravit, zkuste ji prosím uložit jako JPG');
     }
-    // U malých obrázků (kolečka, loga) bývá původní soubor lehčí než
-    // překódovaná verze — pak nemá smysl kvalitu zahazovat.
     if (jeBezna && blob.size >= soubor.size) return soubor;
     const pripona = blob.type === 'image/webp' ? '.webp' : '.jpg';
     return new File([blob], soubor.name.replace(/\.[^.]+$/, '') + pripona, {type: blob.type});
@@ -1834,7 +1853,7 @@
         if (!soubor) return;
         zprava('Připravuji fotku…');
         try {
-          const fotka = await zmensiFotku(soubor);
+          const fotka = await zmensiFotku(soubor, el.dataset.foto);
           zprava('Nahrávám fotku…');
           const dataUrl = await new Promise((hotovo, chyba) => {
             const r = new FileReader();
