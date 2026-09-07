@@ -1002,9 +1002,14 @@
   }
   @media (max-width: 640px) {
     /* Na telefonu zůstává v hero jen nadpis a tlačítko — na malé obrazovce
-       si nadpis, popisek i řádek nad ním konkurují a nic z toho nevynikne. */
+       si nadpis, popisek i řádek nad ním konkurují a nic z toho nevynikne.
+       Nadpis jde nahoru pod menu, fotky králíků drží spodek: .wrap se roztáhne
+       přes celé hero a `margin-top: auto` u pásu je odtlačí dolů. */
     .hero-eyebrow, .hero .hero-sub { display: none; }
-    .hero h1 { max-width: none; }
+    .hero h1 { max-width: none; margin-top: 0; }
+    .hero { justify-content: flex-start; }
+    .hero .wrap { flex: 1; display: flex; flex-direction: column; }
+    .hero-deck { margin-top: auto; }
     .nav-quick { display: none; }
     .nav-cta { padding: .5em 1.05em; font-size: .85rem; }
     /* mobile navbar keeps the mark only — the wordmark eats the whole bar */
