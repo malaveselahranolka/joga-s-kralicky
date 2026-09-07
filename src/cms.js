@@ -122,6 +122,14 @@ function setImage(element, image, alt, path, opts = {}) {
   if (alt != null) element.alt = clean(alt)
   annotate(element, path)
 
+  // Mimo Studio se fotka nevyměňuje. Sanity a HTML se ručně drží ve shodě
+  // (viz sync-content.mjs pro text, ruční upload assetu pro obrázky) — když
+  // by tahle výměna proběhla i tady, návštěvník by při každém načtení viděl
+  // krátké probliknutí ze statické fotky na vizuálně skoro stejnou fotku
+  // z CDN. Ve Studiu (`editing`) naopak výměna zůstává, aby živé
+  // near-real-time náhledy při úpravách obsahu fungovaly.
+  if (!editing) return
+
   // Stejná fotka už tam je — nesahat na ni.
   if (element.getAttribute('src') === src) return
 
