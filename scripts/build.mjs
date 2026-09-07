@@ -20,6 +20,7 @@ const files = [
   'joga-se-stenaty.html',
   'robots.txt',
   'sitemap.xml',
+  'favicon.ico',
   'vstupenka.html',
   'obchodni-podminky.html',
   'zasady-osobnich-udaju.html',
