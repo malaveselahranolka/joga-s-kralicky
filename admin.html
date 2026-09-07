@@ -1715,6 +1715,45 @@
     return data.session ? data.session.access_token : null;
   }
 
+  // Fotka z mobilu má klidně 4000 px a 5 MB. Na stránce se zobrazí nanejvýš
+  // v šířce 1600 px a server nic většího než 4 MB nepřijme, tak ji zmenšíme
+  // rovnou tady — majitelka nemusí nic řešit a web se nezpomalí.
+  const MAX_HRANA = 1600;
+  const BEZ_UPRAVY = 300 * 1024;
+
+  async function zmensiFotku(soubor) {
+    let bitmapa;
+    try {
+      // from-image = respektovat otočení z EXIFu, jinak by fotky z mobilu
+      // skončily položené na bok
+      bitmapa = await createImageBitmap(soubor, {imageOrientation: 'from-image'});
+    } catch (_e) {
+      throw new Error('tenhle formát fotky prohlížeč neumí otevřít, uložte ji prosím jako JPG');
+    }
+    const hrana = Math.max(bitmapa.width, bitmapa.height);
+    const jeBezna = /^image\/(jpeg|png|webp)$/.test(soubor.type);
+    if (jeBezna && soubor.size <= BEZ_UPRAVY && hrana <= MAX_HRANA) {
+      bitmapa.close();
+      return soubor;
+    }
+    const pomer = Math.min(1, MAX_HRANA / hrana);
+    const platno = document.createElement('canvas');
+    platno.width = Math.round(bitmapa.width * pomer);
+    platno.height = Math.round(bitmapa.height * pomer);
+    platno.getContext('2d').drawImage(bitmapa, 0, 0, platno.width, platno.height);
+    bitmapa.close();
+    const blob = await new Promise((h) => platno.toBlob(h, 'image/webp', 0.82));
+    if (!blob) {
+      if (jeBezna) return soubor;
+      throw new Error('fotku se nepodařilo připravit, uložte ji prosím jako JPG');
+    }
+    // U malých obrázků (loga, kolečka) bývá původní soubor lehčí než
+    // překódovaná verze — pak nemá smysl kvalitu zahazovat.
+    if (jeBezna && blob.size >= soubor.size) return soubor;
+    const jmeno = soubor.name.replace(/\.[^.]+$/, '') + '.webp';
+    return new File([blob], jmeno, {type: 'image/webp'});
+  }
+
   function poleHtml(popis, cesta, typ) {
     if (!cesta) return '<div class="obsah-podskupina"><h4>' + popis.replace('—— ', '') + '</h4></div>';
     const hodnota = cti(cesta) == null ? '' : String(cti(cesta));
@@ -1722,7 +1761,7 @@
     if (typ === 'foto') {
       return '<div class="obsah-pole"><label>' + popis + '</label><div class="obsah-foto">'
         + '<img id="' + id + '-nahled" src="' + (hodnota ? '/' + hodnota : '') + '" alt="" />'
-        + '<input type="file" accept="image/jpeg,image/png,image/webp" data-foto="' + cesta + '" />'
+        + '<input type="file" accept="image/*" data-foto="' + cesta + '" />'
         + '</div></div>';
     }
     const vstup = typ === 'text'
@@ -1749,19 +1788,20 @@
       el.addEventListener('change', async () => {
         const soubor = el.files && el.files[0];
         if (!soubor) return;
-        if (soubor.size > 4 * 1024 * 1024) { zprava('Fotka je větší než 4 MB. Zmenšete ji prosím.', 'err'); el.value = ''; return; }
-        zprava('Nahrávám fotku…');
+        zprava('Připravuji fotku…');
         try {
+          const fotka = await zmensiFotku(soubor);
+          zprava('Nahrávám fotku…');
           const dataUrl = await new Promise((hotovo, chyba) => {
             const r = new FileReader();
             r.onload = () => hotovo(r.result);
             r.onerror = () => chyba(new Error('čtení souboru selhalo'));
-            r.readAsDataURL(soubor);
+            r.readAsDataURL(fotka);
           });
           const r = await fetch('/api/obsah', {
             method: 'POST',
             headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + await token()},
-            body: JSON.stringify({nazev: soubor.name, data: dataUrl}),
+            body: JSON.stringify({nazev: fotka.name, data: dataUrl}),
           });
           const odpoved = await r.json();
           if (!r.ok) throw new Error(odpoved.error || 'nahrání selhalo');
@@ -1773,7 +1813,7 @@
             : el.dataset.foto.replace(/\.image$/, '.full');
           if (rodic !== el.dataset.foto && cti(rodic) != null) zapis(rodic, odpoved.cesta);
           const nahled = document.getElementById('o-' + el.dataset.foto.replace(/\./g, '-') + '-nahled');
-          if (nahled) nahled.src = URL.createObjectURL(soubor);
+          if (nahled) nahled.src = URL.createObjectURL(fotka);
           zprava('Fotka nahraná. Nezapomeňte uložit.', 'ok');
         } catch (e) {
           zprava('Fotku se nepodařilo nahrát: ' + e.message, 'err');
