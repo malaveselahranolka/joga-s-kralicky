@@ -59,8 +59,24 @@ export function obsahDoHtml(html, o) {
   text(root, '[data-cms="hero-title-end"]', o.heroTitleEnd)
   text(root, '.hero-sub', o.heroSubtitle)
   image(root, '.hero-bg img', o.heroImage, o.heroImageAlt)
-  const heroPreload = root.querySelector('link[rel="preload"][as="image"]')
+  const heroPreload = root.querySelector('link[rel="preload"][media="(min-width: 641px)"]')
   if (heroPreload && o.heroImage) heroPreload.setAttribute('href', o.heroImage)
+
+  // Fotka na telefon má vlastní <source>. Menší varianta je nepovinná —
+  // po výměně ve správě přijde jen jeden soubor a použije se na obě šířky.
+  if (o.heroImageMobile) {
+    const maly = o.heroImageMobileSmall
+    const srcset = maly
+      ? `${maly} 750w, ${o.heroImageMobile} 1100w`
+      : o.heroImageMobile
+    const zdroj = root.querySelector('.hero-bg source')
+    if (zdroj) zdroj.setAttribute('srcset', srcset)
+    const mobilPreload = root.querySelector('link[rel="preload"][media="(max-width: 640px)"]')
+    if (mobilPreload) {
+      mobilPreload.setAttribute('href', maly || o.heroImageMobile)
+      mobilPreload.setAttribute('imagesrcset', srcset)
+    }
+  }
 
   root.querySelectorAll('.hero-deck img').forEach((img, i) => {
     const item = o.heroDeck?.[i]

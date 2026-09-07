@@ -12,7 +12,8 @@
 <title>Jóga s králíčky Ostrava — jóga se zvířaty, 7 králíků na lekci</title>
 <meta name="description" content="Jóga se zvířaty v Ostravě — hodina jemné hathy, při které mezi cvičícími pobíhá sedm domácích králíků. Vstup 499 Kč, Fit&amp;Fun Studio. Rezervace online." />
 <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
-<link rel="preload" as="image" href="assets/photos/yoga-5.webp" fetchpriority="high" />
+<link rel="preload" as="image" href="assets/photos/yoga-5.webp" fetchpriority="high" media="(min-width: 641px)" />
+<link rel="preload" as="image" href="assets/photos/kralicek-hero-mobil-750.webp" imagesrcset="assets/photos/kralicek-hero-mobil-750.webp 750w, assets/photos/kralicek-hero-mobil.webp 1100w" imagesizes="100vw" fetchpriority="high" media="(max-width: 640px)" />
 <meta property="og:title" content="Jóga s králíčky Ostrava — jóga se zvířaty, 7 králíků na lekci" />
 <meta property="og:description" content="Hodina jógy, po které vám na klíně usne králík. Fit&amp;Fun Studio Ostrava, vstup 499 Kč." />
 <!-- Náhled při sdílení musí mít ABSOLUTNÍ adresu — Facebook, Messenger ani
@@ -492,6 +493,9 @@
   /* ---------- hero ---------- */
   .hero { position: relative; min-height: 100svh; display: flex; flex-direction: column; justify-content: flex-end; color: #fff; overflow: hidden; padding: 96px 0 0; }
   .hero-bg { position: absolute; inset: 0; z-index: -2; overflow: hidden; }
+  /* picture nesmí vyrobit vlastní box, jinak by se rozměry z .hero-bg img
+     počítaly vůči němu a fotka by přestala sedět na výšku hero sekce */
+  .hero-bg picture { display: contents; }
   .hero-bg img { width: 100%; height: 132%; object-fit: cover; position: relative; top: -16%; will-change: transform; }
   .hero-bg::after { content: ""; position: absolute; inset: 0; z-index: 2; background: linear-gradient(180deg, rgba(20,24,18,.62) 0%, rgba(20,24,18,.26) 30%, rgba(20,24,18,.5) 66%, rgba(20,24,18,.9) 100%); }
   /* Jemný zelený nádech přes fotku, ať hero drží barvu studia. Vlastní
@@ -1007,10 +1011,14 @@
        .wrap se roztáhne přes celé hero a `margin-top: auto` u tlačítka
        odtlačí jeho i pás pod ním ke spodní hraně. */
     .hero-eyebrow, .hero .hero-sub { display: none; }
-    .hero h1 { max-width: none; margin-top: 0; }
+    /* Nadpis začíná až pod králíkem na fotce — nad ním má zůstat vidět
+       ta část snímku, kvůli které tam fotka je. */
+    .hero h1 { max-width: none; margin-top: 40vh; }
     .hero { justify-content: flex-start; }
     .hero .wrap { flex: 1; display: flex; flex-direction: column; }
-    .hero-actions { margin-top: auto; }
+    /* padding drží odstup od nadpisu i ve chvíli, kdy `auto` vyjde na nulu
+       (nižší displeje, delší nadpis po úpravě v CMS) */
+    .hero-actions { margin-top: auto; padding-top: 1.5rem; }
     .nav-quick { display: none; }
     .nav-cta { padding: .5em 1.05em; font-size: .85rem; }
     /* mobile navbar keeps the mark only — the wordmark eats the whole bar */
@@ -1089,7 +1097,12 @@
   <!-- ============ HERO ============ -->
   <section class="hero" id="hero">
     <div class="hero-bg">
-      <img decoding="async" src="assets/photos/yoga-5.webp" alt="Skupina cvičí v předklonu na podložkách, mezi nohama pobíhají dva králíci" fetchpriority="high" width="1500" height="1000" />
+      <!-- Na telefonu jede vlastní fotka na výšku: široký záběr z desktopu se
+           do úzké obrazovky ořízne tak, že z něj skoro nic nezbude. -->
+      <picture>
+        <source media="(max-width: 640px)" srcset="assets/photos/kralicek-hero-mobil-750.webp 750w, assets/photos/kralicek-hero-mobil.webp 1100w" sizes="100vw" />
+        <img decoding="async" src="assets/photos/yoga-5.webp" alt="Skupina cvičí v předklonu na podložkách, mezi nohama pobíhají dva králíci" fetchpriority="high" width="1500" height="1000" />
+      </picture>
     </div>
     <div class="aurora breathe" aria-hidden="true" style="width:520px;height:520px;right:-120px;top:16%;background:radial-gradient(circle, rgba(210,133,74,.55), transparent 70%)"></div>
     <div class="aurora breathe" aria-hidden="true" style="width:420px;height:420px;left:-100px;bottom:8%;background:radial-gradient(circle, rgba(110,138,78,.5), transparent 70%);animation-delay:-5.5s"></div>
