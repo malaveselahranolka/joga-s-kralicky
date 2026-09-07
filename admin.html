@@ -81,6 +81,25 @@
   .panel-head h2 { font-size: 1.7rem; }
 
   .card { background: var(--cloud); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 1.4rem 1.5rem; }
+
+  /* ---------- editor obsahu ---------- */
+  .obsah-msg { min-height: 1.4em; margin-bottom: .9rem; font-weight: 700; font-size: .92rem; }
+  .obsah-msg.ok { color: var(--clover); }
+  .obsah-msg.err { color: var(--carrot); }
+  .obsah-sekce { background: var(--cloud); border: 1px solid var(--line); border-radius: var(--r-lg); margin-bottom: 1rem; overflow: hidden; }
+  .obsah-sekce > summary { cursor: pointer; padding: 1.05rem 1.3rem; font-weight: 700; font-size: 1.02rem; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+  .obsah-sekce > summary::-webkit-details-marker { display: none; }
+  .obsah-sekce > summary::after { content: "▾"; color: var(--ink-soft); transition: transform .2s var(--ease); }
+  .obsah-sekce[open] > summary::after { transform: rotate(180deg); }
+  .obsah-sekce > summary:hover { background: color-mix(in srgb, var(--clover) 7%, transparent); }
+  .obsah-telo { padding: 0 1.3rem 1.3rem; display: grid; gap: 1rem; }
+  .obsah-pole label { display: block; font-size: .84rem; font-weight: 700; color: var(--ink-soft); margin-bottom: .35rem; }
+  .obsah-pole textarea { min-height: 5.2em; resize: vertical; line-height: 1.5; }
+  .obsah-podskupina { border-top: 1px dashed var(--line); padding-top: 1rem; display: grid; gap: 1rem; }
+  .obsah-podskupina > h4 { font-size: .95rem; }
+  .obsah-foto { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+  .obsah-foto img { width: 108px; height: 78px; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); background: var(--line); }
+  .obsah-foto input[type="file"] { width: auto; border: none; background: none; padding: 0; font-size: .88rem; }
   .muted { color: var(--ink-soft); }
   .empty { text-align: center; color: var(--ink-soft); padding: 2.5rem 1rem; border: 1px dashed var(--line); border-radius: var(--r-lg); }
 
@@ -307,22 +326,13 @@
     <section class="panel" id="panel-content" role="tabpanel">
       <div class="panel-head">
         <h2>Obsah webu</h2>
-        <a class="btn btn-primary btn-sm" href="studio/" target="_blank" rel="noopener">Otevřít editor obsahu</a>
-      </div>
-      <div class="card" style="padding:clamp(1.25rem,3vw,2rem)">
-        <p class="muted" style="font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.45rem">Sanity CMS · propojeno přes Vercel</p>
-        <h3 style="font-size:clamp(1.35rem,3vw,2rem);margin-bottom:.8rem">Texty i fotografie bez úprav kódu</h3>
-        <p class="muted" style="max-width:64ch;line-height:1.65">V editoru najdete úvod, čísla studia, důvody, lekce, galerii, reference, výzvu, FAQ, kontakt i patičku. Po úpravě klikněte na <strong>Publikovat</strong>. Web změnu načte hned, bez nového nasazení.</p>
-        <div class="stat-row" style="margin:1.5rem 0">
-          <div class="stat"><div class="n">1</div><div class="lbl">Otevřete editor</div></div>
-          <div class="stat"><div class="n">2</div><div class="lbl">Upravte text nebo fotografii</div></div>
-          <div class="stat"><div class="n">3</div><div class="lbl">Klikněte na Publikovat</div></div>
-        </div>
-        <div style="display:flex;gap:.7rem;flex-wrap:wrap">
-          <a class="btn btn-primary" href="studio/" target="_blank" rel="noopener">Upravit obsah</a>
-          <a class="btn btn-ghost" href="/" target="_blank" rel="noopener">Otevřít veřejný web</a>
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+          <a class="btn btn-ghost btn-sm" href="/" target="_blank" rel="noopener">Otevřít web</a>
+          <button class="btn btn-primary btn-sm" id="obsahSave">Uložit a zveřejnit</button>
         </div>
       </div>
+      <p class="obsah-msg" id="obsahMsg" role="status" aria-live="polite"></p>
+      <div id="obsahForm"><p class="muted">Načítám obsah…</p></div>
     </section>
 
     <!-- LESSONS -->
@@ -1552,6 +1562,246 @@
       await loadAll();
       await showVoucherScan(vcode);
     }
+  });
+})();
+</script>
+
+<!-- =====================================================================
+     EDITOR OBSAHU WEBU
+
+     Uložení pošle content/obsah.json na GitHub (přes /api/obsah) a Vercel
+     web sám nasadí. Zdroj pravdy je repozitář — každá změna textu je
+     dohledatelná v historii a dá se vrátit.
+
+     Běží ve vlastním bloku, aby se nemíchal se správou rezervací; sdílí
+     s ní jen přihlášení ze Supabase.
+     ===================================================================== -->
+<script>
+(function () {
+  if (typeof window.supabase === 'undefined' || !window.SUPABASE_URL) return;
+  const sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+  const $ = (id) => document.getElementById(id);
+  const form = $('obsahForm'), msg = $('obsahMsg'), saveBtn = $('obsahSave');
+  if (!form || !saveBtn) return;
+
+  // Popis formuláře: co je vlevo, ať majitelka pozná, které místo na webu
+  // mění. Cesta vpravo odpovídá klíči v content/obsah.json.
+  const SEKCE = [
+    ['Úvodní obrazovka', [
+      ['Nadpis — první část', 'heroTitleStart'],
+      ['Nadpis — druhá část', 'heroTitleEnd'],
+      ['Text nad nadpisem', 'heroLocation'],
+      ['Odstavec pod nadpisem', 'heroSubtitle', 'text'],
+      ['Hlavní fotka', 'heroImage', 'foto'],
+      ['Popis hlavní fotky (pro čtečky a Google)', 'heroImageAlt'],
+    ]],
+    ['Proč se lidé vracejí', [
+      ['Text nad nadpisem', 'reasonsEyebrow'],
+      ['Nadpis sekce', 'reasonsTitle'],
+      ['Úvodní odstavec', 'reasonsLead', 'text'],
+      ...[0, 1, 2, 3].flatMap((i) => [
+        ['—— Karta ' + (i + 1), null],
+        ['Štítek', 'reasons.' + i + '.label'],
+        ['Nadpis karty', 'reasons.' + i + '.title'],
+        ['Text karty', 'reasons.' + i + '.body', 'text'],
+        ['Fotka karty', 'reasons.' + i + '.image', 'foto'],
+        ['Popis fotky', 'reasons.' + i + '.alt'],
+      ]),
+    ]],
+    ['Lekce', [
+      ['Nadpis sekce', 'lessonsTitle'],
+      ['Úvodní odstavec', 'lessonsLead', 'text'],
+      ...[0, 1].flatMap((i) => [
+        ['—— Lekce ' + (i + 1), null],
+        ['Štítek nad fotkou', 'lessons.' + i + '.tag'],
+        ['Název lekce', 'lessons.' + i + '.title'],
+        ['Cena', 'lessons.' + i + '.price'],
+        ['Délka', 'lessons.' + i + '.meta.0'],
+        ['Kdy se koná', 'lessons.' + i + '.meta.1'],
+        ['Kapacita', 'lessons.' + i + '.meta.2'],
+        ['Pro koho', 'lessons.' + i + '.meta.3'],
+        ['Popis lekce', 'lessons.' + i + '.description', 'text'],
+        ['Průběh 1 — čas', 'lessons.' + i + '.timeline.0.time'],
+        ['Průběh 1 — co se děje', 'lessons.' + i + '.timeline.0.text'],
+        ['Průběh 2 — čas', 'lessons.' + i + '.timeline.1.time'],
+        ['Průběh 2 — co se děje', 'lessons.' + i + '.timeline.1.text'],
+        ['Průběh 3 — čas', 'lessons.' + i + '.timeline.2.time'],
+        ['Průběh 3 — co se děje', 'lessons.' + i + '.timeline.2.text'],
+        ['Text tlačítka', 'lessons.' + i + '.buttonLabel'],
+        ['Fotka lekce', 'lessons.' + i + '.image', 'foto'],
+        ['Popis fotky', 'lessons.' + i + '.alt'],
+      ]),
+    ]],
+    ['Galerie', [
+      ['Nadpis sekce', 'galleryTitle'],
+      ['Úvodní odstavec', 'galleryLead', 'text'],
+      ['Nápověda u posuvníku', 'galleryHint'],
+      ['Text tlačítka', 'galleryButtonLabel'],
+    ]],
+    ['Přidejte se (zelený pruh)', [
+      ['Text nad nadpisem', 'communityEyebrow'],
+      ['Nadpis', 'communityTitle', 'text'],
+      ['Odstavec', 'communityBody', 'text'],
+      ['Řádek pod fotkami', 'communityNote'],
+      ['Otázka nad odkazem', 'communityNudge'],
+      ['Text odkazu', 'communityNudgeLink'],
+    ]],
+    ['Časté dotazy', [
+      ['Nadpis sekce', 'faqTitle'],
+      ['Úvodní text', 'faqIntro', 'text'],
+      ['Pobídka k rozkliknutí', 'faqCue'],
+      ...[0, 1, 2, 3, 4, 5].flatMap((i) => [
+        ['—— Otázka ' + (i + 1), null],
+        ['Otázka', 'faqs.' + i + '.question'],
+        ['Odpověď', 'faqs.' + i + '.answer', 'text'],
+      ]),
+    ]],
+    ['Kontakt', [
+      ['Nadpis sekce', 'contactTitle'],
+      ['Úvodní odstavec', 'contactLead', 'text'],
+      ['Název studia', 'studioName'],
+      ['Adresa', 'studioAddress'],
+      ['E-mail', 'contactEmail'],
+      ['Telefon', 'contactPhone'],
+      ['Rozvrh (řádek s hodinami)', 'contactSchedule'],
+    ]],
+    ['Patička', [
+      ['Věta o studiu', 'footerTagline', 'text'],
+      ['Nadpis newsletteru', 'newsletterTitle'],
+      ['Text u newsletteru', 'newsletterText', 'text'],
+      ['Spodní řádek (copyright, IČO)', 'copyright', 'text'],
+    ]],
+    ['Google a sdílení', [
+      ['Titulek stránky', 'pageTitle', 'text'],
+      ['Popis pro Google', 'pageDescription', 'text'],
+      ['Popis při sdílení na sítích', 'shareDescription', 'text'],
+    ]],
+  ];
+
+  let obsah = null;
+
+  const cti = (cesta) => cesta.split('.').reduce((o, k) => (o == null ? o : o[k]), obsah);
+  function zapis(cesta, hodnota) {
+    const klice = cesta.split('.');
+    let cil = obsah;
+    for (const k of klice.slice(0, -1)) {
+      if (cil[k] == null) cil[k] = {};
+      cil = cil[k];
+    }
+    cil[klice[klice.length - 1]] = hodnota;
+  }
+
+  function zprava(text, druh) {
+    msg.textContent = text;
+    msg.className = 'obsah-msg' + (druh ? ' ' + druh : '');
+  }
+
+  async function token() {
+    const {data} = await sb.auth.getSession();
+    return data.session ? data.session.access_token : null;
+  }
+
+  function poleHtml(popis, cesta, typ) {
+    if (!cesta) return '<div class="obsah-podskupina"><h4>' + popis.replace('—— ', '') + '</h4></div>';
+    const hodnota = cti(cesta) == null ? '' : String(cti(cesta));
+    const id = 'o-' + cesta.replace(/\./g, '-');
+    if (typ === 'foto') {
+      return '<div class="obsah-pole"><label>' + popis + '</label><div class="obsah-foto">'
+        + '<img id="' + id + '-nahled" src="' + (hodnota ? '/' + hodnota : '') + '" alt="" />'
+        + '<input type="file" accept="image/jpeg,image/png,image/webp" data-foto="' + cesta + '" />'
+        + '</div></div>';
+    }
+    const vstup = typ === 'text'
+      ? '<textarea id="' + id + '" data-cesta="' + cesta + '"></textarea>'
+      : '<input id="' + id + '" type="text" data-cesta="' + cesta + '" />';
+    return '<div class="obsah-pole"><label for="' + id + '">' + popis + '</label>' + vstup + '</div>';
+  }
+
+  function vykresli() {
+    form.innerHTML = SEKCE.map(([nazev, pole], i) =>
+      '<details class="obsah-sekce"' + (i === 0 ? ' open' : '') + '><summary>' + nazev + '</summary>'
+      + '<div class="obsah-telo">' + pole.map(([p, c, t]) => poleHtml(p, c, t)).join('') + '</div></details>',
+    ).join('');
+
+    // Hodnoty se dosazují až po vykreslení, aby uvozovky ani lomené závorky
+    // v textu nemohly rozbít značky formuláře.
+    form.querySelectorAll('[data-cesta]').forEach((el) => {
+      const v = cti(el.dataset.cesta);
+      el.value = v == null ? '' : String(v);
+      el.addEventListener('input', () => zapis(el.dataset.cesta, el.value));
+    });
+
+    form.querySelectorAll('[data-foto]').forEach((el) => {
+      el.addEventListener('change', async () => {
+        const soubor = el.files && el.files[0];
+        if (!soubor) return;
+        if (soubor.size > 4 * 1024 * 1024) { zprava('Fotka je větší než 4 MB. Zmenšete ji prosím.', 'err'); el.value = ''; return; }
+        zprava('Nahrávám fotku…');
+        try {
+          const dataUrl = await new Promise((hotovo, chyba) => {
+            const r = new FileReader();
+            r.onload = () => hotovo(r.result);
+            r.onerror = () => chyba(new Error('čtení souboru selhalo'));
+            r.readAsDataURL(soubor);
+          });
+          const r = await fetch('/api/obsah', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + await token()},
+            body: JSON.stringify({nazev: soubor.name, data: dataUrl}),
+          });
+          const odpoved = await r.json();
+          if (!r.ok) throw new Error(odpoved.error || 'nahrání selhalo');
+          zapis(el.dataset.foto, odpoved.cesta);
+          const nahled = document.getElementById('o-' + el.dataset.foto.replace(/\./g, '-') + '-nahled');
+          if (nahled) nahled.src = URL.createObjectURL(soubor);
+          zprava('Fotka nahraná. Nezapomeňte uložit.', 'ok');
+        } catch (e) {
+          zprava('Fotku se nepodařilo nahrát: ' + e.message, 'err');
+        }
+        el.value = '';
+      });
+    });
+  }
+
+  async function nacti() {
+    try {
+      const r = await fetch('/api/obsah', {headers: {Authorization: 'Bearer ' + await token()}});
+      if (!r.ok) throw new Error((await r.json()).error || 'načtení selhalo');
+      obsah = await r.json();
+      vykresli();
+      zprava('');
+    } catch (e) {
+      form.innerHTML = '<p class="muted">Obsah se nepodařilo načíst: ' + e.message + '</p>';
+    }
+  }
+
+  saveBtn.addEventListener('click', async () => {
+    if (!obsah) return;
+    saveBtn.disabled = true;
+    zprava('Ukládám…');
+    try {
+      const r = await fetch('/api/obsah', {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + await token()},
+        body: JSON.stringify({obsah}),
+      });
+      if (!r.ok) throw new Error((await r.json()).error || 'uložení selhalo');
+      zprava('Uloženo. Web se sám nasadí, změnu uvidíte zhruba do minuty.', 'ok');
+    } catch (e) {
+      zprava('Uložení se nepodařilo: ' + e.message, 'err');
+    }
+    saveBtn.disabled = false;
+  });
+
+  // Načítáme až při prvním otevření záložky — kdo obsah needituje,
+  // ať kvůli němu nečeká na GitHub.
+  let nacteno = false;
+  document.querySelectorAll('.tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      if (tab.dataset.tab !== 'content' || nacteno) return;
+      nacteno = true;
+      nacti();
+    });
   });
 })();
 </script>

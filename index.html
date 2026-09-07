@@ -12,10 +12,7 @@
 <title>Jóga s králíčky Ostrava — jóga se zvířaty, 7 králíků na lekci</title>
 <meta name="description" content="Jóga se zvířaty v Ostravě — hodina jemné hathy, při které mezi cvičícími pobíhá sedm domácích králíků. Vstup 499 Kč, Fit&amp;Fun Studio. Rezervace online." />
 <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
-<!-- Hero fotku dosazuje CMS ze Sanity, takže tady nemá smysl přednačítat
-     soubor z assets — stáhl by se navíc a zahodil. Místo toho otevřeme
-     spojení na cdn.sanity.io, ať LCP obrázek nečeká na TLS handshake. -->
-<link rel="preconnect" href="https://cdn.sanity.io" crossorigin />
+<link rel="preload" as="image" href="assets/photos/yoga-5.webp" fetchpriority="high" />
 <meta property="og:title" content="Jóga s králíčky Ostrava — jóga se zvířaty, 7 králíků na lekci" />
 <meta property="og:description" content="Hodina jógy, po které vám na klíně usne králík. Fit&amp;Fun Studio Ostrava, vstup 499 Kč." />
 <!-- Náhled při sdílení musí mít ABSOLUTNÍ adresu — Facebook, Messenger ani
@@ -1119,18 +1116,18 @@
   <!-- ============ WHY PEOPLE COME BACK ============ -->
   <section class="reasons" id="proc">
     <div class="wrap section-head reveal">
-      <span class="eyebrow">Proč se lidi vracejí</span>
-      <h2>Zeptali jsme se. Nikdo neřekl „kvůli protažení“.</h2>
-      <p class="lead">Jóga je záminka. Tohle jsou čtyři důvody, které nám lidi říkají doopravdy.</p>
+      <span class="eyebrow">Proč se lidé vracejí</span>
+      <h2>Jedinečný zážitek, který si zamilujete.</h2>
+      <p class="lead">Není to jen o pohybu. Je to o chvíli, kdy se zastavíte a užíváte si přítomnost.</p>
     </div>
 
     <div class="rstack">
       <article class="rpanel">
         <div class="wrap rp-grid">
           <div class="rp-text">
-            <span class="rp-label">Blízkost</span>
-            <h3>Protože si k vám někdo lehne</h3>
-            <p>Králíček si klín vybere sám. Objednat se to nedá, a právě proto to sedne.</p>
+            <span class="rp-label">Kontakt</span>
+            <h3>Kontakt s králíčky</h3>
+            <p>Mazlení, hlazení a chvíle, kdy zapomenete na všechno kolem.</p>
           </div>
           <div class="rp-pic">
             <img decoding="async" src="assets/photos/rabbit-3.webp" alt="Klopoušek s dlouhýma ušima zblízka" loading="lazy" width="1050" height="1400" />
@@ -1141,9 +1138,9 @@
       <article class="rpanel">
         <div class="wrap rp-grid">
           <div class="rp-text">
-            <span class="rp-label">Bez zrcadel</span>
-            <h3>Protože se nikdo nedívá, jak vám to jde</h3>
-            <p>Žádná zrcadla, žádné opravování. Lektorka ukáže a nechá vás to dělat po svém.</p>
+            <span class="rp-label">Mazlík</span>
+            <h3>Místo pro ty, co nemůžou mít doma mazlíčka</h3>
+            <p>Přijďte si užít králíčky, i když je doma mít nemůžete. Pohladíte si ho, pomazlíte a užijete si klid, který přináší.</p>
           </div>
           <div class="rp-pic">
             <img decoding="async" src="assets/photos/yoga-4.webp" alt="Žena sedí v klidu na podložce ve světlém sále" loading="lazy" width="1500" height="1200" />
@@ -1154,9 +1151,9 @@
       <article class="rpanel">
         <div class="wrap rp-grid">
           <div class="rp-text">
-            <span class="rp-label">Tempo</span>
-            <h3>Protože králík se nedá popohnat</h3>
-            <p>Nemůžete uspíšit zvíře, které si dává na čas. Tak si ho nakonec dáte taky.</p>
+            <span class="rp-label">Děti</span>
+            <h3>Pro děti, co milují zvířátka</h3>
+            <p>Děti se naučí, jak ke králíčkům přistupovat, protáhnou se a užijí si spoustu mazlení s ušatými kamarády.</p>
           </div>
           <div class="rp-pic">
             <img decoding="async" src="assets/photos/rabbit-6.webp" alt="Šedý a hnědý králík odpočívají v chýši" loading="lazy" width="1050" height="1400" />
@@ -1167,9 +1164,9 @@
       <article class="rpanel">
         <div class="wrap rp-grid">
           <div class="rp-text">
-            <span class="rp-label">Parta</span>
-            <h3>Protože si zapamatujete jména dřív než pozice</h3>
-            <p>Po měsíci znáte Pepu, Tofu i Mínku. Sanskrt počká, tahle hodina ne.</p>
+            <span class="rp-label">Jedinečnost</span>
+            <h3>Zážitek, který jinde nenajdete</h3>
+            <p>Hodina na kterou budete ještě dlouho vzpomínat.</p>
           </div>
           <div class="rp-pic">
             <img decoding="async" src="assets/photos/rabbit-2.webp" alt="Dva králíci si spolu pochutnávají na trávě" loading="lazy" width="1050" height="1400" />
@@ -1192,45 +1189,45 @@
         <article class="lesson reveal">
           <div class="l-pic">
             <span class="l-tag">Pro dospělé</span>
-            <img decoding="async" src="assets/photos/yoga-6.webp" alt="Cvičenka v pozici na kolenou krmí mrkví šedého králíka" loading="lazy" width="1500" height="1000" />
+            <img decoding="async" src="assets/photos/yoga-6.webp" alt="Skupina cvičí v sále na podložkách" loading="lazy" width="1500" height="1000" />
           </div>
           <div class="l-body">
             <div class="l-top">
-              <h3>Hatha s králíčky</h3>
+              <h3>Jóga s králíčky</h3>
               <span class="l-price">499 Kč</span>
             </div>
             <ul class="l-meta">
-              <li>60 minut</li><li>Út · Čt · So</li><li>max 10 míst</li><li>i pro úplné začátečníky</li>
+              <li>60 minut</li><li>So.</li><li>max 10 míst</li><li>i pro úplné začátečníky</li>
             </ul>
-            <p class="l-desc">Naše klasika. Pomalý pohyb a dech, u každé pozice se ukáže i jednodušší varianta.</p>
+            <p class="l-desc">Zacvičte si, užijte si mazlení s králíčky a nechte starosti za dveřmi.</p>
             <div class="l-run">
-              <div><b>0–10 min</b><span>Přijdete, zujete se, dostanete čaj.</span></div>
-              <div><b>10–40 min</b><span>Pomalá hatha. Lektorka vede, nikdo neopravuje.</span></div>
-              <div><b>40–60 min</b><span>Savasana a sál se otevře králíkům. Vybírají si sami.</span></div>
+              <div><b>0–5 min</b><span>Seznámení s králíčky</span></div>
+              <div><b>5–40 min</b><span>Jóga vedená lektorkou</span></div>
+              <div><b>40–60 min</b><span>Mazlení, hlazení a focení s králíčky</span></div>
             </div>
-            <div class="l-cta"><a class="btn btn-light" href="rezervace.html">Rezervovat Hathu <span class="arrow">→</span></a></div>
+            <div class="l-cta"><a class="btn btn-light" href="rezervace.html">Rezervovat <span class="arrow">→</span></a></div>
           </div>
         </article>
         <article class="lesson reveal">
           <div class="l-pic">
-            <span class="l-tag">Pro děti od 5 let</span>
+            <span class="l-tag">Pro děti od 7 let</span>
             <img decoding="async" src="assets/photos/yoga-15.webp" alt="Chlapec na dětské lekci drží v náručí šedého králíka" loading="lazy" width="1500" height="1000" />
           </div>
           <div class="l-body">
             <div class="l-top">
-              <h3>Děti &amp; králíci</h3>
+              <h3>Děti &amp; králíčci</h3>
               <span class="l-price">499 Kč</span>
             </div>
             <ul class="l-meta">
-              <li>60 minut</li><li>Sobota 9:30</li><li>max 10 míst</li><li>dítě s rodičem</li>
+              <li>60 minut</li><li>-</li><li>max 10 míst</li><li>dítě s rodičem</li>
             </ul>
-            <p class="l-desc">Víc her než ásan. Děti se učí jedinou věc: být tak klidné, aby k nim někdo přišel dobrovolně. Funguje to i na rodiče.</p>
+            <p class="l-desc">Děti se naučí králíčky pohladit, nakrmit a při tom se i hezky protáhnout.</p>
             <div class="l-run">
               <div><b>0–10 min</b><span>Jak se ke králíkovi přiblížit, aby neutekl.</span></div>
-              <div><b>10–40 min</b><span>Pozice se zvířecími jmény, hry a hodně smíchu.</span></div>
-              <div><b>40–60 min</b><span>Klid na dece, mrkev a mazlení.</span></div>
+              <div><b>10–35 min</b><span>Pozice se zvířecími jmény a lehké cvičení.</span></div>
+              <div><b>35–60 min</b><span>Krmení, hlazení a focení.</span></div>
             </div>
-            <div class="l-cta"><a class="btn btn-light" href="rezervace.html">Rezervovat sobotu <span class="arrow">→</span></a></div>
+            <div class="l-cta"><a class="btn btn-light" href="rezervace.html">Momentálně nevypsané termíny <span class="arrow">→</span></a></div>
           </div>
         </article>
       </div>
@@ -1359,8 +1356,8 @@
     <div class="sglow" aria-hidden="true"></div>
     <div class="wrap">
       <span class="eyebrow">Přidejte se</span>
-      <h2>Sedm králíků čeká, až zpomalíte i vy</h2>
-      <p>Vstup stojí 499&nbsp;Kč a platí se online rovnou při rezervaci, takže máte místo jisté hned. Žádné čekání na potvrzení.</p>
+      <h2>Přijďte si na chvíli odpočinout, odreagovat a nechat starosti za dveřmi.</h2>
+      <p>Vstup stojí 499&nbsp;Kč a platí se online rovnou při rezervaci, takže máte místo jisté hned.</p>
       <div class="community-faces" aria-hidden="true">
         <img src="assets/photos/rabbit-1-96.webp" alt="" loading="lazy" decoding="async" width="48" height="48" />
         <img src="assets/photos/rabbit-5-96.webp" alt="" loading="lazy" decoding="async" width="48" height="48" />
@@ -1401,7 +1398,7 @@
         </div>
         <div class="faq-item">
           <button class="faq-q" aria-expanded="false">Co když mám alergii na zvířata?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4v14M4 11h14"/></svg></button>
-          <div class="faq-a"><div><p>Sál pečlivě větráme a čistíme, přesto při alergii na srst doporučujeme lekci zvážit nebo se poradit s lékařem. Rádi vám pomůžeme vybrat méně kontaktní termín.</p></div></div>
+          <div class="faq-a"><div><p>Sál pečlivě větráme a čistíme, přesto při alergii na srst doporučujeme lekci zvážit nebo se poradit s lékařem.</p></div></div>
         </div>
         <div class="faq-item">
           <button class="faq-q" aria-expanded="false">Co si mám vzít s sebou?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4v14M4 11h14"/></svg></button>
@@ -1413,7 +1410,7 @@
         </div>
         <div class="faq-item">
           <button class="faq-q" aria-expanded="false">Jsou králíci v pořádku?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4v14M4 11h14"/></svg></button>
-          <div class="faq-a"><div><p>Jejich pohoda je u nás na prvním místě. Mají vlastní klidové zóny, kam se kdykoliv mohou stáhnout, pravidelné pauzy a veterinární péči. Na lekci jdou jen odpočatí a dobrovolně.</p></div></div>
+          <div class="faq-a"><div><p>Jejich pohoda je u nás na prvním místě. Mají vlastní klidové zóny, kam se kdykoliv mohou stáhnout a veterinární péči. Na lekce bereme pouze méně bázlivé jedince.</p></div></div>
         </div>
       </div>
     </div>
@@ -1996,6 +1993,5 @@
     });
   });
 </script>
-<script type="module" src="cms.js"></script>
 </body>
 </html>

@@ -1,14 +1,10 @@
-import {build} from 'esbuild'
 import {copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync} from 'node:fs'
 import {join} from 'node:path'
 import {spawnSync} from 'node:child_process'
+import {obsahDoHtml} from './obsah-do-html.mjs'
 
 const root = process.cwd()
 const output = join(root, 'public')
-const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || process.env.SANITY_STUDIO_PROJECT_ID || process.env.SANITY_API_PROJECT_ID
-const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || process.env.SANITY_STUDIO_DATASET || process.env.SANITY_API_DATASET || 'production'
-
-if (!projectId) throw new Error('Chybí SANITY project ID. Spusť `vercel env pull .env.local`.')
 
 rmSync(output, {recursive: true, force: true})
 mkdirSync(output, {recursive: true})
@@ -39,6 +35,26 @@ for (const file of files) {
   if (existsSync(join(root, file))) copyFileSync(join(root, file), join(output, file))
 }
 cpSync(join(root, 'assets'), join(output, 'assets'), {recursive: true})
+
+// ---------------------------------------------------------------------
+//  OBSAH ZE SPRÁVY
+//
+//  content/obsah.json edituje majitelka ve správě (admin.html → Obsah).
+//  Uložení commitne soubor na GitHub, Vercel nasadí a tady se obsah
+//  vsadí do HTML. Když soubor chybí, build pokračuje s texty, které
+//  jsou v index.html — nasazení kvůli obsahu nikdy nespadne.
+// ---------------------------------------------------------------------
+const obsahPath = join(root, 'content', 'obsah.json')
+const indexPath = join(output, 'index.html')
+if (existsSync(obsahPath) && existsSync(indexPath)) {
+  try {
+    const obsah = JSON.parse(readFileSync(obsahPath, 'utf8'))
+    writeFileSync(indexPath, obsahDoHtml(readFileSync(indexPath, 'utf8'), obsah))
+    console.log('Obsah: content/obsah.json vsazen do index.html.')
+  } catch (e) {
+    console.warn(`Obsah se nepodařilo vsadit (${e.message}) — jede se s texty z index.html.`)
+  }
+}
 
 // ---------------------------------------------------------------------
 //  SITEMAP: lastmod podle poslední změny v gitu
@@ -264,34 +280,4 @@ if (existsSync(sitemapPath)) {
   console.log(`Sitemap: lastmod z gitu u ${touched} adres, ze souboru u ${zaloha}.`)
 }
 
-// splitting + esm: vizuální editor se vejde do vlastního souboru, který si
-// veřejná stránka nevyžádá. Bez toho by ho dynamický import jen vložil zpátky
-// do hlavního balíku a nic bychom neušetřili.
-// (index.html načítá cms.js jako <script type="module">, takže esm sedí.)
-await build({
-  absWorkingDir: root,
-  entryPoints: ['./src/cms.js'],
-  bundle: true,
-  format: 'esm',
-  splitting: true,
-  minify: true,
-  sourcemap: true,
-  outdir: output,
-  entryNames: '[name]',
-  chunkNames: 'chunks/[name]-[hash]',
-})
-
-const bin = join(root, 'node_modules', '.bin', process.platform === 'win32' ? 'sanity.cmd' : 'sanity')
-const result = spawnSync(bin, ['build', join(output, 'studio'), '--yes'], {
-  cwd: root,
-  env: process.env,
-  shell: process.platform === 'win32',
-  stdio: 'inherit',
-})
-if (result.status !== 0) process.exit(result.status || 1)
-
-const localStudio = join(root, 'studio')
-rmSync(localStudio, {recursive: true, force: true})
-cpSync(join(output, 'studio'), localStudio, {recursive: true})
-
-console.log('Hotovo: veřejný web + Sanity Studio jsou v public/.')
+console.log('Hotovo: veřejný web je v public/.')
