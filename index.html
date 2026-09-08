@@ -167,8 +167,12 @@
       },
       "sameAs": [
         "https://www.instagram.com/zooterapie_joga",
-        "https://www.facebook.com/share/188akYWtuR/"
-      ]
+        "https://www.facebook.com/share/188akYWtuR/",
+        "https://maps.app.goo.gl/Qm7YAJJRsvKyVLaF6",
+        "https://mapy.com/s/melakehoju",
+        "https://www.firmy.cz/detail/14064344-joga-s-kralicky-ostrava-marianske-hory.html"
+      ],
+      "hasMap": "https://maps.app.goo.gl/Qm7YAJJRsvKyVLaF6"
     },
     {
       "@type": "WebSite",
@@ -886,11 +890,15 @@
   .contact-list a, .contact-list p { display: inline-flex; align-items: center; gap: .7rem; font-weight: 600; color: var(--ink); transition: color .25s var(--ease); }
   .contact-list a:hover { color: var(--clover-text); }
   .contact-list svg { color: var(--clover); flex: none; }
-  .contact-list .plain { font-weight: 400; color: var(--ink-soft); }
+  .contact-list .plain { font-weight: 400; color: var(--ink-soft); flex-wrap: wrap; }
+  .contact-list .plain a { font-size: .9rem; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--line); }
   .visit-card .btn { margin-top: auto; align-self: flex-start; }
   .visit-actions { margin-top: 1.8rem; display: flex; gap: .7rem; flex-wrap: wrap; }
   .visit-map { border-radius: var(--r-xl); overflow: hidden; border: 1px solid var(--line); box-shadow: var(--sh-2); min-height: 340px; background: var(--paper); position: relative; }
   .visit-map iframe { width: 100%; height: 100%; min-height: 340px; border: 0; display: block; filter: saturate(.82) contrast(1.02); }
+  .arrival-guide { margin-top: clamp(1.2rem, 3vw, 1.8rem); padding: clamp(1.4rem, 3vw, 2rem); border: 1px solid var(--line); border-radius: var(--r-xl); background: var(--paper); display: grid; grid-template-columns: minmax(220px, .7fr) 1.3fr; gap: 1rem clamp(1.8rem, 4vw, 3.6rem); align-items: start; }
+  .arrival-guide h3 { margin-top: .45rem; font-family: "Schibsted Grotesk"; font-size: clamp(1.35rem, 1.15rem + .7vw, 1.8rem); letter-spacing: -.02em; }
+  .arrival-guide p { color: var(--ink-soft); line-height: 1.7; max-width: 72ch; }
 
   /* ---------- footer ---------- */
   footer.foot { background: var(--forest-deep); color: rgba(255,255,255,.7); padding: clamp(3.5rem, 6vw, 5rem) 0 2.5rem; }
@@ -1021,6 +1029,9 @@
     .tcard { flex-basis: calc((100% - 1.3rem) / 2); }
     .foot-grid { grid-template-columns: 1fr 1fr; }
     .foot .brand-cell { grid-column: 1 / -1; }
+  }
+  @media (max-width: 720px) {
+    .arrival-guide { grid-template-columns: 1fr; }
   }
   @media (max-width: 980px) {
     /* the deck moves into the flow so the rabbits stay visible on small screens */
@@ -1505,7 +1516,8 @@
               <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
               <!-- Tento text přepisuje CMS (pole contactSchedule), proto musí
                    zůstat shodný s veřejnou nabídkou. -->
-              Lekce: sobota 10:30
+              Pravidelně v sobotu 10:30
+              <a href="rezervace.html">Ověřit aktuální termíny</a>
             </p>
           </div>
           <div class="visit-actions">
@@ -1519,6 +1531,13 @@
             src="https://maps.google.com/maps?q=Fit%26Fun%20Studio%20Ostrava%2C%20Tovární%20486%2F7%2C%20709%2000%20Ostrava-Mari%C3%A1nsk%C3%A9%20Hory&amp;z=15&amp;ie=UTF8&amp;output=embed"
             loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
         </div>
+      </div>
+      <div class="arrival-guide reveal">
+        <div>
+          <span class="eyebrow">Doprava a parkování</span>
+          <h3>Jak se k nám dostanete</h3>
+        </div>
+        <p>Tramvají vystupte na zastávce <strong>Daliborova</strong>, kterou obsluhují linky <strong>3, 4, 8, 18 a 19</strong>. Ke vchodu do Fit&amp;Fun Studia je to přibližně 100 metrů, tedy asi dvě minuty pěšky ulicemi Daliborova a Tovární. Pokud přijedete autem, <strong>bezplatné parkování je přímo u studia</strong>. Adresa pro navigaci je Tovární 486/7, Ostrava-Mariánské Hory. Sobotní lekce začíná pravidelně v 10:30, ale nekoná se nutně každou sobotu, proto si před cestou vždy ověřte aktuální termín v rezervaci.</p>
       </div>
     </div>
   </section>

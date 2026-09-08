@@ -74,7 +74,7 @@ const CIL = {
   // Dřív „10 chlupatých lektorů · 230+ klidných hostů“. To číslo hostů je
   // stejně nepodložené jako hodnocení, která jsme kvůli tomu odstranili.
   communityNote: 'Sedm králíčků · každý s vlastním jménem',
-  contactSchedule: 'Lekce: sobota 10:30',
+  contactSchedule: 'Pravidelně v sobotu 10:30',
 }
 
 // Položky polí se dohledávají podle pořadí, _key se zachovává.

@@ -52,7 +52,9 @@ Homepage je u tohoto projektu zároveň stránkou hlavní služby. Králičí j�
 
 ### Google Business Profile
 
-- Doplnit pravdivou hlavní kategorii, režim „pouze dle termínů“, popis služeb a aktuální fotografie přímo z lekcí.
+- Veřejný profil je propojený s homepage i samostatným tlačítkem rezervace, používá název **Jóga s králíčky**, kategorii „Studio jógy“, adresu Tovární 486/7 a telefon +420 603 340 860. V JSON-LD je přidaný do `sameAs` i `hasMap`.
+- Profil veřejně neuvádí pevnou otevírací dobu. To odpovídá provozu podle vypsaných termínů; nevydávat pravidelnou sobotní lekci za otevření studia každou sobotu.
+- Průběžně doplňovat aktuální fotografie a příspěvky z uskutečněných lekcí. K 8. září 2026 má profil 2 recenze s průměrem 5,0; vzorek je příliš malý na konkurenční lokální autoritu.
 - Do JSON-LD nepřidávat `openingHoursSpecification`: studio nemá pevnou otevírací dobu a funguje pouze podle vypsaných termínů. Tento režim se nastavuje přímo v Google Business Profile.
 - Držet všude stejné údaje: **Jóga s králíčky**, Tovární 486/7, Ostrava-Mariánské Hory, +420 603 340 860.
 - Na recenze odpovídat věcně a přirozeně; nevkládat do každé odpovědi klíčová slova.
@@ -68,17 +70,20 @@ Homepage je u tohoto projektu zároveň stránkou hlavní služby. Králičí j�
 ### Lokální autorita
 
 - Získat odkaz z webu Fit&Fun Studia přímo na `https://www.jogaskralicky.cz/`.
-- Doplnit a ověřit zápis na Firmy.cz/Mapy.com pro Seznam. Název, adresa, telefon a odkaz na web musí znak po znaku odpovídat webu a Google Business Profile.
+- Zápis na Firmy.cz/Mapy.com je aktivní a propojený s homepage. Název, adresa, telefon, e-mail, IČO 29731828, popis služby a cena 499 Kč odpovídají webu; profily jsou přidané do `sameAs`.
+- Na Firmy.cz nastavit „Kurzy jógy“ jako hlavní kategorii. Veřejný detail na Mapy.com se nyní zobrazuje obecně jako „Gym“ a vedle „Kurzů jógy“ je zařazený také do „Dámských fitness center“; druhou kategorii ponechat jen tehdy, pokud jsou lekce skutečně výhradně pro ženy.
+- U dětské položky v ceníku Firmy.cz doplnit měnu: jeden výpis ukazuje jen „499“, zatímco detail nabídky správně zobrazuje 499 Kč.
+- Získávat hodnocení také na Firmy.cz; veřejný profil při kontrole zatím nenabízel žádné hodnocení.
 - Sledovat vedle Googlu také indexaci a návštěvy ze Seznamu; pro české lokální dotazy může být profil Firmy.cz samostatným zdrojem viditelnosti.
 - Nabídnout skutečný příběh a fotografie ostravským médiím, lokálním přehledům akcí a relevantním partnerům.
 - U každé zmínky kontrolovat stejný název, adresu, telefon a cílovou URL.
 - Nekupovat balíky odkazů a nevyrábět umělé „SEO články“ na nesouvisejících webech.
 
-### Údaje čekající na potvrzení majitelkou
+### Ověřená doprava
 
-- Přesná veřejná URL Google Business Profile a přesná URL zápisu na Firmy.cz. Teprve potom je přidat do `sameAs`; ověřenou mapovou URL lze přidat také jako `hasMap`. Do schématu nedávat placeholdery.
-- Potvrdit, zda text „Lekce: sobota 10:30“ označuje skutečný pravidelný termín. Pokud ne, nahradit ho odkazem na aktuální termíny v rezervaci.
-- Pro sekci „Jak se k nám dostanete“ potvrdit nejbližší zastávku, čísla linek, skutečný čas chůze a možnosti parkování. Sekci zveřejnit až s ověřenými údaji.
+- Nejbližší tramvajová zastávka je **Daliborova**, přibližně 100 metrů a dvě minuty pěšky od studia. Aktuálně ji obsluhují linky 3, 4, 8, 18 a 19.
+- Bezplatné parkování je přímo u Fit&Fun Studia. Homepage tyto údaje uvádí v samostatné sekci „Jak se k nám dostanete“.
+- Sobota 10:30 je pravidelný čas, ale nikoliv záruka lekce každou sobotu. Homepage proto současně odkazuje na aktuální dostupnost v rezervaci.
 
 ## Měření na 90 dní
 

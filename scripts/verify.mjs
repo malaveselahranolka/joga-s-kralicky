@@ -257,6 +257,40 @@ if (/"openingHoursSpecification"\s*:/.test(homeHtml)) {
   fail('index.html', 'LocalBusiness nesmí uvádět openingHoursSpecification; studio funguje podle vypsaných termínů')
 }
 
+// Veřejné firemní profily byly ověřené proti skutečným detailům firmy.
+// Když někdo při úpravě JSON-LD jeden smaže nebo nahradí placeholderem,
+// ztratí se explicitní propojení webu s lokálními zápisy.
+const PROFILY = [
+  'https://maps.app.goo.gl/Qm7YAJJRsvKyVLaF6',
+  'https://mapy.com/s/melakehoju',
+  'https://www.firmy.cz/detail/14064344-joga-s-kralicky-ostrava-marianske-hory.html',
+]
+try {
+  const schemaBodies = [...homeHtml.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi)]
+  const schemaNodes = schemaBodies.flatMap((match) => {
+    const root = JSON.parse(match[1])
+    return Array.isArray(root?.['@graph']) ? root['@graph'] : [root]
+  })
+  const firma = schemaNodes.find((node) => {
+    const types = Array.isArray(node?.['@type']) ? node['@type'] : [node?.['@type']]
+    return types.includes('LocalBusiness')
+  })
+  if (!firma) {
+    fail('index.html', 'JSON-LD neobsahuje LocalBusiness')
+  } else {
+    for (const profil of PROFILY) {
+      if (!firma.sameAs?.includes(profil)) fail('index.html', `LocalBusiness.sameAs neobsahuje ověřený profil ${profil}`)
+    }
+    if (firma.hasMap !== PROFILY[0]) fail('index.html', 'LocalBusiness.hasMap nevede na ověřený Google Maps profil')
+  }
+} catch (error) {
+  fail('index.html', `lokální profily v JSON-LD nejdou ověřit — ${error.message}`)
+}
+
+for (const fakt of ['Daliborova', '3, 4, 8, 18 a 19', '100 metrů', 'dvě minuty', 'bezplatné parkování']) {
+  if (!homeHtml.includes(fakt)) fail('index.html', `sekce dopravy neobsahuje ověřený údaj „${fakt}“`)
+}
+
 let obsah = {}
 try {
   if (!existsSync(join(root, 'content/obsah.json'))) throw new Error('soubor chybí')
@@ -271,6 +305,9 @@ if (obsah.pageTitle !== homeTitle) {
 }
 if (!String(obsah.pageDescription || '').toLocaleLowerCase('cs-CZ').includes('jóga se zvířaty v ostravě')) {
   contentProblem('content/obsah.json', 'pageDescription neobsahuje hlavní lokální dotaz „jóga se zvířaty v Ostravě“')
+}
+if (!/pravidelně v sobotu 10:30/i.test(String(obsah.contactSchedule || ''))) {
+  contentProblem('content/obsah.json', 'contactSchedule neuvádí potvrzený pravidelný čas v sobotu 10:30')
 }
 const detskaLekce = (obsah.lessons || []).find((lekce) => /děti/i.test(lekce.title || ''))
 if (!detskaLekce || !new RegExp(`od ${FAKTA.vekDeti} let`, 'i').test(detskaLekce.tag || '')) {

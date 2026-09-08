@@ -220,7 +220,7 @@ const document = {
   studioAddress: 'Tovární 486/7, 709 00 Ostrava-Mariánské Hory',
   contactEmail: 'info@jogaskralicky.cz',
   contactPhone: '+420 603 340 860',
-  contactSchedule: 'Lekce: sobota 10:30',
+  contactSchedule: 'Pravidelně v sobotu 10:30',
 
   footerTagline: 'Studio klidu, kde tempo udávají králíci. Fit&Fun Studio Ostrava, Tovární 486/7, Ostrava-Mariánské Hory.',
   newsletterTitle: 'Klidná pošta, žádný spam',
