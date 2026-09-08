@@ -17,7 +17,6 @@ const files = [
   'joga-se-zviraty.html',
   'darkovy-poukaz.html',
   'joga-pro-deti-ostrava.html',
-  'joga-se-stenaty.html',
   'robots.txt',
   'sitemap.xml',
   'favicon.ico',

@@ -6,25 +6,25 @@ Web studia klidu, kde po lekcích jógy volně pobíhají domácí králíčci.
 
 ## Co to doopravdy je
 
-Tenhle popis tu dřív říkal „jednostránkový statický web na GitHub Pages".
-To už dávno neplatí a bylo to zavádějící — kdo tomu věřil, hledal chybu
-úplně jinde, než byla. Ve skutečnosti jde o čtyři propojené systémy:
+Nejde už o jednostránkový web na GitHub Pages. Ve skutečnosti jsou
+propojené tyto části:
 
 | Část | Kde běží | K čemu |
 |---|---|---|
-| Statické HTML + `assets/` | Vercel | Web sám. Styly jsou inline v každé stránce. |
-| `src/cms.js` + `api/content.js` | Vercel | Dotáhne texty a fotky ze Sanity a přepíše jimi HTML. |
-| Sanity Studio (`/studio`) | Vercel (build) | Majitelka si tu edituje obsah. |
+| Statické HTML + `assets/` | Vercel | Web sám. Build ho skládá do `public/`. |
+| `content/obsah.json` | GitHub + build | Zdroj aktuálního obsahu homepage; při buildu se vsadí přímo do HTML. |
+| `admin.html` + `api/obsah.js` | Vercel + GitHub | Správa obsahu; uložení vytvoří commit a spustí nové nasazení. |
 | Supabase (databáze + Edge funkce) | Supabase | Lekce, rezervace, poukazy, platby přes Stripe. |
 
-HTML v repozitáři není jen zástupný text — je to **záložní obsah**. Když
-CMS nedojede, návštěvník uvidí to, co je v souboru. Proto musí být obojí
-srovnané a proto na to dohlíží `npm run verify`.
+HTML v repozitáři není zástupný text. Homepage se při buildu doplní z
+`content/obsah.json`, takže vyhledávač i návštěvník dostanou stejný obsah
+bez čekání na JavaScript. Proto musí být obě vrstvy srovnané a dohlíží na
+to automatické kontroly.
 
 ## Lokální práce
 
 ```bash
-npm install
+npm ci
 ```
 
 ```bash
@@ -35,26 +35,19 @@ vercel env pull .env.local
 npm run build
 ```
 
-Build vyrobí `public/` — veřejné stránky i zbuildované Studio. Bez
-`SANITY project ID` v prostředí rovnou spadne, viz [`.env.example`](.env.example).
-
-Studio samotné:
-
-```bash
-npm run studio
-```
+Build vyrobí `public/`. Bez lokálních proměnných doběhne také, jen do
+rezervační stránky nevloží statický snímek právě vypsaných termínů.
 
 ## Než něco nasadíš
 
 ```bash
-npm run verify
+npm run build
 ```
 
-Zkontroluje, co jde poznat ze souborů: že se dá přečíst každý inline
-skript i JSON-LD, že si cena, délka lekce a kapacita neodporují napříč
-stránkami, CMS seedem a generátorem rozvrhu v adminu, že sedí sitemapa
-a kanonické adresy, že žádný odkaz nevede nikam a že robots.txt zakazuje
-interní stránky **každé** jmenovité skupině robotů, ne jen `*`.
+Build nejprve zkontroluje zdroje, potom sestaví `public/` a nakonec
+projde i hotový balík. Hlídá skripty, JSON-LD, provozní fakta, věk dětí,
+sitemapu, indexaci, canonicaly, přesměrování, chybějící odkazy i soubory.
+Samostatnou zdrojovou kontrolu lze pustit přes `npm run verify`.
 
 Návratový kód 1 = nenasazuj. Není to náhrada za testy plateb, ale chytí
 to přesně ty rozpory, které se na webu objevovaly opakovaně.

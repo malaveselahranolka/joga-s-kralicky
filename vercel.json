@@ -5,13 +5,6 @@
   "framework": null,
   "routes": [
     {
-      "src": "/index.html",
-      "status": 308,
-      "headers": {
-        "Location": "/"
-      }
-    },
-    {
       "has": [
         {
           "type": "host",
@@ -22,6 +15,69 @@
       "status": 308,
       "headers": {
         "Location": "https://www.jogaskralicky.cz/$1"
+      }
+    },
+    {
+      "src": "/index.html",
+      "status": 308,
+      "headers": {
+        "Location": "/"
+      }
+    },
+    {
+      "src": "/kontakt",
+      "status": 308,
+      "headers": {
+        "Location": "/#kontakt"
+      }
+    },
+    {
+      "src": "/kontakt.html",
+      "status": 308,
+      "headers": {
+        "Location": "/#kontakt"
+      }
+    },
+    {
+      "src": "/joga-se-stenaty",
+      "status": 308,
+      "headers": {
+        "Location": "/joga-se-zviraty.html"
+      }
+    },
+    {
+      "src": "/joga-se-stenaty.html",
+      "status": 308,
+      "headers": {
+        "Location": "/joga-se-zviraty.html"
+      }
+    },
+    {
+      "src": "/joga-se-zviraty",
+      "status": 308,
+      "headers": {
+        "Location": "/joga-se-zviraty.html"
+      }
+    },
+    {
+      "src": "/joga-pro-deti-ostrava",
+      "status": 308,
+      "headers": {
+        "Location": "/joga-pro-deti-ostrava.html"
+      }
+    },
+    {
+      "src": "/darkovy-poukaz",
+      "status": 308,
+      "headers": {
+        "Location": "/darkovy-poukaz.html"
+      }
+    },
+    {
+      "src": "/rezervace",
+      "status": 308,
+      "headers": {
+        "Location": "/rezervace.html"
       }
     },
     {

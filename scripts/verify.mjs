@@ -17,21 +17,27 @@
 import {readFileSync, existsSync} from 'node:fs'
 import {join} from 'node:path'
 import vm from 'node:vm'
+import {parse} from 'node-html-parser'
 
 const root = process.cwd()
 const problems = []
 const fail = (where, what) => problems.push(`${where}: ${what}`)
 
-// Veřejné stránky. admin.html a vstupenka.html sem nepatří — jsou
-// schválně mimo sitemapu a mimo vyhledávače.
-const PUBLIC_PAGES = [
+// Veřejné stránky dělíme na ty, které mají soutěžit ve vyhledávání, a
+// právní servisní stránky. Ty musí zůstat dostupné lidem, ale nemají
+// zabírat místo v sitemapě ani ve výsledcích hledání.
+const INDEXABLE_PAGES = [
   'index.html', 'rezervace.html', 'darkovy-poukaz.html',
-  'joga-se-zviraty.html', 'joga-se-stenaty.html', 'joga-pro-deti-ostrava.html',
+  'joga-se-zviraty.html', 'joga-pro-deti-ostrava.html',
+]
+const NOINDEX_PAGES = [
   'obchodni-podminky.html', 'zasady-osobnich-udaju.html',
 ]
+const PUBLIC_PAGES = [...INDEXABLE_PAGES, ...NOINDEX_PAGES]
 const ALL_PAGES = [...PUBLIC_PAGES, 'admin.html', 'vstupenka.html', '404.html']
 
 const read = (f) => readFileSync(join(root, f), 'utf8')
+const normalizujText = (value) => String(value ?? '').replace(/\s+/g, ' ').trim()
 
 // ---------------------------------------------------------------------
 //  1) INLINE SKRIPTY A STRUKTUROVANÁ DATA SE MUSÍ DÁT PŘEČÍST
@@ -43,11 +49,26 @@ const SCRIPT_RE = /<script(?![^>]*\bsrc=)([^>]*)>([\s\S]*?)<\/script>/g
 for (const page of ALL_PAGES) {
   if (!existsSync(join(root, page))) continue
   const html = read(page)
+  const dom = parse(html)
+  dom.querySelectorAll('script, style').forEach((element) => element.remove())
+  const visibleText = normalizujText(dom.text)
   for (const [, attrs, body] of html.matchAll(SCRIPT_RE)) {
     if (!body.trim()) continue
     if (/ld\+json/i.test(attrs)) {
       try {
-        JSON.parse(body)
+        const data = JSON.parse(body)
+        const roots = Array.isArray(data) ? data : [data]
+        const nodes = roots.flatMap((item) => Array.isArray(item?.['@graph']) ? item['@graph'] : [item])
+        for (const node of nodes) {
+          const types = Array.isArray(node?.['@type']) ? node['@type'] : [node?.['@type']]
+          if (!types.includes('FAQPage')) continue
+          for (const question of node.mainEntity || []) {
+            const q = normalizujText(question?.name)
+            const a = normalizujText(question?.acceptedAnswer?.text)
+            if (q && !visibleText.includes(q)) fail(page, `FAQ schema obsahuje neviditelnou otázku „${q}“`)
+            if (a && !visibleText.includes(a)) fail(page, `FAQ schema obsahuje odpověď, která není vidět u otázky „${q}“`)
+          }
+        }
       } catch (e) {
         fail(page, `nevalidní JSON-LD — ${e.message}`)
       }
@@ -68,7 +89,7 @@ for (const page of ALL_PAGES) {
 //     ve strukturovaných datech, v CMS seedu i v generátoru rozvrhu.
 //     Stačí je změnit na jednom místě a web začne lhát.
 // ---------------------------------------------------------------------
-const FAKTA = {delkaMin: 60, kapacita: 10, cenaKc: 499, kraliku: 7}
+const FAKTA = {delkaMin: 60, kapacita: 10, cenaKc: 499, kraliku: 7, vekDeti: 5}
 
 // Zakázané formulace = staré hodnoty, které se nesmí vrátit.
 // Články o štěňatech smí psát o obecném trhu ("60 až 75 minut"), proto
@@ -87,6 +108,8 @@ const ZAKAZANE = [
   // „deset míst" i „o deset minut dřív" musí projít.
   [/\b(deset|deseti|10)\s+králí/i, 'starý počet králíků (10)'],
   [/\bz\s+desítky\b/i, 'starý počet králíků (10)'],
+  [/(?:děti|dítě)[^.\n]{0,35}(?:od\s*)?7\s*(?:let|\+)/i, 'nesprávný minimální věk dětí (7 let)'],
+  [/sobot(?:a|ní)[^.\n]{0,25}(?:od\s*)?9:30/i, 'neaktuální dětský čas (sobota 9:30)'],
 ]
 
 for (const page of [...PUBLIC_PAGES, 'scripts/seed-content.mjs', 'llms.txt']) {
@@ -131,9 +154,17 @@ for (const loc of locs) {
   const rel = loc.replace(ORIGIN, '').replace(/^\//, '') || 'index.html'
   if (!existsSync(join(root, rel))) fail('sitemap.xml', `${loc} neodpovídá žádnému souboru`)
 }
-for (const page of PUBLIC_PAGES) {
+for (const page of INDEXABLE_PAGES) {
   const expected = page === 'index.html' ? `${ORIGIN}/` : `${ORIGIN}/${page}`
   if (!locs.includes(expected)) fail('sitemap.xml', `chybí ${expected}`)
+}
+for (const page of NOINDEX_PAGES) {
+  const forbidden = `${ORIGIN}/${page}`
+  if (locs.includes(forbidden)) fail('sitemap.xml', `obsahuje noindex stránku ${forbidden}`)
+}
+if (new Set(locs).size !== locs.length) fail('sitemap.xml', 'obsahuje duplicitní adresu')
+for (const loc of locs) {
+  if (!loc.startsWith(`${ORIGIN}/`)) fail('sitemap.xml', `cizí nebo nekanonický host: ${loc}`)
 }
 
 // ---------------------------------------------------------------------
@@ -145,6 +176,68 @@ for (const page of PUBLIC_PAGES) {
   const expected = page === 'index.html' ? `${ORIGIN}/` : `${ORIGIN}/${page}`
   if (!canonical) fail(page, 'chybí canonical')
   else if (canonical !== expected) fail(page, `canonical je ${canonical}, čekáme ${expected}`)
+}
+
+// ---------------------------------------------------------------------
+//  4b) INDEXACE A ZÁKLADNÍ ON-PAGE SEO
+// ---------------------------------------------------------------------
+const titleOwners = new Map()
+const descriptionOwners = new Map()
+
+for (const page of PUBLIC_PAGES) {
+  const html = read(page)
+  const robots = (html.match(/<meta[^>]+name="robots"[^>]+content="([^"]+)"/i) || [])[1] || ''
+  const shouldIndex = INDEXABLE_PAGES.includes(page)
+  if (shouldIndex && !/(?:^|,)\s*index(?:\s*,|$)/i.test(robots)) {
+    fail(page, 'má být indexovatelná, ale meta robots neobsahuje index')
+  }
+  if (!shouldIndex && !/noindex/i.test(robots)) {
+    fail(page, 'servisní stránka musí mít noindex, follow')
+  }
+
+  if (!shouldIndex) continue
+  const titles = [...html.matchAll(/<title>([^<]+)<\/title>/gi)].map((m) => m[1].trim())
+  const descriptions = [...html.matchAll(/<meta[^>]+name="description"[^>]+content="([^"]+)"/gi)].map((m) => m[1].trim())
+  const h1s = [...html.matchAll(/<h1(?:\s[^>]*)?>([\s\S]*?)<\/h1>/gi)]
+  if (titles.length !== 1) fail(page, `má ${titles.length} elementů <title>, očekáváme právě jeden`)
+  if (descriptions.length !== 1) fail(page, `má ${descriptions.length} meta description, očekáváme právě jeden`)
+  if (h1s.length !== 1) fail(page, `má ${h1s.length} nadpisů H1, očekáváme právě jeden`)
+
+  const title = titles[0]
+  const description = descriptions[0]
+  if (title) {
+    if (titleOwners.has(title)) fail(page, `duplikuje title stránky ${titleOwners.get(title)}`)
+    else titleOwners.set(title, page)
+  }
+  if (description) {
+    if (descriptionOwners.has(description)) fail(page, `duplikuje meta description stránky ${descriptionOwners.get(description)}`)
+    else descriptionOwners.set(description, page)
+  }
+}
+
+const homeTitle = (read('index.html').match(/<title>([^<]+)<\/title>/i) || [])[1] || ''
+if (!homeTitle.includes('Jóga s králíčky Ostrava')) {
+  fail('index.html', 'homepage nevlastní značkový dotaz „Jóga s králíčky Ostrava“')
+}
+const animalHtml = read('joga-se-zviraty.html')
+const animalTitle = (animalHtml.match(/<title>([^<]+)<\/title>/i) || [])[1] || ''
+const animalH1 = (animalHtml.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i) || [])[1]?.replace(/<[^>]+>/g, '') || ''
+if (!animalTitle.includes('Jóga se zvířaty v Ostravě')) {
+  fail('joga-se-zviraty.html', 'title neobsahuje hlavní lokální dotaz „Jóga se zvířaty v Ostravě“')
+}
+if (!animalH1.includes('Jóga se zvířaty v Ostravě')) {
+  fail('joga-se-zviraty.html', 'H1 neobsahuje hlavní lokální dotaz „Jóga se zvířaty v Ostravě“')
+}
+for (const varianta of ['jóga se zvířátky Ostrava', 'bunny yoga Ostrava', 'pet yoga Ostrava', 'králičí jóga']) {
+  if (!animalHtml.toLocaleLowerCase('cs-CZ').includes(varianta.toLocaleLowerCase('cs-CZ'))) {
+    fail('joga-se-zviraty.html', `chybí přirozená varianta dotazu „${varianta}“`)
+  }
+}
+
+const obsah = JSON.parse(read('content/obsah.json'))
+const detskaLekce = (obsah.lessons || []).find((lekce) => /děti/i.test(lekce.title || ''))
+if (!detskaLekce || !new RegExp(`od ${FAKTA.vekDeti} let`, 'i').test(detskaLekce.tag || '')) {
+  fail('content/obsah.json', `dětská lekce musí uvádět věk od ${FAKTA.vekDeti} let`)
 }
 
 // ---------------------------------------------------------------------
@@ -305,8 +398,49 @@ try {
       fail('vercel.json', `routes[${i}] přesměrovává na www.jogaskralicky.cz, ale jeho podmínka na host sedí i na www — smyčka`)
     }
   }
+
+  const localRedirect = (path) => {
+    for (const route of vercel.routes || []) {
+      if (route.has?.length || !route.headers?.Location || ![301, 302, 307, 308].includes(route.status)) continue
+      try {
+        if (new RegExp(`^(?:${route.src})$`).test(path)) return route.headers.Location
+      } catch (e) {
+        fail('vercel.json', `neplatný regulární výraz routy ${route.src}: ${e.message}`)
+      }
+    }
+    return null
+  }
+
+  const requiredRedirects = new Map([
+    ['/kontakt', '/#kontakt'],
+    ['/kontakt.html', '/#kontakt'],
+    ['/joga-se-stenaty', '/joga-se-zviraty.html'],
+    ['/joga-se-stenaty.html', '/joga-se-zviraty.html'],
+    ['/joga-se-zviraty', '/joga-se-zviraty.html'],
+    ['/joga-pro-deti-ostrava', '/joga-pro-deti-ostrava.html'],
+    ['/darkovy-poukaz', '/darkovy-poukaz.html'],
+    ['/rezervace', '/rezervace.html'],
+  ])
+  for (const [path, target] of requiredRedirects) {
+    const actual = localRedirect(path)
+    if (actual !== target) fail('vercel.json', `${path} se přesměrovává na ${actual || 'nic'}, čekáme ${target}`)
+  }
 } catch (e) {
   fail('vercel.json', `nejde přečíst jako JSON — ${e.message}`)
+}
+
+// Starý článek o štěňatech cílil na službu, kterou nenabízíme. Jeho URL
+// musí zůstat jen jako redirect, ne jako znovu nasaditelná stránka.
+if (existsSync(join(root, 'joga-se-stenaty.html'))) {
+  fail('joga-se-stenaty.html', 'zrušená stránka se vrátila; ponech jen redirect ve vercel.json')
+}
+if (read('scripts/build.mjs').includes("'joga-se-stenaty.html'")) {
+  fail('scripts/build.mjs', 'znovu kopíruje zrušenou stránku o štěňatech')
+}
+for (const page of PUBLIC_PAGES) {
+  if (/href="\/?joga-se-stenaty(?:\.html)?(?:[#?"])/i.test(read(page))) {
+    fail(page, 'interně odkazuje na zrušenou stránku o štěňatech')
+  }
 }
 
 // ---------------------------------------------------------------------

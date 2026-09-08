@@ -1,11 +1,11 @@
 {
-  "pageTitle": "Jóga s králíčky Ostrava — jóga se zvířaty, 7 králíků na lekci",
-  "pageDescription": "Jóga se zvířaty v Ostravě — hodina jemné hathy, při které vám mezi pozice hopsá sedm domácích králíků. Bez výkonu, bez zrcadel. Vstup 499 Kč, Fit&Fun Studio, Ostrava-Mariánské Hory. Rezervace online.",
+  "pageTitle": "Jóga s králíčky Ostrava | Lekce se 7 králíky",
+  "pageDescription": "Přijďte na 60 minut jemné jógy se sedmi domácími králíky. Fit&Fun Studio Ostrava, 499 Kč, max. 10 míst. Vhodné i pro začátečníky.",
   "shareDescription": "Hodina jógy, po které vám na klíně usne králík. Fit&Fun Studio Ostrava, vstup 499 Kč.",
   "heroLocation": "Fit&Fun Studio Ostrava",
   "heroTitleStart": "Jóga s králíčky v Ostravě",
   "heroTitleEnd": "míň jógy, víc králíčků",
-  "heroSubtitle": "Lekce jógy v Ostravě, při které mezi vámi pobíhá sedm králíčků. Poznávají vás, nechají se pohladit a vy na chvíli zapomenete na všechny starosti.",
+  "heroSubtitle": "Jóga se zvířaty v Ostravě, při které mezi vámi pobíhá sedm králíčků. Poznávají vás, nechají se pohladit a vy na chvíli zapomenete na všechny starosti.",
   "heroImage": "assets/photos/yoga-5.webp",
   "heroImageAlt": "Skupina cvičí v předklonu na podložkách, mezi nohama pobíhají dva králíci",
   "heroImageMobile": "assets/photos/kralicek-hero-mobil.webp",
@@ -43,7 +43,7 @@
       "alt": "Dva králíci si spolu pochutnávají na trávě"
     }
   ],
-  "lessonsTitle": "Pro dospělé i pro nejmenší",
+  "lessonsTitle": "Lekce pro dospělé i děti od 5 let",
   "lessonsLead": "Máme jednu lekci pro dospělé a jednu pro děti s rodičem. Obě vedeme v Ostravě-Mariánských Horách — vyberte si a rezervujte rovnou tady.",
   "lessons": [
     {
@@ -76,7 +76,7 @@
       "alt": "Skupina cvičí v sále na podložkách"
     },
     {
-      "tag": "Pro děti od 7 let",
+      "tag": "Pro děti od 5 let",
       "title": "Děti & králíčci",
       "price": "499 Kč",
       "meta": [

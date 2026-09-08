@@ -4,8 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node --env-file-if-exists=.env.local scripts/build.mjs",
-    "verify": "node scripts/verify.mjs"
+    "build": "node scripts/verify.mjs && node --env-file-if-exists=.env.local scripts/build.mjs && node scripts/verify-public.mjs",
+    "verify": "node scripts/verify.mjs",
+    "verify:public": "node scripts/verify-public.mjs"
   },
   "dependencies": {
     "node-html-parser": "^7.0.1"
