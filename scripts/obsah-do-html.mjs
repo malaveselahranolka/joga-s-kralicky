@@ -52,6 +52,7 @@ export function obsahDoHtml(html, o) {
   meta('meta[name="description"]', o.pageDescription)
   meta('meta[property="og:title"]', o.pageTitle)
   meta('meta[property="og:description"]', o.shareDescription)
+  meta('meta[name="twitter:title"]', o.pageTitle)
   meta('meta[name="twitter:description"]', o.shareDescription)
 
   text(root, '.hero-eyebrow', o.heroLocation)
@@ -186,6 +187,30 @@ export function obsahDoHtml(html, o) {
     const a = item.querySelector('.faq-a p')
     if (a && faq.answer != null) a.set_content(sazba(faq.answer))
   })
+
+  // FAQ ve strukturovaných datech se skládá ze stejného pole jako viditelná
+  // sekce. Majitelka tak může otázky upravit ve správě, aniž by schema
+  // zůstalo pozadu nebo obsahovalo odpovědi, které na stránce nejsou.
+  const schemaElement = root.querySelector('script[type="application/ld+json"]')
+  if (schemaElement && Array.isArray(o.faqs)) {
+    const schema = JSON.parse(schemaElement.innerHTML)
+    const graph = Array.isArray(schema['@graph']) ? schema['@graph'] : []
+    const faqPage = graph.find((node) => {
+      const types = Array.isArray(node?.['@type']) ? node['@type'] : [node?.['@type']]
+      return types.includes('FAQPage')
+    })
+    if (faqPage) {
+      faqPage.mainEntity = o.faqs
+        .filter((faq) => faq?.question && faq?.answer)
+        .map((faq) => ({
+          '@type': 'Question',
+          name: String(faq.question),
+          acceptedAnswer: {'@type': 'Answer', text: String(faq.answer)},
+        }))
+      const json = JSON.stringify(schema, null, 2).replace(/</g, '\\u003c')
+      schemaElement.set_content(`\n${json}\n`)
+    }
+  }
 
   text(root, '.visit .section-head h2', o.contactTitle)
   text(root, '.visit .section-head .lead', o.contactLead)

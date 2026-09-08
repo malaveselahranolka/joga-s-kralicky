@@ -66,8 +66,8 @@ const keyed = (key, value) => ({_key: key, ...value})
 const document = {
   _id: 'siteContent',
   _type: 'siteContent',
-  pageTitle: 'Jóga s králíčky — jóga se sedmi králíky, Ostrava',
-  pageDescription: 'Hodina jógy v Ostravě, při které vám mezi pozice hopsají domácí králíci. Bez výkonu, bez zrcadel — jen dech a sedm chlupatých rozptýlení. Vstup 499 Kč, Fit&Fun Studio Ostrava.',
+  pageTitle: 'Jóga se zvířaty Ostrava — jóga s králíčky, 7 králíků',
+  pageDescription: 'Jóga se zvířaty v Ostravě se 7 domácími králíčky. 60 minut jemné jógy, 499 Kč, max. 10 míst. Pet yoga pro začátečníky, rezervace online.',
   shareDescription: 'Hodina jógy, po které vám na klíně usne králík. Fit&Fun Studio Ostrava, vstup 499 Kč.',
   shareImage: image('assets/photos/yoga-1.webp'),
 
@@ -76,7 +76,7 @@ const document = {
   heroLocation: 'Fit&Fun Studio Ostrava',
   heroTitleStart: 'Jóga s králíčky v Ostravě',
   heroTitleEnd: 'míň jógy, víc králíčků',
-  heroSubtitle: 'Hodina jemné jógy, po které se po sále volně rozeběhne sedm chlupatých učitelů zpomalení.',
+  heroSubtitle: 'Jóga se zvířaty v Ostravě, při které mezi vámi pobíhá sedm králíčků. Poznávají vás, nechají se pohladit a vy na chvíli zapomenete na všechny starosti.',
   heroImage: image('assets/photos/yoga-5.webp'),
   heroDeck: [
     image('assets/photos/rabbit-1.webp', 'hero-rabbit-1'),
@@ -85,7 +85,7 @@ const document = {
   ],
 
   stats: [
-    keyed('rabbits', {number: '10', label: 'králíčků-lektorů'}),
+    keyed('rabbits', {number: '7', label: 'králíčků'}),
     keyed('duration', {number: '60′', label: 'délka jedné lekce'}),
     keyed('capacity', {number: 'max 10', label: 'míst v sále'}),
   ],
@@ -125,15 +125,15 @@ const document = {
     }),
   ],
 
-  lessonsTitle: 'Dvě lekce. Obě končí králíkem na podložce.',
-  lessonsLead: 'Nemáme rozpis na tři strany. Máme jednu lekci pro dospělé a jednu pro děti s rodičem. Vyberte si a rezervujte rovnou tady.',
+  lessonsTitle: 'Lekce pro dospělé i děti od 5 let',
+  lessonsLead: 'Máme jednu lekci pro dospělé a jednu pro děti s rodičem. Obě vedeme v Ostravě-Mariánských Horách — vyberte si a rezervujte rovnou tady.',
   lessons: [
     keyed('adult', {
       tag: 'Pro dospělé',
       title: 'Hatha s králíčky',
       price: '499 Kč',
-      meta: ['60 minut', 'Út · Čt · So', 'max 10 míst', 'i pro úplné začátečníky'],
-      description: 'Naše klasika. Pomalý pohyb a dech, u každé pozice se ukáže i jednodušší varianta. Nejde o to, jak hluboko se prohnete.',
+      meta: ['60 minut', 'So.', 'max 10 míst', 'i pro úplné začátečníky'],
+      description: 'Zacvičte si, užijte si mazlení s králíčky a nechte starosti za dveřmi.',
       timeline: [
         keyed('adult-1', {time: '0–10 min', text: 'Přijdete, zujete se, dostanete čaj.'}),
         keyed('adult-2', {time: '10–40 min', text: 'Pomalá hatha. Lektorka vede, nikdo neopravuje.'}),
@@ -147,14 +147,14 @@ const document = {
       tag: 'Pro děti od 5 let',
       title: 'Děti & králíci',
       price: '499 Kč',
-      meta: ['60 minut', 'Sobota 9:30', 'max 10 míst', 'dítě s rodičem'],
-      description: 'Víc her než ásan. Děti se učí jedinou věc: být tak klidné, aby k nim někdo přišel dobrovolně. Funguje to i na rodiče.',
+      meta: ['60 minut', '-', 'max 10 míst', 'dítě s rodičem'],
+      description: 'Děti se naučí králíčky pohladit, nakrmit a při tom se i hezky protáhnout.',
       timeline: [
         keyed('children-1', {time: '0–10 min', text: 'Jak se ke králíkovi přiblížit, aby neutekl.'}),
         keyed('children-2', {time: '10–40 min', text: 'Pozice se zvířecími jmény, hry a hodně smíchu.'}),
         keyed('children-3', {time: '40–60 min', text: 'Klid na dece, mrkev a mazlení.'}),
       ],
-      buttonLabel: 'Rezervovat sobotu',
+      buttonLabel: 'Momentálně nevypsané termíny',
       image: image('assets/photos/rabbit-4.webp'),
       alt: 'Dva bílí králíčci pohromadě',
     }),
@@ -220,7 +220,7 @@ const document = {
   studioAddress: 'Tovární 486/7, 709 00 Ostrava-Mariánské Hory',
   contactEmail: 'info@jogaskralicky.cz',
   contactPhone: '+420 603 340 860',
-  contactSchedule: 'Lekce: úterý, čtvrtek a sobota. Děti v sobotu od 9:30.',
+  contactSchedule: 'Pravidelně v sobotu 10:30',
 
   footerTagline: 'Studio klidu, kde tempo udávají králíci. Fit&Fun Studio Ostrava, Tovární 486/7, Ostrava-Mariánské Hory.',
   newsletterTitle: 'Klidná pošta, žádný spam',

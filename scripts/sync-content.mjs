@@ -57,8 +57,8 @@ async function zapis(mutations) {
 const CIL = {
   // Titulek a popisek stránky. V CMS zůstaly verze z doby před SEO úpravami
   // a v prohlížeči přepisovaly ty novější z HTML.
-  pageTitle: 'Jóga s králíčky Ostrava — jóga se zvířaty, 7 králíků na lekci',
-  pageDescription: 'Jóga se zvířaty v Ostravě — hodina jemné hathy, při které vám mezi pozice hopsá sedm domácích králíků. Bez výkonu, bez zrcadel. Vstup 499 Kč, Fit&Fun Studio, Ostrava-Mariánské Hory. Rezervace online.',
+  pageTitle: 'Jóga se zvířaty Ostrava — jóga s králíčky, 7 králíků',
+  pageDescription: 'Jóga se zvířaty v Ostravě se 7 domácími králíčky. 60 minut jemné jógy, 499 Kč, max. 10 míst. Pet yoga pro začátečníky, rezervace online.',
 
   // H1 se dřív nehlídal vůbec, a právě proto se rozešel nejvíc: v CMS
   // z něj byla obecná wellness věta bez jediného klíčového slova
@@ -66,24 +66,27 @@ const CIL = {
   heroTitleStart: 'Jóga s králíčky v Ostravě',
   heroTitleEnd: 'míň jógy, víc králíčků',
 
-  heroSubtitle: 'Hodina jemné jógy, po které se po sále volně rozeběhne sedm roztomilých králíčků.',
-  lessonsTitle: 'Dvě lekce. Obě končí králíčkem na podložce.',
-  lessonsLead: 'Máme jednu lekci pro dospělé a jednu pro děti s rodičem. Vyberte si a rezervujte rovnou tady.',
+  heroSubtitle: 'Jóga se zvířaty v Ostravě, při které mezi vámi pobíhá sedm králíčků. Poznávají vás, nechají se pohladit a vy na chvíli zapomenete na všechny starosti.',
+  lessonsTitle: 'Lekce pro dospělé i děti od 5 let',
+  lessonsLead: 'Máme jednu lekci pro dospělé a jednu pro děti s rodičem. Obě vedeme v Ostravě-Mariánských Horách — vyberte si a rezervujte rovnou tady.',
   galleryTitle: 'Králíčci, kteří nikdy nespěchají',
 
   // Dřív „10 chlupatých lektorů · 230+ klidných hostů“. To číslo hostů je
   // stejně nepodložené jako hodnocení, která jsme kvůli tomu odstranili.
   communityNote: 'Sedm králíčků · každý s vlastním jménem',
+  contactSchedule: 'Pravidelně v sobotu 10:30',
 }
 
 // Položky polí se dohledávají podle pořadí, _key se zachovává.
 const CIL_LEKCE = [
   {
-    meta: ['60 minut', 'Út · Čt · So', 'max 10 míst', 'i pro úplné začátečníky'],
-    description: 'Naše klasika. Pomalý pohyb a dech, u každé pozice se ukáže i jednodušší varianta.',
+    meta: ['60 minut', 'So.', 'max 10 míst', 'i pro úplné začátečníky'],
+    description: 'Zacvičte si, užijte si mazlení s králíčky a nechte starosti za dveřmi.',
   },
   {
-    meta: ['60 minut', 'Sobota 9:30', 'max 10 míst', 'dítě s rodičem'],
+    tag: 'Pro děti od 5 let',
+    meta: ['60 minut', '-', 'max 10 míst', 'dítě s rodičem'],
+    buttonLabel: 'Momentálně nevypsané termíny',
   },
 ]
 
