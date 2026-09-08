@@ -262,7 +262,7 @@ if (/"openingHoursSpecification"\s*:/.test(homeHtml)) {
 // ztratí se explicitní propojení webu s lokálními zápisy.
 const PROFILY = [
   'https://maps.app.goo.gl/Qm7YAJJRsvKyVLaF6',
-  'https://mapy.com/s/melakehoju',
+  'https://mapy.com/en/zakladni?source=firm&id=14064344&x=18.2538681&y=49.8264650&z=17',
   'https://www.firmy.cz/detail/14064344-joga-s-kralicky-ostrava-marianske-hory.html',
 ]
 try {
