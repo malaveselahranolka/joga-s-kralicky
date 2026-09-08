@@ -20,32 +20,35 @@ Web tedy nebyl plošně neindexovaný. Uměl vyhrát značkové a velmi přesné
 | Primární stránka | Hlavní dotazy | Úloha |
 |---|---|---|
 | `/` | jóga se zvířaty Ostrava, jóga se zvířátky Ostrava, pet yoga Ostrava, bunny yoga Ostrava, jóga s králíčky Ostrava, králičí jóga Ostrava | jediná hlavní stránka služby a značky |
+| `/joga-se-zviraty.html` | co je jóga se zvířaty, jak probíhá jóga se zvířaty, welfare zvířat | informační průvodce bez lokálního komerčního titulku |
 | `/joga-pro-deti-ostrava.html` | jóga pro děti Ostrava, jóga se zvířaty pro děti | dětský formát od 5 let |
 | `/darkovy-poukaz.html` | dárkový poukaz jóga Ostrava, zážitkový dárek Ostrava | nákup poukazu |
 | `/rezervace.html` | rezervace jóga s králíčky, termíny | aktuální termíny a platba |
 
-Homepage je u tohoto projektu zároveň stránkou hlavní služby. Králičí jóga, jóga se zvířaty, pet yoga a bunny yoga neoznačují čtyři odlišné nabídky, ale stejný komerční záměr. Patří proto na jednu URL. Samostatné stránky zůstávají jen pro skutečně jiný záměr: děti, dárkový poukaz a rezervaci.
+Homepage je u tohoto projektu zároveň stránkou hlavní služby. Králičí jóga, jóga se zvířaty, pet yoga a bunny yoga neoznačují čtyři odlišné nabídky, ale stejný lokální komerční záměr. Patří proto na jednu URL. Samostatný průvodce odpovídá na obecný informační záměr: vysvětluje průběh, rozdíly mezi formáty a welfare a vede čtenáře hledajícího Ostravu zpět na homepage.
 
 ## Co řeší tato změna
 
-- Nejlepší lokální informace z překrývající se stránky o józe se zvířaty jsou součástí homepage.
-- `/joga-se-zviraty.html` i její čistá varianta trvale přesměrovávají na `/`, takže se relevance a případné odkazy nedělí mezi dvě URL.
-- URL o štěňatech, tedy službě, kterou studio nenabízí, přesměrovává přímo na homepage bez mezikroku.
+- Homepage vlastní celý lokální komerční cluster a obsahuje přesnou lokalitu, nabídku, cenu, kapacitu i přirozené varianty dotazu.
+- Informační průvodce `/joga-se-zviraty.html` zůstává zachovaný, ale jeho title a H1 necílí na „Ostrava“. Nepravdivý pevný rozvrh, neověřené celorepublikové ceny a odkaz na zrušenou stránku o štěňatech byly odstraněny.
+- Čistá varianta `/joga-se-zviraty` trvale přesměrovává na kanonickou `.html` adresu průvodce.
+- URL o štěňatech, tedy službě, kterou studio nenabízí, vrací `410 Gone` s užitečnou vysvětlující stránkou; nepředstírá tematickou náhradu na homepage.
 - Staré adresy `/kontakt` a `/kontakt.html` přesměrovávají na kontakt na homepage.
 - Věk dětí je ve všech aktuálních podkladech sjednocen na **od 5 let**.
 - Dětská stránka už netvrdí pevný čas 9:30; jediným zdrojem právě dostupných termínů je rezervace.
 - Právní stránky zůstávají dostupné, ale mají `noindex` a nejsou v sitemapě.
 - Homepage má title zaměřený na „jóga se zvířaty Ostrava“, značkový H1 a přirozeně vysvětluje varianty pet yoga, bunny yoga, jóga se zvířátky a králičí jóga.
-- Build se zastaví při návratu starého věku, času, zrušené stránky, chybného redirectu, rozbitého odkazu, canonicalu, sitemap URL nebo JSON-LD.
+- FAQ schema homepage se při buildu skládá ze stejného obsahu jako viditelné FAQ, takže úprava v administraci nevytvoří rozpor. Google FAQ rich results už nezobrazuje; markup zde neslibujeme jako rankingový faktor.
+- Build se zastaví při strukturální chybě, například nevalidním JSON-LD, chybějícím souboru, rozbitém canonicalu nebo routě. Odchylka ve volně editovatelném obsahu vypíše při nasazení varování, ale administraci nezablokuje; přísný `npm run check` zůstává pro vývoj a kontrolu PR.
 
 ## Co musí následovat mimo kód
 
 ### Ihned po nasazení
 
-1. V Google Search Console požádat o nové procházení homepage `/`.
+1. V Google Search Console požádat o nové procházení homepage `/` a průvodce `/joga-se-zviraty.html`.
 2. Znovu odeslat `https://www.jogaskralicky.cz/sitemap.xml`.
-3. V kontrole URL ověřit, že `/joga-se-zviraty.html`, `/joga-se-stenaty.html` a `/kontakt.html` vracejí trvalé přesměrování, ne 404.
-4. Po 7–14 dnech ověřit, že Google přesouvá dotazy ze starých URL na homepage. Jde o kontrolní termín, ne garantovanou dobu zpracování.
+3. Ověřit, že `/joga-se-zviraty` vrací 308 na `/joga-se-zviraty.html`, puppy URL vracejí 410 a `/kontakt.html` vrací 308 na kontakt homepage.
+4. Po 7–14 dnech zkontrolovat, kterou URL Google zobrazuje pro lokální a informační dotazy. Jde o kontrolní termín, ne garantovanou dobu zpracování.
 
 ### Google Business Profile
 
@@ -82,3 +85,4 @@ První cíl je získat stabilní indexaci a růst impresí pro neznačkový clus
 - [Google: užitečný a spolehlivý obsah](https://developers.google.com/search/docs/fundamentals/creating-helpful-content)
 - [Google: canonicaly a přesměrování duplicit](https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls)
 - [Google: vytvoření a odeslání sitemap](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap)
+- [Google Search updates: ukončení FAQ rich results v červnu 2026](https://developers.google.com/search/updates#june-2026)

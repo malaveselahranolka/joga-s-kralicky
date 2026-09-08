@@ -41,15 +41,19 @@ rezervační stránky nevloží statický snímek právě vypsaných termínů.
 ## Než něco nasadíš
 
 ```bash
-npm run build
+npm run check
 ```
 
-Build nejprve zkontroluje zdroje, potom sestaví `public/` a nakonec
-projde i hotový balík. Hlídá skripty, JSON-LD, provozní fakta, věk dětí,
-sitemapu, indexaci, canonicaly, přesměrování, chybějící odkazy i soubory.
-Samostatnou zdrojovou kontrolu lze pustit přes `npm run verify`.
+`check` přísně zkontroluje zdroje, sestaví `public/` a projde i hotový
+balík. Hlídá skripty, JSON-LD, provozní fakta, věk dětí, sitemapu,
+indexaci, canonicaly, přesměrování, chybějící odkazy i soubory.
 
-Návratový kód 1 = nenasazuj. Není to náhrada za testy plateb, ale chytí
+Vercel používá `npm run build`. Strukturální chyby při něm nasazení dál
+zastaví, ale odchylka v titulku, popisku nebo jiném textu upraveném
+majitelkou v administraci pouze vypíše varování. Uložení běžného obsahu
+tak nemůže tiše zablokovat nové nasazení.
+
+Návratový kód 1 z `npm run check` = nenasazuj. Není to náhrada za testy plateb, ale chytí
 to přesně ty rozpory, které se na webu objevovaly opakovaně.
 
 ## Databáze

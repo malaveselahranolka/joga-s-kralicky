@@ -66,7 +66,7 @@ const keyed = (key, value) => ({_key: key, ...value})
 const document = {
   _id: 'siteContent',
   _type: 'siteContent',
-  pageTitle: 'Jóga se zvířaty Ostrava | Jóga s králíčky',
+  pageTitle: 'Jóga se zvířaty Ostrava — jóga s králíčky, 7 králíků',
   pageDescription: 'Jóga se zvířaty v Ostravě se 7 domácími králíčky. 60 minut jemné jógy, 499 Kč, max. 10 míst. Pet yoga pro začátečníky, rezervace online.',
   shareDescription: 'Hodina jógy, po které vám na klíně usne králík. Fit&Fun Studio Ostrava, vstup 499 Kč.',
   shareImage: image('assets/photos/yoga-1.webp'),

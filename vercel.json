@@ -40,30 +40,19 @@
     },
     {
       "src": "/joga-se-stenaty",
-      "status": 308,
-      "headers": {
-        "Location": "/"
-      }
+      "dest": "/410.html",
+      "status": 410
     },
     {
       "src": "/joga-se-stenaty.html",
-      "status": 308,
-      "headers": {
-        "Location": "/"
-      }
+      "dest": "/410.html",
+      "status": 410
     },
     {
       "src": "/joga-se-zviraty",
       "status": 308,
       "headers": {
-        "Location": "/"
-      }
-    },
-    {
-      "src": "/joga-se-zviraty.html",
-      "status": 308,
-      "headers": {
-        "Location": "/"
+        "Location": "/joga-se-zviraty.html"
       }
     },
     {

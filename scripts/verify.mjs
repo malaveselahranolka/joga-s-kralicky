@@ -21,20 +21,23 @@ import {parse} from 'node-html-parser'
 
 const root = process.cwd()
 const problems = []
+const warnings = []
 const fail = (where, what) => problems.push(`${where}: ${what}`)
+const contentDriftAllowed = process.argv.includes('--allow-content-drift')
+const contentProblem = (where, what) => (contentDriftAllowed ? warnings : problems).push(`${where}: ${what}`)
 
 // Veřejné stránky dělíme na ty, které mají soutěžit ve vyhledávání, a
 // právní servisní stránky. Ty musí zůstat dostupné lidem, ale nemají
 // zabírat místo v sitemapě ani ve výsledcích hledání.
 const INDEXABLE_PAGES = [
   'index.html', 'rezervace.html', 'darkovy-poukaz.html',
-  'joga-pro-deti-ostrava.html',
+  'joga-pro-deti-ostrava.html', 'joga-se-zviraty.html',
 ]
 const NOINDEX_PAGES = [
   'obchodni-podminky.html', 'zasady-osobnich-udaju.html',
 ]
 const PUBLIC_PAGES = [...INDEXABLE_PAGES, ...NOINDEX_PAGES]
-const ALL_PAGES = [...PUBLIC_PAGES, 'admin.html', 'vstupenka.html', '404.html']
+const ALL_PAGES = [...PUBLIC_PAGES, 'admin.html', 'vstupenka.html', '404.html', '410.html']
 
 const read = (f) => readFileSync(join(root, f), 'utf8')
 const normalizujText = (value) => String(value ?? '').replace(/\s+/g, ' ').trim()
@@ -217,32 +220,40 @@ for (const page of PUBLIC_PAGES) {
 
 const homeTitle = (read('index.html').match(/<title>([^<]+)<\/title>/i) || [])[1] || ''
 if (!homeTitle.includes('Jóga se zvířaty Ostrava')) {
-  fail('index.html', 'homepage nevlastní hlavní lokální dotaz „Jóga se zvířaty Ostrava“')
+  contentProblem('index.html', 'homepage nevlastní hlavní lokální dotaz „Jóga se zvířaty Ostrava“')
 }
-if (!homeTitle.includes('Jóga s králíčky')) {
-  fail('index.html', 'title homepage neobsahuje značku „Jóga s králíčky“')
+if (!homeTitle.toLocaleLowerCase('cs-CZ').includes('jóga s králíčky')) {
+  contentProblem('index.html', 'title homepage neobsahuje značku „Jóga s králíčky“')
 }
 const homeHtml = read('index.html')
 const homeH1 = (homeHtml.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i) || [])[1]?.replace(/<[^>]+>/g, '') || ''
 if (!/Jóga s králíčky v Ostravě/i.test(homeH1)) {
-  fail('index.html', 'H1 homepage neobsahuje značku a lokalitu „Jóga s králíčky v Ostravě“')
+  contentProblem('index.html', 'H1 homepage neobsahuje značku a lokalitu „Jóga s králíčky v Ostravě“')
 }
 for (const varianta of ['jóga se zvířátky', 'bunny yoga', 'pet yoga', 'králičí jóga']) {
   if (!homeHtml.toLocaleLowerCase('cs-CZ').includes(varianta.toLocaleLowerCase('cs-CZ'))) {
-    fail('index.html', `homepage neobsahuje přirozenou variantu dotazu „${varianta}“`)
+    contentProblem('index.html', `homepage neobsahuje přirozenou variantu dotazu „${varianta}“`)
   }
 }
 
-const obsah = JSON.parse(read('content/obsah.json'))
+let obsah = {}
+try {
+  if (!existsSync(join(root, 'content/obsah.json'))) throw new Error('soubor chybí')
+  const parsed = JSON.parse(read('content/obsah.json'))
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('kořen musí být objekt')
+  obsah = parsed
+} catch (error) {
+  contentProblem('content/obsah.json', `obsah nejde použít (${error.message}); build použije bezpečný obsah z index.html`)
+}
 if (obsah.pageTitle !== homeTitle) {
-  fail('content/obsah.json', 'pageTitle se liší od title v index.html; build by SEO titulek tiše přepsal')
+  contentProblem('content/obsah.json', 'pageTitle se liší od title v index.html; build SEO titulek přepíše obsahem ze správy')
 }
 if (!String(obsah.pageDescription || '').toLocaleLowerCase('cs-CZ').includes('jóga se zvířaty v ostravě')) {
-  fail('content/obsah.json', 'pageDescription neobsahuje hlavní lokální dotaz „jóga se zvířaty v Ostravě“')
+  contentProblem('content/obsah.json', 'pageDescription neobsahuje hlavní lokální dotaz „jóga se zvířaty v Ostravě“')
 }
 const detskaLekce = (obsah.lessons || []).find((lekce) => /děti/i.test(lekce.title || ''))
 if (!detskaLekce || !new RegExp(`od ${FAKTA.vekDeti} let`, 'i').test(detskaLekce.tag || '')) {
-  fail('content/obsah.json', `dětská lekce musí uvádět věk od ${FAKTA.vekDeti} let`)
+  contentProblem('content/obsah.json', `dětská lekce musí uvádět věk od ${FAKTA.vekDeti} let`)
 }
 
 // ---------------------------------------------------------------------
@@ -419,10 +430,7 @@ try {
   const requiredRedirects = new Map([
     ['/kontakt', '/#kontakt'],
     ['/kontakt.html', '/#kontakt'],
-    ['/joga-se-stenaty', '/'],
-    ['/joga-se-stenaty.html', '/'],
-    ['/joga-se-zviraty', '/'],
-    ['/joga-se-zviraty.html', '/'],
+    ['/joga-se-zviraty', '/joga-se-zviraty.html'],
     ['/joga-pro-deti-ostrava', '/joga-pro-deti-ostrava.html'],
     ['/darkovy-poukaz', '/darkovy-poukaz.html'],
     ['/rezervace', '/rezervace.html'],
@@ -431,13 +439,20 @@ try {
     const actual = localRedirect(path)
     if (actual !== target) fail('vercel.json', `${path} se přesměrovává na ${actual || 'nic'}, čekáme ${target}`)
   }
+
+  for (const path of ['/joga-se-stenaty', '/joga-se-stenaty.html']) {
+    const route = (vercel.routes || []).find((candidate) => {
+      if (candidate.has?.length || candidate.status !== 410) return false
+      try { return new RegExp(`^(?:${candidate.src})$`).test(path) } catch (_e) { return false }
+    })
+    if (!route) fail('vercel.json', `${path} musí vracet stav 410 Gone`)
+  }
 } catch (e) {
   fail('vercel.json', `nejde přečíst jako JSON — ${e.message}`)
 }
 
-// Staré články mají překryv nebo cílily na službu, kterou nenabízíme.
-// Jejich URL musí zůstat pouze jako přímé redirecty na homepage.
-for (const retired of ['joga-se-stenaty.html', 'joga-se-zviraty.html']) {
+// Stránka o službě, kterou nenabízíme, se nesmí vrátit do veřejného webu.
+for (const retired of ['joga-se-stenaty.html']) {
   if (existsSync(join(root, retired))) {
     fail(retired, 'zrušená stránka se vrátila; ponech jen redirect ve vercel.json')
   }
@@ -446,14 +461,19 @@ for (const retired of ['joga-se-stenaty.html', 'joga-se-zviraty.html']) {
   }
 }
 for (const page of PUBLIC_PAGES) {
-  if (/href="\/?joga-se-(?:stenaty|zviraty)(?:\.html)?(?:[#?"])/i.test(read(page))) {
-    fail(page, 'interně odkazuje na zrušenou SEO stránku místo homepage')
+  if (/href="\/?joga-se-stenaty(?:\.html)?(?:[#?"])/i.test(read(page))) {
+    fail(page, 'interně odkazuje na zrušenou stránku o józe se štěňaty')
   }
 }
 
 // ---------------------------------------------------------------------
 //  VÝSLEDEK
 // ---------------------------------------------------------------------
+if (warnings.length) {
+  console.warn(`\n⚠ ${warnings.length} obsahové ${warnings.length === 1 ? 'upozornění' : 'upozornění'} (nasazení pokračuje):\n`)
+  for (const warning of warnings) console.warn('  • ' + warning)
+  console.warn('')
+}
 if (problems.length) {
   console.error(`\n✗ ${problems.length} ${problems.length === 1 ? 'problém' : problems.length < 5 ? 'problémy' : 'problémů'}:\n`)
   for (const p of problems) console.error('  • ' + p)
