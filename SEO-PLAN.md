@@ -52,17 +52,33 @@ Homepage je u tohoto projektu zároveň stránkou hlavní služby. Králičí j�
 
 ### Google Business Profile
 
-- Doplnit pravdivou hlavní kategorii, otevírací dobu nebo režim „pouze dle termínů“, popis služeb a aktuální fotografie přímo z lekcí.
+- Doplnit pravdivou hlavní kategorii, režim „pouze dle termínů“, popis služeb a aktuální fotografie přímo z lekcí.
+- Do JSON-LD nepřidávat `openingHoursSpecification`: studio nemá pevnou otevírací dobu a funguje pouze podle vypsaných termínů. Tento režim se nastavuje přímo v Google Business Profile.
 - Držet všude stejné údaje: **Jóga s králíčky**, Tovární 486/7, Ostrava-Mariánské Hory, +420 603 340 860.
-- Po každé lekci požádat skutečné návštěvníky o upřímnou recenzi přes přímý Google odkaz. Nenabízet odměnu a nevybírat jen spokojené hosty.
 - Na recenze odpovídat věcně a přirozeně; nevkládat do každé odpovědi klíčová slova.
+
+#### Automatický sběr recenzí
+
+- Po skončení uskutečněné lekce zařadit přes existující `email_outbox` jeden e-mail s žádostí o upřímnou recenzi, plánovaný na **24 hodin po lekci**.
+- E-mail musí obsahovat jediný přímý odkaz na formulář pro napsání recenze v Google Business Profile. Odkaz se doplní až z ověřeného profilu, bez placeholderu v produkci.
+- Žádost poslat všem oprávněným návštěvníkům stejně, bez předchozího dotazu na spokojenost, bez odměny a bez přesměrování nespokojených lidí jinam. Tím se zabrání zakázanému filtrování recenzí.
+- Odeslání udělat idempotentní podle rezervace a termínu, aby opakované zpracování fronty neposlalo druhou žádost. Neodesílat po zrušené nebo vrácené rezervaci.
+- Před spuštěním potvrdit právní režim e-mailu a použít odpovídající možnost odmítnutí dalšího kontaktu; technicky využít stejnou serverovou frontu, ne odesílání z prohlížeče.
 
 ### Lokální autorita
 
 - Získat odkaz z webu Fit&Fun Studia přímo na `https://www.jogaskralicky.cz/`.
+- Doplnit a ověřit zápis na Firmy.cz/Mapy.com pro Seznam. Název, adresa, telefon a odkaz na web musí znak po znaku odpovídat webu a Google Business Profile.
+- Sledovat vedle Googlu také indexaci a návštěvy ze Seznamu; pro české lokální dotazy může být profil Firmy.cz samostatným zdrojem viditelnosti.
 - Nabídnout skutečný příběh a fotografie ostravským médiím, lokálním přehledům akcí a relevantním partnerům.
 - U každé zmínky kontrolovat stejný název, adresu, telefon a cílovou URL.
 - Nekupovat balíky odkazů a nevyrábět umělé „SEO články“ na nesouvisejících webech.
+
+### Údaje čekající na potvrzení majitelkou
+
+- Přesná veřejná URL Google Business Profile a přesná URL zápisu na Firmy.cz. Teprve potom je přidat do `sameAs`; ověřenou mapovou URL lze přidat také jako `hasMap`. Do schématu nedávat placeholdery.
+- Potvrdit, zda text „Lekce: sobota 10:30“ označuje skutečný pravidelný termín. Pokud ne, nahradit ho odkazem na aktuální termíny v rezervaci.
+- Pro sekci „Jak se k nám dostanete“ potvrdit nejbližší zastávku, čísla linek, skutečný čas chůze a možnosti parkování. Sekci zveřejnit až s ověřenými údaji.
 
 ## Měření na 90 dní
 
@@ -85,4 +101,4 @@ První cíl je získat stabilní indexaci a růst impresí pro neznačkový clus
 - [Google: užitečný a spolehlivý obsah](https://developers.google.com/search/docs/fundamentals/creating-helpful-content)
 - [Google: canonicaly a přesměrování duplicit](https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls)
 - [Google: vytvoření a odeslání sitemap](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap)
-- [Google Search updates: ukončení FAQ rich results v červnu 2026](https://developers.google.com/search/updates#june-2026)
+- [Google Search updates: ukončení FAQ rich results (květen a červen 2026)](https://developers.google.com/search/updates)

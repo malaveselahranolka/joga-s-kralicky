@@ -236,6 +236,27 @@ for (const varianta of ['jóga se zvířátky', 'bunny yoga', 'pet yoga', 'král
   }
 }
 
+// Informační průvodce má odpovídat na obecný dotaz. Kdyby se mu do
+// titulku nebo H1 vrátila Ostrava (v libovolném pádě), znovu by soutěžil
+// s homepage o stejný lokální záměr. Nejde o obsah z administrace, proto
+// je to tvrdá strukturální kontrola i při produkčním buildu.
+const guideHtml = read('joga-se-zviraty.html')
+const guideTitle = (guideHtml.match(/<title>([^<]+)<\/title>/i) || [])[1] || ''
+const guideH1 = (guideHtml.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i) || [])[1]?.replace(/<[^>]+>/g, '') || ''
+if (/ostrav/i.test(guideTitle)) {
+  fail('joga-se-zviraty.html', 'title informačního průvodce nesmí obsahovat „Ostrava“ ani její skloňovaný tvar')
+}
+if (/ostrav/i.test(guideH1)) {
+  fail('joga-se-zviraty.html', 'H1 informačního průvodce nesmí obsahovat „Ostrava“ ani její skloňovaný tvar')
+}
+
+// Studio nemá pevnou otevírací dobu; návštěvy probíhají jen podle
+// vypsaných lekcí. Smyšlené hodiny ve strukturovaných datech by byly
+// horší než jejich absence.
+if (/"openingHoursSpecification"\s*:/.test(homeHtml)) {
+  fail('index.html', 'LocalBusiness nesmí uvádět openingHoursSpecification; studio funguje podle vypsaných termínů')
+}
+
 let obsah = {}
 try {
   if (!existsSync(join(root, 'content/obsah.json'))) throw new Error('soubor chybí')
