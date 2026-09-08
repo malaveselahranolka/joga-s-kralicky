@@ -13,13 +13,18 @@ To už dávno neplatí a bylo to zavádějící — kdo tomu věřil, hledal chy
 | Část | Kde běží | K čemu |
 |---|---|---|
 | Statické HTML + `assets/` | Vercel | Web sám. Styly jsou inline v každé stránce. |
-| `src/cms.js` + `api/content.js` | Vercel | Dotáhne texty a fotky ze Sanity a přepíše jimi HTML. |
-| Sanity Studio (`/studio`) | Vercel (build) | Majitelka si tu edituje obsah. |
+| `content/obsah.json` | repozitář | **Zdroj pravdy pro texty a fotky.** |
+| `scripts/obsah-do-html.mjs` | build | Vsadí obsah do HTML ještě před odesláním. |
+| `admin.html` → „Obsah webu" | Vercel | Majitelka si tu edituje obsah; uloží se commitem. |
 | Supabase (databáze + Edge funkce) | Supabase | Lekce, rezervace, poukazy, platby přes Stripe. |
 
-HTML v repozitáři není jen zástupný text — je to **záložní obsah**. Když
-CMS nedojede, návštěvník uvidí to, co je v souboru. Proto musí být obojí
-srovnané a proto na to dohlíží `npm run verify`.
+**Sanity byla 7. 9. 2026 nahrazena vlastním CMS v repozitáři.** Dřív se obsah
+dotahoval až v prohlížeči, takže Google i náhledy na sítích viděly jinou verzi
+než návštěvník — a obě se tiše rozcházely. Teď je odeslané HTML finální:
+pro člověka, robota i prohlížeč bez JS je to totéž. Dohlíží na to `npm run verify`.
+
+Text se proto **nemění v HTML**, ale v `content/obsah.json` nebo ve správě.
+Úprava přímo v `index.html` se při dalším buildu ztratí.
 
 ## Lokální práce
 
