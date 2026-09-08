@@ -28,7 +28,7 @@ const fail = (where, what) => problems.push(`${where}: ${what}`)
 // zabírat místo v sitemapě ani ve výsledcích hledání.
 const INDEXABLE_PAGES = [
   'index.html', 'rezervace.html', 'darkovy-poukaz.html',
-  'joga-se-zviraty.html', 'joga-pro-deti-ostrava.html',
+  'joga-pro-deti-ostrava.html',
 ]
 const NOINDEX_PAGES = [
   'obchodni-podminky.html', 'zasady-osobnich-udaju.html',
@@ -216,25 +216,30 @@ for (const page of PUBLIC_PAGES) {
 }
 
 const homeTitle = (read('index.html').match(/<title>([^<]+)<\/title>/i) || [])[1] || ''
-if (!homeTitle.includes('Jóga s králíčky Ostrava')) {
-  fail('index.html', 'homepage nevlastní značkový dotaz „Jóga s králíčky Ostrava“')
+if (!homeTitle.includes('Jóga se zvířaty Ostrava')) {
+  fail('index.html', 'homepage nevlastní hlavní lokální dotaz „Jóga se zvířaty Ostrava“')
 }
-const animalHtml = read('joga-se-zviraty.html')
-const animalTitle = (animalHtml.match(/<title>([^<]+)<\/title>/i) || [])[1] || ''
-const animalH1 = (animalHtml.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i) || [])[1]?.replace(/<[^>]+>/g, '') || ''
-if (!animalTitle.includes('Jóga se zvířaty v Ostravě')) {
-  fail('joga-se-zviraty.html', 'title neobsahuje hlavní lokální dotaz „Jóga se zvířaty v Ostravě“')
+if (!homeTitle.includes('Jóga s králíčky')) {
+  fail('index.html', 'title homepage neobsahuje značku „Jóga s králíčky“')
 }
-if (!animalH1.includes('Jóga se zvířaty v Ostravě')) {
-  fail('joga-se-zviraty.html', 'H1 neobsahuje hlavní lokální dotaz „Jóga se zvířaty v Ostravě“')
+const homeHtml = read('index.html')
+const homeH1 = (homeHtml.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i) || [])[1]?.replace(/<[^>]+>/g, '') || ''
+if (!/Jóga s králíčky v Ostravě/i.test(homeH1)) {
+  fail('index.html', 'H1 homepage neobsahuje značku a lokalitu „Jóga s králíčky v Ostravě“')
 }
-for (const varianta of ['jóga se zvířátky Ostrava', 'bunny yoga Ostrava', 'pet yoga Ostrava', 'králičí jóga']) {
-  if (!animalHtml.toLocaleLowerCase('cs-CZ').includes(varianta.toLocaleLowerCase('cs-CZ'))) {
-    fail('joga-se-zviraty.html', `chybí přirozená varianta dotazu „${varianta}“`)
+for (const varianta of ['jóga se zvířátky', 'bunny yoga', 'pet yoga', 'králičí jóga']) {
+  if (!homeHtml.toLocaleLowerCase('cs-CZ').includes(varianta.toLocaleLowerCase('cs-CZ'))) {
+    fail('index.html', `homepage neobsahuje přirozenou variantu dotazu „${varianta}“`)
   }
 }
 
 const obsah = JSON.parse(read('content/obsah.json'))
+if (obsah.pageTitle !== homeTitle) {
+  fail('content/obsah.json', 'pageTitle se liší od title v index.html; build by SEO titulek tiše přepsal')
+}
+if (!String(obsah.pageDescription || '').toLocaleLowerCase('cs-CZ').includes('jóga se zvířaty v ostravě')) {
+  fail('content/obsah.json', 'pageDescription neobsahuje hlavní lokální dotaz „jóga se zvířaty v Ostravě“')
+}
 const detskaLekce = (obsah.lessons || []).find((lekce) => /děti/i.test(lekce.title || ''))
 if (!detskaLekce || !new RegExp(`od ${FAKTA.vekDeti} let`, 'i').test(detskaLekce.tag || '')) {
   fail('content/obsah.json', `dětská lekce musí uvádět věk od ${FAKTA.vekDeti} let`)
@@ -414,9 +419,10 @@ try {
   const requiredRedirects = new Map([
     ['/kontakt', '/#kontakt'],
     ['/kontakt.html', '/#kontakt'],
-    ['/joga-se-stenaty', '/joga-se-zviraty.html'],
-    ['/joga-se-stenaty.html', '/joga-se-zviraty.html'],
-    ['/joga-se-zviraty', '/joga-se-zviraty.html'],
+    ['/joga-se-stenaty', '/'],
+    ['/joga-se-stenaty.html', '/'],
+    ['/joga-se-zviraty', '/'],
+    ['/joga-se-zviraty.html', '/'],
     ['/joga-pro-deti-ostrava', '/joga-pro-deti-ostrava.html'],
     ['/darkovy-poukaz', '/darkovy-poukaz.html'],
     ['/rezervace', '/rezervace.html'],
@@ -429,17 +435,19 @@ try {
   fail('vercel.json', `nejde přečíst jako JSON — ${e.message}`)
 }
 
-// Starý článek o štěňatech cílil na službu, kterou nenabízíme. Jeho URL
-// musí zůstat jen jako redirect, ne jako znovu nasaditelná stránka.
-if (existsSync(join(root, 'joga-se-stenaty.html'))) {
-  fail('joga-se-stenaty.html', 'zrušená stránka se vrátila; ponech jen redirect ve vercel.json')
-}
-if (read('scripts/build.mjs').includes("'joga-se-stenaty.html'")) {
-  fail('scripts/build.mjs', 'znovu kopíruje zrušenou stránku o štěňatech')
+// Staré články mají překryv nebo cílily na službu, kterou nenabízíme.
+// Jejich URL musí zůstat pouze jako přímé redirecty na homepage.
+for (const retired of ['joga-se-stenaty.html', 'joga-se-zviraty.html']) {
+  if (existsSync(join(root, retired))) {
+    fail(retired, 'zrušená stránka se vrátila; ponech jen redirect ve vercel.json')
+  }
+  if (read('scripts/build.mjs').includes(`'${retired}'`)) {
+    fail('scripts/build.mjs', `znovu kopíruje zrušenou stránku ${retired}`)
+  }
 }
 for (const page of PUBLIC_PAGES) {
-  if (/href="\/?joga-se-stenaty(?:\.html)?(?:[#?"])/i.test(read(page))) {
-    fail(page, 'interně odkazuje na zrušenou stránku o štěňatech')
+  if (/href="\/?joga-se-(?:stenaty|zviraty)(?:\.html)?(?:[#?"])/i.test(read(page))) {
+    fail(page, 'interně odkazuje na zrušenou SEO stránku místo homepage')
   }
 }
 

@@ -42,21 +42,28 @@
       "src": "/joga-se-stenaty",
       "status": 308,
       "headers": {
-        "Location": "/joga-se-zviraty.html"
+        "Location": "/"
       }
     },
     {
       "src": "/joga-se-stenaty.html",
       "status": 308,
       "headers": {
-        "Location": "/joga-se-zviraty.html"
+        "Location": "/"
       }
     },
     {
       "src": "/joga-se-zviraty",
       "status": 308,
       "headers": {
-        "Location": "/joga-se-zviraty.html"
+        "Location": "/"
+      }
+    },
+    {
+      "src": "/joga-se-zviraty.html",
+      "status": 308,
+      "headers": {
+        "Location": "/"
       }
     },
     {

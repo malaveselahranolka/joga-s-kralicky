@@ -14,7 +14,6 @@ const files = [
   '404.html',
   'admin.html',
   'rezervace.html',
-  'joga-se-zviraty.html',
   'darkovy-poukaz.html',
   'joga-pro-deti-ostrava.html',
   'robots.txt',

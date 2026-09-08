@@ -57,8 +57,8 @@ async function zapis(mutations) {
 const CIL = {
   // Titulek a popisek stránky. V CMS zůstaly verze z doby před SEO úpravami
   // a v prohlížeči přepisovaly ty novější z HTML.
-  pageTitle: 'Jóga s králíčky Ostrava | Lekce se 7 králíky',
-  pageDescription: 'Přijďte na 60 minut jemné jógy se sedmi domácími králíky. Fit&Fun Studio Ostrava, 499 Kč, max. 10 míst. Vhodné i pro začátečníky.',
+  pageTitle: 'Jóga se zvířaty Ostrava | Jóga s králíčky',
+  pageDescription: 'Jóga se zvířaty v Ostravě se 7 domácími králíčky. 60 minut jemné jógy, 499 Kč, max. 10 míst. Pet yoga pro začátečníky, rezervace online.',
 
   // H1 se dřív nehlídal vůbec, a právě proto se rozešel nejvíc: v CMS
   // z něj byla obecná wellness věta bez jediného klíčového slova

@@ -13,39 +13,39 @@ Stav a výchozí měření: 8. září 2026. Výsledky byly ověřené v neperso
 | jóga se zvířaty Ostrava | web nebyl v prvních 40 výsledcích |
 | jóga Ostrava | web nebyl v první desítce |
 
-Web tedy nebyl plošně neindexovaný. Uměl vyhrát značkové a velmi přesné králičí dotazy, ale neměl dostatečně relevantní lokální stránku a autoritu pro obecnější hledání.
+Web tedy nebyl plošně neindexovaný. Uměl vyhrát značkové a velmi přesné králičí dotazy, ale homepage neměla dost silné pokrytí obecnějšího lokálního záměru. Přesný objem jednotlivých frází nelze poctivě určit z výsledků vyhledávání; k tomu slouží vlastní data v Search Console nebo Keyword Planneru. Architektura proto pokrývá celý významově shodný cluster, ne domnělý žebříček hledanosti.
 
 ## Která stránka vlastní který záměr
 
 | Primární stránka | Hlavní dotazy | Úloha |
 |---|---|---|
-| `/` | jóga s králíčky Ostrava, Joga s králičky | značka, studio, přehled nabídky |
-| `/joga-se-zviraty.html` | jóga se zvířaty Ostrava, jóga se zvířátky Ostrava, bunny yoga Ostrava, pet yoga Ostrava, králičí jóga | hlavní lokální nabídková stránka |
+| `/` | jóga se zvířaty Ostrava, jóga se zvířátky Ostrava, pet yoga Ostrava, bunny yoga Ostrava, jóga s králíčky Ostrava, králičí jóga Ostrava | jediná hlavní stránka služby a značky |
 | `/joga-pro-deti-ostrava.html` | jóga pro děti Ostrava, jóga se zvířaty pro děti | dětský formát od 5 let |
 | `/darkovy-poukaz.html` | dárkový poukaz jóga Ostrava, zážitkový dárek Ostrava | nákup poukazu |
 | `/rezervace.html` | rezervace jóga s králíčky, termíny | aktuální termíny a platba |
 
-Nevytvářet samostatnou stránku pro každou pravopisnou nebo anglickou variantu. Byly by si příliš podobné a soupeřily by mezi sebou. Varianty patří přirozeně na jednu silnou lokální stránku.
+Homepage je u tohoto projektu zároveň stránkou hlavní služby. Králičí jóga, jóga se zvířaty, pet yoga a bunny yoga neoznačují čtyři odlišné nabídky, ale stejný komerční záměr. Patří proto na jednu URL. Samostatné stránky zůstávají jen pro skutečně jiný záměr: děti, dárkový poukaz a rezervaci.
 
 ## Co řeší tato změna
 
-- Původní obecný článek o józe s kozami, koťaty a štěňaty je nahrazen konkrétní ostravskou službou.
-- URL o štěňatech, tedy službě, kterou studio nenabízí, trvale přesměrovává na relevantní stránku o józe se zvířaty.
+- Nejlepší lokální informace z překrývající se stránky o józe se zvířaty jsou součástí homepage.
+- `/joga-se-zviraty.html` i její čistá varianta trvale přesměrovávají na `/`, takže se relevance a případné odkazy nedělí mezi dvě URL.
+- URL o štěňatech, tedy službě, kterou studio nenabízí, přesměrovává přímo na homepage bez mezikroku.
 - Staré adresy `/kontakt` a `/kontakt.html` přesměrovávají na kontakt na homepage.
 - Věk dětí je ve všech aktuálních podkladech sjednocen na **od 5 let**.
 - Dětská stránka už netvrdí pevný čas 9:30; jediným zdrojem právě dostupných termínů je rezervace.
 - Právní stránky zůstávají dostupné, ale mají `noindex` a nejsou v sitemapě.
-- Homepage a obecná lokální stránka mají odlišný účel, title a H1, aby si nekonkurovaly.
+- Homepage má title zaměřený na „jóga se zvířaty Ostrava“, značkový H1 a přirozeně vysvětluje varianty pet yoga, bunny yoga, jóga se zvířátky a králičí jóga.
 - Build se zastaví při návratu starého věku, času, zrušené stránky, chybného redirectu, rozbitého odkazu, canonicalu, sitemap URL nebo JSON-LD.
 
 ## Co musí následovat mimo kód
 
 ### Ihned po nasazení
 
-1. V Google Search Console zkontrolovat a požádat o nové procházení adres `/` a `/joga-se-zviraty.html`.
+1. V Google Search Console požádat o nové procházení homepage `/`.
 2. Znovu odeslat `https://www.jogaskralicky.cz/sitemap.xml`.
-3. V kontrole URL ověřit, že `/kontakt.html` a `/joga-se-stenaty.html` vracejí trvalé přesměrování, ne 404.
-4. Po 7–14 dnech ověřit, kterou URL Google zvolil jako canonical a zda staré URL mizí z indexu.
+3. V kontrole URL ověřit, že `/joga-se-zviraty.html`, `/joga-se-stenaty.html` a `/kontakt.html` vracejí trvalé přesměrování, ne 404.
+4. Po 7–14 dnech ověřit, že Google přesouvá dotazy ze starých URL na homepage. Jde o kontrolní termín, ne garantovanou dobu zpracování.
 
 ### Google Business Profile
 
@@ -56,7 +56,7 @@ Nevytvářet samostatnou stránku pro každou pravopisnou nebo anglickou variant
 
 ### Lokální autorita
 
-- Získat odkaz z webu Fit&Fun Studia na hlavní lokální stránku.
+- Získat odkaz z webu Fit&Fun Studia přímo na `https://www.jogaskralicky.cz/`.
 - Nabídnout skutečný příběh a fotografie ostravským médiím, lokálním přehledům akcí a relevantním partnerům.
 - U každé zmínky kontrolovat stejný název, adresu, telefon a cílovou URL.
 - Nekupovat balíky odkazů a nevyrábět umělé „SEO články“ na nesouvisejících webech.

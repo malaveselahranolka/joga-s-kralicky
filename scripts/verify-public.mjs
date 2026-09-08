@@ -65,8 +65,10 @@ for (const page of ['obchodni-podminky.html', 'zasady-osobnich-udaju.html']) {
   }
 }
 
-if (existsSync(join(output, 'joga-se-stenaty.html'))) {
-  fail('public/joga-se-stenaty.html', 'zrušená stránka se dostala do nasazení')
+for (const retired of ['joga-se-stenaty.html', 'joga-se-zviraty.html']) {
+  if (existsSync(join(output, retired))) {
+    fail(`public/${retired}`, 'zrušená SEO stránka se dostala do nasazení')
+  }
 }
 
 // Lokální odkazy a soubory. Kontrolujeme celý veřejný balík, nejen sitemapu,
@@ -105,6 +107,15 @@ const content = JSON.parse(readFileSync(join(root, 'content', 'obsah.json'), 'ut
 const builtTitle = (read('index.html').match(/<title>([^<]+)<\/title>/i) || [])[1]
 if (builtTitle !== content.pageTitle) {
   fail('public/index.html', `title po buildu neodpovídá content/obsah.json (${builtTitle})`)
+}
+const builtHome = read('index.html')
+if (!builtTitle?.includes('Jóga se zvířaty Ostrava') || !builtTitle?.includes('Jóga s králíčky')) {
+  fail('public/index.html', 'výsledný title nespojuje hlavní lokální dotaz se značkou')
+}
+for (const varianta of ['jóga se zvířátky', 'bunny yoga', 'pet yoga', 'králičí jóga']) {
+  if (!builtHome.toLocaleLowerCase('cs-CZ').includes(varianta.toLocaleLowerCase('cs-CZ'))) {
+    fail('public/index.html', `výsledná homepage neobsahuje variantu „${varianta}“`)
+  }
 }
 
 if (problems.length) {

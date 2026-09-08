@@ -9,12 +9,12 @@
      Skript souhlas.js ukáže lištu, uloží rozhodnutí a teprve pak
      případně natáhne gtag.js. Nepředbíhat ho vlastním script tagem. -->
 <script defer src="/souhlas.js?v=1"></script>
-<title>Jóga s králíčky Ostrava | Lekce se 7 králíky</title>
-<meta name="description" content="Přijďte na 60 minut jemné jógy se sedmi domácími králíky. Fit&amp;Fun Studio Ostrava, 499 Kč, max. 10 míst. Vhodné i pro začátečníky." />
+<title>Jóga se zvířaty Ostrava | Jóga s králíčky</title>
+<meta name="description" content="Jóga se zvířaty v Ostravě se 7 domácími králíčky. 60 minut jemné jógy, 499 Kč, max. 10 míst. Pet yoga pro začátečníky, rezervace online." />
 <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
 <link rel="preload" as="image" href="assets/photos/yoga-5.webp" fetchpriority="high" media="(min-width: 641px)" />
 <link rel="preload" as="image" href="assets/photos/kralicek-hero-mobil-750.webp" imagesrcset="assets/photos/kralicek-hero-mobil-750.webp 750w, assets/photos/kralicek-hero-mobil.webp 1100w" imagesizes="100vw" fetchpriority="high" media="(max-width: 640px)" />
-<meta property="og:title" content="Jóga s králíčky Ostrava | Lekce se 7 králíky" />
+<meta property="og:title" content="Jóga se zvířaty Ostrava | Jóga s králíčky" />
 <meta property="og:description" content="Hodina jógy, po které vám na klíně usne králík. Fit&amp;Fun Studio Ostrava, vstup 499 Kč." />
 <!-- Náhled při sdílení musí mít ABSOLUTNÍ adresu — Facebook, Messenger ani
      WhatsApp relativní cestu nenačtou a náhled by zůstal bez obrázku. -->
@@ -31,7 +31,7 @@
 <meta property="og:locale" content="cs_CZ" />
 <meta property="og:site_name" content="Jóga s králíčky" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Jóga s králíčky Ostrava | Lekce se 7 králíky" />
+<meta name="twitter:title" content="Jóga se zvířaty Ostrava | Jóga s králíčky" />
 <meta name="twitter:description" content="Hodina jógy, po které vám na klíně usne králík. Fit&amp;Fun Studio Ostrava, vstup 499 Kč." />
 <meta name="twitter:image" content="https://www.jogaskralicky.cz/assets/og-jogaskralicky.png" />
 <meta name="geo.region" content="CZ-80" />
@@ -114,7 +114,9 @@
         "jóga pro začátečníky",
         "jóga pro děti",
         "animoterapie",
-        "pets yoga"
+        "pet yoga",
+        "bunny yoga",
+        "králičí jóga"
       ],
       "hasOfferCatalog": {
         "@type": "OfferCatalog",
@@ -130,8 +132,16 @@
             "category": "Jóga se zvířaty",
             "itemOffered": {
               "@type": "Service",
-              "name": "Hatha jóga s králíčky — Ostrava",
+              "@id": "https://www.jogaskralicky.cz/#joga-se-zviraty",
+              "name": "Jóga se zvířaty v Ostravě se sedmi králíčky",
+              "alternateName": [
+                "Jóga se zvířátky Ostrava",
+                "Pet yoga Ostrava",
+                "Bunny yoga Ostrava",
+                "Králičí jóga Ostrava"
+              ],
               "serviceType": "Lekce jógy se zvířaty",
+              "url": "https://www.jogaskralicky.cz/",
               "provider": {
                 "@id": "https://www.jogaskralicky.cz/#studio"
               }
@@ -175,13 +185,16 @@
       "@type": "WebPage",
       "@id": "https://www.jogaskralicky.cz/#webpage",
       "url": "https://www.jogaskralicky.cz/",
-      "name": "Jóga s králíčky Ostrava | Lekce se 7 králíky",
-      "description": "Jóga se zvířaty v Ostravě — hodina jemné hathy, při které vám mezi pozice hopsá sedm domácích králíků.",
+      "name": "Jóga se zvířaty Ostrava | Jóga s králíčky",
+      "description": "Jóga se zvířaty v Ostravě se sedmi domácími králíčky. Jemná 60minutová lekce pro začátečníky ve Fit&Fun Studiu.",
       "isPartOf": {
         "@id": "https://www.jogaskralicky.cz/#website"
       },
       "about": {
         "@id": "https://www.jogaskralicky.cz/#studio"
+      },
+      "mainEntity": {
+        "@id": "https://www.jogaskralicky.cz/#joga-se-zviraty"
       },
       "primaryImageOfPage": "https://www.jogaskralicky.cz/assets/og-jogaskralicky.png",
       "inLanguage": "cs-CZ"
@@ -553,8 +566,8 @@
   .l-cta { margin-top: 1.6rem; }
   .l-body .btn { width: 100%; }
 
-  /* Kontextový odkaz vyjasňuje vztah mezi značkou na homepage a službou,
-     kterou lidé hledají pod obecnými názvy. */
+  /* Hlavní služba a její běžné názvy patří na homepage. Samostatná SEO
+     stránka by popisovala stejnou nabídku a dělila signály mezi dvě URL. */
   .animal-intro {
     margin-top: clamp(2.2rem, 4vw, 3.2rem);
     padding: clamp(1.35rem, 2.8vw, 2rem);
@@ -563,7 +576,7 @@
     border: 1px solid rgba(255,255,255,.16); border-radius: var(--r-xl);
     background: rgba(255,255,255,.06);
   }
-  .animal-intro h3 { color: var(--cream); font-size: clamp(1.35rem, 1.05rem + 1vw, 1.9rem); }
+  .animal-intro h2 { color: var(--cream); font-size: clamp(1.35rem, 1.05rem + 1vw, 1.9rem); }
   .animal-intro p { margin-top: .65rem; max-width: 64ch; color: rgba(255,255,255,.76); }
   @media (max-width: 640px) {
     .animal-intro { grid-template-columns: 1fr; }
@@ -1239,12 +1252,13 @@
         </div>
       </div>
 
-      <div class="animal-intro reveal">
+      <div class="animal-intro reveal" id="joga-se-zviraty">
         <div>
-          <h3>Jóga se zvířaty v Ostravě</h3>
-          <p>Pod názvy jóga se zvířátky, bunny yoga nebo pet yoga u nás najdete jediný konkrétní formát: jemnou jógu se sedmi domácími králíčky.</p>
+          <h2>Jóga se zvířaty v Ostravě — se sedmi králíčky</h2>
+          <p>Hledáte jógu se zvířátky, pet yogu nebo bunny yogu v Ostravě? U nás všechny tyto názvy znamenají jednu konkrétní lekci: 60 minut jemné hatha jógy ve Fit&amp;Fun Studiu se sedmi domácími králíčky.</p>
+          <p>Naše králičí jóga je vhodná i pro úplné začátečníky. Králíci ve studiu bydlí, nikam je nepřevážíme a sami si vybírají, ke komu přijdou. Vstup stojí 499 Kč a ve skupině je maximálně 10 míst.</p>
         </div>
-        <a class="btn btn-light" href="joga-se-zviraty.html">Jak lekce probíhá <span class="arrow">→</span></a>
+        <a class="btn btn-light" href="rezervace.html">Vybrat termín <span class="arrow">→</span></a>
       </div>
     </div>
   </section>
@@ -1490,7 +1504,7 @@
         <a href="rezervace.html">Rezervace</a>
         <a href="darkovy-poukaz.html">Dárkový poukaz</a>
         <a href="joga-pro-deti-ostrava.html">Jóga pro děti</a>
-        <a href="joga-se-zviraty.html">Jóga se zvířaty</a>
+        <a href="#joga-se-zviraty">Jóga se zvířaty</a>
         <a href="obchodni-podminky.html">Obchodní podmínky</a>
         <a href="zasady-osobnich-udaju.html">Zpracování osobních údajů</a>
       </nav>
