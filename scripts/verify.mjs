@@ -89,7 +89,7 @@ const ZAKAZANE = [
   [/\bz\s+desítky\b/i, 'starý počet králíků (10)'],
 ]
 
-for (const page of [...PUBLIC_PAGES, 'scripts/seed-content.mjs', 'llms.txt']) {
+for (const page of [...PUBLIC_PAGES, 'content/obsah.json', 'llms.txt']) {
   if (!existsSync(join(root, page))) continue
   const text = read(page)
   for (const [re, popis] of ZAKAZANE) {
@@ -184,18 +184,6 @@ for (const blok of skupiny) {
   for (const cesta of ZAKAZ) {
     if (!blok.includes(`Disallow: ${cesta}`)) fail('robots.txt', `skupina ${ua} nezakazuje ${cesta}`)
   }
-}
-
-// ---------------------------------------------------------------------
-//  7) VIZUÁLNÍ EDITOR NESMÍ ZPÁTKY DO VEŘEJNÉHO BALÍKU
-//     @sanity/visual-editing váží přes 800 kB a potřebuje ho jedině
-//     Studio. Když se sem vrátí napevno psaný import, stahuje si ho
-//     zase každý návštěvník — a nikdo si toho nevšimne, protože web
-//     funguje dál, jen pomalu.
-// ---------------------------------------------------------------------
-const cms = read('src/cms.js')
-if (/^\s*import\s[^\n]*@sanity\/visual-editing/m.test(cms)) {
-  fail('src/cms.js', 'statický import @sanity/visual-editing — musí zůstat dynamický (await import(...))')
 }
 
 // ---------------------------------------------------------------------

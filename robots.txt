@@ -15,8 +15,6 @@ Allow: /
 Disallow: /admin.html
 Disallow: /vstupenka.html
 Disallow: /api/
-Disallow: /studio
-Disallow: /studio/
 
 # AI vyhledávače — chceme, aby nás citovaly
 User-agent: GPTBot
@@ -24,47 +22,35 @@ Allow: /
 Disallow: /admin.html
 Disallow: /vstupenka.html
 Disallow: /api/
-Disallow: /studio
-Disallow: /studio/
 
 User-agent: OAI-SearchBot
 Allow: /
 Disallow: /admin.html
 Disallow: /vstupenka.html
 Disallow: /api/
-Disallow: /studio
-Disallow: /studio/
 
 User-agent: ChatGPT-User
 Allow: /
 Disallow: /admin.html
 Disallow: /vstupenka.html
 Disallow: /api/
-Disallow: /studio
-Disallow: /studio/
 
 User-agent: PerplexityBot
 Allow: /
 Disallow: /admin.html
 Disallow: /vstupenka.html
 Disallow: /api/
-Disallow: /studio
-Disallow: /studio/
 
 User-agent: ClaudeBot
 Allow: /
 Disallow: /admin.html
 Disallow: /vstupenka.html
 Disallow: /api/
-Disallow: /studio
-Disallow: /studio/
 
 User-agent: Google-Extended
 Allow: /
 Disallow: /admin.html
 Disallow: /vstupenka.html
 Disallow: /api/
-Disallow: /studio
-Disallow: /studio/
 
 Sitemap: https://www.jogaskralicky.cz/sitemap.xml
