@@ -6,30 +6,29 @@ Web studia klidu, kde po lekcích jógy volně pobíhají domácí králíčci.
 
 ## Co to doopravdy je
 
-Tenhle popis tu dřív říkal „jednostránkový statický web na GitHub Pages".
-To už dávno neplatí a bylo to zavádějící — kdo tomu věřil, hledal chybu
-úplně jinde, než byla. Ve skutečnosti jde o čtyři propojené systémy:
+Nejde už o jednostránkový web na GitHub Pages. Ve skutečnosti jsou
+propojené tyto části:
 
 | Část | Kde běží | K čemu |
 |---|---|---|
-| Statické HTML + `assets/` | Vercel | Web sám. Styly jsou inline v každé stránce. |
-| `content/obsah.json` | repozitář | **Zdroj pravdy pro texty a fotky.** |
-| `scripts/obsah-do-html.mjs` | build | Vsadí obsah do HTML ještě před odesláním. |
-| `admin.html` → „Obsah webu" | Vercel | Majitelka si tu edituje obsah; uloží se commitem. |
+| Statické HTML + `assets/` | Vercel | Web sám. Build ho skládá do `public/`. |
+| `content/obsah.json` | GitHub + build | Zdroj aktuálního obsahu homepage; při buildu se vsadí přímo do HTML. |
+| `admin.html` + `api/obsah.js` | Vercel + GitHub | Správa obsahu; uložení vytvoří commit a spustí nové nasazení. |
 | Supabase (databáze + Edge funkce) | Supabase | Lekce, rezervace, poukazy, platby přes Stripe. |
 
-**Sanity byla 7. 9. 2026 nahrazena vlastním CMS v repozitáři.** Dřív se obsah
-dotahoval až v prohlížeči, takže Google i náhledy na sítích viděly jinou verzi
-než návštěvník — a obě se tiše rozcházely. Teď je odeslané HTML finální:
-pro člověka, robota i prohlížeč bez JS je to totéž. Dohlíží na to `npm run verify`.
+HTML v repozitáři není zástupný text. Homepage se při buildu doplní z
+`content/obsah.json`, takže vyhledávač i návštěvník dostanou stejný obsah
+bez čekání na JavaScript. Proto musí být obě vrstvy srovnané a dohlíží na
+to automatické kontroly.
 
-Text se proto **nemění v HTML**, ale v `content/obsah.json` nebo ve správě.
-Úprava přímo v `index.html` se při dalším buildu ztratí.
+Text se proto **nemění přímo v HTML** — mění se v `content/obsah.json` nebo ve
+správě. Úprava v `index.html` se při dalším buildu ztratí. (Sanity, která obsah
+dřív dotahovala až v prohlížeči, byla 7. 9. 2026 odstraněna.)
 
 ## Lokální práce
 
 ```bash
-npm install
+npm ci
 ```
 
 ```bash
@@ -40,28 +39,25 @@ vercel env pull .env.local
 npm run build
 ```
 
-Build vyrobí `public/` — veřejné stránky i zbuildované Studio. Bez
-`SANITY project ID` v prostředí rovnou spadne, viz [`.env.example`](.env.example).
-
-Studio samotné:
-
-```bash
-npm run studio
-```
+Build vyrobí `public/`. Bez lokálních proměnných doběhne také, jen do
+rezervační stránky nevloží statický snímek právě vypsaných termínů.
 
 ## Než něco nasadíš
 
 ```bash
-npm run verify
+npm run check
 ```
 
-Zkontroluje, co jde poznat ze souborů: že se dá přečíst každý inline
-skript i JSON-LD, že si cena, délka lekce a kapacita neodporují napříč
-stránkami, CMS seedem a generátorem rozvrhu v adminu, že sedí sitemapa
-a kanonické adresy, že žádný odkaz nevede nikam a že robots.txt zakazuje
-interní stránky **každé** jmenovité skupině robotů, ne jen `*`.
+`check` přísně zkontroluje zdroje, sestaví `public/` a projde i hotový
+balík. Hlídá skripty, JSON-LD, provozní fakta, věk dětí, sitemapu,
+indexaci, canonicaly, přesměrování, chybějící odkazy i soubory.
 
-Návratový kód 1 = nenasazuj. Není to náhrada za testy plateb, ale chytí
+Vercel používá `npm run build`. Strukturální chyby při něm nasazení dál
+zastaví, ale odchylka v titulku, popisku nebo jiném textu upraveném
+majitelkou v administraci pouze vypíše varování. Uložení běžného obsahu
+tak nemůže tiše zablokovat nové nasazení.
+
+Návratový kód 1 z `npm run check` = nenasazuj. Není to náhrada za testy plateb, ale chytí
 to přesně ty rozpory, které se na webu objevovaly opakovaně.
 
 ## Databáze

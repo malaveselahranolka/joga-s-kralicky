@@ -9,12 +9,12 @@
      Skript souhlas.js ukáže lištu, uloží rozhodnutí a teprve pak
      případně natáhne gtag.js. Nepředbíhat ho vlastním script tagem. -->
 <script defer src="/souhlas.js?v=1"></script>
-<title>Jóga s králíčky Ostrava — jóga se zvířaty, 7 králíků na lekci</title>
-<meta name="description" content="Jóga se zvířaty v Ostravě — hodina jemné hathy, při které mezi cvičícími pobíhá sedm domácích králíků. Vstup 499 Kč, Fit&amp;Fun Studio. Rezervace online." />
+<title>Jóga se zvířaty Ostrava — jóga s králíčky, 7 králíků</title>
+<meta name="description" content="Jóga se zvířaty v Ostravě se 7 domácími králíčky. 60 minut jemné jógy, 499 Kč, max. 10 míst. Pet yoga pro začátečníky, rezervace online." />
 <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
 <link rel="preload" as="image" href="assets/photos/yoga-5.webp" fetchpriority="high" media="(min-width: 641px)" />
 <link rel="preload" as="image" href="assets/photos/kralicek-hero-mobil-750.webp" imagesrcset="assets/photos/kralicek-hero-mobil-750.webp 750w, assets/photos/kralicek-hero-mobil.webp 1100w" imagesizes="100vw" fetchpriority="high" media="(max-width: 640px)" />
-<meta property="og:title" content="Jóga s králíčky Ostrava — jóga se zvířaty, 7 králíků na lekci" />
+<meta property="og:title" content="Jóga se zvířaty Ostrava — jóga s králíčky, 7 králíků" />
 <meta property="og:description" content="Hodina jógy, po které vám na klíně usne králík. Fit&amp;Fun Studio Ostrava, vstup 499 Kč." />
 <!-- Náhled při sdílení musí mít ABSOLUTNÍ adresu — Facebook, Messenger ani
      WhatsApp relativní cestu nenačtou a náhled by zůstal bez obrázku. -->
@@ -31,7 +31,7 @@
 <meta property="og:locale" content="cs_CZ" />
 <meta property="og:site_name" content="Jóga s králíčky" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Jóga s králíčky Ostrava — jóga se zvířaty" />
+<meta name="twitter:title" content="Jóga se zvířaty Ostrava — jóga s králíčky, 7 králíků" />
 <meta name="twitter:description" content="Hodina jógy, po které vám na klíně usne králík. Fit&amp;Fun Studio Ostrava, vstup 499 Kč." />
 <meta name="twitter:image" content="https://www.jogaskralicky.cz/assets/og-jogaskralicky.png" />
 <meta name="geo.region" content="CZ-80" />
@@ -49,13 +49,9 @@
       ],
       "@id": "https://www.jogaskralicky.cz/#studio",
       "name": "Jóga s králíčky",
-      "alternateName": [
-        "Jóga se zvířaty Ostrava",
-        "Bunny yoga Ostrava"
-      ],
       "description": "Lekce jemné hatha jógy v Ostravě, při kterých se po sále volně pohybuje sedm domácích králíků. Jóga se zvířaty pro dospělé i pro děti od 5 let.",
       "url": "https://www.jogaskralicky.cz/",
-      "telephone": "+420603340860",
+      "telephone": "+420 603 340 860",
       "email": "info@jogaskralicky.cz",
       "logo": "https://www.jogaskralicky.cz/assets/logo.svg",
       "image": [
@@ -63,7 +59,6 @@
         "https://www.jogaskralicky.cz/assets/photos/yoga-8.jpg",
         "https://www.jogaskralicky.cz/assets/photos/gal-pepa.jpg"
       ],
-      "priceRange": "499 Kč",
       "currenciesAccepted": "CZK",
       "paymentAccepted": "Platební karta online",
       "isAccessibleForFree": false,
@@ -75,6 +70,11 @@
         "postalCode": "709 00",
         "addressRegion": "Moravskoslezský kraj",
         "addressCountry": "CZ"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 49.8266513,
+        "longitude": 18.2535218
       },
       "containedInPlace": {
         "@type": "ExerciseGym",
@@ -113,7 +113,9 @@
         "jóga pro začátečníky",
         "jóga pro děti",
         "animoterapie",
-        "pets yoga"
+        "pet yoga",
+        "bunny yoga",
+        "králičí jóga"
       ],
       "hasOfferCatalog": {
         "@type": "OfferCatalog",
@@ -125,13 +127,20 @@
             "description": "Pomalá 60minutová hatha jóga pro dospělé i úplné začátečníky. Posledních 20 minut se sál otevře králíkům. Maximálně 10 míst.",
             "price": "499",
             "priceCurrency": "CZK",
-            "availability": "https://schema.org/InStock",
             "url": "https://www.jogaskralicky.cz/rezervace.html",
             "category": "Jóga se zvířaty",
             "itemOffered": {
               "@type": "Service",
-              "name": "Hatha jóga s králíčky — Ostrava",
+              "@id": "https://www.jogaskralicky.cz/#joga-se-zviraty",
+              "name": "Jóga se zvířaty v Ostravě se sedmi králíčky",
+              "alternateName": [
+                "Jóga se zvířátky Ostrava",
+                "Pet yoga Ostrava",
+                "Bunny yoga Ostrava",
+                "Králičí jóga Ostrava"
+              ],
               "serviceType": "Lekce jógy se zvířaty",
+              "url": "https://www.jogaskralicky.cz/",
               "provider": {
                 "@id": "https://www.jogaskralicky.cz/#studio"
               }
@@ -143,7 +152,6 @@
             "description": "60minutová lekce pro děti od 5 let v doprovodu rodiče. Víc her než ásan. Maximálně 10 míst.",
             "price": "499",
             "priceCurrency": "CZK",
-            "availability": "https://schema.org/InStock",
             "url": "https://www.jogaskralicky.cz/rezervace.html",
             "category": "Jóga pro děti se zvířaty",
             "itemOffered": {
@@ -159,8 +167,12 @@
       },
       "sameAs": [
         "https://www.instagram.com/zooterapie_joga",
-        "https://www.facebook.com/share/188akYWtuR/"
-      ]
+        "https://www.facebook.com/share/188akYWtuR/",
+        "https://maps.app.goo.gl/Qm7YAJJRsvKyVLaF6",
+        "https://mapy.com/en/zakladni?source=firm&id=14064344&x=18.2538681&y=49.8264650&z=17",
+        "https://www.firmy.cz/detail/14064344-joga-s-kralicky-ostrava-marianske-hory.html"
+      ],
+      "hasMap": "https://maps.app.goo.gl/Qm7YAJJRsvKyVLaF6"
     },
     {
       "@type": "WebSite",
@@ -173,22 +185,26 @@
       }
     },
     {
-      "@type": [
-        "WebPage",
-        "FAQPage"
-      ],
+      "@type": "WebPage",
       "@id": "https://www.jogaskralicky.cz/#webpage",
       "url": "https://www.jogaskralicky.cz/",
-      "name": "Jóga s králíčky Ostrava — jóga se zvířaty, 7 králíků na lekci",
-      "description": "Jóga se zvířaty v Ostravě — hodina jemné hathy, při které vám mezi pozice hopsá sedm domácích králíků.",
+      "name": "Jóga se zvířaty Ostrava — jóga s králíčky, 7 králíků",
+      "description": "Jóga se zvířaty v Ostravě se sedmi domácími králíčky. Jemná 60minutová lekce pro začátečníky ve Fit&Fun Studiu.",
       "isPartOf": {
         "@id": "https://www.jogaskralicky.cz/#website"
       },
       "about": {
         "@id": "https://www.jogaskralicky.cz/#studio"
       },
+      "mainEntity": {
+        "@id": "https://www.jogaskralicky.cz/#joga-se-zviraty"
+      },
       "primaryImageOfPage": "https://www.jogaskralicky.cz/assets/og-jogaskralicky.png",
-      "inLanguage": "cs-CZ",
+      "inLanguage": "cs-CZ"
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://www.jogaskralicky.cz/#faq",
       "mainEntity": [
         {
           "@type": "Question",
@@ -211,7 +227,7 @@
           "name": "Co když mám alergii na zvířata?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Sál pečlivě větráme a čistíme, přesto při alergii na srst doporučujeme lekci zvážit nebo se poradit s lékařem. Rádi vám pomůžeme vybrat méně kontaktní termín."
+            "text": "Sál pečlivě větráme a čistíme, přesto při alergii na srst doporučujeme lekci zvážit nebo se poradit s lékařem."
           }
         },
         {
@@ -227,7 +243,7 @@
           "name": "Jak a kdy se platí?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Výhradně online kartou při rezervaci, na místě se neplatí. Vstup stojí 499 Kč za osobu. Po zaplacení přijde e-mail s QR kódem, který ve studiu jen ukážete. Než platbu dokončíte, držíme vám místo 35 minut."
+            "text": "Výhradně online kartou při rezervaci, na místě se neplatí. Vstup stojí 499 Kč za osobu. Když rezervujete víc míst na jedno jméno, brána rovnou spočítá celou částku. Po zaplacení přijde e-mail s QR kódem, který ve studiu jen ukážete. Než platbu dokončíte, držíme vám místo 35 minut."
           }
         },
         {
@@ -235,7 +251,7 @@
           "name": "Jsou králíci v pořádku?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Jejich pohoda je u nás na prvním místě. Mají vlastní klidové zóny, kam se kdykoliv mohou stáhnout, pravidelné pauzy a veterinární péči. Na lekci jdou jen odpočatí a dobrovolně."
+            "text": "Jejich pohoda je u nás na prvním místě. Mají vlastní klidové zóny, kam se kdykoliv mohou stáhnout a veterinární péči. Na lekce bereme pouze méně bázlivé jedince."
           }
         }
       ]
@@ -607,6 +623,23 @@
   .l-cta { margin-top: 1.6rem; }
   .l-body .btn { width: 100%; }
 
+  /* Hlavní služba a její běžné názvy patří na homepage. Samostatná SEO
+     stránka by popisovala stejnou nabídku a dělila signály mezi dvě URL. */
+  .animal-intro {
+    margin-top: clamp(2.2rem, 4vw, 3.2rem);
+    padding: clamp(1.35rem, 2.8vw, 2rem);
+    display: grid; grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1.2rem 2rem; align-items: center;
+    border: 1px solid rgba(255,255,255,.16); border-radius: var(--r-xl);
+    background: rgba(255,255,255,.06);
+  }
+  .animal-intro h2 { color: var(--cream); font-size: clamp(1.35rem, 1.05rem + 1vw, 1.9rem); }
+  .animal-intro p { margin-top: .65rem; max-width: 64ch; color: rgba(255,255,255,.76); }
+  @media (max-width: 640px) {
+    .animal-intro { grid-template-columns: 1fr; }
+    .animal-intro .btn { width: 100%; }
+  }
+
   /* ---------- dárkový poukaz: vstup z domovské stránky ----------
      Nákup zůstává na jednom místě (darkovy-poukaz.html → rezervace.html#voucherCard),
      tady je jen vstup do něj — ať web nemá dvě různá místa, kde se kupuje totéž.
@@ -857,11 +890,15 @@
   .contact-list a, .contact-list p { display: inline-flex; align-items: center; gap: .7rem; font-weight: 600; color: var(--ink); transition: color .25s var(--ease); }
   .contact-list a:hover { color: var(--clover-text); }
   .contact-list svg { color: var(--clover); flex: none; }
-  .contact-list .plain { font-weight: 400; color: var(--ink-soft); }
+  .contact-list .plain { font-weight: 400; color: var(--ink-soft); flex-wrap: wrap; }
+  .contact-list .plain a { font-size: .9rem; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--line); }
   .visit-card .btn { margin-top: auto; align-self: flex-start; }
   .visit-actions { margin-top: 1.8rem; display: flex; gap: .7rem; flex-wrap: wrap; }
   .visit-map { border-radius: var(--r-xl); overflow: hidden; border: 1px solid var(--line); box-shadow: var(--sh-2); min-height: 340px; background: var(--paper); position: relative; }
   .visit-map iframe { width: 100%; height: 100%; min-height: 340px; border: 0; display: block; filter: saturate(.82) contrast(1.02); }
+  .arrival-guide { margin-top: clamp(1.2rem, 3vw, 1.8rem); padding: clamp(1.4rem, 3vw, 2rem); border: 1px solid var(--line); border-radius: var(--r-xl); background: var(--paper); display: grid; grid-template-columns: minmax(220px, .7fr) 1.3fr; gap: 1rem clamp(1.8rem, 4vw, 3.6rem); align-items: start; }
+  .arrival-guide h3 { margin-top: .45rem; font-family: "Schibsted Grotesk"; font-size: clamp(1.35rem, 1.15rem + .7vw, 1.8rem); letter-spacing: -.02em; }
+  .arrival-guide p { color: var(--ink-soft); line-height: 1.7; max-width: 72ch; }
 
   /* ---------- footer ---------- */
   footer.foot { background: var(--forest-deep); color: rgba(255,255,255,.7); padding: clamp(3.5rem, 6vw, 5rem) 0 2.5rem; }
@@ -993,6 +1030,9 @@
     .foot-grid { grid-template-columns: 1fr 1fr; }
     .foot .brand-cell { grid-column: 1 / -1; }
   }
+  @media (max-width: 720px) {
+    .arrival-guide { grid-template-columns: 1fr; }
+  }
   @media (max-width: 980px) {
     /* the deck moves into the flow so the rabbits stay visible on small screens */
     .hero { justify-content: flex-end; }
@@ -1111,7 +1151,7 @@
     <div class="wrap">
       <span class="eyebrow hero-eyebrow">Fit&amp;Fun Studio Ostrava</span>
       <h1><span data-cms="hero-title-start">Jóga s králíčky v Ostravě</span> <span class="dash">—</span> <span data-cms="hero-title-end">míň jógy, víc králíčků</span></h1>
-      <p class="hero-sub">Lekce jógy v Ostravě, při které mezi vámi pobíhá sedm králíčků. Poznávají vás, nechají se pohladit a vy na chvíli zapomenete na všechny starosti.</p>
+      <p class="hero-sub">Jóga se zvířaty v Ostravě, při které mezi vámi pobíhá sedm králíčků. Poznávají vás, nechají se pohladit a vy na chvíli zapomenete na všechny starosti.</p>
       <div class="hero-actions">
         <div class="cta-split on-photo">
           <a class="btn btn-light" href="rezervace.html">Rezervovat lekci</a>
@@ -1210,7 +1250,7 @@
     <div class="sglow" aria-hidden="true"></div>
     <div class="wrap">
       <div class="section-head reveal">
-        <h2>Dvě lekce. Obě končí králíčkem na podložce.</h2>
+        <h2>Lekce pro dospělé i děti od 5 let</h2>
         <p class="lead">Máme jednu lekci pro dospělé a jednu pro děti s rodičem. Obě vedeme v Ostravě-Mariánských Horách — vyberte si a rezervujte rovnou tady.</p>
       </div>
       <div class="lesson-pair">
@@ -1238,7 +1278,7 @@
         </article>
         <article class="lesson reveal">
           <div class="l-pic">
-            <span class="l-tag">Pro děti od 7 let</span>
+            <span class="l-tag">Pro děti od 5 let</span>
             <img decoding="async" src="assets/photos/yoga-15.webp" alt="Chlapec na dětské lekci drží v náručí šedého králíka" loading="lazy" width="1500" height="1000" />
           </div>
           <div class="l-body">
@@ -1253,7 +1293,7 @@
             <div class="l-run">
               <div><b>0–10 min</b><span>Jak se ke králíkovi přiblížit, aby neutekl.</span></div>
               <div><b>10–35 min</b><span>Pozice se zvířecími jmény a lehké cvičení.</span></div>
-              <div><b>35–60 min</b><span>Krmení, hlazení a focení.</span></div>
+              <div><b>35–60 min</b><span>Krmení a hlazení.</span></div>
             </div>
             <div class="l-cta"><a class="btn btn-light" href="rezervace.html">Momentálně nevypsané termíny <span class="arrow">→</span></a></div>
           </div>
@@ -1274,6 +1314,15 @@
           <img decoding="async" src="assets/logo.svg" alt="" width="38" height="38" loading="lazy" />
           <span class="gift-price">499<span class="gift-cur">Kč</span></span>
         </div>
+      </div>
+
+      <div class="animal-intro reveal" id="joga-se-zviraty">
+        <div>
+          <h2>Jóga se zvířaty v Ostravě — se sedmi králíčky</h2>
+          <p>Hledáte jógu se zvířátky, pet yogu nebo bunny yogu v Ostravě? U nás všechny tyto názvy znamenají jednu konkrétní lekci: 60 minut jemné hatha jógy ve Fit&amp;Fun Studiu se sedmi domácími králíčky.</p>
+          <p>Naše králičí jóga je vhodná i pro úplné začátečníky. Králíci si sami vybírají, ke komu přijdou. Vstup stojí 499 Kč a ve skupině je maximálně 10 míst. Pokud vás zajímá i výběr vhodného formátu a welfare zvířat, přečtěte si <a href="joga-se-zviraty.html">průvodce jógou se zvířaty</a>.</p>
+        </div>
+        <a class="btn btn-light" href="rezervace.html">Vybrat termín <span class="arrow">→</span></a>
       </div>
     </div>
   </section>
@@ -1465,11 +1514,10 @@
             </a>
             <p class="plain">
               <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-              <!-- Tenhle text přepisuje CMS (pole contactSchedule), ale bez JS a
-                   pro vyhledávače platí to, co je tady. Musí proto říkat totéž.
-                   Dřív tu stálo „úterý, čtvrtek a sobota, děti v sobotu od 9:30" —
-                   rozvrh, který se už nejede a v nabídce nikdy nebyl. -->
-              Lekce: sobota 10:30
+              <!-- Tento text přepisuje CMS (pole contactSchedule), proto musí
+                   zůstat shodný s veřejnou nabídkou. -->
+              Pravidelně v sobotu 10:30
+              <a href="rezervace.html">Ověřit aktuální termíny</a>
             </p>
           </div>
           <div class="visit-actions">
@@ -1483,6 +1531,13 @@
             src="https://maps.google.com/maps?q=Fit%26Fun%20Studio%20Ostrava%2C%20Tovární%20486%2F7%2C%20709%2000%20Ostrava-Mari%C3%A1nsk%C3%A9%20Hory&amp;z=15&amp;ie=UTF8&amp;output=embed"
             loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
         </div>
+      </div>
+      <div class="arrival-guide reveal">
+        <div>
+          <span class="eyebrow">Doprava a parkování</span>
+          <h3>Jak se k nám dostanete</h3>
+        </div>
+        <p>Tramvají vystupte na zastávce <strong>Daliborova</strong>, kterou obsluhují linky <strong>3, 4, 8, 18 a 19</strong>. Ke vchodu do Fit&amp;Fun Studia je to přibližně 100 metrů, tedy asi dvě minuty pěšky ulicemi Daliborova a Tovární. Pokud přijedete autem, <strong>bezplatné parkování je přímo u studia</strong>. Adresa pro navigaci je Tovární 486/7, Ostrava-Mariánské Hory. Sobotní lekce začíná pravidelně v 10:30, ale nekoná se nutně každou sobotu, proto si před cestou vždy ověřte aktuální termín v rezervaci.</p>
       </div>
     </div>
   </section>
@@ -1521,8 +1576,8 @@
         <a href="rezervace.html">Rezervace</a>
         <a href="darkovy-poukaz.html">Dárkový poukaz</a>
         <a href="joga-pro-deti-ostrava.html">Jóga pro děti</a>
-        <a href="joga-se-zviraty.html">Jóga se zvířaty</a>
-        <a href="joga-se-stenaty.html">Jóga se štěňaty</a>
+        <a href="#joga-se-zviraty">Jóga se zvířaty</a>
+        <a href="joga-se-zviraty.html">Průvodce jógou se zvířaty</a>
         <a href="obchodni-podminky.html">Obchodní podmínky</a>
         <a href="zasady-osobnich-udaju.html">Zpracování osobních údajů</a>
         <a href="admin.html" rel="nofollow">Správa (pro studio)</a>
