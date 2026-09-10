@@ -28,6 +28,7 @@ const files = [
   'supabase-config.js',
   'datum.js',
   'souhlas.js',
+  'speed-insights.js',
   'google8760dad4313e888f.html',
   'llms.txt',
 ]
