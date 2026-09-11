@@ -176,6 +176,7 @@ function reports(data) {
 }
 
 function sources(data) {
+  const syncable = new Set(['stripe', 'ga4', 'vercel', 'meta_ads', 'instagram', 'facebook_page', 'tiktok_ads', 'tiktok_organic', 'google_ads', 'sklik']);
   const required = [
     ['supabase','Supabase'], ['stripe','Stripe'], ['ga4','GA4'], ['vercel','Vercel'],
     ['meta_ads','Meta Ads'], ['instagram','Instagram'], ['facebook_page','Facebook'],
@@ -186,7 +187,8 @@ function sources(data) {
   return `<div class="view-stack">${errors(data.errors)}<section class="panel"><div class="section-head"><div><p class="section-label">Stav</p><h2>Napojení</h2><p>Dashboard nezobrazuje vymyšlené hodnoty. Nepřipojený zdroj zůstane výslovně prázdný.</p></div></div><div class="connection-list">${required.map(([provider, label]) => {
     const row = byProvider.get(provider) || { provider, status: provider === 'supabase' ? 'connected' : 'not_connected' };
     const kind = row.status === 'connected' ? 'good' : row.status === 'error' ? 'warn' : '';
-    return `<div class="connection"><strong>${esc(label)}</strong><span class="connection-status"><span class="status-dot ${row.status === 'connected' ? '' : 'partial'}"></span>${statusLabel(row.status)}</span><span class="connection-detail">${row.last_success_at ? `Naposledy ${date(row.last_success_at)}` : 'Čeká na bezpečné připojení'} ${row.last_error ? `· ${esc(row.last_error)}` : ''}</span><span class="badge ${kind}">${row.status === 'connected' ? 'živé' : 'bez hodnot'}</span></div>`;
+    const syncButton = syncable.has(provider) ? `<button class="button button-secondary button-small" type="button" data-action="sync-provider" data-provider="${esc(provider)}" data-label="${esc(label)}" aria-label="Načíst data: ${esc(label)}">Načíst data</button>` : '';
+    return `<div class="connection"><strong>${esc(label)}</strong><span class="connection-status"><span class="status-dot ${row.status === 'connected' ? '' : 'partial'}"></span>${statusLabel(row.status)}</span><span class="connection-detail">${row.last_success_at ? `Naposledy ${date(row.last_success_at)}` : 'Čeká na bezpečné připojení'} ${row.last_error ? `· ${esc(row.last_error)}` : ''}</span><span class="connection-actions"><span class="badge ${kind}">${row.status === 'connected' ? 'živé' : 'bez hodnot'}</span>${syncButton}</span></div>`;
   }).join('')}</div></section><div class="notice notice-info">API klíče a přihlášení zůstávají pouze v serverových secrets. Synchronizace běží mimo prohlížeč a její selhání neovlivní rezervace.</div></div>`;
 }
 

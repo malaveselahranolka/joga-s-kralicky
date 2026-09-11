@@ -303,6 +303,27 @@ export function createBusinessStore({ client = null, demo = false } = {}) {
     if (error) throw error;
   }
 
+  async function syncProvider(provider, period) {
+    if (demo) {
+      const connection = demoData.connections.find((item) => item.provider === provider);
+      if (connection) Object.assign(connection, { status: 'connected', last_success_at: new Date().toISOString(), last_error: null });
+      else demoData.connections.push({ id: `connection-${provider}`, provider, status: 'connected', last_success_at: new Date().toISOString() });
+      writeDemo(demoData);
+      return { ok: true, provider, status: 'success', imported: 0 };
+    }
+    if (!client) throw new Error('Business připojení není nastavené.');
+    const { data, error } = await client.functions.invoke('business-sync', {
+      body: { provider, from: period.from, to: period.to },
+    });
+    if (error) {
+      let detail = null;
+      try { detail = await error.context?.clone?.().json(); } catch (_error) { /* odpověď neposlala JSON */ }
+      throw new Error(detail?.error || error.message || 'provider_sync_failed');
+    }
+    if (!data?.ok) throw new Error(data?.error || 'provider_sync_failed');
+    return data;
+  }
+
   return {
     demo,
     hasAccess,
@@ -317,6 +338,7 @@ export function createBusinessStore({ client = null, demo = false } = {}) {
     saveView: (row) => saveRecord('savedViews', 'business_saved_views', row),
     resetDemo,
     saveSetting,
+    syncProvider,
     attachmentUrl,
   };
 }

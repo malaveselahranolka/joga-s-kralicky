@@ -50,6 +50,14 @@ function toast(message) {
   toastTimer = setTimeout(() => $('#toast').classList.remove('show'), 3000);
 }
 
+function syncErrorMessage(error) {
+  const message = String(error?.message || error || '');
+  if (message.startsWith('missing_secret:')) return 'Zdroj čeká na bezpečné připojení účtu.';
+  if (message === 'provider_sync_failed') return 'Zdroj synchronizaci odmítl. Zkontrolujte přístup a zkuste to znovu.';
+  if (message === 'forbidden' || message.includes('non-2xx status code')) return 'Přihlášení nemá oprávnění spustit synchronizaci.';
+  return message || 'Synchronizace se nezdařila.';
+}
+
 function showAuth(reason) {
   $('#authScreen').hidden = false;
   $('#businessApp').hidden = true;
@@ -276,6 +284,20 @@ async function handleViewAction(target) {
   if (action === 'print') return window.print();
   if (action === 'export-summary') { exportSummary(); return toast('Souhrn exportován.'); }
   if (action === 'save-view') { await store.saveView({ name: `${viewMeta[currentView()][0]} ${period.from}–${period.to}`, view_key: currentView(), filters: { from: period.from, to: period.to } }); toast('Pohled uložen.'); return load(); }
+  if (action === 'sync-provider') {
+    const provider = button.dataset.provider;
+    const label = button.dataset.label || provider;
+    button.disabled = true;
+    button.textContent = 'Načítám…';
+    try {
+      const result = await store.syncProvider(provider, period);
+      toast(`${label}: načteno ${Number(result.imported || 0)} záznamů.`);
+    } catch (error) {
+      toast(`${label}: ${syncErrorMessage(error)}`);
+    }
+    await load();
+    return;
+  }
   if (action === 'toggle-paid') { button.disabled = true; await store.markOccurrencePaid(button.dataset.id, button.dataset.paid !== 'true'); toast('Stav nákladu změněn.'); return load(); }
   if (action === 'open-attachment') {
     const popup = window.open('', '_blank');
