@@ -10,6 +10,7 @@
     "check": "node scripts/verify.mjs && node --env-file-if-exists=.env.local scripts/build.mjs && node scripts/verify-public.mjs"
   },
   "dependencies": {
+    "@vercel/speed-insights": "^2.0.0",
     "node-html-parser": "^7.0.1"
   },
   "overrides": {
