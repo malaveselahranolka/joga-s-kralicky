@@ -13,6 +13,8 @@
 User-agent: *
 Allow: /
 Disallow: /admin.html
+Disallow: /business.html
+Disallow: /business
 Disallow: /vstupenka.html
 Disallow: /api/
 Disallow: /studio
@@ -22,6 +24,8 @@ Disallow: /studio/
 User-agent: GPTBot
 Allow: /
 Disallow: /admin.html
+Disallow: /business.html
+Disallow: /business
 Disallow: /vstupenka.html
 Disallow: /api/
 Disallow: /studio
@@ -30,6 +34,8 @@ Disallow: /studio/
 User-agent: OAI-SearchBot
 Allow: /
 Disallow: /admin.html
+Disallow: /business.html
+Disallow: /business
 Disallow: /vstupenka.html
 Disallow: /api/
 Disallow: /studio
@@ -38,6 +44,8 @@ Disallow: /studio/
 User-agent: ChatGPT-User
 Allow: /
 Disallow: /admin.html
+Disallow: /business.html
+Disallow: /business
 Disallow: /vstupenka.html
 Disallow: /api/
 Disallow: /studio
@@ -46,6 +54,8 @@ Disallow: /studio/
 User-agent: PerplexityBot
 Allow: /
 Disallow: /admin.html
+Disallow: /business.html
+Disallow: /business
 Disallow: /vstupenka.html
 Disallow: /api/
 Disallow: /studio
@@ -54,6 +64,8 @@ Disallow: /studio/
 User-agent: ClaudeBot
 Allow: /
 Disallow: /admin.html
+Disallow: /business.html
+Disallow: /business
 Disallow: /vstupenka.html
 Disallow: /api/
 Disallow: /studio
@@ -62,6 +74,8 @@ Disallow: /studio/
 User-agent: Google-Extended
 Allow: /
 Disallow: /admin.html
+Disallow: /business.html
+Disallow: /business
 Disallow: /vstupenka.html
 Disallow: /api/
 Disallow: /studio

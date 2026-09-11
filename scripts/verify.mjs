@@ -37,7 +37,7 @@ const NOINDEX_PAGES = [
   'obchodni-podminky.html', 'zasady-osobnich-udaju.html',
 ]
 const PUBLIC_PAGES = [...INDEXABLE_PAGES, ...NOINDEX_PAGES]
-const ALL_PAGES = [...PUBLIC_PAGES, 'admin.html', 'vstupenka.html', '404.html', '410.html']
+const ALL_PAGES = [...PUBLIC_PAGES, 'admin.html', 'business.html', 'vstupenka.html', '404.html', '410.html']
 
 const read = (f) => readFileSync(join(root, f), 'utf8')
 const normalizujText = (value) => String(value ?? '').replace(/\s+/g, ' ').trim()

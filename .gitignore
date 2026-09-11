@@ -13,6 +13,8 @@ screenshot.mjs
 serve.mjs
 
 .playwright-mcp/
+graphify-out/
+/supabase/.temp/
 
 # nikdy necommitovat tajne klice
 token.txt
@@ -21,4 +23,5 @@ token.txt
 # docasne soubory z auditu (screenshoty prohlizece)
 *.png
 !assets/**/*.png
+!docs/screenshots/*.png
 .playwright-mcp/

@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#FAFBF6">
+  <title>Business — Jóga s králíčky</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/logo.svg">
+  <link rel="preload" href="/assets/fonts/hanken-grotesk-latin-ext.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/schibsted-grotesk-latin-ext.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/business/business.css">
+</head>
+<body>
+  <a class="skip-link" href="#mainContent">Přejít k obsahu</a>
+
+  <section class="auth-screen" id="authScreen" aria-labelledby="authTitle">
+    <div class="auth-card">
+      <a class="wordmark" href="/" aria-label="Jóga s králíčky — veřejný web">
+        <img src="/assets/logo.svg" alt="" width="38" height="38">
+        <span>Jóga s králíčky</span>
+      </a>
+      <p class="section-label">Business</p>
+      <h1 id="authTitle">Přihlášení k výsledkům studia</h1>
+      <p class="auth-copy">Použijte stejný účet jako ve správě studia. Přístup k financím musí být výslovně povolený.</p>
+      <div class="notice notice-warning" id="configNotice" hidden>
+        Připojení k databázi není nastavené. Doplňte veřejnou konfiguraci Supabase podle návodu.
+      </div>
+      <form id="loginForm" novalidate>
+        <div class="field">
+          <label for="loginEmail">E-mail</label>
+          <input id="loginEmail" name="email" type="email" autocomplete="username" spellcheck="false" required>
+        </div>
+        <div class="field">
+          <label for="loginPassword">Heslo</label>
+          <input id="loginPassword" name="password" type="password" autocomplete="current-password" required>
+        </div>
+        <button class="button button-primary button-wide" type="submit" id="loginButton">Přihlásit se</button>
+        <p class="form-message" id="loginMessage" role="alert"></p>
+      </form>
+      <a class="quiet-link" href="/admin.html">Zpět do správy studia</a>
+      <a class="quiet-link" id="localDemoLink" href="/business.html?demo=1" hidden>Otevřít místní ukázku</a>
+    </div>
+  </section>
+
+  <div class="business-app" id="businessApp" hidden>
+    <aside class="sidebar" id="sidebar" aria-label="Business navigace">
+      <div class="sidebar-head">
+        <a class="wordmark" href="/business.html">
+          <img src="/assets/logo.svg" alt="" width="34" height="34">
+          <span>Business</span>
+        </a>
+        <button class="icon-button close-menu" id="closeMenu" type="button" aria-label="Zavřít menu">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <nav class="primary-nav" aria-label="Hlavní části">
+        <a href="/business.html?view=overview" data-view="overview">Přehled</a>
+        <a href="/business.html?view=finance" data-view="finance">Finance</a>
+        <a href="/business.html?view=marketing" data-view="marketing">Marketing</a>
+        <a href="/business.html?view=audience" data-view="audience">Publikum</a>
+        <a href="/business.html?view=plan" data-view="plan">Plán</a>
+        <a href="/business.html?view=reports" data-view="reports">Reporty</a>
+      </nav>
+      <div class="sidebar-bottom">
+        <nav class="secondary-nav" aria-label="Další části">
+          <a href="/business.html?view=sources" data-view="sources">Zdroje dat</a>
+          <a href="/business.html?view=settings" data-view="settings">Nastavení</a>
+        </nav>
+        <a class="studio-switch" href="/admin.html">
+          <span>Správa studia</span>
+          <span aria-hidden="true">→</span>
+        </a>
+        <div class="account-row">
+          <span id="accountEmail"></span>
+          <button class="text-button" id="logoutButton" type="button">Odhlásit</button>
+        </div>
+      </div>
+    </aside>
+    <button class="sidebar-scrim" id="sidebarScrim" type="button" aria-label="Zavřít menu" tabindex="-1"></button>
+
+    <div class="workspace">
+      <header class="mobile-bar">
+        <button class="icon-button" id="openMenu" type="button" aria-label="Otevřít menu" aria-controls="sidebar" aria-expanded="false">
+          <span aria-hidden="true">☰</span>
+        </button>
+        <span>Business</span>
+        <a href="/admin.html">Správa</a>
+      </header>
+
+      <div class="demo-banner" id="demoBanner" hidden>
+        <strong>Ukázková data.</strong> Změny se ukládají jen v tomto prohlížeči a nikdy se nemíchají se skutečností.
+        <button class="text-button" id="resetDemo" type="button">Obnovit ukázku</button>
+      </div>
+
+      <header class="workspace-header">
+        <div>
+          <p class="section-label" id="viewQuestion">Jak se daří?</p>
+          <h1 id="viewTitle">Přehled</h1>
+          <p class="date-range" id="dateRangeLabel"></p>
+        </div>
+        <div class="period-controls" aria-label="Zvolené období">
+          <label class="sr-only" for="periodPreset">Období</label>
+          <select id="periodPreset" name="period">
+            <option value="week">Tento týden</option>
+            <option value="month" selected>Tento měsíc</option>
+            <option value="3m">Poslední 3 měsíce</option>
+            <option value="6m">Posledních 6 měsíců</option>
+            <option value="12m">Posledních 12 měsíců</option>
+            <option value="custom">Vlastní rozsah</option>
+          </select>
+          <button class="button button-secondary" id="openPeriod" type="button">Upravit období…</button>
+        </div>
+      </header>
+
+      <main id="mainContent" tabindex="-1">
+        <div class="loading-state" id="loadingState" aria-live="polite">
+          <span class="loading-line"></span><span class="loading-line short"></span>
+          <div class="loading-panel"></div>
+          <span class="sr-only">Načítám data…</span>
+        </div>
+        <div id="viewContent" hidden></div>
+      </main>
+    </div>
+  </div>
+
+  <dialog class="modal" id="periodDialog" aria-labelledby="periodTitle">
+    <form method="dialog" id="periodForm">
+      <div class="modal-head"><div><p class="section-label">Filtr</p><h2 id="periodTitle">Vlastní období</h2></div><button class="icon-button" value="cancel" aria-label="Zavřít">×</button></div>
+      <div class="two-fields">
+        <div class="field"><label for="periodFrom">Od</label><input id="periodFrom" name="from" type="date" required></div>
+        <div class="field"><label for="periodTo">Do</label><input id="periodTo" name="to" type="date" required></div>
+      </div>
+      <p class="form-message" id="periodMessage" role="alert"></p>
+      <div class="modal-actions"><button class="button button-secondary" value="cancel">Zrušit</button><button class="button button-primary" id="applyPeriod" value="default">Použít období</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="modal modal-wide" id="costDialog" aria-labelledby="costTitle">
+    <form method="dialog" id="costForm" novalidate>
+      <div class="modal-head"><div><p class="section-label">Finance</p><h2 id="costTitle">Přidat náklad</h2></div><button class="icon-button" value="cancel" aria-label="Zavřít">×</button></div>
+      <input id="costRuleKey" name="rule_key" type="hidden">
+      <input id="costVersion" name="version" type="hidden" value="1">
+      <input id="costExistingAttachment" type="hidden">
+      <div class="cost-quick-grid">
+        <div class="field field-span-2"><label for="costName">Název</label><input id="costName" name="name" autocomplete="off" placeholder="Např. nájem studia…" required></div>
+        <div class="field"><label for="costAmount">Částka v Kč</label><input id="costAmount" name="amount" inputmode="decimal" autocomplete="off" placeholder="5 000…" required></div>
+        <div class="field"><label for="costCategory">Kategorie</label><select id="costCategory" name="category_id" required></select></div>
+        <div class="field"><label for="costDate">Začátek nebo datum</label><input id="costDate" name="valid_from" type="date" required></div>
+        <div class="field"><label for="costRecurrence">Opakování</label><select id="costRecurrence" name="recurrence"><option value="once">Jednorázově</option><option value="weekly">Každý týden</option><option value="monthly">Každý měsíc</option><option value="yearly">Každý rok</option><option value="per_lesson">Za uskutečněnou lekci</option><option value="per_paid_spot">Za zaplacené místo</option><option value="percentage">Procento ze základu</option></select></div>
+      </div>
+      <p class="field-help">Den 29.–31. se v kratším měsíci použije poslední platný den. Roční 29. únor připadne v nepřestupném roce na 28. února.</p>
+      <details class="advanced-fields">
+        <summary>Rozšířené</summary>
+        <div class="advanced-grid">
+          <div class="field"><label for="costValidTo">Konec platnosti</label><input id="costValidTo" name="valid_to" type="date"></div>
+          <div class="field"><label for="costClass">Druh nákladu</label><select id="costClass" name="cost_class"><option value="operation">Provoz</option><option value="advertising">Reklama</option><option value="investment">Investice</option><option value="own_work">Vlastní práce — simulace</option></select></div>
+          <div class="field" id="percentageBasisField" hidden><label for="percentageBasis">Základ procenta</label><select id="percentageBasis" name="percentage_basis"><option value="recognized_revenue">Výnosy uskutečněných lekcí</option><option value="cash_sales">Čistý peněžní příjem z prodeje</option><option value="ad_spend">Doložená reklamní útrata</option></select></div>
+          <div class="field" id="percentageRateField" hidden><label for="percentageRate">Sazba v %</label><input id="percentageRate" name="rate_percent" type="number" min="0" max="100" step="0.01" value="15"></div>
+          <div class="field field-span-2"><label for="costNote">Poznámka</label><textarea id="costNote" name="note" rows="3" maxlength="2000"></textarea></div>
+          <div class="field field-span-2"><label for="costAttachment">Soukromý doklad</label><input id="costAttachment" type="file" accept="application/pdf,image/jpeg,image/png,image/webp"><span class="field-help">PDF nebo obrázek, nejvýše 10 MB. Soubor uvidí jen vlastník business sekce.</span></div>
+          <label class="check-row"><input id="costPaid" name="paid" type="checkbox" checked><span>Označit vytvořené výskyty jako zaplacené</span></label>
+          <label class="check-row"><input id="costOperating" name="include_in_operating" type="checkbox" checked><span>Zahrnout do manažerského provozního výsledku</span></label>
+        </div>
+      </details>
+      <p class="form-message" id="costMessage" role="alert"></p>
+      <div class="modal-actions"><button class="button button-secondary" value="cancel">Zrušit</button><button class="button button-primary" id="saveCost" value="default">Uložit náklad</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="modal modal-wide" id="importDialog" aria-labelledby="importTitle">
+    <form method="dialog" id="importForm">
+      <div class="modal-head"><div><p class="section-label">Peněžní pohyby</p><h2 id="importTitle">Import CSV</h2></div><button class="icon-button" value="cancel" aria-label="Zavřít">×</button></div>
+      <div class="field"><label for="csvFile">Soubor CSV</label><input id="csvFile" name="file" type="file" accept=".csv,text/csv"></div>
+      <div id="importMapping" hidden></div>
+      <div class="table-scroll" id="importPreview" hidden></div>
+      <p class="form-message" id="importMessage" role="alert"></p>
+      <div class="modal-actions"><button class="button button-secondary" value="cancel">Zrušit</button><button class="button button-primary" id="runImport" type="button" disabled>Importovat platné řádky</button></div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/supabase-config.js?v=2"></script>
+  <script type="module" src="/business/app.js"></script>
+</body>
+</html>

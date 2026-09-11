@@ -14,6 +14,7 @@ const files = [
   '404.html',
   '410.html',
   'admin.html',
+  'business.html',
   'rezervace.html',
   'darkovy-poukaz.html',
   'joga-pro-deti-ostrava.html',
@@ -36,6 +37,7 @@ for (const file of files) {
   if (existsSync(join(root, file))) copyFileSync(join(root, file), join(output, file))
 }
 cpSync(join(root, 'assets'), join(output, 'assets'), {recursive: true})
+cpSync(join(root, 'business'), join(output, 'business'), {recursive: true})
 
 // ---------------------------------------------------------------------
 //  OBSAH ZE SPRÁVY
