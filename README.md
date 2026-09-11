@@ -21,6 +21,10 @@ HTML v repozitáři není zástupný text. Homepage se při buildu doplní z
 bez čekání na JavaScript. Proto musí být obě vrstvy srovnané a dohlíží na
 to automatické kontroly.
 
+Text se proto **nemění přímo v HTML** — mění se v `content/obsah.json` nebo ve
+správě. Úprava v `index.html` se při dalším buildu ztratí. (Sanity, která obsah
+dřív dotahovala až v prohlížeči, byla 7. 9. 2026 odstraněna.)
+
 ## Lokální práce
 
 ```bash

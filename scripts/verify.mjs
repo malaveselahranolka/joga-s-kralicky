@@ -115,7 +115,7 @@ const ZAKAZANE = [
   [/sobot(?:a|ní)[^.\n]{0,25}(?:od\s*)?9:30/i, 'neaktuální dětský čas (sobota 9:30)'],
 ]
 
-for (const page of [...PUBLIC_PAGES, 'scripts/seed-content.mjs', 'llms.txt']) {
+for (const page of [...PUBLIC_PAGES, 'content/obsah.json', 'llms.txt']) {
   if (!existsSync(join(root, page))) continue
   const text = read(page)
   for (const [re, popis] of ZAKAZANE) {
@@ -332,8 +332,6 @@ for (const page of ALL_PAGES) {
     if (!file || file.startsWith('/')) continue          // kořenové cesty řeší Vercel
     // href skládaný v JavaScriptu (href="' + fn(x) + '") není cesta k souboru
     if (/[+'`${}]/.test(file)) continue
-    // studio/ vzniká až při buildu (sanity build), v repozitáři není
-    if (file.replace(/\/$/, '') === 'studio') continue
     if (!existsSync(join(root, file))) fail(page, `odkaz na ${file}, který neexistuje`)
   }
 }
@@ -351,18 +349,6 @@ for (const blok of skupiny) {
   for (const cesta of ZAKAZ) {
     if (!blok.includes(`Disallow: ${cesta}`)) fail('robots.txt', `skupina ${ua} nezakazuje ${cesta}`)
   }
-}
-
-// ---------------------------------------------------------------------
-//  7) VIZUÁLNÍ EDITOR NESMÍ ZPÁTKY DO VEŘEJNÉHO BALÍKU
-//     @sanity/visual-editing váží přes 800 kB a potřebuje ho jedině
-//     Studio. Když se sem vrátí napevno psaný import, stahuje si ho
-//     zase každý návštěvník — a nikdo si toho nevšimne, protože web
-//     funguje dál, jen pomalu.
-// ---------------------------------------------------------------------
-const cms = read('src/cms.js')
-if (/^\s*import\s[^\n]*@sanity\/visual-editing/m.test(cms)) {
-  fail('src/cms.js', 'statický import @sanity/visual-editing — musí zůstat dynamický (await import(...))')
 }
 
 // ---------------------------------------------------------------------
