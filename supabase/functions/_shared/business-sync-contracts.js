@@ -79,7 +79,7 @@ export function vercelUrls(from, to, projectId, teamId = '') {
   assertPeriod(from, to);
   const common = { projectId, since: from, until: to, filter: vercelPublicFilter() };
   if (teamId) common.teamId = teamId;
-  const daily = new URLSearchParams({ ...common, by: 'day', limit: '500' });
+  const daily = new URLSearchParams({ ...common, by: 'day', limit: '100' });
   const period = new URLSearchParams(common);
   return {
     daily: `https://api.vercel.com/v1/query/web-analytics/visits/aggregate?${daily}`,

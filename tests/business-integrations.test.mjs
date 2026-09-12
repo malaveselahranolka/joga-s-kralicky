@@ -76,6 +76,7 @@ test('server request builders use bounded periods and read-only reporting endpoi
   assert.match(stripeBalanceUrl('2026-09-01', '2026-09-30', 'txn_1'), /starting_after=txn_1/);
   assert.equal(ga4Bodies('2026-09-01', '2026-09-30').period.dimensions, undefined);
   assert.match(vercelUrls('2026-09-01', '2026-09-30', 'prj_x', 'team_x').daily, /visits%2Faggregate|visits\/aggregate/);
+  assert.match(vercelUrls('2026-09-01', '2026-09-30', 'prj_x', 'team_x').daily, /limit=100/);
   assert.match(metaInsightsUrl('2026-09-01', '2026-09-30', 'act_1'), /\/insights\?/);
   assert.match(tiktokReportUrl('2026-09-01', '2026-09-30', '1'), /report\/integrated\/get/);
   assert.match(googleAdsQuery('2026-09-01', '2026-09-30'), /campaign\.status != 'REMOVED'/);
