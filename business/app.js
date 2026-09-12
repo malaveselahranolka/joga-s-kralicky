@@ -223,7 +223,7 @@ async function saveCost(event) {
     rule_key: $('#costRuleKey').value || crypto.randomUUID(),
     version: Number($('#costVersion').value || 1), name: $('#costName').value.trim(),
     category_id: $('#costCategory').value, amount_minor: amount, currency: 'CZK', recurrence,
-    valid_from: validFrom, valid_to: $('#costValidTo').value || null, day_of_week: new Date(Date.UTC(year, month - 1, day)).getUTCDay(),
+    valid_from: validFrom, valid_to: $('#costValidTo').value || null,
     day_of_month: day, month_of_year: month, rate_basis_points: recurrence === 'percentage' ? Math.round(Number($('#percentageRate').value) * 100) : null,
     percentage_basis: recurrence === 'percentage' ? $('#percentageBasis').value : null,
     cost_class: $('#costClass').value, include_in_operating: $('#costOperating').checked,
