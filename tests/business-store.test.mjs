@@ -2,6 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createBusinessStore } from '../business/data.js';
 
+function memoryStorage() {
+  const values = new Map();
+  return {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, String(value)),
+  };
+}
+
 test('syncProvider invokes the protected business sync function for the selected period', async () => {
   let invocation;
   const client = {
@@ -40,4 +48,23 @@ test('syncProvider preserves the server error code for actionable UI copy', asyn
     store.syncProvider('ga4', { from: '2026-09-01', to: '2026-09-11' }),
     /missing_secret:GA4_PROPERTY_ID/,
   );
+});
+
+test('deleteCost removes every version and occurrence but keeps unrelated demo costs', async () => {
+  const previousStorage = globalThis.localStorage;
+  globalThis.localStorage = memoryStorage();
+  try {
+    const store = createBusinessStore({ demo: true });
+    const impact = await store.costDeletionImpact('rule-rent');
+    assert.deepEqual(impact, { ruleKey: 'rule-rent', name: 'Nájem studia', ruleCount: 1, occurrenceCount: 1, attachmentCount: 0 });
+    await store.deleteCost('rule-rent');
+    const data = await store.load({ from: '2026-09-01', to: '2026-09-30' });
+    assert.equal(data.costRules.some((row) => row.rule_key === 'rule-rent'), false);
+    assert.equal(data.occurrences.some((row) => row.rule_id === 'rule-rent'), false);
+    assert.equal(data.costRules.length, 2);
+    assert.equal(data.changeLog[0].action, 'DELETE');
+  } finally {
+    if (previousStorage === undefined) delete globalThis.localStorage;
+    else globalThis.localStorage = previousStorage;
+  }
 });

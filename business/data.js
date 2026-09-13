@@ -219,6 +219,72 @@ export function createBusinessStore({ client = null, demo = false } = {}) {
     return saved;
   }
 
+  async function costDeletionImpact(ruleKey) {
+    if (!ruleKey) throw new Error('Chybí identifikátor nákladu.');
+    if (demo) {
+      demoData = readDemo();
+      const rules = demoData.costRules.filter((row) => row.rule_key === ruleKey);
+      const ruleIds = new Set(rules.map((row) => row.id));
+      return {
+        ruleKey,
+        name: rules[0]?.name || '',
+        ruleCount: rules.length,
+        occurrenceCount: demoData.occurrences.filter((row) => ruleIds.has(row.rule_id)).length,
+        attachmentCount: rules.filter((row) => row.attachment_path).length,
+      };
+    }
+    const { data: rules, error: rulesError } = await client
+      .from('business_cost_rules')
+      .select('id,name,attachment_path')
+      .eq('rule_key', ruleKey);
+    if (rulesError) throw rulesError;
+    if (!rules?.length) return { ruleKey, name: '', ruleCount: 0, occurrenceCount: 0, attachmentCount: 0 };
+    const { count, error: occurrencesError } = await client
+      .from('business_cost_occurrences')
+      .select('id', { count: 'exact', head: true })
+      .in('rule_id', rules.map((row) => row.id));
+    if (occurrencesError) throw occurrencesError;
+    return {
+      ruleKey,
+      name: rules[0].name,
+      ruleCount: rules.length,
+      occurrenceCount: Number(count || 0),
+      attachmentCount: rules.filter((row) => row.attachment_path).length,
+    };
+  }
+
+  async function deleteCost(ruleKey) {
+    const impact = await costDeletionImpact(ruleKey);
+    if (!impact.ruleCount) throw new Error('Náklad už neexistuje. Obnovte stránku.');
+    if (demo) {
+      const ruleIds = new Set(demoData.costRules.filter((row) => row.rule_key === ruleKey).map((row) => row.id));
+      demoData.occurrences = demoData.occurrences.filter((row) => !ruleIds.has(row.rule_id));
+      demoData.costRules = demoData.costRules.filter((row) => row.rule_key !== ruleKey);
+      for (const id of ruleIds) demoData.changeLog.unshift({ id: Date.now() + demoData.changeLog.length, table_name: 'business_cost_rules', row_id: id, action: 'DELETE', changed_at: new Date().toISOString() });
+      writeDemo(demoData);
+      return impact;
+    }
+    const { data: rules, error: rulesError } = await client
+      .from('business_cost_rules')
+      .select('id,attachment_path')
+      .eq('rule_key', ruleKey);
+    if (rulesError) throw rulesError;
+    const ruleIds = (rules || []).map((row) => row.id);
+    if (!ruleIds.length) throw new Error('Náklad už neexistuje. Obnovte stránku.');
+    const { error: occurrencesError } = await client.from('business_cost_occurrences').delete().in('rule_id', ruleIds);
+    if (occurrencesError) throw occurrencesError;
+    const { data: deletedRules, error: deleteError } = await client.from('business_cost_rules').delete().in('id', ruleIds).select('id');
+    if (deleteError) throw new Error(`Výskyty byly odstraněny, ale pravidlo ne: ${deleteError.message}`);
+    if ((deletedRules || []).length !== ruleIds.length) throw new Error('Některé verze pravidla se nepodařilo odstranit. Obnovte stránku a zkuste to znovu.');
+    const attachmentPaths = [...new Set((rules || []).map((row) => row.attachment_path).filter(Boolean))];
+    let attachmentCleanupFailed = false;
+    if (attachmentPaths.length) {
+      const { error: attachmentError } = await client.storage.from('business-attachments').remove(attachmentPaths);
+      attachmentCleanupFailed = Boolean(attachmentError);
+    }
+    return { ...impact, attachmentCleanupFailed };
+  }
+
   async function attachmentUrl(path) {
     if (demo) throw new Error('Ukázkový doklad nemá skutečný soubor.');
     if (!path) throw new Error('Doklad chybí.');
@@ -329,6 +395,8 @@ export function createBusinessStore({ client = null, demo = false } = {}) {
     hasAccess,
     load,
     saveCost,
+    costDeletionImpact,
+    deleteCost,
     markOccurrencePaid,
     importLedger,
     saveBudget: (row) => saveRecord('budgets', 'business_budgets', row),

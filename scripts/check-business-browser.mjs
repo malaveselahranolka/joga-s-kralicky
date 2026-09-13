@@ -135,6 +135,26 @@ try {
   assert(await evaluate('JSON.parse(localStorage.getItem("jsk:business-demo:v1")).costRules.some((row) => row.attachment_path === "demo/doklad.pdf")'), 'Odkaz na doklad se neuložil.');
   assert(await evaluate('JSON.parse(localStorage.getItem("jsk:business-demo:v1")).occurrences.some((row) => row.amount_minor === 12300)'), 'Výskyt nákladu se nevygeneroval.');
   await evaluate(`(() => {
+    const rule = JSON.parse(localStorage.getItem('jsk:business-demo:v1')).costRules.find((row) => row.name === 'Testovací náklad');
+    document.querySelector('[data-action="delete-cost"][data-id="' + rule.id + '"]').click();
+  })()`);
+  await waitFor('document.querySelector("#deleteCostDialog")?.open && !document.querySelector("#confirmDeleteCost").disabled', 'Potvrzení smazání se neotevřelo.');
+  assert(await evaluate('document.querySelector("#deleteCostSummary").textContent.includes("1 pravidlo") && document.querySelector("#deleteCostSummary").textContent.includes("1 výskyt")'), 'Potvrzení neukázalo rozsah smazání.');
+  assert(await evaluate('document.activeElement?.id === "cancelDeleteCost"'), 'Potvrzení nezačalo na bezpečné akci.');
+  await evaluate('document.querySelector("#cancelDeleteCost").click()');
+  await waitFor('document.activeElement?.dataset.action === "delete-cost"', 'Po zrušení se fokus nevrátil na původní akci.');
+  assert(await evaluate('JSON.parse(localStorage.getItem("jsk:business-demo:v1")).costRules.some((row) => row.name === "Testovací náklad")'), 'Zrušení omylem smazalo náklad.');
+  await evaluate(`(() => {
+    const rule = JSON.parse(localStorage.getItem('jsk:business-demo:v1')).costRules.find((row) => row.name === 'Testovací náklad');
+    document.querySelector('[data-action="delete-cost"][data-id="' + rule.id + '"]').click();
+  })()`);
+  await waitFor('!document.querySelector("#confirmDeleteCost").disabled', 'Opakované potvrzení smazání se nepřipravilo.');
+  await evaluate('document.querySelector("#confirmDeleteCost").click()');
+  await waitFor('document.querySelector("#toast")?.textContent.includes("včetně výskytů smazán")', 'Smazání nebylo potvrzeno.');
+  assert(await evaluate('document.activeElement?.dataset.action === "open-cost"'), 'Po smazání se fokus nepřesunul na Přidat náklad.');
+  assert(await evaluate('!JSON.parse(localStorage.getItem("jsk:business-demo:v1")).costRules.some((row) => row.name === "Testovací náklad")'), 'Pravidlo nákladu zůstalo po smazání.');
+  assert(await evaluate('!JSON.parse(localStorage.getItem("jsk:business-demo:v1")).occurrences.some((row) => row.amount_minor === 12300)'), 'Výskyt nákladu zůstal po smazání.');
+  await evaluate(`(() => {
     document.querySelector('[data-action=open-import]').click();
     const input = document.querySelector('#csvFile');
     const transfer = new DataTransfer();
@@ -147,7 +167,7 @@ try {
   await waitFor('document.querySelector("#toast")?.textContent.includes("Import:")', 'CSV import nebyl potvrzen.');
   assert(await evaluate('JSON.parse(localStorage.getItem("jsk:business-demo:v1")).ledger.some((row) => row.external_id === "row-1")'), 'CSV pohyb se neuložil.');
   assert(errors.length === 0, `Chyby v konzoli: ${errors.join(' | ')}`);
-  console.log('✓ Business prohlížeč: 8 sekcí, graf, mobil, uložený pohled, náklad a CSV import prošly.');
+  console.log('✓ Business prohlížeč: 8 sekcí, graf, mobil, uložený pohled, vytvoření i smazání nákladu a CSV import prošly.');
 } finally {
   protocol.socket.close();
   chrome.kill();

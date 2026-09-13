@@ -168,6 +168,16 @@
     </form>
   </dialog>
 
+  <dialog class="modal" id="deleteCostDialog" aria-labelledby="deleteCostTitle" aria-describedby="deleteCostSummary deleteCostWarning">
+    <form method="dialog" id="deleteCostForm">
+      <div class="modal-head"><div><p class="section-label">Nevratná akce</p><h2 id="deleteCostTitle">Smazat náklad?</h2></div><button class="icon-button" value="cancel" aria-label="Zavřít">×</button></div>
+      <p id="deleteCostSummary">Zjišťuji rozsah mazání…</p>
+      <p class="notice notice-error delete-warning" id="deleteCostWarning">Náklad, všechny jeho verze a vytvořené výskyty zmizí. Akci nelze vrátit. Auditní záznam zůstane.</p>
+      <p class="form-message" id="deleteCostMessage" role="alert"></p>
+      <div class="modal-actions"><button class="button button-secondary" id="cancelDeleteCost" value="cancel">Nechat náklad</button><button class="button button-danger" id="confirmDeleteCost" type="button" disabled>Smazat náklad</button></div>
+    </form>
+  </dialog>
+
   <dialog class="modal modal-wide" id="importDialog" aria-labelledby="importTitle">
     <form method="dialog" id="importForm">
       <div class="modal-head"><div><p class="section-label">Peněžní pohyby</p><h2 id="importTitle">Import CSV</h2></div><button class="icon-button" value="cancel" aria-label="Zavřít">×</button></div>

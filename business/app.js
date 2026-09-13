@@ -5,6 +5,7 @@ import { renderView, viewMeta } from './ui.js';
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
+const countLabel = (value, one, few, other) => `${value} ${{ one, few, other }[new Intl.PluralRules('cs-CZ').select(value)] || other}`;
 const localHost = ['localhost', '127.0.0.1'].includes(location.hostname);
 const params = new URLSearchParams(location.search);
 const demo = params.get('demo') === '1' && localHost;
@@ -19,6 +20,9 @@ let currentData = null;
 let importRows = [];
 let toastTimer;
 let chartMetric = 'result';
+let pendingCostDelete = null;
+let costDeleteTrigger = null;
+let costDeleteCompleted = false;
 
 function periodFromUrl() {
   const liveParams = new URLSearchParams(location.search);
@@ -237,6 +241,55 @@ async function saveCost(event) {
   finally { $('#saveCost').disabled = false; }
 }
 
+async function openDeleteCostDialog(rule, trigger) {
+  if (!rule) return;
+  pendingCostDelete = null;
+  costDeleteTrigger = trigger;
+  costDeleteCompleted = false;
+  $('#deleteCostSummary').textContent = `Náklad „${rule.name}“: zjišťuji počet verzí a výskytů…`;
+  $('#deleteCostMessage').textContent = '';
+  $('#confirmDeleteCost').disabled = true;
+  $('#confirmDeleteCost').removeAttribute('aria-busy');
+  $('#deleteCostDialog').showModal();
+  $('#cancelDeleteCost').focus();
+  try {
+    const impact = await store.costDeletionImpact(rule.rule_key);
+    if (!$('#deleteCostDialog').open || costDeleteTrigger !== trigger) return;
+    if (!impact.ruleCount) throw new Error('Náklad už neexistuje. Obnovte stránku.');
+    pendingCostDelete = impact;
+    const versions = countLabel(impact.ruleCount, 'pravidlo', 'verze pravidla', 'verzí pravidla');
+    const occurrences = countLabel(impact.occurrenceCount, 'výskyt', 'výskyty', 'výskytů');
+    const attachments = impact.attachmentCount ? ` a ${countLabel(impact.attachmentCount, 'soukromý doklad', 'soukromé doklady', 'soukromých dokladů')}` : '';
+    $('#deleteCostSummary').textContent = `„${impact.name}“: smaže se ${versions}, ${occurrences}${attachments}.`;
+    $('#confirmDeleteCost').disabled = false;
+  } catch (error) {
+    $('#deleteCostMessage').textContent = error.message;
+  }
+}
+
+async function confirmDeleteCost() {
+  if (!pendingCostDelete) return;
+  const button = $('#confirmDeleteCost');
+  button.disabled = true;
+  button.setAttribute('aria-busy', 'true');
+  $('#cancelDeleteCost').disabled = true;
+  $('#deleteCostMessage').textContent = '';
+  try {
+    const result = await store.deleteCost(pendingCostDelete.ruleKey);
+    costDeleteCompleted = true;
+    $('#deleteCostDialog').close();
+    await load();
+    $('[data-action="open-cost"]')?.focus();
+    toast(result.attachmentCleanupFailed ? 'Náklad smazán. Soukromý doklad se nepodařilo odstranit.' : 'Náklad včetně výskytů smazán.');
+  } catch (error) {
+    $('#deleteCostMessage').textContent = error.message;
+  } finally {
+    button.disabled = false;
+    button.removeAttribute('aria-busy');
+    $('#cancelDeleteCost').disabled = false;
+  }
+}
+
 async function readCsv(file) {
   $('#importMessage').textContent = '';
   const parsed = parseCsv(await file.text());
@@ -279,6 +332,7 @@ async function handleViewAction(target) {
   if (action === 'retry') return load();
   if (action === 'open-cost') return openCostDialog();
   if (action === 'edit-cost') return openCostDialog(currentData.costRules.find((row) => row.id === button.dataset.id));
+  if (action === 'delete-cost') return openDeleteCostDialog(currentData.costRules.find((row) => row.id === button.dataset.id), button);
   if (action === 'chart-mode') { chartMetric = button.dataset.mode; return render(); }
   if (action === 'open-import') { $('#importForm').reset(); $('#importMapping').hidden = true; $('#importPreview').hidden = true; $('#runImport').disabled = true; $('#importMessage').textContent = ''; return $('#importDialog').showModal(); }
   if (action === 'print') return window.print();
@@ -331,6 +385,12 @@ $('#openPeriod').addEventListener('click', openPeriodDialog);
 $('#periodPreset').addEventListener('change', async (event) => { const next = presetPeriod(event.target.value); if (!next) return openPeriodDialog(); period = next; setUrl({ from: period.from, to: period.to }); await load(); });
 $('#periodForm').addEventListener('submit', async (event) => { event.preventDefault(); const next = { from: $('#periodFrom').value, to: $('#periodTo').value }; if (!next.from || !next.to || next.from > next.to) return void ($('#periodMessage').textContent = 'Konec období musí být stejný nebo pozdější než začátek.'); period = next; $('#periodDialog').close(); setUrl({ from: period.from, to: period.to }); await load(); });
 $('#costRecurrence').addEventListener('change', togglePercentageFields); $('#costForm').addEventListener('submit', saveCost);
+$('#confirmDeleteCost').addEventListener('click', confirmDeleteCost);
+$('#deleteCostDialog').addEventListener('close', () => {
+  if (!costDeleteCompleted) costDeleteTrigger?.focus();
+  pendingCostDelete = null;
+  costDeleteTrigger = null;
+});
 $('#csvFile').addEventListener('change', (event) => event.target.files[0] && readCsv(event.target.files[0]));
 $('#importMapping').addEventListener('change', updateImportPreview); $('#runImport').addEventListener('click', runImport);
 $('#viewContent').addEventListener('click', (event) => handleViewAction(event.target).catch((error) => toast(error.message)));
