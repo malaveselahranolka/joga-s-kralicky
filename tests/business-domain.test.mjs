@@ -9,6 +9,7 @@ import {
   mergeLedgerEntries,
   proposeAdBudget,
   recommendChannels,
+  pragueDate,
   recurrenceOccurrences,
   trafficSummary,
 } from '../business/domain.js';
@@ -156,4 +157,109 @@ test('CSV parser keeps quoted delimiters and maps Czech columns', () => {
   assert.equal(mapped[0].valid, true);
   assert.equal(mapped[0].entry.amount_minor, 100_050);
   assert.equal(mapped[0].entry.kind, 'expense');
+});
+
+// ---------------------------------------------------------------------
+//  Regrese k auditu v docs/business-audit.md. Každý test drží jednu
+//  konkrétní chybu, která se v sekci našla, aby se nevrátila.
+// ---------------------------------------------------------------------
+
+test('regrese: jedna rezervace bez částky je jedna chybějící částka', () => {
+  // Rezervace spadala do období lekcí i do období úhrad, a počítala se dvakrát.
+  const result = computeFinancials({
+    lessons: [{ id: 'l1', starts_at: '2026-09-10T08:00:00Z', status: 'active' }],
+    bookings: [{ id: 'b1', lesson_id: 'l1', status: 'confirmed', payment_status: 'paid', payment_amount: null, paid_at: '2026-09-09T10:00:00Z', spots: 1, email: 'host@example.cz' }],
+  }, { from: '2026-09-01', to: '2026-09-30' });
+  assert.equal(result.missingPaymentAmounts, 1);
+  assert.equal(result.completeness, 'partial');
+});
+
+test('regrese: čekající pohyb se nepočítá, stejně jako v SQL souhrnu', () => {
+  const period = { from: '2026-09-01', to: '2026-09-30' };
+  const pending = computeFinancials({
+    ledger: [{ id: 'f1', source: 'stripe', external_id: 'fee_1', kind: 'fee', status: 'pending', amount_minor: 50_000, occurred_at: '2026-09-05T10:00:00Z' }],
+  }, period);
+  assert.equal(pending.feesMinor, 0, 'business_period_summary bere jen status = posted');
+  const posted = computeFinancials({
+    ledger: [{ id: 'f1', source: 'stripe', external_id: 'fee_1', kind: 'fee', status: 'posted', amount_minor: 50_000, occurred_at: '2026-09-05T10:00:00Z' }],
+  }, period);
+  assert.equal(posted.feesMinor, 50_000);
+  // Sloupec má v databázi default 'posted'; chybějící hodnota ho musí dědit.
+  const implicit = computeFinancials({
+    ledger: [{ id: 'f2', source: 'stripe', external_id: 'fee_2', kind: 'fee', amount_minor: 1_000, occurred_at: '2026-09-05T10:00:00Z' }],
+  }, period);
+  assert.equal(implicit.feesMinor, 1_000);
+});
+
+test('regrese: cizí měna se nesčítá s korunami a hlásí se jako neúplnost', () => {
+  const result = computeFinancials({
+    ledger: [
+      { id: 'e1', source: 'stripe', external_id: 'eur_1', kind: 'fee', status: 'posted', currency: 'EUR', amount_minor: 90_000, occurred_at: '2026-09-05T10:00:00Z' },
+      { id: 'e2', source: 'stripe', external_id: 'czk_1', kind: 'fee', status: 'posted', currency: 'CZK', amount_minor: 10_000, occurred_at: '2026-09-05T10:00:00Z' },
+    ],
+  }, { from: '2026-09-01', to: '2026-09-30' });
+  assert.equal(result.feesMinor, 10_000);
+  assert.equal(result.foreignCurrencyEntries, 1);
+  assert.equal(result.completeness, 'partial');
+});
+
+test('regrese: nulové tržby kanálů nevyrobí NaN rozdělení', () => {
+  const result = recommendChannels(100_000, [
+    { channel: 'Meta', spend_minor: 50_000, revenue_minor: 0, purchases: 8 },
+    { channel: 'Sklik', spend_minor: 30_000, revenue_minor: 0, purchases: 6 },
+  ]);
+  assert.deepEqual(result.allocations, []);
+  assert.equal(result.unallocatedMinor, 100_000);
+  assert.equal(result.evidence, 'experiment');
+});
+
+test('regrese: CSV znaménko je volba, ne dohad', () => {
+  const rows = [{ Datum: '01.09.2026', 'Částka': '1 000', Popis: 'Platba za lekci' }];
+  const mapping = { date: 'Datum', amount: 'Částka', note: 'Popis', kind: '', externalId: '' };
+  // Bankovní i Stripe export píše příjem kladně — to je výchozí konvence.
+  assert.equal(mapCsvRows(rows, { ...mapping, signConvention: 'positive_income' })[0].entry.kind, 'income');
+  assert.equal(mapCsvRows(rows, { ...mapping, signConvention: 'positive_expense' })[0].entry.kind, 'expense');
+  // Výslovný typ ve sloupci má přednost, i s diakritikou.
+  const typed = [{ Datum: '01.09.2026', 'Částka': '500', Typ: 'převod', Popis: '' }];
+  assert.equal(mapCsvRows(typed, { ...mapping, kind: 'Typ' })[0].entry.kind, 'transfer');
+});
+
+test('regrese: otisk importu nezávisí na pořadí řádků v souboru', () => {
+  const mapping = { date: 'Datum', amount: 'Částka', note: 'Popis', kind: '', externalId: '' };
+  const a = { Datum: '01.09.2026', 'Částka': '100', Popis: 'A' };
+  const b = { Datum: '02.09.2026', 'Částka': '200', Popis: 'B' };
+  const forward = mapCsvRows([a, b], mapping).map((row) => row.entry.import_fingerprint);
+  const reversed = mapCsvRows([b, a], mapping).map((row) => row.entry.import_fingerprint);
+  assert.deepEqual([...forward].sort(), [...reversed].sort(), 'přeskládaný export se nesmí naimportovat znovu');
+  // Dva opravdu shodné pohyby v jednom souboru zůstanou dva.
+  const twins = mapCsvRows([a, { ...a }], mapping).map((row) => row.entry.import_fingerprint);
+  assert.notEqual(twins[0], twins[1]);
+});
+
+test('regrese: pražský den platí i kolem půlnoci a v zimě', () => {
+  const mapping = { date: 'Datum', amount: 'Částka', note: 'Popis', kind: '', externalId: '' };
+  const winter = mapCsvRows([{ Datum: '15.01.2026', 'Částka': '100', Popis: '' }], mapping)[0].entry.occurred_at;
+  assert.equal(pragueDate(winter), '2026-01-15', 'zimní čas má posun +01:00');
+  const summer = mapCsvRows([{ Datum: '15.07.2026', 'Částka': '100', Popis: '' }], mapping)[0].entry.occurred_at;
+  assert.equal(pragueDate(summer), '2026-07-15');
+});
+
+test('regrese: lekce po půlnoci UTC patří do pražského dne', () => {
+  // Lekce 30. 9. ve 22:30 UTC je v Praze až 1. 10. — a musí spadnout do října.
+  const source = {
+    lessons: [{ id: 'l1', starts_at: '2026-09-30T22:30:00Z', status: 'active' }],
+    bookings: [{ id: 'b1', lesson_id: 'l1', status: 'confirmed', payment_status: 'paid', payment_amount: 49_900, paid_at: '2026-09-30T22:30:00Z', spots: 1, email: 'host@example.cz' }],
+  };
+  assert.equal(computeFinancials(source, { from: '2026-09-01', to: '2026-09-30' }).recognizedRevenueMinor, 0);
+  assert.equal(computeFinancials(source, { from: '2026-10-01', to: '2026-10-31' }).recognizedRevenueMinor, 49_900);
+});
+
+test('regrese: cizoměnový náklad mimo období nekazí úplnost období', () => {
+  const source = {
+    occurrences: [
+      { id: 'o1', occurrence_key: 'k1', status: 'paid', currency: 'EUR', amount_minor: 5_000, period_start: '2026-03-01', scheduled_on: '2026-03-01', paid_on: '2026-03-01' },
+    ],
+  };
+  assert.equal(computeFinancials(source, { from: '2026-09-01', to: '2026-09-30' }).completeness, 'complete');
+  assert.equal(computeFinancials(source, { from: '2026-03-01', to: '2026-03-31' }).foreignCurrencyEntries, 1);
 });

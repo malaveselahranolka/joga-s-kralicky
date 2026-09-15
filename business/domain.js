@@ -19,6 +19,10 @@ export function parseMoneyToMinor(value) {
   return Number.isFinite(amount) ? Math.round(amount * 100) : null;
 }
 
+export function pragueToday() {
+  return pragueDate(new Date());
+}
+
 export function pragueDate(value) {
   if (!value) return null;
   if (/^\d{4}-\d{2}-\d{2}$/.test(String(value))) return String(value);
@@ -198,6 +202,11 @@ export function buyerStats(bookings, period) {
   return { buyers: buyers.size, paidSpots: spots };
 }
 
+// Vše se počítá v jedné měně. Cizí měna se nesčítá s korunami — zůstane
+// stranou jako výslovná neúplnost, dokud nebude převod.
+export const BASE_CURRENCY = 'CZK';
+const isBaseCurrency = (row) => String(row.currency || BASE_CURRENCY).toUpperCase() === BASE_CURRENCY;
+
 export function computeFinancials({ bookings = [], lessons = [], vouchers = [], ledger = [], occurrences = [] }, period) {
   const lessonById = new Map(lessons.map((lesson) => [lesson.id, lesson]));
   const paidBookings = bookings.filter((booking) => booking.status !== 'cancelled' && booking.payment_status === 'paid');
@@ -205,20 +214,22 @@ export function computeFinancials({ bookings = [], lessons = [], vouchers = [], 
   let bookingCashMinor = 0;
   let paidSpots = 0;
   let missingPaymentAmounts = 0;
+  let foreignCurrencyEntries = 0;
 
   for (const booking of paidBookings) {
     const hasAmount = booking.payment_amount !== null && booking.payment_amount !== undefined && booking.payment_amount !== '';
     const amount = hasAmount ? Number(booking.payment_amount) : NaN;
     const lesson = lessonById.get(booking.lesson_id);
-    if (lesson && inPeriod(lesson.starts_at, period)) {
+    const inRecognized = Boolean(lesson && inPeriod(lesson.starts_at, period));
+    const inCash = inPeriod(booking.paid_at, period);
+    if (inRecognized) {
       paidSpots += Number(booking.spots || 0);
       if (Number.isFinite(amount)) recognizedRevenueMinor += amount;
-      else missingPaymentAmounts += 1;
     }
-    if (inPeriod(booking.paid_at, period)) {
-      if (Number.isFinite(amount)) bookingCashMinor += amount;
-      else missingPaymentAmounts += 1;
-    }
+    if (inCash && Number.isFinite(amount)) bookingCashMinor += amount;
+    // Jedna rezervace bez částky je jedna chybějící částka, i když spadá
+    // do období lekcí i do období úhrad zároveň.
+    if (!Number.isFinite(amount) && (inRecognized || inCash)) missingPaymentAmounts += 1;
   }
 
   const voucherRows = uniqueBy(vouchers, (voucher) => voucher.id || voucher.code);
@@ -229,7 +240,16 @@ export function computeFinancials({ bookings = [], lessons = [], vouchers = [], 
   const actualOccurrences = uniqueBy(
     occurrences.filter((row) => row.status === 'paid'),
     (row) => row.occurrence_key || row.id,
-  );
+  ).filter((row) => {
+    if (isBaseCurrency(row)) return true;
+    // Počítá se jen cizí měna, která do období opravdu spadá — stejně jako
+    // v business_period_summary. Jinak by starý cizoměnový náklad shodil
+    // úplnost období, se kterým nemá nic společného.
+    const touchesPeriod = inPeriod(row.period_start || row.scheduled_on, period)
+      || inPeriod(row.paid_on || row.scheduled_on, period);
+    if (touchesPeriod) foreignCurrencyEntries += 1;
+    return false;
+  });
   const occurrenceOperating = actualOccurrences
     .filter((row) => row.include_in_operating !== false && inPeriod(row.period_start || row.scheduled_on, period))
     .reduce((sum, row) => sum + Number(row.amount_minor || 0), 0);
@@ -243,7 +263,10 @@ export function computeFinancials({ bookings = [], lessons = [], vouchers = [], 
   let adSpendMinor = 0;
   let otherExpensesMinor = 0;
   for (const entry of uniqueBy(ledger, ledgerIdentity)) {
-    if (!inPeriod(entry.occurred_at, period) || entry.status === 'void') continue;
+    // Stejné pravidlo jako business_period_summary v SQL: započítá se jen
+    // vyrovnaný pohyb. Čekající ani stornovaný do výsledku nepatří.
+    if (!inPeriod(entry.occurred_at, period) || (entry.status ?? 'posted') !== 'posted') continue;
+    if (!isBaseCurrency(entry)) { foreignCurrencyEntries += 1; continue; }
     const amount = Math.abs(Number(entry.amount_minor || 0));
     if (entry.kind === 'transfer') continue;
     if (entry.kind === 'income' && !entry.booking_id && !entry.voucher_id) otherIncomeMinor += amount;
@@ -275,7 +298,8 @@ export function computeFinancials({ bookings = [], lessons = [], vouchers = [], 
     feesMinor,
     adSpendMinor,
     missingPaymentAmounts,
-    completeness: missingPaymentAmounts ? 'partial' : 'complete',
+    foreignCurrencyEntries,
+    completeness: missingPaymentAmounts || foreignCurrencyEntries ? 'partial' : 'complete',
   };
 }
 
@@ -306,6 +330,11 @@ export function recommendChannels(budgetMinor, channels, { minimumPurchases = 5 
   }
   const weighted = eligible.map((row) => ({ ...row, score: Number(row.revenue_minor) / Number(row.spend_minor) * Math.sqrt(Number(row.purchases)) }));
   const totalScore = weighted.reduce((sum, row) => sum + row.score, 0);
+  // Samé nulové tržby znamenají nulový součet vah. Dělení jím by vyrobilo NaN,
+  // který by se v kartě zobrazil jako „— Kč" a přitom s razítkem „měřeno".
+  if (!Number.isFinite(totalScore) || totalScore <= 0) {
+    return { allocations: [], unallocatedMinor: Math.max(0, Number(budgetMinor || 0)), evidence: 'experiment' };
+  }
   let used = 0;
   const allocations = weighted.map((row, index) => {
     const amount = index === weighted.length - 1

@@ -40,9 +40,10 @@ export function createDemoData() {
     { id: 'rule-rent', rule_key: 'rule-rent', version: 1, name: 'Nájem studia', category_id: 'category-1', amount_minor: 700_000, recurrence: 'monthly', valid_from: '2026-01-01', day_of_month: 1, cost_class: 'operation', include_in_operating: true, status: 'active' },
     { id: 'rule-clean', rule_key: 'rule-clean', version: 1, name: 'Úklid', category_id: 'category-3', amount_minor: 120_000, recurrence: 'monthly', valid_from: '2026-01-01', day_of_month: 5, cost_class: 'operation', include_in_operating: true, status: 'active' },
     { id: 'rule-rabbits', rule_key: 'rule-rabbits', version: 1, name: 'Péče o králíčky', category_id: 'category-4', amount_minor: 180_000, recurrence: 'monthly', valid_from: '2026-01-01', day_of_month: 7, cost_class: 'operation', include_in_operating: true, status: 'active' },
+    { id: 'rule-mat', rule_key: 'rule-mat', version: 1, name: 'Materiál na místo', category_id: 'category-5', amount_minor: 7_000, recurrence: 'per_paid_spot', valid_from: '2026-01-01', cost_class: 'operation', include_in_operating: true, status: 'active' },
   ];
 
-  const occurrences = costRules.map((rule) => ({
+  const occurrences = costRules.filter((rule) => rule.recurrence === 'monthly').map((rule) => ({
     id: `occ-${rule.id}`,
     rule_id: rule.id,
     occurrence_key: `${rule.rule_key}:1:2026-09`,
@@ -74,14 +75,19 @@ export function createDemoData() {
     ],
     budgets: [{ id: 'budget-1', budget_key: 'budget-sep', version: 1, kind: 'advertising', period_start: '2026-09-01', period_end: '2026-09-30', basis_period_start: '2026-08-01', basis_period_end: '2026-08-31', basis_result_minor: 1_800_000, rate_basis_points: 1500, proposed_minor: 270_000, accepted_minor: 300_000, carryover_minor: 0, status: 'accepted' }],
     campaigns: [
-      { id: 'campaign-meta', name: 'Zářijová videa', channel: 'Meta', starts_on: '2026-09-01', ends_on: '2026-09-30', status: 'active', spend_minor: 200_000, revenue_minor: 648_700, purchases: 13 },
-      { id: 'campaign-sklik', name: 'Hledání Ostrava', channel: 'Sklik', starts_on: '2026-09-01', ends_on: '2026-09-30', status: 'active', spend_minor: 80_000, revenue_minor: 249_500, purchases: 5 },
+      { id: 'campaign-meta', source: 'meta_ads', external_id: 'meta-1', name: 'Zářijová videa', channel: 'Meta Ads', starts_on: '2026-09-01', ends_on: '2026-09-30', status: 'active' },
+      { id: 'campaign-sklik', source: 'sklik', external_id: 'sklik-1', name: 'Hledání Ostrava', channel: 'Sklik', starts_on: '2026-09-01', ends_on: '2026-09-30', status: 'active' },
     ],
     posts: [
       { id: 'post-1', channel: 'Instagram', published_at: iso(2, 19), format: 'Reel', topic_tags: ['králíčci','zákulisí'], paid_support: true, metrics: { views: 12800, saves: 94, interactions: 643 }, measurement_window_hours: 168 },
       { id: 'post-2', channel: 'Facebook', published_at: iso(5, 18), format: 'Video', topic_tags: ['lekce','atmosféra'], paid_support: false, metrics: { views: 3400, saves: 21, interactions: 184 }, measurement_window_hours: 168 },
     ],
-    dailyMetrics: Array.from({ length: 10 }, (_, index) => ({ id: `metric-${index + 1}`, source: 'vercel', metric_date: `2026-09-${String(index + 1).padStart(2, '0')}`, dimension_key: 'public-only', complete: true, metrics: { sessions: 52 + index * 3, views: 78 + index * 5 } })),
+    dailyMetrics: [
+      ...Array.from({ length: 10 }, (_, index) => ({ id: `metric-${index + 1}`, source: 'vercel', metric_date: `2026-09-${String(index + 1).padStart(2, '0')}`, dimension_key: 'public-only', complete: true, metrics: { sessions: 52 + index * 3, views: 78 + index * 5 } })),
+      // Kampaňové metriky žijí přesně tam, kam je ukládá business-sync.
+      ...Array.from({ length: 10 }, (_, index) => ({ id: `metric-meta-${index + 1}`, source: 'meta_ads', metric_date: `2026-09-${String(index + 1).padStart(2, '0')}`, dimension_key: 'campaign:meta-1', complete: true, metrics: { spend_minor: 20_000, impressions: 3100 + index * 40, clicks: 74 + index, purchases: index % 4 === 0 ? 2 : 1 } })),
+      ...Array.from({ length: 10 }, (_, index) => ({ id: `metric-sklik-${index + 1}`, source: 'sklik', metric_date: `2026-09-${String(index + 1).padStart(2, '0')}`, dimension_key: 'campaign:sklik-1', complete: true, metrics: { spend_minor: 8_000, impressions: 900 + index * 12, clicks: 31 + index, conversions: index % 2 === 0 ? 1 : 0 } })),
+    ],
     periodMetrics: [{ id: 'period-1', source: 'ga4', period_start: '2026-09-01', period_end: '2026-09-10', dimension_key: 'public-only', complete: true, metrics: { users: 417, sessions: 655, views: 1015 }, methodology: 'Agregace za celé období; interní cesty vyloučené.' }],
     connections: [
       { id: 'connection-supabase', provider: 'supabase', status: 'connected', external_account_label: 'Rezervace', last_success_at: iso(11, 8) },

@@ -24,6 +24,8 @@ export function stripeBalanceUrl(from, to, cursor = '') {
   return `https://api.stripe.com/v1/balance_transactions?${params}`;
 }
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export function mapStripeBalance(row) {
   const type = String(row?.type || '');
   const amount = Number(row?.amount);
@@ -38,7 +40,10 @@ export function mapStripeBalance(row) {
     source: 'stripe', external_id: row.id, source_created_at: new Date(row.created * 1000).toISOString(),
     source_updated_at: new Date(row.created * 1000).toISOString(), occurred_at: new Date(row.created * 1000).toISOString(),
     currency: String(row.currency || 'czk').toUpperCase(), amount_minor: Math.abs(Math.round(amount)), kind,
-    status: row.status === 'pending' ? 'pending' : 'posted', booking_id: source?.metadata?.booking_id || null,
+    status: row.status === 'pending' ? 'pending' : 'posted',
+    // Metadata Stripu nejsou zárukou, že rezervace existuje. Neověřené ID by
+    // porušilo cizí klíč a shodilo celý běh synchronizace.
+    booking_id: UUID_PATTERN.test(String(source?.metadata?.booking_id || '')) ? source.metadata.booking_id : null,
     source_url: `https://dashboard.stripe.com/balance/history/${row.id}`, note: row.description || type,
   };
 }

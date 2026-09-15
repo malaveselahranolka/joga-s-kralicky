@@ -538,9 +538,16 @@ begin
   ),
   cost_values as (
     select
-      coalesce(sum(amount_minor) filter (where status = 'paid' and include_in_operating and period_start between p_from and p_to), 0)::bigint as operating,
-      coalesce(sum(amount_minor) filter (where status = 'paid' and coalesce(paid_on, scheduled_on) between p_from and p_to), 0)::bigint as cash
+      coalesce(sum(amount_minor) filter (where status = 'paid' and include_in_operating and period_start between p_from and p_to and currency = 'CZK'), 0)::bigint as operating,
+      coalesce(sum(amount_minor) filter (where status = 'paid' and coalesce(paid_on, scheduled_on) between p_from and p_to and currency = 'CZK'), 0)::bigint as cash,
+      count(*) filter (where status = 'paid' and currency <> 'CZK'
+        and (period_start between p_from and p_to or coalesce(paid_on, scheduled_on) between p_from and p_to))::bigint as foreign_rows
     from public.business_cost_occurrences
+  ),
+  -- Cizí měna se nesčítá s korunami. Zůstane stranou jako neúplnost.
+  ledger_period as (
+    select * from public.business_ledger_entries
+    where status = 'posted' and (occurred_at at time zone 'Europe/Prague')::date between p_from and p_to
   ),
   ledger_values as (
     select
@@ -549,8 +556,10 @@ begin
       coalesce(sum(amount_minor) filter (where kind = 'fee' and cost_occurrence_id is null), 0)::bigint as fees,
       coalesce(sum(amount_minor) filter (where kind = 'ad_spend' and cost_occurrence_id is null), 0)::bigint as ads,
       coalesce(sum(amount_minor) filter (where kind = 'expense' and cost_occurrence_id is null), 0)::bigint as expenses
-    from public.business_ledger_entries
-    where status = 'posted' and (occurred_at at time zone 'Europe/Prague')::date between p_from and p_to
+    from ledger_period where currency = 'CZK'
+  ),
+  foreign_values as (
+    select count(*)::bigint as rows from ledger_period where currency <> 'CZK'
   )
   select jsonb_build_object(
     'recognized_revenue_minor', b.revenue,
@@ -564,9 +573,14 @@ begin
     'fees_minor', x.fees,
     'ad_spend_minor', x.ads,
     'missing_payment_amounts', b.missing_amounts,
-    'complete', b.missing_amounts = 0
+    'foreign_currency_entries', f.rows + c.foreign_rows,
+    -- Přístup k business tabulkám neznamená přístup k rezervacím. Když druhý
+    -- chybí, RLS vrátí prázdno bez chyby a součty by vypadaly jako nula.
+    'source_access', public.is_owner(),
+    'complete', b.missing_amounts = 0 and f.rows + c.foreign_rows = 0 and public.is_owner()
   ) into result
-  from booking_values b cross join voucher_values v cross join cost_values c cross join ledger_values x;
+  from booking_values b cross join voucher_values v cross join cost_values c
+    cross join ledger_values x cross join foreign_values f;
   return result;
 end;
 $$;
@@ -582,8 +596,11 @@ set search_path = public
 as $$
 begin
   if new.version > 1 then
+    -- valid_to nesmí předběhnout valid_from předchozí verze, jinak by nová
+    -- verze se zpětným datem spadla na check (valid_to >= valid_from).
     update public.business_cost_rules
-      set status = 'archived', valid_to = least(coalesce(valid_to, new.valid_from - 1), new.valid_from - 1)
+      set status = 'archived',
+          valid_to = greatest(valid_from, least(coalesce(valid_to, new.valid_from - 1), new.valid_from - 1))
       where rule_key = new.rule_key and version < new.version and status = 'active';
   end if;
   return new;

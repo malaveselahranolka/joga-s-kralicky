@@ -1,4 +1,4 @@
-import { computeFinancials, ledgerIdentity, recurrenceOccurrences } from './domain.js';
+import { computeFinancials, ledgerIdentity, pragueToday, recurrenceOccurrences } from './domain.js';
 import { createDemoData } from './demo-data.js';
 
 const DEMO_KEY = 'jsk:business-demo:v1';
@@ -17,17 +17,19 @@ function writeDemo(data) {
   localStorage.setItem(DEMO_KEY, JSON.stringify(data));
 }
 
-function camelizeRow(row) {
-  return row;
-}
-
-async function queryOrError(name, promise, errors) {
+async function queryOrError(name, promise, errors, limit = null) {
   const result = await promise;
   if (result.error) {
-    errors.push({ source: name, message: result.error.message, code: result.error.code });
+    errors.push({ source: name, message: result.error.message, code: result.error.code, kind: 'query' });
     return [];
   }
-  return result.data || [];
+  const rows = result.data || [];
+  // Dotaz s limitem, který se limitu dotkl, vrátil neúplnou historii. Bez
+  // upozornění by starší období tiše ukazovala nižší čísla.
+  if (limit && rows.length >= limit) {
+    errors.push({ source: name, message: `Načteno maximum ${limit} řádků, starší záznamy chybí.`, kind: 'truncated' });
+  }
+  return rows;
 }
 
 function calendarMonths(period) {
@@ -44,10 +46,11 @@ function calendarMonths(period) {
   return rows;
 }
 
-function contextForRule(rule, source, period) {
+function contextForRule(rule, source, period, cache = new Map()) {
   const percentageBases = {};
   for (const month of calendarMonths(period)) {
-    const summary = computeFinancials(source, month.period);
+    if (!cache.has(month.key)) cache.set(month.key, computeFinancials(source, month.period));
+    const summary = cache.get(month.key);
     percentageBases[month.key] = rule.percentage_basis === 'cash_sales'
       ? summary.cashSalesMinor
       : rule.percentage_basis === 'ad_spend'
@@ -60,8 +63,9 @@ function contextForRule(rule, source, period) {
 function missingDerivedOccurrences(rules, source, period) {
   const known = new Set((source.occurrences || []).map((row) => row.occurrence_key || row.key).filter(Boolean));
   const rows = [];
+  const basisCache = new Map();
   for (const rule of rules.filter((row) => row.status === 'active' && ['per_lesson','per_paid_spot','percentage'].includes(row.recurrence))) {
-    for (const occurrence of recurrenceOccurrences(rule, period, contextForRule(rule, source, period))) {
+    for (const occurrence of recurrenceOccurrences(rule, period, contextForRule(rule, source, period, basisCache))) {
       if (known.has(occurrence.key)) continue;
       known.add(occurrence.key);
       rows.push({
@@ -85,7 +89,7 @@ export function createBusinessStore({ client = null, demo = false } = {}) {
     const { data: sessionData } = await client.auth.getSession();
     const session = sessionData?.session;
     if (!session) return { allowed: false, reason: 'signed_out' };
-    const { data, error } = await client.from('business_access').select('role,active').maybeSingle();
+    const { data, error } = await client.from('business_access').select('role,active').eq('user_id', session.user.id).maybeSingle();
     if (error) return { allowed: false, reason: error.code === '42P01' ? 'migration_missing' : 'forbidden', detail: error.message, session };
     return { allowed: Boolean(data?.active && data?.role === 'owner'), reason: data ? null : 'forbidden', session, email: session.user.email };
   }
@@ -95,30 +99,59 @@ export function createBusinessStore({ client = null, demo = false } = {}) {
       demoData = readDemo();
       const derived = missingDerivedOccurrences(demoData.costRules, demoData, period).map((row) => ({ ...row, id: `occ-${crypto.randomUUID()}` }));
       if (derived.length) { demoData.occurrences.push(...derived); writeDemo(demoData); }
+      // Demo musí filtrovat období stejně jako skutečný dotaz, jinak ukazuje
+      // pod hlavičkou týdne výskyty z celého měsíce.
+      const inPeriod = (from, to) => (value) => value && String(value).slice(0, 10) >= from && String(value).slice(0, 10) <= to;
+      const touchesPeriod = inPeriod(period.from, period.to);
       return {
         ...demoData,
-        summary: computeFinancials({
+        occurrences: demoData.occurrences.filter((row) => touchesPeriod(row.scheduled_on) || touchesPeriod(row.period_start) || touchesPeriod(row.paid_on)),
+        lessons: demoData.lessons.filter((row) => touchesPeriod(row.starts_at)),
+        vouchers: demoData.vouchers.filter((row) => touchesPeriod(row.created_at)),
+        ledger: demoData.ledger.filter((row) => touchesPeriod(row.occurred_at)),
+        notes: demoData.notes.filter((row) => touchesPeriod(row.note_date)),
+        dailyMetrics: demoData.dailyMetrics.filter((row) => touchesPeriod(row.metric_date)),
+        summary: { ...computeFinancials({
           bookings: demoData.bookings,
           lessons: demoData.lessons,
           vouchers: demoData.vouchers,
           ledger: demoData.ledger,
           occurrences: demoData.occurrences,
-        }, period),
-        errors: demoData.connections.filter((item) => item.status === 'error').map((item) => ({ source: item.provider, message: item.last_error })),
+        }, period), sourceAccess: true },
+        period,
+        errors: demoData.connections.filter((item) => item.status === 'error').map((item) => ({ source: item.provider, message: item.last_error, kind: 'connection' })),
       };
     }
 
     const errors = [];
     const calendarGeneration = await client.rpc('business_generate_calendar_costs', { p_from: period.from, p_to: period.to });
-    if (calendarGeneration.error) errors.push({ source: 'Kalendář nákladů', message: calendarGeneration.error.message, code: calendarGeneration.error.code });
-    const [lessons, bookings, vouchers, categories, costRules, occurrences, ledger, budgets, campaigns, posts, dailyMetrics, periodMetrics, connections, goals, scenarios, notes, savedViews, settings, changeLog] = await Promise.all([
-      queryOrError('Lekce', client.from('lessons').select('id,title,starts_at,status,capacity').gte('starts_at', `${period.from}T00:00:00`).lte('starts_at', `${period.to}T23:59:59`).order('starts_at'), errors),
-      queryOrError('Rezervace', client.from('bookings').select('id,lesson_id,email,spots,status,payment_status,payment_amount,paid_at,created_at').order('created_at', { ascending: false }).limit(5000), errors),
-      queryOrError('Poukazy', client.from('vouchers').select('id,code,amount,created_at,redeemed,redeemed_at,expires_at').order('created_at', { ascending: false }).limit(1000), errors),
+    if (calendarGeneration.error) errors.push({ source: 'Kalendář nákladů', message: calendarGeneration.error.message, code: calendarGeneration.error.code, kind: 'query' });
+
+    // Lekce musí být známé dřív než rezervace: výnos se váže na datum lekce,
+    // hotovost na datum úhrady. Bez obojího by dotaz na rezervace musel brát
+    // celou historii a limit by ji tiše usekl.
+    const from = `${period.from}T00:00:00`;
+    const to = `${period.to}T23:59:59`;
+    const lessons = await queryOrError('Lekce', client.from('lessons').select('id,title,starts_at,status,capacity').gte('starts_at', from).lte('starts_at', to).order('starts_at'), errors);
+    const lessonIds = lessons.map((row) => row.id);
+    const bookingColumns = 'id,lesson_id,email,spots,status,payment_status,payment_amount,paid_at,created_at';
+    const BOOKING_LIMIT = 5000;
+
+    const [bookingsForLessons, bookingsPaidInPeriod] = await Promise.all([
+      lessonIds.length
+        ? queryOrError('Rezervace na lekce období', client.from('bookings').select(bookingColumns).in('lesson_id', lessonIds).limit(BOOKING_LIMIT), errors, BOOKING_LIMIT)
+        : Promise.resolve([]),
+      queryOrError('Uhrazené rezervace období', client.from('bookings').select(bookingColumns).gte('paid_at', from).lte('paid_at', to).limit(BOOKING_LIMIT), errors, BOOKING_LIMIT),
+    ]);
+    const bookings = [...new Map([...bookingsForLessons, ...bookingsPaidInPeriod].map((row) => [row.id, row])).values()];
+
+    const [vouchers, categories, costRules, occurrences, ledger, budgets, campaigns, posts, dailyMetrics, periodMetrics, connections, goals, scenarios, notes, savedViews, settings, changeLog] = await Promise.all([
+      queryOrError('Poukazy', client.from('vouchers').select('id,code,amount,created_at,redeemed,redeemed_at,expires_at').gte('created_at', from).lte('created_at', to).order('created_at', { ascending: false }).limit(1000), errors, 1000),
       queryOrError('Kategorie nákladů', client.from('business_cost_categories').select('*').order('sort_order'), errors),
       queryOrError('Pravidla nákladů', client.from('business_cost_rules').select('*').order('created_at', { ascending: false }), errors),
-      queryOrError('Náklady', client.from('business_cost_occurrences').select('*').lte('period_start', period.to).gte('scheduled_on', period.from).order('scheduled_on'), errors),
-      queryOrError('Peněžní pohyby', client.from('business_ledger_entries').select('*').gte('occurred_at', `${period.from}T00:00:00`).lte('occurred_at', `${period.to}T23:59:59`).order('occurred_at', { ascending: false }).limit(5000), errors),
+      // Náklad naplánovaný dřív a zaplacený uvnitř období patří do peněžního toku.
+      queryOrError('Náklady', client.from('business_cost_occurrences').select('*').or(`and(scheduled_on.gte.${period.from},scheduled_on.lte.${period.to}),and(period_start.gte.${period.from},period_start.lte.${period.to}),and(paid_on.gte.${period.from},paid_on.lte.${period.to})`).order('scheduled_on'), errors),
+      queryOrError('Peněžní pohyby', client.from('business_ledger_entries').select('*').gte('occurred_at', from).lte('occurred_at', to).order('occurred_at', { ascending: false }).limit(5000), errors, 5000),
       queryOrError('Rozpočty', client.from('business_budgets').select('*').lte('period_start', period.to).gte('period_end', period.from).order('created_at', { ascending: false }), errors),
       queryOrError('Kampaně', client.from('business_campaigns').select('*').order('starts_on', { ascending: false }), errors),
       queryOrError('Sociální obsah', client.from('business_social_posts').select('*').order('published_at', { ascending: false }).limit(500), errors),
@@ -143,9 +176,20 @@ export function createBusinessStore({ client = null, demo = false } = {}) {
 
     const localSummary = computeFinancials({ bookings, lessons, vouchers, ledger, occurrences }, period);
     const rpc = await client.rpc('business_period_summary', { p_from: period.from, p_to: period.to });
-    if (rpc.error) errors.push({ source: 'Souhrnný výpočet', message: rpc.error.message, code: rpc.error.code });
+    if (rpc.error) errors.push({ source: 'Souhrnný výpočet', message: rpc.error.message, code: rpc.error.code, kind: 'query' });
     const rawSummary = rpc.data || {};
-    const summary = rpc.error ? localSummary : {
+    // Přístup k business tabulkám a přístup k rezervacím jsou dvě různá
+    // oprávnění. Když druhé chybí, vrátí RLS prázdno bez chyby a součty by
+    // vypadaly jako poctivá nula. Tohle je jediné místo, kde to poznáme.
+    const sourceAccess = rpc.error ? null : rawSummary.source_access !== false;
+    if (sourceAccess === false) {
+      errors.push({
+        source: 'Rezervace a lekce',
+        message: 'Přihlášený účet má přístup k business sekci, ale ne k rezervacím. Zobrazené nuly nejsou skutečnost.',
+        kind: 'blocking',
+      });
+    }
+    const summary = rpc.error ? { ...localSummary, sourceAccess } : {
       recognizedRevenueMinor: Number(rawSummary.recognized_revenue_minor || 0),
       cashSalesMinor: Number(rawSummary.cash_sales_minor || 0),
       operatingCostsMinor: Number(rawSummary.operating_costs_minor || 0),
@@ -157,11 +201,13 @@ export function createBusinessStore({ client = null, demo = false } = {}) {
       feesMinor: Number(rawSummary.fees_minor || 0),
       adSpendMinor: Number(rawSummary.ad_spend_minor || 0),
       missingPaymentAmounts: Number(rawSummary.missing_payment_amounts || 0),
-      completeness: rawSummary.complete ? 'complete' : 'partial',
+      foreignCurrencyEntries: Number(rawSummary.foreign_currency_entries || 0),
+      completeness: rawSummary.complete && sourceAccess !== false ? 'complete' : 'partial',
       buyerCount: localSummary.buyerCount,
+      sourceAccess,
     };
 
-    return { lessons, bookings, vouchers, categories, costRules, occurrences, ledger, budgets, campaigns, posts, dailyMetrics, periodMetrics, connections, goals, scenarios, notes, savedViews, settings, changeLog, summary, errors };
+    return { lessons, bookings, vouchers, categories, costRules, occurrences, ledger, budgets, campaigns, posts, dailyMetrics, periodMetrics, connections, goals, scenarios, notes, savedViews, settings, changeLog, summary, errors, period };
   }
 
   async function saveCost(rule, period, context, attachmentFile = null) {
@@ -294,7 +340,7 @@ export function createBusinessStore({ client = null, demo = false } = {}) {
   }
 
   async function markOccurrencePaid(id, paid) {
-    const values = paid ? { status: 'paid', paid_on: new Date().toISOString().slice(0, 10) } : { status: 'planned', paid_on: null };
+    const values = paid ? { status: 'paid', paid_on: pragueToday() } : { status: 'planned', paid_on: null };
     if (demo) {
       const row = demoData.occurrences.find((item) => item.id === id);
       if (row) Object.assign(row, values);
@@ -314,7 +360,7 @@ export function createBusinessStore({ client = null, demo = false } = {}) {
     }
     const { data, error } = await client.from(table).insert(row).select().single();
     if (error) throw error;
-    return camelizeRow(data);
+    return data;
   }
 
   async function importLedger(rows, meta = {}) {

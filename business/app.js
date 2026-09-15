@@ -1,5 +1,5 @@
-import { mapCsvRows, inferMapping, parseCsv } from './csv.js';
-import { monthPeriod, parseMoneyToMinor, pragueDate } from './domain.js';
+import { mapCsvRows, inferMapping, parseCsv, SIGN_CONVENTIONS } from './csv.js';
+import { monthPeriod, parseMoneyToMinor, pragueDate, pragueToday } from './domain.js';
 import { createBusinessStore } from './data.js';
 import { renderView, viewMeta } from './ui.js';
 
@@ -69,6 +69,8 @@ function showAuth(reason) {
   if (reason === 'migration_missing') $('#configNotice').textContent = 'Business databázová migrace zatím není nasazená. Skutečná data proto nejsou dostupná.';
   if (reason === 'forbidden') $('#configNotice').textContent = 'Účet je přihlášený, ale nemá povolený přístup k business údajům.';
   $('#loginForm').hidden = reason === 'migration_missing' || reason === 'forbidden';
+  // Kdo se přihlásí účtem bez oprávnění, musí mít cestu ven.
+  $('#authSignOut').hidden = !['migration_missing', 'forbidden'].includes(reason);
 }
 
 function showApp(access) {
@@ -100,21 +102,36 @@ async function load() {
   }
 }
 
+function matchingPreset() {
+  for (const value of ['week', 'month', '3m', '6m', '12m']) {
+    const preset = presetPeriod(value);
+    if (preset && preset.from === period.from && preset.to === period.to) return value;
+  }
+  return 'custom';
+}
+
 function render() {
   const view = currentView();
+  $('#periodPreset').value = matchingPreset();
   const [title, question] = viewMeta[view];
   $('#viewTitle').textContent = title;
   $('#viewQuestion').textContent = question;
   $('#dateRangeLabel').textContent = labelPeriod();
   document.title = `${title} — Business — Jóga s králíčky`;
   $$('[data-view]').forEach((link) => {
-    link.toggleAttribute('aria-current', link.dataset.view === view);
+    if (link.dataset.view === view) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
     const url = new URL(link.href);
     url.searchParams.set('from', period.from); url.searchParams.set('to', period.to);
     if (demo) url.searchParams.set('demo', '1');
     link.href = `${url.pathname}${url.search}`;
   });
   $('#viewContent').innerHTML = renderView(view, currentData, { chartMetric });
+  // Graf se na 390 px zmenší tak, že popisky os nejsou čitelné. Tam je
+  // přesná tabulka jediná použitelná podoba, takže je rovnou otevřená.
+  if (window.matchMedia('(max-width: 640px)').matches) {
+    $$('[data-open-on-narrow]').forEach((node) => { node.open = true; });
+  }
   $('#viewContent').hidden = false;
   fillCostCategories();
 }
@@ -155,10 +172,14 @@ function presetPeriod(value) {
   const end = pragueDate(now);
   if (value === 'month') return monthPeriod(now);
   if (value === 'week') {
-    const weekday = (now.getDay() + 6) % 7;
-    const start = new Date(now); start.setDate(now.getDate() - weekday);
-    const finish = new Date(start); finish.setDate(start.getDate() + 6);
-    return { from: pragueDate(start), to: pragueDate(finish) };
+    const today = pragueDate(now);
+    const weekday = (new Date(`${today}T12:00:00Z`).getUTCDay() + 6) % 7;
+    const shift = (days) => {
+      const cursor = new Date(`${today}T12:00:00Z`);
+      cursor.setUTCDate(cursor.getUTCDate() + days);
+      return cursor.toISOString().slice(0, 10);
+    };
+    return { from: shift(-weekday), to: shift(6 - weekday) };
   }
   const months = { '3m': 3, '6m': 6, '12m': 12 }[value];
   if (months) {
@@ -187,7 +208,7 @@ function openCostDialog(rule = null) {
   $('#costVersion').value = String(rule ? Number(rule.version || 1) + 1 : 1);
   $('#costName').value = rule?.name || '';
   $('#costAmount').value = rule ? String(Number(rule.amount_minor || 0) / 100).replace('.', ',') : '';
-  $('#costDate').value = rule ? pragueDate(new Date()) : pragueDate(new Date());
+  $('#costDate').value = pragueToday();
   $('#costValidTo').value = rule?.valid_to || '';
   $('#costRecurrence').value = rule?.recurrence || 'once';
   $('#costClass').value = rule?.cost_class || 'operation';
@@ -226,7 +247,7 @@ async function saveCost(event) {
   const payload = {
     rule_key: $('#costRuleKey').value || crypto.randomUUID(),
     version: Number($('#costVersion').value || 1), name: $('#costName').value.trim(),
-    category_id: $('#costCategory').value, amount_minor: amount, currency: 'CZK', recurrence,
+    category_id: $('#costCategory').value || null, amount_minor: amount, currency: 'CZK', recurrence,
     valid_from: validFrom, valid_to: $('#costValidTo').value || null,
     day_of_month: day, month_of_year: month, rate_basis_points: recurrence === 'percentage' ? Math.round(Number($('#percentageRate').value) * 100) : null,
     percentage_basis: recurrence === 'percentage' ? $('#percentageBasis').value : null,
@@ -296,7 +317,8 @@ async function readCsv(file) {
   if (!parsed.headers.length || !parsed.rows.length) return void ($('#importMessage').textContent = 'Soubor neobsahuje hlavičku a datové řádky.');
   const mapping = inferMapping(parsed.headers);
   const fields = [['date','Datum'],['amount','Částka'],['kind','Typ'],['note','Poznámka'],['externalId','Externí ID']];
-  $('#importMapping').innerHTML = `<div class="mapping-grid">${fields.map(([key, label]) => `<div class="field"><label for="map-${key}">${label}</label><select id="map-${key}" data-map="${key}"><option value="">— nevybráno —</option>${parsed.headers.map((header) => `<option value="${escapeHtml(header)}" ${mapping[key] === header ? 'selected' : ''}>${escapeHtml(header)}</option>`).join('')}</select></div>`).join('')}</div>`;
+  const signOptions = Object.entries(SIGN_CONVENTIONS).map(([value, label]) => `<option value="${value}">${escapeHtml(label)}</option>`).join('');
+  $('#importMapping').innerHTML = `<div class="mapping-grid">${fields.map(([key, label]) => `<div class="field"><label for="map-${key}">${label}</label><select id="map-${key}" data-map="${key}"><option value="">— nevybráno —</option>${parsed.headers.map((header) => `<option value="${escapeHtml(header)}" ${mapping[key] === header ? 'selected' : ''}>${escapeHtml(header)}</option>`).join('')}</select></div>`).join('')}<div class="field"><label for="map-signConvention">Znaménko částky</label><select id="map-signConvention" data-map="signConvention">${signOptions}</select><span class="field-help">Bankovní i Stripe exporty obvykle píšou příjem kladně. Zkontrolujte v náhledu, že typy sedí.</span></div></div>`;
   $('#importMapping').hidden = false;
   $('#importMapping').dataset.rows = JSON.stringify(parsed.rows);
   updateImportPreview();
@@ -352,6 +374,23 @@ async function handleViewAction(target) {
     await load();
     return;
   }
+  if (action === 'accept-budget') {
+    const amount = Number(button.dataset.amount);
+    if (!Number.isFinite(amount)) return toast('Návrh rozpočtu není k dispozici.');
+    button.disabled = true;
+    try {
+      await store.saveBudget({
+        period_start: period.from, period_end: period.to, kind: 'advertising',
+        basis_period_start: period.from, basis_period_end: period.to,
+        basis_result_minor: currentData.summary.operatingResultMinor,
+        rate_basis_points: Math.round(Number(button.dataset.rate || 0) * 100),
+        proposed_minor: amount, accepted_minor: amount, status: 'accepted',
+      });
+      toast('Rozpočet přijat.');
+      await load();
+    } catch (error) { button.disabled = false; toast(error.message); }
+    return;
+  }
   if (action === 'toggle-paid') { button.disabled = true; await store.markOccurrencePaid(button.dataset.id, button.dataset.paid !== 'true'); toast('Stav nákladu změněn.'); return load(); }
   if (action === 'open-attachment') {
     const popup = window.open('', '_blank');
@@ -378,9 +417,21 @@ $('#loginForm').addEventListener('submit', async (event) => {
   location.reload();
 });
 
-$('#logoutButton').addEventListener('click', async () => { if (client) await client.auth.signOut(); location.href = '/business.html'; });
+const signOut = async () => { if (client) await client.auth.signOut(); location.href = '/business.html'; };
+$('#logoutButton').addEventListener('click', signOut);
+$('#authSignOut').addEventListener('click', signOut);
 $('#openMenu').addEventListener('click', openMenu); $('#closeMenu').addEventListener('click', closeMenu); $('#sidebarScrim').addEventListener('click', closeMenu);
-$('.sidebar').addEventListener('click', (event) => { if (event.target.closest('a')) closeMenu(); });
+$('.sidebar').addEventListener('click', (event) => {
+  const link = event.target.closest('a[data-view]');
+  closeMenu();
+  // Data pro všechny pohledy jsou už načtená. Plné načtení stránky by znovu
+  // spustilo 19 dotazů i generování kalendáře nákladů.
+  if (!link || !currentData || event.metaKey || event.ctrlKey || event.shiftKey || event.button) return;
+  event.preventDefault();
+  history.pushState({}, '', link.href);
+  render();
+  $('#mainContent').focus();
+});
 $('#openPeriod').addEventListener('click', openPeriodDialog);
 $('#periodPreset').addEventListener('change', async (event) => { const next = presetPeriod(event.target.value); if (!next) return openPeriodDialog(); period = next; setUrl({ from: period.from, to: period.to }); await load(); });
 $('#periodForm').addEventListener('submit', async (event) => { event.preventDefault(); const next = { from: $('#periodFrom').value, to: $('#periodTo').value }; if (!next.from || !next.to || next.from > next.to) return void ($('#periodMessage').textContent = 'Konec období musí být stejný nebo pozdější než začátek.'); period = next; $('#periodDialog').close(); setUrl({ from: period.from, to: period.to }); await load(); });

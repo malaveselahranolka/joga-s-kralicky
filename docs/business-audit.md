@@ -3,6 +3,12 @@
 Datum auditu: 15. 9. 2026. Auditovaný strom: `origin/codex/business-dashboard` (`f9d477e`),
 základ `9415ba4` — tedy **4 commity za `main`**.
 
+> **Stav oprav (15. 9. 2026).** Body P0 a P2 jsou opravené na větvi
+> `claude/business-section-audit-smryvh`, stejně jako P1 kromě výslovně
+> uvedených výjimek. Každá oprava má regresní test (`npm run test:business`,
+> 40 testů). Jednotlivé body si stav nesou u sebe, otevřené zbytky shrnuje
+> závěrečná část *Co zůstalo otevřené*.
+
 Auditováno bylo všech 34 souborů větve: `business.html`, `business/*.js` (7 souborů),
 `supabase/business-dashboard.sql`, obě Edge Functions, testy, dokumentace i změny
 v `scripts/`, `robots.txt`, `vercel.json` a `package.json`.
@@ -31,6 +37,11 @@ majitelce čísla, o kterých nepozná, že jsou neúplná.
 
 ### 1. Dva nezávislé systémy oprávnění, které se můžou rozejít
 
+**Opraveno.** `business_period_summary` nově vrací `source_access` (= `public.is_owner()`)
+a bez něj je `complete` vždy `false`. Klient z toho dělá blokující hlášku
+místo nul s odznakem „Úplná data".
+
+
 `public.is_owner()` v `supabase/schema.sql` má natvrdo jediný e-mail. `lessons`,
 `bookings` i `vouchers` mají RLS postavenou na něm. Nová `public.business_has_access()`
 v `supabase/business-dashboard.sql` je na tom nezávislá a ptá se jen na `business_access`.
@@ -48,6 +59,10 @@ udělat `security definer` s vlastní kontrolou, nebo (nejlevněji) při načten
 
 ### 2. Souhrn v SQL a v JS počítají jinak
 
+**Opraveno.** `computeFinancials` bere jen `status = 'posted'` (chybějící hodnota
+dědí výchozí `posted` ze sloupce) a jedna rezervace bez částky se počítá jednou.
+
+
 Existují dvě nezávislé implementace stejných definic: `business_period_summary`
 (`supabase/business-dashboard.sql`) a `computeFinancials` (`business/domain.js`).
 Testy pokrývají jen tu druhou. Rozdíly, které jsem ověřil:
@@ -55,9 +70,13 @@ Testy pokrývají jen tu druhou. Rozdíly, které jsem ověřil:
 | Co | SQL | JS (fallback při chybě RPC) |
 | --- | --- | --- |
 | stav pohybu | jen `status = 'posted'` | vše kromě `'void'` — **počítá i `pending`** |
-| rezervace | `join lessons` — rezervace bez lekce úplně vypadne | do hotovosti se započte i bez lekce |
 | `missing_payment_amounts` | jedna rezervace = 1 | **jedna rezervace = 2** (ověřeno) |
 | poukazy | sečte všechny řádky | dedupuje přes `id`/`code` |
+
+*Oprava k původnímu znění auditu:* mezi rozdíly byl uvedený i `join lessons`
+v SQL proti volnější vazbě v JS. To neplatí — `bookings.lesson_id` je
+v `supabase/schema.sql` `not null` s cizím klíčem, takže rezervace bez lekce
+vzniknout nemůže a obě implementace se tu rozejít nemají jak.
 
 Ověřeno: čekající Stripe poplatek 500 Kč se v JS objeví v nákladech, v SQL ne.
 Jedna zaplacená rezervace bez částky nahlásí „2 platby bez částky".
@@ -66,6 +85,10 @@ Oprava: jeden zdroj pravdy. Buď SQL funkce jako jediná cesta a JS jen pro demo
 nebo test, který obě implementace porovná na stejném vzorku.
 
 ### 3. Měna se nikde nekontroluje
+
+**Opraveno.** Obě implementace sčítají jen `CZK`; cizí měna se počítá zvlášť jako
+`foreign_currency_entries` a shodí úplnost na „Částečná data".
+
 
 `mapStripeBalance` (`supabase/functions/_shared/business-sync-contracts.js`) bere
 `row.currency` tak, jak přijde. Ani `computeFinancials`, ani `business_period_summary`
@@ -76,6 +99,11 @@ Oprava: všechny součty omezit na `currency = 'CZK'` a jiné měny vypsat zvlá
 jako neúplnost, dokud nebude převod.
 
 ### 4. Časové pásmo se na třech místech ztratí
+
+**Opraveno** na všech čtyřech místech: `pragueToday()` u úhrady nákladu,
+`pragueDate()` v grafu, rozlišení zimního a letního posunu v CSV a pražský
+začátek týdne v předvolbě období.
+
 
 Dokumentace slibuje `Europe/Prague`, kód místy používá UTC:
 
@@ -91,6 +119,10 @@ Dokumentace slibuje `Europe/Prague`, kód místy používá UTC:
 
 ### 5. Publikum počítá něco jiného, než co má v hlavičce
 
+**Opraveno.** Publikum filtruje podle období a používá `normalizedBuyerEmail()`
+společně s Přehledem.
+
+
 `audience()` v `business/ui.js` **vůbec nefiltruje podle období**. Pod nadpisem
 „1. září 2026 – 30. září 2026" se tak zobrazí počty za všechny načtené rezervace.
 Navíc si normalizuje e-mail po svém (`email.startsWith('rucne')`) místo
@@ -98,6 +130,12 @@ Navíc si normalizuje e-mail po svém (`email.startsWith('rucne')`) místo
 „skutečných kupujících" v Přehledu jsou dvě různě spočítaná čísla ve stejné aplikaci.
 
 ### 6. Limity dotazů useknou historii bez varování
+
+**Opraveno.** Rezervace se načítají dvěma dotazy omezenými obdobím (lekce období
++ úhrady období) a slučují se podle `id`. Poukazy mají filtr období, výskyty
+nákladů berou i náklad zaplacený uvnitř období. Dotaz, který se dotkl limitu,
+hlásí neúplnost.
+
 
 `business/data.js` načítá rezervace bez filtru na období s `.limit(5000)`,
 poukazy s `.limit(1000)` a pohyby s `.limit(5000)`, vždy seřazené od nejnovějších.
@@ -110,6 +148,10 @@ limitu vypsat výslovné upozornění „zobrazený výsledek je neúplný".
 
 ### 7. Zrušené lekce kazí obsazenost a bod zvratu
 
+**Opraveno.** Kapacita počítá jen nezrušené lekce; fixní náklady v Plánu berou
+jen zaplacené výskyty zahrnuté do provozního výsledku.
+
+
 `overview()` i `plan()` sčítají `capacity` ze **všech** lekcí v období —
 dotaz v `data.js` zrušené lekce nevyfiltrovává. Zrušená lekce tedy nafoukne kapacitu
 a sníží obsazenost. `recurrenceOccurrences` v `domain.js` přitom zrušené lekce
@@ -120,12 +162,21 @@ i na `include_in_operating`** — na rozdíl od všeho ostatního, co počítá 
 
 ### 8. Doporučení kanálů vrátí NaN
 
+**Opraveno.** Nulový součet vah vrací prázdné rozdělení s `evidence: 'experiment'`.
+
+
 `recommendChannels` v `domain.js`: pokud všechny způsobilé kanály mají
 `revenue_minor = 0`, je `totalScore = 0` a všechny částky vyjdou jako `NaN`.
 Ověřeno — karta pak ukáže „— Kč" a přitom `evidence: 'measured'`.
 Chybí pojistka `totalScore > 0`.
 
 ### 9. CSV import obrátí znaménka u běžného bankovního výpisu
+
+**Opraveno.** Znaménková konvence je volba v kroku mapování (výchozí „kladná
+částka = příjem"), otisk se počítá z obsahu řádku místo jeho pořadí, klíčová
+slova se porovnávají bez diakritiky (dřív se „výdaj" ani „převod" netrefily)
+a `'meta'` už není vzorek pro reklamu.
+
 
 `business/csv.js`: `kindFrom()` označí kladnou částku bez klíčového slova jako
 `expense` a zápornou jako `income`; `mapCsvRows` pak znaménko zahodí (`Math.abs`).
@@ -142,6 +193,12 @@ Oprava: znaménkovou konvenci nabídnout jako explicitní volbu v kroku mapován
 fingerprint počítat z obsahu řádku (bez indexu) a typ nechat potvrdit v náhledu.
 
 ### 10. Drobné, ale spolehlivě rozbije uložení
+
+**Opraveno** kromě posledního bodu: prázdná kategorie jde jako `null`, trigger
+verzí drží `valid_to >= valid_from` i u zpětného data, Stripe `booking_id` se
+ověřuje proti tvaru UUID. **Neopraveno:** `deleteCost` je pořád dvoukrokový
+bez transakce — patří do RPC, což je zásah do migrace nad rámec oprav.
+
 
 - `business/app.js` — `category_id: $('#costCategory').value` pošle prázdný řetězec,
   když se kategorie nenačtou. Postgres odpoví `invalid input syntax for type uuid`.
@@ -160,6 +217,12 @@ fingerprint počítat z obsahu řádku (bez indexu) a typ nechat potvrdit v náh
 ## P1 — funkce, které proti nasazenému schématu nemůžou fungovat
 
 ### 11. Celý Marketing je proti produkci prázdný
+
+**Opraveno.** Útrata, prokliky a nákupy se spojují z `business_daily_metrics`
+přes `dimension_key = 'campaign:<id>'`. Přiřazené tržby zůstávají prázdné,
+protože je nikdo nevyrábí — a doporučení kanálů to nově řekne nahlas místo
+tiché prázdné karty. Demo používá stejné sloupce jako migrace.
+
 
 `ui.js` čte z kampaní sloupce `spend_minor`, `revenue_minor` a `purchases`.
 Tabulka `business_campaigns` v `business-dashboard.sql` **žádný z nich nemá** —
@@ -181,6 +244,12 @@ A demo srovnat se schématem, ať neslibuje nemožné.
 
 ### 12. Polovina uložených objektů nemá jak vzniknout
 
+**Částečně opraveno.** Návrh rozpočtu jde přijmout tlačítkem v Přehledu, takže
+cyklus návrh → přijetí → čerpání se uzavře; „Schválený rámec" ukazuje jen
+rozpočet ve stavu `accepted`. Cíle se vykreslují v Plánu. **Neopraveno:**
+formuláře na scénáře a poznámky — to je nová funkce, ne oprava.
+
+
 `business/data.js` vystavuje `saveBudget`, `saveGoal`, `saveScenario` a `saveNote`.
 **Žádná z nich se nikde nevolá.** V UI není formulář na rozpočet, cíl, scénář ani poznámku.
 
@@ -197,12 +266,20 @@ Dále: `ui.js` bere `data.budgets[0]` bez ohledu na `status`, takže se jako
 
 ### 13. Unikátní uživatelé nebudou dostupní skoro nikdy
 
+**Neopraveno.** Dopočet metriky na vyžádání je nová funkce. Rozhraní ale už
+neplete nedostupnost s nulou.
+
+
 `data.js` hledá `business_period_metrics` přes `.eq('period_start', …).eq('period_end', …)` —
 tedy přesnou shodu. Řádky vyrábí jen sync pro konkrétní období. Jakmile si majitelka
 zvolí vlastní rozsah, řádek neexistuje a „Uživatelé webu" jsou trvale nedostupní.
 Chybí dopočet na vyžádání (nebo aspoň nabídka „načíst pro toto období").
 
 ### 14. Bod zvratu počítá z vymyšleného čísla
+
+**Opraveno.** Cena se bere z `payment-config.js`, proměnný náklad z pravidel
+„za zaplacené místo". Bez nich se model nespočítá a Plán řekne, co chybí.
+
 
 `ui.js`, funkce `plan()`: `breakEven({ priceMinor: 49900, variableCostMinor: 7000, … })`.
 
@@ -217,6 +294,9 @@ Oprava: cenu brát z `payment-config.js`, proměnný náklad z pravidla `per_pai
 které majitelka skutečně zadala — a když neexistuje, bod zvratu nepočítat.
 
 ### 15. Import nejde vzít zpět
+
+**Neopraveno.** Správa importních dávek je nová funkce.
+
 
 Nesprávně namapovaný CSV import zapíše stovky pohybů a **v UI není žádná cesta,
 jak je smazat nebo označit `void`**. Importní dávka se v `business_import_batches`
@@ -261,8 +341,13 @@ bez transakce; zavření prohlížeče uprostřed nechá dávku navždy ve stavu
     změn za den nelze odlišit.
 11. **Export je tenký.** „Export CSV" vydá 6 řádků souhrnu. Chybí detailní export
     rezervací, nákladů a pohybů, tedy to, co by účetní skutečně chtěl.
-12. **Demo je přibité na září 2026.** `demo-data.js` generuje data přes `iso(den)`
-    s natvrdo `2026-09`. Od října bude ukázka prázdná.
+12. **Finance, Marketing a Plán přetékaly na 390 px vodorovně.** Položka gridu
+    se nezmenší pod šířku svého obsahu, takže široká tabulka roztáhla celý
+    pohled místo aby se posouvala uvnitř svého rámu. Původní ověření to minulo,
+    protože na mobilu zkoušelo jen Přehled. **Opraveno** (`min-width:0` na
+    položkách gridu); nově se měří všech osm pohledů na 390, 768 i 1440 px.
+13. **Demo je přibité na září 2026.** `demo-data.js` generuje data přes `iso(den)`
+    s natvrdo `2026-09`. Od října bude ukázka prázdná. **Opraveno** (`setAttribute('aria-current','page')`). **Opraveno** — předvolba se dopočítá z období, jinak ukáže „Vlastní rozsah". **Opraveno** — opakování, typ poznámky i operace auditu mají české popisky. **Opraveno** — přepnutí pohledu překreslí z už načtených dat, bez dotazů a bez zápisu. **Opraveno** — na uvítací obrazovce přibylo „Odhlásit tento účet". **Opraveno** — hlášky rozlišují selhaný dotaz, useknutý výsledek a nepřipojený zdroj; pruh je i v Plánu, Reportech a Nastavení. **Opraveno** — pod 640 px se graf skryje a přesná tabulka je otevřená. **Opraveno** — osa používá kroky 1/2/2,5/5. **Opraveno** — natvrdo psané `aria-current` je pryč. **Opraveno** — deník ukazuje datum i čas v pražském pásmu. **Neopraveno** — detailní exporty jsou nová funkce. **Neopraveno** — ukázka zestárne, ale nic nerozbije.
 
 ---
 
@@ -343,3 +428,37 @@ a co zapisuje `business-sync`; ověření jednotek `payment_amount` a `vouchers.
 **Neověřeno:** SQL za běhu — migrace není nasazená, takže `business_period_summary`,
 `business_generate_calendar_costs`, triggery ani RLS neběžely proti skutečné databázi.
 Žádný externí konektor se nespouštěl. Nic se nenasazovalo ani neměnilo v produkci.
+
+---
+
+## Co zůstalo otevřené
+
+Opraveny byly chyby — věci, které vracely špatné číslo nebo nefungovaly.
+Tohle jsou nové funkce, ne opravy, a zůstávají v seznamu *Co přidat*:
+
+| Co | Proč to nebylo v opravách |
+| --- | --- |
+| Správa importních dávek a vrácení importu | nová obrazovka a nové RPC |
+| Formuláře na scénáře a poznámky | nové funkce; cíle a rozpočet už fungují |
+| Dopočet unikátních uživatelů pro vlastní období | vyžaduje volání konektoru na vyžádání |
+| Detailní exporty rezervací, nákladů a pohybů | nová funkce |
+| Srovnání s předchozím obdobím | nová funkce |
+| Upozornění na neshodu Stripe vs. rezervace | nová funkce, potřebuje nasazený konektor |
+| `deleteCost` v jedné transakci | patří do RPC, tedy zásah do migrace |
+| Demo přepsat na relativní data | ukázka zestárne, nic ale nerozbije |
+
+Dál platí i poznámky k nasazení: migrace se pořád musí projít přes staging,
+RLS a obě SQL funkce nikdo nespustil proti skutečné databázi a `verify_jwt`
+pro `business-sync` není v repozitáři zafixované.
+
+## Ověření oprav
+
+```bash
+npm run check                 # 40 testů + kontrola zdroje, build a hotový public/
+npm run test:business-browser # 8 sekcí, graf, mobil, náklad, CSV import
+```
+
+Kontrola prohlížeče si nově sama spustí statický server a najde Chrome podle
+platformy, takže jde spustit z čistého klonu (`BUSINESS_CHROME_PATH` ji přebije).
+Selhání externí CDN v demo režimu kontrolu neshodí, výjimka ve vlastním
+skriptu ano.

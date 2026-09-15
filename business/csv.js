@@ -1,4 +1,4 @@
-import { parseMoneyToMinor } from './domain.js';
+import { parseMoneyToMinor, pragueDate } from './domain.js';
 
 export function parseCsv(text) {
   const source = String(text || '').replace(/^\uFEFF/, '');
@@ -44,34 +44,65 @@ export function inferMapping(headers) {
   };
 }
 
-function kindFrom(value, amountMinor) {
-  const text = String(value || '').toLowerCase();
+// Znaménko ve výpisech není jednotné: banky i Stripe píšou příjem kladně
+// a výdaj záporně, jiné exporty naopak. Hádat se to nedá, proto je to
+// výslovná volba v kroku mapování.
+export const SIGN_CONVENTIONS = {
+  positive_income: 'Kladná částka = příjem',
+  positive_expense: 'Kladná částka = výdaj',
+};
+
+function kindFrom(value, amountMinor, signConvention = 'positive_income') {
+  const text = String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   if (text.includes('refund') || text.includes('vrat')) return 'refund';
   if (text.includes('fee') || text.includes('poplat')) return 'fee';
-  if (text.includes('advert') || text.includes('reklam') || text.includes('meta') || text.includes('sklik')) return 'ad_spend';
+  if (text.includes('advert') || text.includes('reklam') || text.includes('sklik')) return 'ad_spend';
   if (text.includes('transfer') || text.includes('payout') || text.includes('prevod')) return 'transfer';
-  if (text.includes('income') || text.includes('prijem') || amountMinor < 0) return 'income';
-  return 'expense';
+  if (text.includes('income') || text.includes('prijem')) return 'income';
+  if (text.includes('expense') || text.includes('vydaj') || text.includes('naklad')) return 'expense';
+  const positiveMeansIncome = signConvention !== 'positive_expense';
+  return (amountMinor >= 0) === positiveMeansIncome ? 'income' : 'expense';
+}
+
+// Poledne pražského dne. Natvrdo psaný posun +02:00 je v zimě špatně.
+function pragueNoon(isoDay) {
+  for (const offset of ['+01:00', '+02:00']) {
+    const candidate = new Date(`${isoDay}T12:00:00${offset}`);
+    if (pragueDate(candidate) === isoDay) return candidate.toISOString();
+  }
+  return new Date(`${isoDay}T12:00:00Z`).toISOString();
 }
 
 function normalizeDate(value) {
   const input = String(value || '').trim();
-  if (/^\d{4}-\d{2}-\d{2}/.test(input)) return new Date(input.length === 10 ? `${input}T12:00:00+02:00` : input).toISOString();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(input)) return pragueNoon(input);
+  if (/^\d{4}-\d{2}-\d{2}/.test(input)) {
+    const parsed = new Date(input);
+    return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+  }
   const match = input.match(/^(\d{1,2})[.\/]\s*(\d{1,2})[.\/]\s*(\d{4})$/);
-  if (match) return new Date(`${match[3]}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}T12:00:00+02:00`).toISOString();
+  if (match) return pragueNoon(`${match[3]}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}`);
   return null;
 }
 
 export function mapCsvRows(rows, mapping, source = 'csv') {
+  // Otisk se počítá z obsahu řádku. Dokud v něm bylo pořadové číslo,
+  // stačilo řádky přeskládat a stejný export se naimportoval znovu.
+  const occurrences = new Map();
   return rows.map((row, index) => {
     const rawAmount = parseMoneyToMinor(row[mapping.amount]);
     const occurredAt = normalizeDate(row[mapping.date]);
     const errors = [];
     if (rawAmount === null || rawAmount === 0) errors.push('Chybí platná nenulová částka.');
     if (!occurredAt) errors.push('Chybí platné datum.');
-    const kind = kindFrom(row[mapping.kind], rawAmount || 0);
+    const kind = kindFrom(row[mapping.kind], rawAmount || 0, mapping.signConvention);
     const externalId = String(row[mapping.externalId] || '').trim() || null;
-    const fingerprint = externalId ? null : [source, occurredAt, rawAmount, row[mapping.note] || '', index + 1].join('|');
+    const content = [source, occurredAt, rawAmount, kind, row[mapping.note] || ''].join('|');
+    // Dva opravdu shodné pohyby v jednom souboru se odliší pořadím výskytu
+    // téhož obsahu, ne pořadím řádku v souboru.
+    const seen = (occurrences.get(content) || 0) + 1;
+    occurrences.set(content, seen);
+    const fingerprint = externalId ? null : `${content}|${seen}`;
     return {
       rowNumber: index + 1,
       valid: errors.length === 0,

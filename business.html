@@ -38,6 +38,7 @@
         <button class="button button-primary button-wide" type="submit" id="loginButton">Přihlásit se</button>
         <p class="form-message" id="loginMessage" role="alert"></p>
       </form>
+      <button class="text-button" id="authSignOut" type="button" hidden>Odhlásit tento účet</button>
       <a class="quiet-link" href="/admin.html">Zpět do správy studia</a>
       <a class="quiet-link" id="localDemoLink" href="/business.html?demo=1" hidden>Otevřít místní ukázku</a>
     </div>
@@ -193,6 +194,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/supabase-config.js?v=2"></script>
+  <script src="/payment-config.js"></script>
   <script type="module" src="/business/app.js"></script>
 </body>
 </html>

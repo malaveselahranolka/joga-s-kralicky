@@ -1,12 +1,53 @@
 import { spawn } from 'node:child_process';
+import { createServer } from 'node:http';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { extname, join, normalize } from 'node:path';
 
-const executablePath = process.env.BUSINESS_CHROME_PATH
-  || process.env.PUPPETEER_EXECUTABLE_PATH
-  || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const base = process.env.BUSINESS_TEST_URL || 'http://localhost:3000/business.html?demo=1';
+// Prohlížeč se hledá tam, kde skutečně bývá. Natvrdo psaná windowsová cesta
+// znamenala, že kontrola nešla spustit nikde jinde.
+const CHROME_CANDIDATES = [
+  process.env.BUSINESS_CHROME_PATH,
+  process.env.PUPPETEER_EXECUTABLE_PATH,
+  process.platform === 'win32' && 'C:/Program Files/Google/Chrome/Application/chrome.exe',
+  process.platform === 'win32' && 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+  process.platform === 'darwin' && '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  process.platform === 'darwin' && '/Applications/Chromium.app/Contents/MacOS/Chromium',
+  '/usr/bin/google-chrome',
+  '/usr/bin/chromium',
+  '/usr/bin/chromium-browser',
+].filter(Boolean);
+const executablePath = CHROME_CANDIDATES.find((candidate) => existsSync(candidate));
+if (!executablePath) {
+  console.error(`Chrome se nenašel. Zkuste BUSINESS_CHROME_PATH=cesta/k/chrome. Hledáno v:\n  ${CHROME_CANDIDATES.join('\n  ')}`);
+  process.exit(1);
+}
+
+// Vlastní statický server: serve.mjs je v .gitignore, takže by kontrola
+// z čistého klonu neměla co obsloužit.
+const MIME = {
+  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8',
+  '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.ico': 'image/x-icon', '.png': 'image/png',
+};
+const root = new URL('..', import.meta.url).pathname;
+let server = null;
+let base = process.env.BUSINESS_TEST_URL;
+if (!base) {
+  server = createServer(async (request, response) => {
+    const path = normalize(decodeURIComponent(request.url.split('?')[0])).replace(/^(\.\.[/\\])+/, '');
+    try {
+      const body = await readFile(join(root, path === '/' ? 'index.html' : path));
+      response.writeHead(200, { 'Content-Type': MIME[extname(path)] || 'application/octet-stream' });
+      response.end(body);
+    } catch {
+      response.writeHead(404).end('404');
+    }
+  });
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  base = `http://127.0.0.1:${server.address().port}/business.html?demo=1`;
+}
 const profile = await mkdtemp(join(tmpdir(), 'jsk-business-chrome-'));
 const chrome = spawn(executablePath, [
   '--headless=new', '--no-sandbox', '--disable-gpu',
@@ -65,8 +106,19 @@ async function openProtocol() {
 
 const protocol = await openProtocol();
 const errors = [];
+const skippedExternal = new Set();
+// Kontrola běží v demo režimu, který síť nepotřebuje. Selhání externího
+// zdroje (firemní proxy, offline stroj) není chyba stránky — ale výpadek
+// vlastního skriptu nebo výjimka v kódu ano, ty musí shodit kontrolu.
+const isExternalNetworkNoise = (entry) => entry.source === 'network'
+  && /^https?:\/\//.test(entry.url || '')
+  && !/^https?:\/\/(127\.0\.0\.1|localhost)[:/]/.test(entry.url || '');
 protocol.on('Runtime.exceptionThrown', ({ exceptionDetails }) => errors.push(exceptionDetails.text));
-protocol.on('Log.entryAdded', ({ entry }) => { if (entry.level === 'error') errors.push(entry.text); });
+protocol.on('Log.entryAdded', ({ entry }) => {
+  if (entry.level !== 'error') return;
+  if (isExternalNetworkNoise(entry)) { skippedExternal.add(new URL(entry.url).host); return; }
+  errors.push(entry.text);
+});
 
 async function evaluate(expression) {
   const result = await protocol.send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true });
@@ -167,9 +219,11 @@ try {
   await waitFor('document.querySelector("#toast")?.textContent.includes("Import:")', 'CSV import nebyl potvrzen.');
   assert(await evaluate('JSON.parse(localStorage.getItem("jsk:business-demo:v1")).ledger.some((row) => row.external_id === "row-1")'), 'CSV pohyb se neuložil.');
   assert(errors.length === 0, `Chyby v konzoli: ${errors.join(' | ')}`);
+  if (skippedExternal.size) console.log(`  (nenačtené externí zdroje, na demu nezáleží: ${[...skippedExternal].join(', ')})`);
   console.log('✓ Business prohlížeč: 8 sekcí, graf, mobil, uložený pohled, vytvoření i smazání nákladu a CSV import prošly.');
 } finally {
   protocol.socket.close();
+  server?.close();
   chrome.kill();
   if (chrome.exitCode === null) await new Promise((resolve) => chrome.once('exit', resolve));
   await rm(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });

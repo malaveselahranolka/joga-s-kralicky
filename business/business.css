@@ -132,6 +132,10 @@ main{max-width:1360px;margin:0 auto;scroll-margin-top:24px}
 .chart-point{fill:var(--studio-white);stroke:var(--studio-leaf);stroke-width:2}.chart-zero{stroke:var(--studio-muted);stroke-dasharray:3 4;opacity:.45}
 .chart-table-toggle{margin-top:10px}.chart-table{margin-top:12px}
 .table-scroll{overflow:auto;max-width:100%;overscroll-behavior:contain}
+/* Položka gridu se sama od sebe nezmenší pod šířku svého obsahu, takže
+   široká tabulka roztáhla celý pohled místo aby se posouvala uvnitř
+   svého rámu. Na úzké obrazovce to přetékalo celou stránkou. */
+.view-stack>*,.split-grid>*,.overview-grid>*,.panel>*{min-width:0}
 th,td{padding:11px 10px;border-bottom:1px solid #e4e7dc;text-align:left;vertical-align:top}
 th{color:var(--studio-muted);font-size:.74rem;font-weight:680;white-space:nowrap}
 td{font-size:.87rem}.numeric{text-align:right;white-space:nowrap}.muted{color:var(--studio-muted)}
@@ -181,4 +185,5 @@ td{font-size:.87rem}.numeric{text-align:right;white-space:nowrap}.muted{color:va
   .panel{padding:18px 16px}.chart-toolbar,.section-head{align-items:stretch;display:grid}.segmented{width:100%}.segmented button{flex:1}.budget-callout{grid-template-columns:1fr}.result-trace{grid-template-columns:1fr}.trace-op{transform:rotate(90deg)}.summary-grid,.split-grid,.three-grid{grid-template-columns:1fr}.bar-row{grid-template-columns:1fr auto}.bar-track{grid-column:1/-1;grid-row:2}.connection{grid-template-columns:1fr auto}.connection-detail,.connection-actions{grid-column:1/-1}.connection-actions{justify-content:space-between}.cost-quick-grid,.two-fields,.advanced-grid,.mapping-grid{grid-template-columns:1fr}.field-span-2{grid-column:auto}.modal form{padding:20px 16px}.modal-actions{display:grid;grid-template-columns:1fr 1fr}.auth-card{padding:24px 20px}.table-scroll{margin-inline:-16px;padding-inline:16px}
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.sidebar,.button,.icon-button,.toast{transition-duration:1ms}.modal[open],.loading-line::after,.loading-panel::after,.button[aria-busy="true"]::before{animation:none}}
+@media(max-width:640px){.chart-wrap{display:none}.chart-table-toggle[data-open-on-narrow] .chart-table{display:block}.chart-table-toggle[data-open-on-narrow]>summary{list-style:none;cursor:default;pointer-events:none;color:var(--studio-muted);font-weight:620}}
 @media print{.sidebar,.mobile-bar,.period-controls,.demo-banner,.button,.text-button,.context-tabs{display:none!important}.workspace{margin:0;padding:0}.workspace-header{padding:0 0 20px}.panel{box-shadow:none;border:1px solid var(--studio-line);break-inside:avoid}.view-stack{gap:16px}}
