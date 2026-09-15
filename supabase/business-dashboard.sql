@@ -551,11 +551,17 @@ begin
   ),
   ledger_values as (
     select
-      coalesce(sum(amount_minor) filter (where kind = 'income' and booking_id is null and voucher_id is null), 0)::bigint as income,
+      -- Platba ze Stripu patří k rezervaci nebo poukazu; ty už jsou v příjmu
+      -- z vlastních tabulek. Nespárovaný stripe pohyb proto není další příjem,
+      -- ale mezera v párování — sčítá se zvlášť a shodí úplnost.
+      coalesce(sum(amount_minor) filter (where kind = 'income' and booking_id is null and voucher_id is null and source <> 'stripe'), 0)::bigint as income,
+      coalesce(sum(amount_minor) filter (where kind = 'income' and booking_id is null and voucher_id is null and source = 'stripe'), 0)::bigint as unmatched_income,
+      count(*) filter (where kind = 'income' and booking_id is null and voucher_id is null and source = 'stripe')::bigint as unmatched_rows,
       coalesce(sum(amount_minor) filter (where kind = 'refund'), 0)::bigint as refunds,
       coalesce(sum(amount_minor) filter (where kind = 'fee' and cost_occurrence_id is null), 0)::bigint as fees,
       coalesce(sum(amount_minor) filter (where kind = 'ad_spend' and cost_occurrence_id is null), 0)::bigint as ads,
-      coalesce(sum(amount_minor) filter (where kind = 'expense' and cost_occurrence_id is null), 0)::bigint as expenses
+      -- 'adjustment' nemá vlastní větev, bez tohoto by mizel ze všech součtů.
+      coalesce(sum(amount_minor) filter (where kind in ('expense','adjustment') and cost_occurrence_id is null), 0)::bigint as expenses
     from ledger_period where currency = 'CZK'
   ),
   foreign_values as (
@@ -574,10 +580,12 @@ begin
     'ad_spend_minor', x.ads,
     'missing_payment_amounts', b.missing_amounts,
     'foreign_currency_entries', f.rows + c.foreign_rows,
+    'unmatched_income_minor', x.unmatched_income,
+    'unmatched_income_entries', x.unmatched_rows,
     -- Přístup k business tabulkám neznamená přístup k rezervacím. Když druhý
     -- chybí, RLS vrátí prázdno bez chyby a součty by vypadaly jako nula.
     'source_access', public.is_owner(),
-    'complete', b.missing_amounts = 0 and f.rows + c.foreign_rows = 0 and public.is_owner()
+    'complete', b.missing_amounts = 0 and f.rows + c.foreign_rows = 0 and x.unmatched_rows = 0 and public.is_owner()
   ) into result
   from booking_values b cross join voucher_values v cross join cost_values c
     cross join ledger_values x cross join foreign_values f;

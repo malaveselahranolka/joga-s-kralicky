@@ -30,22 +30,48 @@ export function mapStripeBalance(row) {
   const type = String(row?.type || '');
   const amount = Number(row?.amount);
   if (!row?.id || !Number.isFinite(amount)) throw new Error('invalid_stripe_row');
-  let kind = 'adjustment';
+  let kind = null;
   if (['charge', 'payment'].includes(type)) kind = amount >= 0 ? 'income' : 'refund';
   else if (type.includes('refund') || type.includes('reversal')) kind = 'refund';
   else if (type.includes('fee')) kind = 'fee';
   else if (type.includes('payout') || type.includes('transfer')) kind = 'transfer';
+  // Částka se ukládá bez znaménka, směr nese kind. U korekce (Climate
+  // contribution, dispute) proto rozhoduje znaménko původní částky —
+  // jinak by skončila jako 'adjustment', který nikdo nezapočítá.
+  else kind = amount < 0 ? 'expense' : 'income';
   const source = row.source && typeof row.source === 'object' ? row.source : null;
-  return {
-    source: 'stripe', external_id: row.id, source_created_at: new Date(row.created * 1000).toISOString(),
-    source_updated_at: new Date(row.created * 1000).toISOString(), occurred_at: new Date(row.created * 1000).toISOString(),
+  const occurredAt = new Date(row.created * 1000).toISOString();
+  const status = row.status === 'pending' ? 'pending' : 'posted';
+  const entry = {
+    source: 'stripe', external_id: row.id, source_created_at: occurredAt,
+    source_updated_at: occurredAt, occurred_at: occurredAt,
     currency: String(row.currency || 'czk').toUpperCase(), amount_minor: Math.abs(Math.round(amount)), kind,
-    status: row.status === 'pending' ? 'pending' : 'posted',
+    status,
     // Metadata Stripu nejsou zárukou, že rezervace existuje. Neověřené ID by
     // porušilo cizí klíč a shodilo celý běh synchronizace.
     booking_id: UUID_PATTERN.test(String(source?.metadata?.booking_id || '')) ? source.metadata.booking_id : null,
     source_url: `https://dashboard.stripe.com/balance/history/${row.id}`, note: row.description || type,
   };
+  return entry;
+}
+
+// Poplatek u karetní platby není samostatná balance transaction — je uvnitř
+// pohybu v poli `fee`. Dokud se nečetlo, měl dashboard nulové poplatky
+// a o ně nadhodnocený provozní výsledek.
+export function mapStripeEntries(row) {
+  const entry = mapStripeBalance(row);
+  const fee = Math.round(Number(row?.fee || 0));
+  if (!fee || entry.kind === 'fee') return [entry];
+  return [entry, {
+    ...entry,
+    // Odvozené, ale stabilní ID: opakovaný import se zdeduplikuje stejně
+    // jako původní pohyb.
+    external_id: `${entry.external_id}:fee`,
+    amount_minor: Math.abs(fee),
+    kind: 'fee',
+    booking_id: null,
+    note: `Poplatek Stripe k ${entry.external_id}`,
+  }];
 }
 
 const publicPathFilter = {

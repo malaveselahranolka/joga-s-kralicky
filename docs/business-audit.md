@@ -498,9 +498,16 @@ což je přesně 21 zaplacených míst × 499 Kč. Plateb bez částky je 0.
 
 ### Co v produkci nesedí
 
-1. **Stripe poplatky se nesbírají.** V ledgeru je 14 pohybů typu `charge`,
-   1 refundace a 1 „Climate contribution" — ale **ani jeden `fee`**. „Platební
-   poplatky" proto ukazují 0 Kč a provozní výsledek je o poplatky nadhodnocený.
+1. **Stripe poplatky se nesbíraly. Opraveno.** V ledgeru bylo 14 pohybů typu
+   `charge`, 1 refundace a 1 „Climate contribution" — ale **ani jeden `fee`**.
+   Příčina: u karetní platby není poplatek samostatná balance transaction, je
+   uvnitř pohybu v poli `fee`, a mapovač ho nečetl. `mapStripeEntries` teď
+   z každého pohybu s nenulovým poplatkem vytvoří druhý záznam typu `fee`
+   s odvozeným stabilním `external_id` (`txn_…:fee`), takže opakovaný import
+   nic nezdvojí. **Pozor:** stávající řádky poplatek zpětně nedostanou — je
+   potřeba nasadit `business-sync` a spustit Stripe synchronizaci za dané
+   období znovu. Nové `external_id` zajistí, že se poplatky doplní bez dotčení
+   už uložených pohybů.
 2. **Vercel zapsal 15 budoucích dnů s nulou** a `complete = true`. Den, který
    nenastal, tak vypadá jako den bez návštěv. Klient je nově do součtu nebere,
    ale zapisovat se přestat musí v konektoru.
@@ -509,13 +516,31 @@ což je přesně 21 zaplacených míst × 499 Kč. Plateb bez částky je 0.
    z toho řádku, který se vrátil první (127 nebo 530 podle nálady databáze).
    **Opraveno** — zdroj se vybírá pevným pořadím (GA4, pak Vercel) a je vidět
    v popisku.
-4. **Pohyby typu `adjustment` nepočítá nikdo.** V SQL ani v JS nemají větev,
-   takže tiše mizí ze všech součtů. Teď jde o 2,50 Kč, ale je to nezaúčtovaná
-   kategorie.
-5. **Tři ze sedmi čekajících Stripe příjmů nemají vazbu na rezervaci.** Až se
-   překlopí na `posted`, započítají se jako „jiný příjem" vedle částky
-   z rezervace — tedy dvakrát. Dnes je „jiný příjem" 0 Kč, protože všechny
-   vyrovnané pohyby vazbu mají.
+4. **Pohyby typu `adjustment` nepočítal nikdo. Opraveno.** V SQL ani v JS
+   neměly větev, takže tiše mizely ze všech součtů. Nově se berou konzervativně
+   jako výdaj a mapovač navíc určuje směr podle znaménka původní částky
+   (záporná → `expense`, kladná → `income`), takže v kategorii `adjustment`
+   zůstanou jen opravdu nejednoznačné případy. Ověřeno proti produkci: výdaje
+   za září vzrostly z 0 Kč na 2,50 Kč, tedy o dosud neviditelnou korekci.
+5. **Tři ze sedmi čekajících Stripe příjmů nemají vazbu na rezervaci. Opraveno.**
+   Až se překlopí na `posted`, započítaly by se jako „jiný příjem" vedle částky
+   z rezervace — tedy dvakrát. Nově platí pravidlo: platba ze Stripu vždycky
+   patří k rezervaci nebo poukazu, a ty už jsou v příjmu z vlastních tabulek.
+   Nespárovaný pohyb ze Stripu proto **není další příjem** — sčítá se zvlášť
+   jako `unmatched_income`, shodí úplnost na „Částečná data" a ve Financích se
+   vypíše výzva ke kontrole. Ruční a CSV příjem vlastní tabulku nemá, ten se
+   počítá dál jako dosud.
+
+   Párování podle částky a času by nepomohlo: k těmto pohybům existuje 1 až 3
+   stejně pravděpodobných rezervací, takže by šlo o hádání. Příčina je
+   pravděpodobně v tom, že `stripe-voucher` vkládá `metadata` jen do checkout
+   session, ne do `payment_intent_data` jako `stripe-create` — poplatek za
+   poukaz je taky 499 Kč, což sedí na všechny tři nespárované částky.
+   **Návrh, neprovedeno:** doplnit `payment_intent_data: { metadata: { type:
+   'voucher' } }` do `supabase/functions/stripe-voucher/index.ts` a mapovat
+   `voucher_id`. Je to jednořádková a čistě doplňující změna, ale sahá do
+   platebního toku, který `AGENTS.md` označuje za chráněný, a z tohoto
+   prostředí ji nelze otestovat skutečnou platbou. Rozhodnutí patří majitelce.
 6. **Marketing zůstane prázdný.** Oprava spojuje kampaně přes
    `dimension_key = 'campaign:<id>'`, jenže v produkci žádný takový řádek není:
    reklamní účty nejsou připojené a Sklik při jediném běhu nepřinesl nic.
@@ -523,6 +548,6 @@ což je přesně 21 zaplacených míst × 499 Kč. Plateb bez částky je 0.
    pořád starou `business_period_summary` bez `source_access` i bez filtru měny.
    Klient to snese (chybějící `source_access` bere jako „přístup je v pořádku"),
    ale ochrany jsou do nasazení migrace nečinné.
-8. **Ke kontrole, ne nutně chyba:** jediné nákladové pravidlo je „Nájem studia"
-   s opakováním **za lekci** a 400 Kč. Pokud má být nájem měsíční, jsou zářijové
-   náklady 800 Kč místo nájmu za celý měsíc.
+8. **Nájem 400 Kč za lekci je správně** — potvrzeno majitelkou 15. 9. 2026.
+   Studio se pronajímá za lekci, ne měsíčně, takže zářijové náklady 800 Kč za
+   dvě uskutečněné lekce odpovídají skutečnosti.

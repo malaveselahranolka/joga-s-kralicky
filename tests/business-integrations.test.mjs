@@ -14,6 +14,7 @@ import {
   googleAdsQuery,
   mapGa4Period,
   mapStripeBalance,
+  mapStripeEntries,
   mapVercelPeriod,
   metaInsightsUrl,
   safeZapierPayload,
@@ -98,4 +99,33 @@ test('provider mappers preserve period uniques and Stripe signs', () => {
   const refund = mapStripeBalance({ id: 'txn_refund', created: 1788220800, amount: -20000, currency: 'czk', type: 'refund', status: 'available' });
   assert.equal(refund.kind, 'refund');
   assert.equal(refund.amount_minor, 20000);
+});
+
+test('regrese: poplatek Stripe vzniká z pole fee uvnitř pohybu', () => {
+  // Karetní platba nemá samostatnou balance transaction pro poplatek — je
+  // v poli `fee`. Dokud se nečetlo, měl dashboard nulové poplatky.
+  const entries = mapStripeEntries({
+    id: 'txn_charge', created: 1788220800, amount: 49_900, fee: 1_400, currency: 'czk',
+    type: 'charge', status: 'available',
+    source: { metadata: { booking_id: '3f1a2b4c-5d6e-4f70-8a91-b2c3d4e5f607' } },
+  });
+  assert.equal(entries.length, 2);
+  assert.equal(entries[0].kind, 'income');
+  assert.equal(entries[0].amount_minor, 49_900);
+  assert.equal(entries[1].kind, 'fee');
+  assert.equal(entries[1].amount_minor, 1_400);
+  assert.equal(entries[1].booking_id, null, 'poplatek není příjem rezervace');
+  // Odvozené ID musí být stabilní, aby se opakovaný import zdeduplikoval.
+  assert.equal(entries[1].external_id, 'txn_charge:fee');
+  assert.deepEqual(mapStripeEntries({ id: 'txn_charge', created: 1788220800, amount: 49_900, fee: 1_400, currency: 'czk', type: 'charge', status: 'available' })[1].external_id, 'txn_charge:fee');
+  // Pohyb bez poplatku zůstává jediný.
+  assert.equal(mapStripeEntries({ id: 'txn_free', created: 1788220800, amount: 10_000, fee: 0, currency: 'czk', type: 'charge', status: 'available' }).length, 1);
+});
+
+test('regrese: korekce dostane směr podle znaménka, ne kind adjustment', () => {
+  const cost = mapStripeEntries({ id: 'txn_climate', created: 1788220800, amount: -250, currency: 'czk', type: 'climate_order_purchase', status: 'available' })[0];
+  assert.equal(cost.kind, 'expense');
+  assert.equal(cost.amount_minor, 250);
+  const credit = mapStripeEntries({ id: 'txn_credit', created: 1788220800, amount: 500, currency: 'czk', type: 'adjustment', status: 'available' })[0];
+  assert.equal(credit.kind, 'income');
 });

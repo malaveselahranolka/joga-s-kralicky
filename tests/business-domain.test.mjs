@@ -297,3 +297,34 @@ test('regrese: budoucí den není nula návštěv', () => {
   assert.equal(trafficSummary(daily, {}, { today: '2026-09-15' }).users, null);
   assert.equal(trafficSummary(daily, {}, { today: '2026-09-15' }).usersState, 'unavailable');
 });
+
+test('regrese: nespárovaná platba ze Stripu se nepřičte k rezervacím', () => {
+  // Živý stav: tři čekající Stripe příjmy bez vazby na rezervaci. Po překlopení
+  // na posted by se dřív započítaly vedle částky z rezervace, tedy dvakrát.
+  const period = { from: '2026-09-01', to: '2026-09-30' };
+  const result = computeFinancials({
+    lessons: [{ id: 'l1', starts_at: '2026-09-10T08:00:00Z', status: 'active' }],
+    bookings: [{ id: 'b1', lesson_id: 'l1', status: 'confirmed', payment_status: 'paid', payment_amount: 49_900, paid_at: '2026-09-09T10:00:00Z', spots: 1, email: 'host@example.cz' }],
+    ledger: [
+      { id: 'x1', source: 'stripe', external_id: 'txn_1', kind: 'income', status: 'posted', amount_minor: 49_900, occurred_at: '2026-09-09T10:00:00Z' },
+    ],
+  }, period);
+  assert.equal(result.cashSalesMinor, 49_900, 'jen jednou, z rezervace');
+  assert.equal(result.unmatchedIncomeMinor, 49_900);
+  assert.equal(result.unmatchedIncomeEntries, 1);
+  assert.equal(result.completeness, 'partial', 'mezera v párování musí být vidět');
+  // Ruční nebo CSV příjem nemá vlastní tabulku, ten se počítá dál.
+  const manual = computeFinancials({
+    ledger: [{ id: 'y1', source: 'csv', external_id: 'bank-1', kind: 'income', status: 'posted', amount_minor: 30_000, occurred_at: '2026-09-09T10:00:00Z' }],
+  }, period);
+  assert.equal(manual.cashSalesMinor, 30_000);
+  assert.equal(manual.unmatchedIncomeEntries, 0);
+});
+
+test('regrese: adjustment nemizí ze součtů', () => {
+  const result = computeFinancials({
+    ledger: [{ id: 'a1', source: 'stripe', external_id: 'txn_climate', kind: 'adjustment', status: 'posted', amount_minor: 250, occurred_at: '2026-09-05T10:00:00Z' }],
+  }, { from: '2026-09-01', to: '2026-09-30' });
+  assert.equal(result.operatingCostsMinor, 250, 'korekce se bere konzervativně jako výdaj');
+  assert.equal(result.cashFlowMinor, -250);
+});

@@ -202,6 +202,8 @@ export function createBusinessStore({ client = null, demo = false } = {}) {
       adSpendMinor: Number(rawSummary.ad_spend_minor || 0),
       missingPaymentAmounts: Number(rawSummary.missing_payment_amounts || 0),
       foreignCurrencyEntries: Number(rawSummary.foreign_currency_entries || 0),
+      unmatchedIncomeMinor: Number(rawSummary.unmatched_income_minor || 0),
+      unmatchedIncomeEntries: Number(rawSummary.unmatched_income_entries || 0),
       completeness: rawSummary.complete && sourceAccess !== false ? 'complete' : 'partial',
       buyerCount: localSummary.buyerCount,
       sourceAccess,

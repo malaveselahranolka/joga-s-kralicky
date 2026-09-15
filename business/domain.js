@@ -205,6 +205,9 @@ export function buyerStats(bookings, period) {
 // Vše se počítá v jedné měně. Cizí měna se nesčítá s korunami — zůstane
 // stranou jako výslovná neúplnost, dokud nebude převod.
 export const BASE_CURRENCY = 'CZK';
+// Zdroje, jejichž příjem se do výsledku dostává z vlastních tabulek
+// (rezervace, poukazy). Jejich pohyb v ledgeru je jen doklad, ne další peníze.
+export const PAID_THROUGH_OWN_TABLES = new Set(['stripe']);
 const isBaseCurrency = (row) => String(row.currency || BASE_CURRENCY).toUpperCase() === BASE_CURRENCY;
 
 export function computeFinancials({ bookings = [], lessons = [], vouchers = [], ledger = [], occurrences = [] }, period) {
@@ -262,6 +265,8 @@ export function computeFinancials({ bookings = [], lessons = [], vouchers = [], 
   let feesMinor = 0;
   let adSpendMinor = 0;
   let otherExpensesMinor = 0;
+  let unmatchedIncomeMinor = 0;
+  let unmatchedIncomeEntries = 0;
   for (const entry of uniqueBy(ledger, ledgerIdentity)) {
     // Stejné pravidlo jako business_period_summary v SQL: započítá se jen
     // vyrovnaný pohyb. Čekající ani stornovaný do výsledku nepatří.
@@ -269,12 +274,24 @@ export function computeFinancials({ bookings = [], lessons = [], vouchers = [], 
     if (!isBaseCurrency(entry)) { foreignCurrencyEntries += 1; continue; }
     const amount = Math.abs(Number(entry.amount_minor || 0));
     if (entry.kind === 'transfer') continue;
-    if (entry.kind === 'income' && !entry.booking_id && !entry.voucher_id) otherIncomeMinor += amount;
+    if (entry.kind === 'income' && !entry.booking_id && !entry.voucher_id) {
+      // Platba ze Stripu vždycky patří k rezervaci nebo poukazu; ty už jsou
+      // v příjmu započítané z vlastních tabulek. Nespárovaný pohyb proto
+      // není další příjem — je to mezera v párování a musí být vidět.
+      if (PAID_THROUGH_OWN_TABLES.has(String(entry.source || ''))) {
+        unmatchedIncomeMinor += amount;
+        unmatchedIncomeEntries += 1;
+      } else {
+        otherIncomeMinor += amount;
+      }
+    }
     if (entry.kind === 'refund') refundsMinor += amount;
     if (entry.cost_occurrence_id) continue;
     if (entry.kind === 'fee') feesMinor += amount;
     if (entry.kind === 'ad_spend') adSpendMinor += amount;
-    if (entry.kind === 'expense') otherExpensesMinor += amount;
+    // 'adjustment' nemá vlastní větev ve výdajích ani v příjmech, takže by
+    // tiše zmizel ze všech součtů. Bere se konzervativně jako výdaj.
+    if (entry.kind === 'expense' || entry.kind === 'adjustment') otherExpensesMinor += amount;
   }
 
   const cashSalesMinor = bookingCashMinor + voucherSalesMinor + otherIncomeMinor - refundsMinor;
@@ -299,7 +316,9 @@ export function computeFinancials({ bookings = [], lessons = [], vouchers = [], 
     adSpendMinor,
     missingPaymentAmounts,
     foreignCurrencyEntries,
-    completeness: missingPaymentAmounts || foreignCurrencyEntries ? 'partial' : 'complete',
+    unmatchedIncomeMinor,
+    unmatchedIncomeEntries,
+    completeness: missingPaymentAmounts || foreignCurrencyEntries || unmatchedIncomeEntries ? 'partial' : 'complete',
   };
 }
 

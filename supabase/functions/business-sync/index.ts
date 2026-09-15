@@ -3,7 +3,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import {
   assertPeriod, ga4Bodies, googleAdsQuery, mapGa4Daily, mapGa4Period,
-  mapStripeBalance, mapVercelDaily, mapVercelPeriod, metaInsightsUrl,
+  mapStripeEntries, mapVercelDaily, mapVercelPeriod, metaInsightsUrl,
   sklikCalls, stripeBalanceUrl, tiktokReportUrl, vercelUrls,
 } from '../_shared/business-sync-contracts.js';
 
@@ -91,7 +91,7 @@ async function syncStripe(from, to) {
   let cursor = '';
   for (let page = 0; page < 50; page += 1) {
     const data = await jsonFetch(stripeBalanceUrl(from, to, cursor), { headers: { Authorization: `Bearer ${env('STRIPE_SECRET_KEY')}` } });
-    ledger.push(...(data.data || []).map(mapStripeBalance));
+    ledger.push(...(data.data || []).flatMap(mapStripeEntries));
     if (!data.has_more || !data.data?.length) return { ledger, cursor: '', metadata: { pages: page + 1 } };
     cursor = data.data.at(-1).id;
   }
