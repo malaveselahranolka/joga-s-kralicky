@@ -77,6 +77,13 @@
       }
     },
     {
+      "src": "/business",
+      "status": 308,
+      "headers": {
+        "Location": "/business.html"
+      }
+    },
+    {
       "src": "/(.*)",
       "continue": true,
       "headers": {

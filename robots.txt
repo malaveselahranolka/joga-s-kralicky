@@ -13,6 +13,8 @@
 User-agent: *
 Allow: /
 Disallow: /admin.html
+Disallow: /business.html
+Disallow: /business
 Disallow: /vstupenka.html
 Disallow: /api/
 
@@ -20,36 +22,48 @@ Disallow: /api/
 User-agent: GPTBot
 Allow: /
 Disallow: /admin.html
+Disallow: /business.html
+Disallow: /business
 Disallow: /vstupenka.html
 Disallow: /api/
 
 User-agent: OAI-SearchBot
 Allow: /
 Disallow: /admin.html
+Disallow: /business.html
+Disallow: /business
 Disallow: /vstupenka.html
 Disallow: /api/
 
 User-agent: ChatGPT-User
 Allow: /
 Disallow: /admin.html
+Disallow: /business.html
+Disallow: /business
 Disallow: /vstupenka.html
 Disallow: /api/
 
 User-agent: PerplexityBot
 Allow: /
 Disallow: /admin.html
+Disallow: /business.html
+Disallow: /business
 Disallow: /vstupenka.html
 Disallow: /api/
 
 User-agent: ClaudeBot
 Allow: /
 Disallow: /admin.html
+Disallow: /business.html
+Disallow: /business
 Disallow: /vstupenka.html
 Disallow: /api/
 
 User-agent: Google-Extended
 Allow: /
 Disallow: /admin.html
+Disallow: /business.html
+Disallow: /business
 Disallow: /vstupenka.html
 Disallow: /api/
 

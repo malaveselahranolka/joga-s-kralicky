@@ -93,7 +93,7 @@ for (const retired of ['joga-se-stenaty.html']) {
 
 // Lokální odkazy a soubory. Kontrolujeme celý veřejný balík, nejen sitemapu,
 // aby neprošla třeba nefunkční fotka nebo odkaz z právní stránky.
-const publicHtml = [...new Set([...pages, 'obchodni-podminky.html', 'zasady-osobnich-udaju.html', '404.html', '410.html'])]
+const publicHtml = [...new Set([...pages, 'obchodni-podminky.html', 'zasady-osobnich-udaju.html', 'business.html', '404.html', '410.html'])]
 for (const page of publicHtml) {
   if (!existsSync(join(output, page))) continue
   const html = read(page)

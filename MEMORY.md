@@ -1,0 +1,1 @@
+- [Live business dashboard deployment](memory/live-business-dashboard.md) — produkční nasazení, Supabase omezení a izolace plateb
