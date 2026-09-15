@@ -9,6 +9,7 @@ import {
   mergeLedgerEntries,
   proposeAdBudget,
   recommendChannels,
+  pickTrafficSource,
   pragueDate,
   recurrenceOccurrences,
   trafficSummary,
@@ -262,4 +263,37 @@ test('regrese: cizoměnový náklad mimo období nekazí úplnost období', () =
   };
   assert.equal(computeFinancials(source, { from: '2026-09-01', to: '2026-09-30' }).completeness, 'complete');
   assert.equal(computeFinancials(source, { from: '2026-03-01', to: '2026-03-31' }).foreignCurrencyEntries, 1);
+});
+
+test('regrese: návštěvnost nesčítá dva měřicí systémy dohromady', () => {
+  // Živá data: GA4 hlásilo za září 558 zobrazení, Vercel 998 za tentýž web.
+  // Sečtení dá 1 556, což neodpovídá ničemu.
+  const daily = [
+    { source: 'ga4', metric_date: '2026-09-01', sessions: 26, views: 558 },
+    { source: 'vercel', metric_date: '2026-09-01', sessions: 40, views: 998 },
+  ];
+  const periodRows = [
+    { source: 'ga4', complete: true, metrics: { users: 127 } },
+    { source: 'vercel', complete: true, metrics: { users: 530 } },
+  ];
+  assert.equal(pickTrafficSource(daily, periodRows), 'ga4', 'GA4 je primární zdroj');
+  const ga4Only = daily.filter((row) => row.source === 'ga4');
+  assert.equal(trafficSummary(ga4Only, periodRows[0].metrics).views, 558);
+  // Záskok, když GA4 chybí.
+  const vercelOnly = daily.filter((row) => row.source === 'vercel');
+  assert.equal(pickTrafficSource(vercelOnly, []), 'vercel');
+});
+
+test('regrese: budoucí den není nula návštěv', () => {
+  // Konektor zapsal dny dopředu s nulami a complete = true.
+  const daily = [
+    { source: 'vercel', metric_date: '2026-09-10', sessions: 40, views: 90 },
+    { source: 'vercel', metric_date: '2026-09-30', sessions: 0, views: 0 },
+  ];
+  const result = trafficSummary(daily, { users: 100 }, { today: '2026-09-15' });
+  assert.equal(result.views, 90);
+  assert.equal(result.skippedFutureDays, 1);
+  // Chybějící počet uživatelů je nedostupnost, ne nula.
+  assert.equal(trafficSummary(daily, {}, { today: '2026-09-15' }).users, null);
+  assert.equal(trafficSummary(daily, {}, { today: '2026-09-15' }).usersState, 'unavailable');
 });

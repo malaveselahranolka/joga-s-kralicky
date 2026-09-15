@@ -4,7 +4,9 @@ import {
   formatMoney,
   integer,
   normalizedBuyerEmail,
+  pickTrafficSource,
   pragueDate,
+  TRAFFIC_SOURCE_LABELS,
   proposeAdBudget,
   recommendChannels,
   trafficSummary,
@@ -139,6 +141,14 @@ function trendChart(data, metric = 'result') {
   return `<div class="chart-wrap"><svg viewBox="0 0 ${width} ${height}" role="img" aria-labelledby="trendTitle trendDesc"><title id="trendTitle">${metricLabel} po dnech</title><desc id="trendDesc">Časová řada ukazatele ${metricLabel.toLowerCase()} za zvolené období. Přesná čísla jsou v tabulce pod grafem.</desc>${grid}<line class="chart-zero" x1="${left}" y1="${y(0)}" x2="${width - right}" y2="${y(0)}"/><polygon class="chart-area" points="${area}"/><polyline class="chart-line" points="${points}"/>${values.map((value, index) => `<circle class="chart-point" cx="${x(index)}" cy="${y(value)}" r="3.5"><title>${date(rows[index].metric_date)}: ${formatMoney(value)}</title></circle>`).join('')}${labels}</svg></div><details class="chart-table-toggle" data-open-on-narrow><summary>Přesná data grafu</summary><div class="table-scroll chart-table"><table><thead><tr><th>Den</th><th class="numeric">${metricLabel}</th><th class="numeric">Návštěvy</th></tr></thead><tbody>${rows.map((row, index) => `<tr><td>${date(row.metric_date)}</td><td class="numeric">${formatMoney(values[index])}</td><td class="numeric">${num(row.sessions)}</td></tr>`).join('')}</tbody></table></div></details>`;
 }
 
+// Jeden zdroj návštěvnosti, vybraný pevným pořadím, ne tím, co se vrátí první.
+function websiteTraffic(data) {
+  const source = pickTrafficSource(data.dailyMetrics, data.periodMetrics);
+  const daily = (data.dailyMetrics || []).filter((row) => row.source === source).map((row) => ({ ...row, ...(row.metrics || {}) }));
+  const periodRow = (data.periodMetrics || []).find((row) => row.source === source && row.complete)?.metrics;
+  return { ...trafficSummary(daily, periodRow), source, sourceLabel: TRAFFIC_SOURCE_LABELS[source] || source };
+}
+
 const activeLessons = (data) => (data.lessons || []).filter((row) => row.status !== 'cancelled');
 const capacityOf = (lessons) => lessons.reduce((sum, row) => sum + Number(row.capacity || 0), 0);
 
@@ -178,13 +188,13 @@ function overview(data, options) {
   const proposal = proposeAdBudget(s.operatingResultMinor, rate, { basisKnown: s.completeness === 'complete', cashLimitMinor: Math.max(0, s.cashFlowMinor) });
   const lessonCapacity = capacityOf(activeLessons(data));
   const occupancy = lessonCapacity ? s.paidSpots / lessonCapacity * 100 : null;
-  const traffic = trafficSummary(data.dailyMetrics.map((row) => ({ ...row, ...(row.metrics || {}) })), data.periodMetrics.find((row) => row.complete)?.metrics);
+  const traffic = websiteTraffic(data);
   return `<div class="view-stack">${errors(data.errors)}${kpis(s)}
     <div class="overview-grid"><section class="panel"><div class="chart-toolbar"><div><p class="section-label">Rytmus studia</p><h2>Vývoj výsledku</h2></div><div><div class="segmented" aria-label="Ukazatel grafu">${[['result','Výsledek'],['revenue','Výnosy'],['costs','Náklady']].map(([key,label]) => `<button type="button" data-action="chart-mode" data-mode="${key}" aria-pressed="${options.chartMetric === key}">${label}</button>`).join('')}</div><div class="status-tag">${completeness(s)}</div></div></div>${trendChart(data, options.chartMetric)}</section>
     <aside class="panel"><div class="section-head"><div><p class="section-label">Dnes důležité</p><h2>Signály</h2></div></div><div class="insight-list">
       <div class="insight"><strong>Obsazenost ${pct(occupancy)}</strong><p>${num(s.paidSpots)} zaplacených míst z kapacity ${num(lessonCapacity)}.</p><a href="?view=plan">Otevřít plán →</a></div>
       <div class="insight"><strong>${num(s.buyerCount)} skutečných kupujících</strong><p>Skupinová rezervace se počítá jako jeden kupující, místa samostatně.</p><a href="?view=audience">Rozebrat publikum →</a></div>
-      <div class="insight"><strong>${traffic.users === null ? 'Uživatelé nejsou dostupní' : `${num(traffic.users)} unikátních uživatelů`}</strong><p>${num(traffic.sessions)} návštěv a ${num(traffic.views)} zobrazení veřejného webu.</p><a href="?view=sources">Zkontrolovat zdroje →</a></div>
+      <div class="insight"><strong>${traffic.users === null ? 'Uživatelé nejsou dostupní' : `${num(traffic.users)} unikátních uživatelů`}</strong><p>${num(traffic.sessions)} návštěv a ${num(traffic.views)} zobrazení veřejného webu${traffic.source ? ` podle ${esc(traffic.sourceLabel)}` : ''}.</p><a href="?view=sources">Zkontrolovat zdroje →</a></div>
     </div></aside></div>
     <section class="panel panel-quiet budget-callout"><div><p class="section-label">Další krok</p><h2>Návrh rozpočtu na reklamu</h2><p>${proposal.proposedMinor === null ? 'Výsledek není úplný, proto automatický návrh nevznikl.' : `${rate} % z kladného výsledku, omezeno dostupnou hotovostí.`}</p></div><div><div class="amount">${formatMoney(proposal.proposedMinor)}</div>${proposal.proposedMinor === null ? '<a href="?view=marketing">Rozdělit rozpočet →</a>' : `<button class="button button-primary" data-action="accept-budget" data-amount="${proposal.proposedMinor}" data-rate="${esc(rate)}">Přijmout jako rozpočet</button>`}</div></section>
   </div>`;
@@ -250,8 +260,8 @@ function audience(data) {
     current.orders += 1; current.spots += Number(row.spots || 0); current.value += Number(row.payment_amount || 0); byEmail.set(email, current);
   }
   const repeat = [...byEmail.values()].filter((row) => row.orders > 1);
-  const traffic = trafficSummary(data.dailyMetrics.map((row) => ({ ...row, ...(row.metrics || {}) })), data.periodMetrics.find((row) => row.complete)?.metrics);
-  return `<div class="view-stack">${errors(data.errors)}<section class="kpi-strip"><article class="kpi"><div class="kpi-label">Kupující</div><div class="kpi-value">${num(byEmail.size)}</div><div class="kpi-meta">Unikátní ověřitelné e-maily</div></article><article class="kpi"><div class="kpi-label">Opakovaní</div><div class="kpi-value">${num(repeat.length)}</div><div class="kpi-meta">Alespoň dva nákupy</div></article><article class="kpi"><div class="kpi-label">Uživatelé webu</div><div class="kpi-value">${num(traffic.users)}</div><div class="kpi-meta">Nesčítáno z denních unikátů</div></article><article class="kpi"><div class="kpi-label">Návštěvy</div><div class="kpi-value">${num(traffic.sessions)}</div><div class="kpi-meta">Pouze veřejné stránky</div></article></section>
+  const traffic = websiteTraffic(data);
+  return `<div class="view-stack">${errors(data.errors)}<section class="kpi-strip"><article class="kpi"><div class="kpi-label">Kupující</div><div class="kpi-value">${num(byEmail.size)}</div><div class="kpi-meta">Unikátní ověřitelné e-maily</div></article><article class="kpi"><div class="kpi-label">Opakovaní</div><div class="kpi-value">${num(repeat.length)}</div><div class="kpi-meta">Alespoň dva nákupy</div></article><article class="kpi"><div class="kpi-label">Uživatelé webu</div><div class="kpi-value">${num(traffic.users)}</div><div class="kpi-meta">${traffic.source ? esc(traffic.sourceLabel) : 'Bez zdroje'} · nesčítáno z denních unikátů</div></article><article class="kpi"><div class="kpi-label">Návštěvy</div><div class="kpi-value">${num(traffic.sessions)}</div><div class="kpi-meta">Pouze veřejné stránky${traffic.skippedFutureDays ? ` · ${num(traffic.skippedFutureDays)} budoucích dnů vynecháno` : ''}</div></article></section>
     <div class="split-grid"><section class="panel"><div class="section-head"><div><p class="section-label">Retence</p><h2>Opakovaní kupující</h2></div></div>${table(repeat,[['email','E-mail'],['orders','Nákupy',num],['spots','Místa',num],['value','Hodnota',formatMoney]])}</section><section class="panel"><div class="section-head"><div><p class="section-label">Metodika</p><h2>Co se nepočítá dvakrát</h2></div></div><div class="insight-list"><div class="insight"><strong>Jedna skupina = jeden kupující</strong><p>Počet míst zůstává zachovaný pro kapacitu.</p></div><div class="insight"><strong>Ruční zástupné e-maily vyloučeny</strong><p>Retenci nezkreslí záznamy bez skutečné identity.</p></div><div class="insight"><strong>Unikátní uživatelé za celé období</strong><p>Denní hodnoty se nesčítají.</p></div></div></section></div></div>`;
 }
 

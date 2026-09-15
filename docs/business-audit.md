@@ -3,6 +3,14 @@
 Datum auditu: 15. 9. 2026. Auditovaný strom: `origin/codex/business-dashboard` (`f9d477e`),
 základ `9415ba4` — tedy **4 commity za `main`**.
 
+> **Produkce je jinde, než tvrdí dokumentace větve (ověřeno 15. 9. 2026).**
+> `docs/business-dashboard.md` i `docs/business-verification.md` píšou, že migrace
+> není nasazená a konektory nejsou živé. **Obojí už neplatí.** Dotaz do produkčního
+> Supabase ukázal: všech 19 business tabulek existuje, `business_access` má vlastníka,
+> `business-sync` i `business-zapier` běží jako Edge Functions (`business-sync`
+> s `verify_jwt = true`) a čtyři konektory už úspěšně importovaly data.
+> Podrobnosti a zbývající mezery jsou v části *Skutečný stav produkce*.
+
 > **Stav oprav (15. 9. 2026).** Body P0 a P2 jsou opravené na větvi
 > `claude/business-section-audit-smryvh`, stejně jako P1 kromě výslovně
 > uvedených výjimek. Každá oprava má regresní test (`npm run test:business`,
@@ -462,3 +470,59 @@ Kontrola prohlížeče si nově sama spustí statický server a najde Chrome pod
 platformy, takže jde spustit z čistého klonu (`BUSINESS_CHROME_PATH` ji přebije).
 Selhání externí CDN v demo režimu kontrolu neshodí, výjimka ve vlastním
 skriptu ano.
+
+---
+
+## Skutečný stav produkce (ověřeno dotazem 15. 9. 2026)
+
+`CLAUDE.md` varuje, že se produkční Supabase s repem rozchází. Rozchází se i tady:
+dokumentace větve tvrdí, že migrace není nasazená a konektory nejsou živé —
+ve skutečnosti běží obojí.
+
+### Co běží
+
+| Co | Stav |
+| --- | --- |
+| Business tabulky | všech 19 existuje, RLS zapnutá |
+| `business_access` | 1 vlastník |
+| `business-sync` | nasazená, `verify_jwt = true` |
+| `business-zapier` | nasazená, `verify_jwt = false` (chrání ji vlastní `x-business-secret`) |
+| Stripe | 2 běhy, 16 pohybů |
+| GA4 | 3 běhy (2 úspěšné), 15 dnů + souhrn období |
+| Vercel | 2 běhy (1 úspěšný), 30 dnů + souhrn období |
+| Sklik | 1 běh, 0 řádků |
+| Meta, Instagram, Facebook, TikTok, Google Ads, Zapier | nepřipojeno, žádný běh |
+
+Účetní jádro proti skutečným datům sedí: za září 2026 vychází výnos 10 479 Kč,
+což je přesně 21 zaplacených míst × 499 Kč. Plateb bez částky je 0.
+
+### Co v produkci nesedí
+
+1. **Stripe poplatky se nesbírají.** V ledgeru je 14 pohybů typu `charge`,
+   1 refundace a 1 „Climate contribution" — ale **ani jeden `fee`**. „Platební
+   poplatky" proto ukazují 0 Kč a provozní výsledek je o poplatky nadhodnocený.
+2. **Vercel zapsal 15 budoucích dnů s nulou** a `complete = true`. Den, který
+   nenastal, tak vypadá jako den bez návštěv. Klient je nově do součtu nebere,
+   ale zapisovat se přestat musí v konektoru.
+3. **Dva měřicí systémy se sčítaly dohromady.** GA4 hlásí za září 558 zobrazení,
+   Vercel 998 za tentýž web; rozhraní je sčítalo na 1 556 a počet uživatelů bral
+   z toho řádku, který se vrátil první (127 nebo 530 podle nálady databáze).
+   **Opraveno** — zdroj se vybírá pevným pořadím (GA4, pak Vercel) a je vidět
+   v popisku.
+4. **Pohyby typu `adjustment` nepočítá nikdo.** V SQL ani v JS nemají větev,
+   takže tiše mizí ze všech součtů. Teď jde o 2,50 Kč, ale je to nezaúčtovaná
+   kategorie.
+5. **Tři ze sedmi čekajících Stripe příjmů nemají vazbu na rezervaci.** Až se
+   překlopí na `posted`, započítají se jako „jiný příjem" vedle částky
+   z rezervace — tedy dvakrát. Dnes je „jiný příjem" 0 Kč, protože všechny
+   vyrovnané pohyby vazbu mají.
+6. **Marketing zůstane prázdný.** Oprava spojuje kampaně přes
+   `dimension_key = 'campaign:<id>'`, jenže v produkci žádný takový řádek není:
+   reklamní účty nejsou připojené a Sklik při jediném běhu nepřinesl nic.
+7. **Opravy v `supabase/business-dashboard.sql` nejsou nasazené.** Produkce má
+   pořád starou `business_period_summary` bez `source_access` i bez filtru měny.
+   Klient to snese (chybějící `source_access` bere jako „přístup je v pořádku"),
+   ale ochrany jsou do nasazení migrace nečinné.
+8. **Ke kontrole, ne nutně chyba:** jediné nákladové pravidlo je „Nájem studia"
+   s opakováním **za lekci** a 400 Kč. Pokud má být nájem měsíční, jsou zářijové
+   náklady 800 Kč místo nájmu za celý měsíc.

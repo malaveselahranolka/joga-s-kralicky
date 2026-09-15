@@ -346,12 +346,27 @@ export function recommendChannels(budgetMinor, channels, { minimumPurchases = 5 
   return { allocations, unallocatedMinor: Math.max(0, Number(budgetMinor) - used), evidence: 'measured' };
 }
 
-export function trafficSummary(dailyRows, periodRow) {
+// GA4 a Vercel měří tentýž web různě (consent, definice relace), takže se
+// jejich čísla nesmějí sčítat ani střídat podle toho, co se vrátí první.
+// Pořadí je pevné: GA4 je primární, Vercel záskok.
+export const TRAFFIC_SOURCES = ['ga4', 'vercel'];
+export const TRAFFIC_SOURCE_LABELS = { ga4: 'GA4', vercel: 'Vercel Web Analytics' };
+
+export function pickTrafficSource(dailyRows = [], periodRows = []) {
+  const has = (source) => dailyRows.some((row) => row.source === source) || periodRows.some((row) => row.source === source);
+  return TRAFFIC_SOURCES.find(has) || null;
+}
+
+export function trafficSummary(dailyRows, periodRow, { today = pragueToday() } = {}) {
+  // Den, který ještě nenastal, není nula návštěv — je to chybějící údaj.
+  // Konektor jich pár dopředu zapsal, do součtu patřit nesmějí.
+  const past = (dailyRows || []).filter((row) => !row.metric_date || String(row.metric_date) <= today);
   return {
     users: Number.isFinite(Number(periodRow?.users)) ? Number(periodRow.users) : null,
-    sessions: dailyRows.reduce((sum, row) => sum + Number(row.sessions || 0), 0),
-    views: dailyRows.reduce((sum, row) => sum + Number(row.views || 0), 0),
-    usersState: periodRow ? 'available' : 'unavailable',
+    sessions: past.reduce((sum, row) => sum + Number(row.sessions || 0), 0),
+    views: past.reduce((sum, row) => sum + Number(row.views || 0), 0),
+    usersState: Number.isFinite(Number(periodRow?.users)) ? 'available' : 'unavailable',
+    skippedFutureDays: (dailyRows || []).length - past.length,
   };
 }
 
