@@ -565,7 +565,7 @@ begin
     from ledger_period where currency = 'CZK'
   ),
   foreign_values as (
-    select count(*)::bigint as rows from ledger_period where currency <> 'CZK'
+    select count(*)::bigint as foreign_rows from ledger_period where currency <> 'CZK'
   )
   select jsonb_build_object(
     'recognized_revenue_minor', b.revenue,
@@ -579,13 +579,13 @@ begin
     'fees_minor', x.fees,
     'ad_spend_minor', x.ads,
     'missing_payment_amounts', b.missing_amounts,
-    'foreign_currency_entries', f.rows + c.foreign_rows,
+    'foreign_currency_entries', f.foreign_rows + c.foreign_rows,
     'unmatched_income_minor', x.unmatched_income,
     'unmatched_income_entries', x.unmatched_rows,
     -- Přístup k business tabulkám neznamená přístup k rezervacím. Když druhý
     -- chybí, RLS vrátí prázdno bez chyby a součty by vypadaly jako nula.
     'source_access', public.is_owner(),
-    'complete', b.missing_amounts = 0 and f.rows + c.foreign_rows = 0 and x.unmatched_rows = 0 and public.is_owner()
+    'complete', b.missing_amounts = 0 and f.foreign_rows + c.foreign_rows = 0 and x.unmatched_rows = 0 and public.is_owner()
   ) into result
   from booking_values b cross join voucher_values v cross join cost_values c
     cross join ledger_values x cross join foreign_values f;

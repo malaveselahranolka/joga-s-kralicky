@@ -551,3 +551,42 @@ což je přesně 21 zaplacených míst × 499 Kč. Plateb bez částky je 0.
 8. **Nájem 400 Kč za lekci je správně** — potvrzeno majitelkou 15. 9. 2026.
    Studio se pronajímá za lekci, ne měsíčně, takže zářijové náklady 800 Kč za
    dvě uskutečněné lekce odpovídají skutečnosti.
+
+---
+
+## Nasazení do produkce 15. 9. 2026
+
+Platebního toku (`stripe-create`, `stripe-webhook`, `stripe-confirm`,
+`stripe-voucher`) se nasazení **nedotklo**.
+
+### Co je nasazené
+
+| Co | Jak ověřeno |
+| --- | --- |
+| `business_period_summary` — `source_access`, filtr měny, nespárovaný příjem, `adjustment` | migrace `business_summary_fees_adjustments_unmatched_income`; definice v produkci ověřena dotazem |
+| `business_close_previous_cost_rule` — oprava zpětného data | tamtéž |
+| `business-sync` verze 6 — poplatky Stripe, směr korekcí, ověření UUID | nasazeno s `verify_jwt = true`; funkce odpověděla `403 forbidden` na anon klíč, tedy modul se načetl a doběhl k vlastní kontrole oprávnění |
+
+Postup byl: uložit stávající definice obou funkcí jako plán návratu → zkušebně
+aplikovat v transakci a vrátit rollbackem (ověření syntaxe, otisky funkcí se
+nezměnily) → teprve potom aplikovat migraci. Mění se jen dvě funkce, žádné
+tabulky, politiky ani data.
+
+### Co ještě živé není
+
+1. **Klientská část.** `www.jogaskralicky.cz/business.html` běží ze staršího
+   production deploye; všechny novější buildy jsou jen preview k PR. Živý
+   klient tedy zatím nemá opravy rozhraní (jeden zdroj návštěvnosti, období
+   v Publiku, kampaně, popisky, zvýraznění sekce). Souhrnná čísla už přitom
+   opravená jsou — bere je z `business_period_summary`, která nasazená je.
+   Zbývá sloučit PR #63 do `main`. Mimo business sekci se merge dotkne jen
+   `admin.html` (tlačítko Business), `robots.txt`, `vercel.json` a
+   `package.json`; veřejné stránky ani rezervační tok se nemění.
+2. **Poplatky Stripe se zpětně nedoplní samy.** Nasazená funkce je umí číst,
+   ale stávající pohyby poplatek nemají. Ve *Zdroje dat* je potřeba u Stripu
+   spustit **Načíst data** za požadované období. Poplatky mají vlastní
+   `external_id` (`txn_…:fee`), takže se doplní, aniž by se už uložené pohyby
+   zdvojily.
+3. **Reklamní účty.** Dokud není připojená Meta, Google Ads nebo TikTok,
+   zůstane Marketing prázdný — spojení kampaní přes
+   `dimension_key = 'campaign:<id>'` nemá co spojovat.
