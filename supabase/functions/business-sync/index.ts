@@ -266,8 +266,22 @@ async function syncSklik(from, to) {
 
 const providers = { stripe: syncStripe, ga4: syncGa4, vercel: syncVercel, meta_ads: syncMeta, instagram: syncInstagram, facebook_page: syncFacebookPage, tiktok_ads: syncTikTok, tiktok_organic: syncTikTokOrganic, google_ads: syncGoogleAds, sklik: syncSklik };
 
+// Metadata Stripu můžou nést UUID rezervace, která už neexistuje (zrušená
+// lekce maže rezervace kaskádou). Samotný tvar UUID tedy nestačí — neověřená
+// vazba porušila cizí klíč a shodila celý běh. Neznámá vazba se zahodí;
+// pohyb pak zůstane jako nespárovaný příjem, což souhrn umí vykázat.
+async function resolveBookingLinks(admin, ledger) {
+  const ids = [...new Set((ledger || []).map((row) => row.booking_id).filter(Boolean))];
+  if (!ids.length) return ledger;
+  const { data, error } = await admin.from('bookings').select('id').in('id', ids);
+  if (error) throw new Error(`database_bookings:${error.message}`);
+  const known = new Set((data || []).map((row) => row.id));
+  return ledger.map((row) => (row.booking_id && !known.has(row.booking_id) ? { ...row, booking_id: null } : row));
+}
+
 async function persist(admin, result) {
   let imported = 0;
+  if (result.ledger?.length) result = { ...result, ledger: await resolveBookingLinks(admin, result.ledger) };
   for (const [table, rows, conflict] of [
     ['business_campaigns', result.campaigns, 'source,external_id'],
     ['business_social_posts', result.social, 'channel,external_id'],

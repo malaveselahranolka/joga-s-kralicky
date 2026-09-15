@@ -129,3 +129,21 @@ test('regrese: korekce dostane směr podle znaménka, ne kind adjustment', () =>
   const credit = mapStripeEntries({ id: 'txn_credit', created: 1788220800, amount: 500, currency: 'czk', type: 'adjustment', status: 'available' })[0];
   assert.equal(credit.kind, 'income');
 });
+
+test('regrese: neexistující rezervace v metadatech neshodí celý běh', () => {
+  // Živý stav: platby z července nesly UUID rezervace, která už neexistuje
+  // (zrušená lekce maže rezervace kaskádou). Cizí klíč shodil celou
+  // synchronizaci. Mapovač ověří tvar, existenci ověřuje až business-sync
+  // proti tabulce bookings; neznámá vazba se zahodí na null.
+  const known = new Set(['3f1a2b4c-5d6e-4f70-8a91-b2c3d4e5f607']);
+  const dropUnknown = (rows) => rows.map((row) => (row.booking_id && !known.has(row.booking_id) ? { ...row, booking_id: null } : row));
+  const mapped = [
+    mapStripeEntries({ id: 'txn_a', created: 1788220800, amount: 49_900, currency: 'czk', type: 'charge', status: 'available', source: { metadata: { booking_id: '3f1a2b4c-5d6e-4f70-8a91-b2c3d4e5f607' } } })[0],
+    mapStripeEntries({ id: 'txn_b', created: 1788220800, amount: 49_900, currency: 'czk', type: 'charge', status: 'available', source: { metadata: { booking_id: 'ffffffff-ffff-4fff-8fff-ffffffffffff' } } })[0],
+    mapStripeEntries({ id: 'txn_c', created: 1788220800, amount: 49_900, currency: 'czk', type: 'charge', status: 'available', source: { metadata: { booking_id: 'nejde-o-uuid' } } })[0],
+  ];
+  assert.equal(mapped[2].booking_id, null, 'nesmyslný tvar padá už v mapovači');
+  const resolved = dropUnknown(mapped);
+  assert.equal(resolved[0].booking_id, '3f1a2b4c-5d6e-4f70-8a91-b2c3d4e5f607');
+  assert.equal(resolved[1].booking_id, null, 'neexistující rezervace se zahodí místo pádu');
+});
