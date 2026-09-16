@@ -684,36 +684,52 @@ U sazby a u srovnání poplatků haléře rozhodují, proto pro ně vznikl
 
 ## Oficiální zahájení provozu 5. 9. 2026
 
-Majitelka určila, že provoz jede oficiálně od 5. září a náklady před tímto
-datem se nemají počítat. Datum je uložené v `business_settings.business_start`
-a jde ho změnit v Nastavení; prázdná hodnota znamená, že se podle data
-nefiltruje nic.
+Majitelka určila, že provoz jede oficiálně od 5. září a všechno starší se
+nemá počítat **nikde**. Datum je uložené v `business_settings.business_start`
+a jde ho změnit v Nastavení; prázdná hodnota znamená, že se neořezává nic.
 
-**Co se filtruje:** nákladové výskyty (podle `period_start`, u peněžního toku
-podle `paid_on`) a pohyby typu `fee`, `ad_spend`, `expense` a `adjustment`.
-Očekávaný poplatek podle sazby se řídí stejným pravidlem.
+**Jak to funguje:** datum se neuplatňuje na jednotlivé druhy položek, ale na
+celé období. `clampPeriod(period, startDate)` posune začátek na pozdější
+z obou dat a všechny ostatní výpočty se pak ptají jen na období — o datu
+zahájení nevědí a nemají se jak rozejít. Stejné je to v SQL: funkce si
+`p_from` sama posune na `greatest(p_from, business_start)`.
 
-**Co se nefiltruje:** výnosy z lekcí, prodej poukazů, hotovost ani refundace.
-To je záměr podle zadání, ale znamená to nesouměrnost, o které rozhraní
-nesmí mlčet: období sahající před 5. 9. vyjde příznivěji, než jaká byla
-skutečnost. Přehled i Finance proto zobrazí pruh s datem zahájení a s tím,
-kolik nákladů a za kolik zůstalo stranou.
+Ořez platí i na dotazy, ne až na součty. `store.load()` proto čte nastavení
+jako první a teprve pak se ptá na data — jinak by návštěvnost, kampaně nebo
+poznámky pořád ukazovaly dobu před otevřením studia.
 
-Dopad na produkční data:
+**Období celé před zahájením** (například srpen) není chyba ani neúplnost.
+Vrací nuly s `period_empty: true` a s dokladem, co do nich nespadlo. Nula je
+tady odpověď, ne mlčení.
 
-| Období | Vyloučeno | Poplatky po změně | Provozní výsledek |
-| --- | --- | --- | --- |
-| září 2026 | 0 položek | 112,89 Kč | 4 914,61 Kč (beze změny) |
-| červenec–září 2026 | 34 položek za 300,27 Kč | 112,89 Kč (dřív 365,68 Kč) | 4 914,61 Kč |
+**Doklad o ořezu.** Změna výsledku se nesmí stát potichu, takže se zvlášť
+počítá, co ořez odnesl: `excluded_revenue_minor`, `excluded_costs_minor`
+a `excluded_entries`. Rozhraní to ukáže v pruhu nad čísly a `labelPeriod()`
+připíše k rozsahu „zkráceno zahájením provozu". V CSV exportu přibyly
+`zvolene_od`, `zvolene_do` a `zahajeni_provozu`, aby se z vyvezeného čísla
+dalo poznat, za jaké dny platí.
 
-Září se nezměnilo, protože všechny jeho náklady jsou až od 5. 9. Vyloučené
-položky jsou poplatky a korekce z července a srpna. Za zmínku stojí, že
-výnosy z lekcí před 5. 9. (2 994 Kč) byly celé refundované, takže
-nesouměrnost tu zatím nic nenafukuje — ale s příštími daty by mohla.
+Dřívější verze ořezávala jen náklady a výnosy nechávala být. To dělalo
+nesouměrnost, kvůli které období sahající před 5. 9. vycházelo příznivěji,
+než jaká byla skutečnost. Ořez celého období ji ruší.
+
+Dopad na produkční data (ověřeno dotazem 16. 9. 2026):
+
+| Období | Provozní výsledek | Ořez odnesl |
+| --- | --- | --- |
+| září 2026 (1.–30. 9.) | 5 912,61 Kč (beze změny) | nic, 1.–4. 9. je prázdné |
+| srpen 2026 | 0 Kč (dřív −998 Kč) | 33 záznamů: výnos 2 994 Kč, náklady 250,80 Kč |
+| červen–září 2026 | 5 912,61 Kč (dřív −998 Kč navíc) | 42 záznamů: výnos 3 992 Kč, náklady 300,27 Kč |
+| 10.–16. 9. 2026 | 1 779,56 Kč | nic, období je celé po zahájení |
+
+Září se nezměnilo, protože mezi 1. a 4. 9. není v produkci jediná rezervace,
+poukaz, náklad ani pohyb. Srpen se změnil z vymyšleného mínusu na poctivou
+nulu: jeho výnos i náklady byly z doby, kdy studio ještě oficiálně neběželo.
 
 ### Křížové ověření po změně
 
 Stejným postupem jako 16. 9.: nasazená SQL funkce spuštěná pod identitou
 majitelky proti JS implementaci nad stejnými produkčními daty.
-**32 metrik ve dvou obdobích, žádný rozdíl** — včetně nových
-`excluded_costs_minor`, `excluded_cost_entries` a `business_start_date`.
+**24 metrik ve třech obdobích plus 12 metrik ve čtvrtém, žádný rozdíl** —
+včetně nových `excluded_revenue_minor`, `excluded_costs_minor`,
+`excluded_entries`, `period_from`, `period_clamped` a `period_empty`.

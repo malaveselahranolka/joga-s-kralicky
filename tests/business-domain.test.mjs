@@ -4,6 +4,7 @@ import {
   breakEven,
   budgetStatus,
   businessStartDate,
+  clampPeriod,
   buyerStats,
   computeFinancials,
   forecastSeats,
@@ -404,7 +405,7 @@ test('regrese: chybějící částka se nezobrazí jako nula', () => {
   assert.equal(formatMoney(bezZakladu.proposedMinor), '—');
 });
 
-test('náklady před zahájením provozu se nepočítají, výnosy ano', () => {
+test('zahájení provozu ořízne celé období — výnos i náklady', () => {
   const period = { from: '2026-09-01', to: '2026-09-30' };
   const source = {
     lessons: [
@@ -430,15 +431,54 @@ test('náklady před zahájením provozu se nepočítají, výnosy ano', () => {
   const odPateho = computeFinancials(source, period, { startDate: '2026-09-05' });
   assert.equal(odPateho.operatingCostsMinor, 40_000 + 1_399, 'náklady z 1. a 2. 9. vypadly');
   assert.equal(odPateho.feesMinor, 1_399);
-  assert.equal(odPateho.excludedCostsMinor, 40_000 + 1_399);
-  assert.equal(odPateho.excludedCostEntries, 2);
-  // Výnosy ani hotovost se datem zahájení neřídí.
-  assert.equal(odPateho.recognizedRevenueMinor, bezData.recognizedRevenueMinor);
-  assert.equal(odPateho.cashSalesMinor, bezData.cashSalesMinor);
-  // Očekávaný poplatek se řídí stejným pravidlem jako skutečný.
+  // Ořez platí i na výnos a hotovost — lekce z 2. 9. i úhrada z 1. 9. vypadly.
+  assert.equal(odPateho.recognizedRevenueMinor, 49_900);
+  assert.equal(odPateho.cashSalesMinor, 49_900);
+  assert.equal(odPateho.paidSpots, 1);
+  assert.equal(odPateho.buyerCount, 1);
+  // Očekávaný poplatek se počítá jen z úhrad uvnitř oříznutého období.
   assert.equal(odPateho.expectedFeesMinor, 1_399);
-  // Peněžní tok vynechá jen výdaje, ne příjem.
-  assert.equal(odPateho.cashFlowMinor, bezData.cashSalesMinor - 40_000 - 1_399);
+  assert.equal(odPateho.cashFlowMinor, 49_900 - 40_000 - 1_399);
+  // Co ořez odnesl, musí být vidět — jinak by se čísla změnila potichu.
+  assert.equal(odPateho.excludedCostsMinor, 40_000 + 1_399);
+  assert.equal(odPateho.excludedRevenueMinor, 49_900);
+  assert.equal(odPateho.excludedEntries, 3);
+  assert.equal(odPateho.periodFrom, '2026-09-05');
+  assert.equal(odPateho.requestedFrom, '2026-09-01');
+  assert.equal(odPateho.periodClamped, true);
+  assert.equal(odPateho.periodEmpty, false);
+  assert.equal(bezData.excludedEntries, 0, 'bez data zahájení se neořezává nic');
+  assert.equal(bezData.periodClamped, false);
+});
+
+test('období celé před zahájením je poctivá nula, ne výpadek dat', () => {
+  const source = {
+    lessons: [{ id: 'l0', starts_at: '2026-08-10T08:00:00Z', status: 'active' }],
+    bookings: [{ id: 'b0', lesson_id: 'l0', status: 'confirmed', payment_status: 'paid', payment_amount: 49_900, paid_at: '2026-08-10T10:00:00Z', spots: 2, email: 'a@b.cz' }],
+    vouchers: [{ id: 'v0', amount: 99_900, created_at: '2026-08-12T10:00:00Z' }],
+    ledger: [],
+    occurrences: [],
+  };
+  const srpen = computeFinancials(source, { from: '2026-08-01', to: '2026-08-31' }, { startDate: '2026-09-05' });
+  assert.equal(srpen.periodEmpty, true);
+  assert.equal(srpen.recognizedRevenueMinor, 0);
+  assert.equal(srpen.cashSalesMinor, 0);
+  assert.equal(srpen.operatingResultMinor, 0);
+  assert.equal(srpen.paidSpots, 0);
+  // Nula je tu odpověď, ne mlčení: doklad říká, co do ní nespadlo.
+  assert.equal(srpen.excludedRevenueMinor, 49_900 + 99_900);
+  assert.equal(srpen.excludedEntries, 2);
+});
+
+test('období celé po zahájení se neořezává', () => {
+  const zari = clampPeriod({ from: '2026-09-10', to: '2026-09-30' }, '2026-09-05');
+  assert.equal(zari.from, '2026-09-10');
+  assert.equal(zari.clamped, false);
+  assert.equal(zari.empty, false);
+  // Bez nastaveného data se nesahá na nic.
+  assert.deepEqual(clampPeriod({ from: '2020-01-01', to: '2020-12-31' }, null), {
+    from: '2020-01-01', to: '2020-12-31', requestedFrom: '2020-01-01', clamped: false, empty: false,
+  });
 });
 
 test('datum zahájení se čte z nastavení a nesmysl se ignoruje', () => {

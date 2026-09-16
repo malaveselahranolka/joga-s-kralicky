@@ -240,11 +240,37 @@ export function paymentFeeModel(settings = []) {
   };
 }
 
-// Datum oficiálního zahájení provozu. Náklady před ním do výsledku nepatří —
-// jsou to přípravné výdaje, ne provoz.
+// Datum oficiálního zahájení provozu. Co se stalo dřív, do byznysu nepatří —
+// je to příprava, ne provoz. Neplatí to jen pro náklady: výnos, hotovost,
+// poukazy, návštěvnost i kampaně se počítají až od tohoto dne.
 export function businessStartDate(settings = []) {
   const raw = settings.find((row) => row.key === 'business_start')?.value?.date;
   return /^\d{4}-\d{2}-\d{2}$/.test(String(raw ?? '')) ? String(raw) : null;
+}
+
+// Zvolené období oříznuté dnem zahájení. Tohle je jediné místo, kde se datum
+// zahájení uplatňuje — všechno ostatní se pak ptá na období a nemusí o
+// zahájení vědět. Když období končí ještě před zahájením, je prázdné:
+// `from` zůstane za `to`, takže žádné porovnání v něm nic nenajde.
+export function clampPeriod(period, startDate = null) {
+  if (!period) return period;
+  if (!startDate || startDate <= period.from) {
+    return { from: period.from, to: period.to, requestedFrom: period.from, clamped: false, empty: false };
+  }
+  return {
+    from: startDate,
+    to: period.to,
+    requestedFrom: period.from,
+    clamped: true,
+    empty: startDate > period.to,
+  };
+}
+
+// Useknutá část období: od původního začátku po den před zahájením. Slouží
+// jen k tomu, aby bylo vidět, co ořez odnesl — tiše se nic nemaže.
+function cutWindow(period) {
+  if (!period || !period.clamped) return null;
+  return { from: period.requestedFrom, to: addDays(period.from, -1) };
 }
 
 const beforeStart = (value, startDate) => {
@@ -263,7 +289,44 @@ export function paymentFeeMinor(amountMinor, model = PAYMENT_FEE_DEFAULT) {
 export const PAID_THROUGH_OWN_TABLES = new Set(['stripe']);
 const isBaseCurrency = (row) => String(row.currency || BASE_CURRENCY).toUpperCase() === BASE_CURRENCY;
 
-export function computeFinancials({ bookings = [], lessons = [], vouchers = [], ledger = [], occurrences = [] }, period, { paymentFee = PAYMENT_FEE_DEFAULT, startDate = null } = {}) {
+// Co ořez odnesl. Nemá to vliv na žádný součet — je to jen doklad, aby se
+// číslo nezměnilo tiše. Nula tady znamená „před zahájením se nic nestalo",
+// ne „nedívali jsme se".
+function cutTally({ bookings, lessons, vouchers, ledger, occurrences }, cut) {
+  const zero = { excludedRevenueMinor: 0, excludedCostsMinor: 0, excludedEntries: 0 };
+  if (!cut || cut.to < cut.from) return zero;
+  const lessonById = new Map(lessons.map((lesson) => [lesson.id, lesson]));
+  const tally = { ...zero };
+  const add = (key, amount) => { tally[key] += Math.abs(Number(amount) || 0); tally.excludedEntries += 1; };
+
+  for (const booking of bookings) {
+    if (booking.status === 'cancelled' || booking.payment_status !== 'paid') continue;
+    const lesson = lessonById.get(booking.lesson_id);
+    if (lesson && inPeriod(lesson.starts_at, cut)) add('excludedRevenueMinor', booking.payment_amount);
+  }
+  for (const voucher of uniqueBy(vouchers, (row) => row.id || row.code)) {
+    if (inPeriod(voucher.created_at, cut)) add('excludedRevenueMinor', voucher.amount);
+  }
+  for (const row of uniqueBy(occurrences.filter((item) => item.status === 'paid'), (item) => item.occurrence_key || item.id)) {
+    if (row.include_in_operating !== false && isBaseCurrency(row) && inPeriod(row.period_start || row.scheduled_on, cut)) {
+      add('excludedCostsMinor', row.amount_minor);
+    }
+  }
+  for (const entry of uniqueBy(ledger, ledgerIdentity)) {
+    if (!inPeriod(entry.occurred_at, cut) || (entry.status ?? 'posted') !== 'posted' || !isBaseCurrency(entry)) continue;
+    if (entry.cost_occurrence_id || entry.kind === 'transfer') continue;
+    if (['fee', 'ad_spend', 'expense', 'adjustment'].includes(entry.kind)) add('excludedCostsMinor', entry.amount_minor);
+    else if (entry.kind === 'income' && !entry.booking_id && !entry.voucher_id
+      && !PAID_THROUGH_OWN_TABLES.has(String(entry.source || ''))) add('excludedRevenueMinor', entry.amount_minor);
+  }
+  return tally;
+}
+
+export function computeFinancials({ bookings = [], lessons = [], vouchers = [], ledger = [], occurrences = [] }, requestedPeriod, { paymentFee = PAYMENT_FEE_DEFAULT, startDate = null } = {}) {
+  // Období se ořízne dnem zahájení a dál se počítá jen s ním. Žádný ze
+  // součtů níž tak o datu zahájení neví — nemá jak se rozejít.
+  const period = clampPeriod(requestedPeriod, startDate);
+  const cut = cutWindow(period);
   const lessonById = new Map(lessons.map((lesson) => [lesson.id, lesson]));
   const paidBookings = bookings.filter((booking) => booking.status !== 'cancelled' && booking.payment_status === 'paid');
   let recognizedRevenueMinor = 0;
@@ -274,10 +337,6 @@ export function computeFinancials({ bookings = [], lessons = [], vouchers = [], 
   // Poplatek podle sazby. Slouží ke kontrole proti skutečně naúčtovaným
   // poplatkům a k plánování tam, kde skutečný poplatek ještě neexistuje.
   let expectedFeesMinor = 0;
-  // Náklady před zahájením provozu se nepočítají, ale musí být vidět,
-  // kolik jich stranou zůstalo — jinak by to byla tichá úprava výsledku.
-  let excludedCostsMinor = 0;
-  let excludedCostEntries = 0;
 
   for (const booking of paidBookings) {
     const hasAmount = booking.payment_amount !== null && booking.payment_amount !== undefined && booking.payment_amount !== '';
@@ -291,7 +350,7 @@ export function computeFinancials({ bookings = [], lessons = [], vouchers = [], 
     }
     if (inCash && Number.isFinite(amount)) {
       bookingCashMinor += amount;
-      if (!beforeStart(booking.paid_at, startDate)) expectedFeesMinor += paymentFeeMinor(amount, paymentFee);
+      expectedFeesMinor += paymentFeeMinor(amount, paymentFee);
     }
     // Jedna rezervace bez částky je jedna chybějící částka, i když spadá
     // do období lekcí i do období úhrad zároveň.
@@ -317,18 +376,10 @@ export function computeFinancials({ bookings = [], lessons = [], vouchers = [], 
     return false;
   });
   const occurrenceOperating = actualOccurrences
-    .filter((row) => {
-      if (row.include_in_operating === false || !inPeriod(row.period_start || row.scheduled_on, period)) return false;
-      if (beforeStart(row.period_start || row.scheduled_on, startDate)) {
-        excludedCostsMinor += Number(row.amount_minor || 0);
-        excludedCostEntries += 1;
-        return false;
-      }
-      return true;
-    })
+    .filter((row) => row.include_in_operating !== false && inPeriod(row.period_start || row.scheduled_on, period))
     .reduce((sum, row) => sum + Number(row.amount_minor || 0), 0);
   const occurrenceCash = actualOccurrences
-    .filter((row) => inPeriod(row.paid_on || row.scheduled_on, period) && !beforeStart(row.paid_on || row.scheduled_on, startDate))
+    .filter((row) => inPeriod(row.paid_on || row.scheduled_on, period))
     .reduce((sum, row) => sum + Number(row.amount_minor || 0), 0);
 
   let otherIncomeMinor = 0;
@@ -358,13 +409,6 @@ export function computeFinancials({ bookings = [], lessons = [], vouchers = [], 
     }
     if (entry.kind === 'refund') refundsMinor += amount;
     if (entry.cost_occurrence_id) continue;
-    // Poplatky, reklama, výdaje a korekce jsou náklady; před zahájením
-    // provozu se nezapočítávají. Příjem a refundace se tím neřídí.
-    if (['fee', 'ad_spend', 'expense', 'adjustment'].includes(entry.kind) && beforeStart(entry.occurred_at, startDate)) {
-      excludedCostsMinor += amount;
-      excludedCostEntries += 1;
-      continue;
-    }
     if (entry.kind === 'fee') feesMinor += amount;
     if (entry.kind === 'ad_spend') adSpendMinor += amount;
     // 'adjustment' nemá vlastní větev ve výdajích ani v příjmech, takže by
@@ -379,6 +423,7 @@ export function computeFinancials({ bookings = [], lessons = [], vouchers = [], 
   const buyers = new Set(paidBookings
     .filter((booking) => inPeriod(booking.paid_at || booking.created_at, period))
     .map((booking) => normalizedBuyerEmail(booking.email)).filter(Boolean));
+  const excluded = cutTally({ bookings, lessons, vouchers, ledger, occurrences }, cut);
 
   return {
     recognizedRevenueMinor,
@@ -395,9 +440,13 @@ export function computeFinancials({ bookings = [], lessons = [], vouchers = [], 
     missingPaymentAmounts,
     foreignCurrencyEntries,
     expectedFeesMinor,
-    excludedCostsMinor,
-    excludedCostEntries,
+    ...excluded,
     startDate,
+    periodFrom: period.from,
+    periodTo: period.to,
+    requestedFrom: period.requestedFrom,
+    periodClamped: period.clamped,
+    periodEmpty: period.empty,
     // Kladný rozdíl = brána si naúčtovala víc, než říká sazba, nebo část
     // poplatků ještě nedorazila ze synchronizace. Záporný = naopak.
     feeGapMinor: feesMinor - expectedFeesMinor,

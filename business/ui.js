@@ -225,14 +225,28 @@ function finance(data) {
 // Skutečně naúčtované poplatky proti sazbě. Rozdíl je signál: buď část
 // poplatků ještě nedorazila ze synchronizace, nebo brána účtuje jinak,
 // než říká nastavená sazba.
-// Zahájení provozu mění výsledek, takže se o něm nesmí mlčet.
+// Ořez období mění všechna čísla na stránce, takže se o něm nesmí mlčet.
+// Zvlášť když ořez odnesl i výnos: bez téhle věty by to vypadalo, že se
+// v tom týdnu neprodalo nic.
 function startNotice(data) {
   const s = data.summary;
   const start = s.startDate || businessStartDate(data.settings);
-  if (!start || !data.period || data.period.from >= start) return '';
-  return `<div class="notice notice-info"><strong>Provoz začal ${esc(date(start))}.</strong> Zvolené období sahá před tento den, takže ${s.excludedCostEntries
-    ? `${num(s.excludedCostEntries)} nákladů za ${formatMoneyExact(s.excludedCostsMinor)} se do výsledku nepočítá`
-    : 'starší náklady se do výsledku nepočítají'}. Výnosy a refundace se tím neřídí — období před zahájením proto vyjde příznivěji, než jaká byla skutečnost.</div>`;
+  const requested = data.requestedPeriod || data.period;
+  if (!start || !requested || requested.from >= start) return '';
+  const odneslo = s.excludedEntries
+    ? `${zaznamy(s.excludedEntries)} tím zůstalo stranou: výnos ${formatMoneyExact(s.excludedRevenueMinor)} a náklady ${formatMoneyExact(s.excludedCostsMinor)}.`
+    : 'Před tímto dnem nic zaúčtovaného není.';
+  if (s.periodEmpty) {
+    return `<div class="notice notice-info"><strong>Provoz začal ${esc(date(start))}.</strong> Zvolené období skončilo dřív, než se otevřelo, takže tu není co počítat — nuly níž nejsou výpadek dat. ${odneslo}</div>`;
+  }
+  return `<div class="notice notice-info"><strong>Provoz začal ${esc(date(start))}.</strong> Zvolené období sahá před tento den, počítá se proto až od ${esc(date(start))} — a to všude: výnos, hotovost, náklady, poukazy i návštěvnost. ${odneslo}</div>`;
+}
+
+// „1 záznam", „2 záznamy", „5 záznamů" — číslo bez správného tvaru vypadá
+// jako strojový výstup, ne jako věta pro člověka.
+function zaznamy(n) {
+  if (n === 1) return '1 záznam';
+  return `${num(n)} ${n >= 2 && n <= 4 ? 'záznamy' : 'záznamů'}`;
 }
 
 function feeCheck(data) {
@@ -358,7 +372,7 @@ function settings(data) {
   const price = entryPriceMinor();
   return `<div class="view-stack">${errors(data.errors)}<section class="panel"><div class="section-head"><div><p class="section-label">Plánovací pravidlo</p><h2>Podíl výsledku pro reklamu</h2><p>Použije se pouze na kladný a úplný provozní výsledek.</p></div></div><form data-action="save-setting" data-setting="advertising_budget_rate"><div class="field"><label for="adRate">Procento</label><input id="adRate" name="percent" type="number" min="0" max="100" step="0.1" value="${esc(rate)}"></div><div class="modal-actions"><button class="button button-primary" type="submit">Uložit pravidlo</button></div></form></section>
     <section class="panel"><div class="section-head"><div><p class="section-label">Platební brána</p><h2>Sazba poplatku</h2><p>Pevná část plus procento z částky. Používá se ke kontrole naúčtovaných poplatků a jako proměnný náklad v bodu zvratu.</p></div></div><form data-action="save-setting" data-setting="payment_fee"><div class="two-fields"><div class="field"><label for="feeFixed">Pevná část v Kč</label><input id="feeFixed" name="fixed_czk" type="number" min="0" step="0.01" value="${esc((fee.fixedMinor / 100).toFixed(2))}"></div><div class="field"><label for="feeRate">Procento z částky</label><input id="feeRate" name="rate_percent" type="number" min="0" max="100" step="0.01" value="${esc(fee.ratePercent)}"></div></div><p class="field-help">${price === null ? 'Cena za místo není dostupná.' : `Při ceně ${formatMoney(price)} za místo vychází poplatek ${formatMoneyExact(paymentFeeMinor(price, fee))}.`}</p><div class="modal-actions"><button class="button button-primary" type="submit">Uložit sazbu</button></div></form></section>
-    <section class="panel"><div class="section-head"><div><p class="section-label">Provoz</p><h2>Oficiální zahájení</h2><p>Náklady s dřívějším datem se do provozního výsledku nepočítají. Výnosy a refundace se tím neřídí.</p></div></div><form data-action="save-setting" data-setting="business_start"><div class="field"><label for="startDate">Datum zahájení</label><input id="startDate" name="date" type="date" value="${esc(businessStartDate(data.settings) || '')}"></div><p class="field-help">Prázdné pole znamená, že se podle data nefiltruje nic.</p><div class="modal-actions"><button class="button button-primary" type="submit">Uložit datum</button></div></form></section><section class="panel"><div class="section-head"><div><p class="section-label">Dohledatelnost</p><h2>Uložené pohledy</h2></div></div>${table(data.savedViews,[['name','Název'],['view_key','Sekce']])}</section><div class="notice notice-warning">Měnu a časové pásmo nelze z tohoto rozhraní měnit. Výpočty používají CZK a Europe/Prague.</div></div>`;
+    <section class="panel"><div class="section-head"><div><p class="section-label">Provoz</p><h2>Oficiální zahájení</h2><p>Zvolené období se vždy ořízne tímto dnem. Cokoli staršího se nepočítá nikde — ve výnosu, v hotovosti, v nákladech, v poukazech ani v návštěvnosti.</p></div></div><form data-action="save-setting" data-setting="business_start"><div class="field"><label for="startDate">Datum zahájení</label><input id="startDate" name="date" type="date" value="${esc(businessStartDate(data.settings) || '')}"></div><p class="field-help">Prázdné pole znamená, že se podle data neořezává nic a počítá se celá historie.</p><div class="modal-actions"><button class="button button-primary" type="submit">Uložit datum</button></div></form></section><section class="panel"><div class="section-head"><div><p class="section-label">Dohledatelnost</p><h2>Uložené pohledy</h2></div></div>${table(data.savedViews,[['name','Název'],['view_key','Sekce']])}</section><div class="notice notice-warning">Měnu a časové pásmo nelze z tohoto rozhraní měnit. Výpočty používají CZK a Europe/Prague.</div></div>`;
 }
 
 export function renderView(view, data, options = { chartMetric: 'result' }) {
