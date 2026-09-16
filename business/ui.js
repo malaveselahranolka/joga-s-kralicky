@@ -1,9 +1,13 @@
 import {
   breakEven,
   budgetStatus,
+  finiteNumber,
   formatMoney,
+  formatMoneyExact,
   integer,
   normalizedBuyerEmail,
+  paymentFeeMinor,
+  paymentFeeModel,
   pickTrafficSource,
   pragueDate,
   TRAFFIC_SOURCE_LABELS,
@@ -15,7 +19,7 @@ import {
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 const date = (value) => value ? new Intl.DateTimeFormat('cs-CZ', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${String(value).slice(0, 10)}T12:00:00`)) : '—';
 const pct = (value) => Number.isFinite(Number(value)) ? `${new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 1 }).format(Number(value))} %` : '—';
-const num = (value) => Number.isFinite(Number(value)) ? integer.format(Number(value)) : '—';
+const num = (value) => (finiteNumber(value) === null ? '—' : integer.format(finiteNumber(value)));
 const dateTime = (value) => value ? new Intl.DateTimeFormat('cs-CZ', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Prague' }).format(new Date(value)) : '—';
 
 // Databázové hodnoty jsou anglické enumy. V rozhraní nemají co dělat.
@@ -211,10 +215,25 @@ function finance(data) {
   return `<div class="view-stack">${errors(data.errors)}<nav class="context-tabs" aria-label="Finance"><a href="#result">Výsledek</a><a href="#costs">Náklady</a><a href="#cash">Pohyby</a></nav>
     <section class="panel" id="result"><div class="section-head"><div><p class="section-label">Manažerský pohled</p><h2>Rozklad výsledku studia</h2><p>Výnos vzniká uskutečněním lekce. Peněžní tok sleduje datum úhrady.</p></div><span class="status-tag">${completeness(s)}</span></div><div class="result-trace"><div class="trace-step"><div class="label">Výnosy lekcí</div><div class="value">${formatMoney(s.recognizedRevenueMinor)}</div></div><div class="trace-op">−</div><div class="trace-step"><div class="label">Provozní náklady a refundace</div><div class="value">${formatMoney(s.operatingCostsMinor + s.refundsMinor)}</div></div><div class="trace-op">=</div><div class="trace-step result"><div class="label">Provozní výsledek</div><div class="value">${formatMoney(s.operatingResultMinor)}</div></div></div><div class="planning-step"><strong>Prodej poukazů: ${formatMoney(s.voucherSalesMinor)}</strong><p>Je v peněžním toku, ne ve výnosech lekcí. Čerpání poukazu se nezapočítá podruhé.</p></div></section>
     <div class="split-grid"><section class="panel" id="costs"><div class="section-head"><div><p class="section-label">Struktura</p><h2>Náklady</h2></div><button class="button button-primary" data-action="open-cost">Přidat náklad</button></div>${expenses.length ? `<div class="bar-list">${expenses.map(([label, value]) => `<div class="bar-row"><span>${label}</span><span class="bar-track"><span class="bar-fill" style="width:${Math.round(value / max * 100)}%"></span></span><strong class="bar-value">${formatMoney(value)}</strong></div>`).join('')}</div>` : '<div class="empty-state"><h3>Žádné náklady</h3><p>V období nejsou zaplacené nákladové položky.</p></div>'}</section>
-    <section class="panel" id="cash"><div class="section-head"><div><p class="section-label">Hotovost</p><h2>Peněžní pohyby</h2></div><button class="button button-secondary" data-action="open-import">Import CSV</button></div><div class="summary-grid"><div class="summary-item"><div class="label">Příjem z prodejů</div><div class="value">${formatMoney(s.cashSalesMinor)}</div></div><div class="summary-item"><div class="label">Peněžní tok</div><div class="value">${formatMoney(s.cashFlowMinor)}</div></div><div class="summary-item"><div class="label">Payouty</div><div class="value">Nejsou výnos</div></div></div>${s.unmatchedIncomeEntries ? `<div class="notice notice-warning"><strong>${num(s.unmatchedIncomeEntries)} plateb ze Stripu nemá vazbu na rezervaci ani poukaz</strong> (${formatMoney(s.unmatchedIncomeMinor)}). Do příjmu se nepřičetly, aby se nezapočítaly podruhé vedle rezervace. Zkontrolujte je v Stripe.</div>` : ''}</section></div>
+    <section class="panel" id="cash"><div class="section-head"><div><p class="section-label">Hotovost</p><h2>Peněžní pohyby</h2></div><button class="button button-secondary" data-action="open-import">Import CSV</button></div>${feeCheck(data)}<div class="summary-grid"><div class="summary-item"><div class="label">Příjem z prodejů</div><div class="value">${formatMoney(s.cashSalesMinor)}</div></div><div class="summary-item"><div class="label">Peněžní tok</div><div class="value">${formatMoney(s.cashFlowMinor)}</div></div><div class="summary-item"><div class="label">Payouty</div><div class="value">Nejsou výnos</div></div></div>${s.unmatchedIncomeEntries ? `<div class="notice notice-warning"><strong>${num(s.unmatchedIncomeEntries)} plateb ze Stripu nemá vazbu na rezervaci ani poukaz</strong> (${formatMoney(s.unmatchedIncomeMinor)}). Do příjmu se nepřičetly, aby se nezapočítaly podruhé vedle rezervace. Zkontrolujte je v Stripe.</div>` : ''}</section></div>
     <section class="panel"><div class="section-head"><div><p class="section-label">Platnost a verze</p><h2>Pravidla nákladů</h2><p>Úprava vytvoří novou verzi od zvoleného data. Smazání odstraní všechny verze i jejich výskyty.</p></div></div>${table(data.costRules,[['name','Náklad'],['amount_minor','Sazba',formatMoney],['recurrence','Opakování',recurrenceLabel],['valid_from','Platí od',date],['version','Verze',num]], (row) => `${row.status === 'active' ? `<span class="row-actions"><button class="text-button" data-action="edit-cost" data-id="${esc(row.id)}">Upravit</button><button class="text-button text-button-danger" data-action="delete-cost" data-id="${esc(row.id)}">Smazat…</button></span>` : '<span class="muted">Archiv</span>'}${row.attachment_path ? ` <button class="text-button" data-action="open-attachment" data-path="${esc(row.attachment_path)}">Doklad</button>` : ''}`)}</section>
     <section class="panel"><div class="section-head"><div><p class="section-label">Kontrola plateb</p><h2>Výskyty nákladů</h2></div></div>${table(data.occurrences, [['scheduled_on','Datum',date],['amount_minor','Částka',formatMoney],['status','Stav',statusLabel]], (row) => `<button class="text-button" data-action="toggle-paid" data-id="${esc(row.id)}" data-paid="${row.status === 'paid'}">${row.status === 'paid' ? 'Vrátit na plán' : 'Označit zaplaceno'}</button>`)}</section>
   </div>`;
+}
+
+// Skutečně naúčtované poplatky proti sazbě. Rozdíl je signál: buď část
+// poplatků ještě nedorazila ze synchronizace, nebo brána účtuje jinak,
+// než říká nastavená sazba.
+function feeCheck(data) {
+  const s = data.summary;
+  const model = paymentFeeModel(data.settings);
+  const sazba = `${formatMoneyExact(model.fixedMinor)} + ${pct(model.ratePercent)} z částky`;
+  if (!s.expectedFeesMinor && !s.feesMinor) return '';
+  const gap = Number(s.feeGapMinor || 0);
+  const shoda = Math.abs(gap) <= Math.max(100, Math.round(Number(s.expectedFeesMinor || 0) * 0.01));
+  return `<div class="planning-step"><strong>Platební poplatky: ${formatMoneyExact(s.feesMinor)}</strong><p>Podle sazby ${esc(sazba)} by úhrady v tomto období stály ${formatMoneyExact(s.expectedFeesMinor)}. ${shoda
+    ? 'Naúčtované poplatky sazbě odpovídají.'
+    : `Rozdíl ${formatMoneyExact(Math.abs(gap))} ${gap > 0 ? 'nad' : 'pod'} sazbou. Nevyrovnané platby se do poplatků zatím nepočítají a refundovaná platba poplatek stejně stála, takže menší odchylka je běžná. Trvale velký rozdíl znamená jinou sazbu — upravíte ji v Nastavení.`}</p></div>`;
 }
 
 function statusLabel(value) {
@@ -279,14 +298,21 @@ function plan(data) {
   // Proměnný náklad na místo smí pocházet jen ze skutečně zadaného pravidla
   // „za zaplacené místo". Odhad zobrazený jako výsledek je horší než prázdno.
   const perSpotRules = (data.costRules || []).filter((row) => row.recurrence === 'per_paid_spot' && row.status === 'active');
-  const variableCostMinor = perSpotRules.reduce((sum, row) => sum + Number(row.amount_minor || 0), 0);
-  const canModel = priceMinor !== null && perSpotRules.length > 0;
+  const perSpotMinor = perSpotRules.reduce((sum, row) => sum + Number(row.amount_minor || 0), 0);
+  // Poplatek brány je proměnný náklad na každé prodané místo, ne odhad:
+  // sazba je nastavená a skutečné poplatky Stripu jí odpovídají.
+  const feeModel = paymentFeeModel(data.settings);
+  const feePerSpotMinor = priceMinor === null ? 0 : paymentFeeMinor(priceMinor, feeModel);
+  const variableCostMinor = perSpotMinor + feePerSpotMinor;
+  const canModel = priceMinor !== null;
   const unit = canModel
     ? breakEven({ fixedCostsMinor: fixed, priceMinor, variableCostMinor, capacity: averageCapacity })
     : { seats: null, attainable: false, reason: 'missing_inputs' };
+  const casti = [`poplatek brány ${formatMoneyExact(feePerSpotMinor)}`];
+  if (perSpotRules.length) casti.push(`${esc(perSpotRules.map((row) => row.name).join(', '))} ${formatMoney(perSpotMinor)}`);
   const modelNote = canModel
-    ? `Cena ${formatMoney(priceMinor)} za místo z nastavení plateb, proměnný náklad ${formatMoney(variableCostMinor)} z ${esc(perSpotRules.map((row) => row.name).join(', '))}.`
-    : `Model zatím nelze spočítat. ${priceMinor === null ? 'Chybí cena z nastavení plateb. ' : ''}${perSpotRules.length ? '' : 'Chybí nákladové pravidlo „za zaplacené místo" — bez něj by proměnný náklad byl jen odhad.'}`;
+    ? `Cena ${formatMoney(priceMinor)} za místo z nastavení plateb. Proměnný náklad ${formatMoneyExact(variableCostMinor)}: ${casti.join(' + ')}.`
+    : 'Model zatím nelze spočítat — chybí cena z nastavení plateb.';
   const goals = data.goals || [];
   return `<div class="view-stack">${errors(data.errors)}<section class="panel"><div class="section-head"><div><p class="section-label">Bod zvratu</p><h2>Kolik míst zaplatí běžný provoz?</h2><p>${modelNote}</p></div>${canModel ? '' : '<button class="button button-secondary" data-action="open-cost">Přidat náklad</button>'}</div><div class="summary-grid"><div class="summary-item"><div class="label">Fixní náklady období</div><div class="value">${formatMoney(fixed)}</div></div><div class="summary-item"><div class="label">Míst k bodu zvratu</div><div class="value">${num(unit.seats)}</div></div><div class="summary-item"><div class="label">Průměr na lekci</div><div class="value">${averageSpots.toFixed(1)} / ${averageCapacity.toFixed(0)}</div></div></div>${canModel && unit.seats !== null && !unit.attainable ? '<div class="notice notice-warning">Bod zvratu je nad průměrnou kapacitou lekce. Při současné ceně a nákladech ho běžná lekce nedosáhne.</div>' : ''}</section>
     <section class="panel"><div class="section-head"><div><p class="section-label">Záměr</p><h2>Cíle období</h2></div></div>${table(goals,[['metric','Ukazatel',labelFrom(GOAL_METRIC_LABELS)],['period_start','Od',date],['period_end','Do',date],['target_minor','Cílová částka',formatMoney],['target_count','Cílový počet',num]])}</section>
@@ -317,7 +343,10 @@ function sources(data) {
 
 function settings(data) {
   const rate = data.settings.find((row) => row.key === 'advertising_budget_rate')?.value?.percent ?? 15;
-  return `<div class="view-stack">${errors(data.errors)}<section class="panel"><div class="section-head"><div><p class="section-label">Plánovací pravidlo</p><h2>Podíl výsledku pro reklamu</h2><p>Použije se pouze na kladný a úplný provozní výsledek.</p></div></div><form data-action="save-setting"><div class="field"><label for="adRate">Procento</label><input id="adRate" name="percent" type="number" min="0" max="100" step="0.1" value="${esc(rate)}"></div><div class="modal-actions"><button class="button button-primary" type="submit">Uložit pravidlo</button></div></form></section><section class="panel"><div class="section-head"><div><p class="section-label">Dohledatelnost</p><h2>Uložené pohledy</h2></div></div>${table(data.savedViews,[['name','Název'],['view_key','Sekce']])}</section><div class="notice notice-warning">Měnu a časové pásmo nelze z tohoto rozhraní měnit. Výpočty používají CZK a Europe/Prague.</div></div>`;
+  const fee = paymentFeeModel(data.settings);
+  const price = entryPriceMinor();
+  return `<div class="view-stack">${errors(data.errors)}<section class="panel"><div class="section-head"><div><p class="section-label">Plánovací pravidlo</p><h2>Podíl výsledku pro reklamu</h2><p>Použije se pouze na kladný a úplný provozní výsledek.</p></div></div><form data-action="save-setting" data-setting="advertising_budget_rate"><div class="field"><label for="adRate">Procento</label><input id="adRate" name="percent" type="number" min="0" max="100" step="0.1" value="${esc(rate)}"></div><div class="modal-actions"><button class="button button-primary" type="submit">Uložit pravidlo</button></div></form></section>
+    <section class="panel"><div class="section-head"><div><p class="section-label">Platební brána</p><h2>Sazba poplatku</h2><p>Pevná část plus procento z částky. Používá se ke kontrole naúčtovaných poplatků a jako proměnný náklad v bodu zvratu.</p></div></div><form data-action="save-setting" data-setting="payment_fee"><div class="two-fields"><div class="field"><label for="feeFixed">Pevná část v Kč</label><input id="feeFixed" name="fixed_czk" type="number" min="0" step="0.01" value="${esc((fee.fixedMinor / 100).toFixed(2))}"></div><div class="field"><label for="feeRate">Procento z částky</label><input id="feeRate" name="rate_percent" type="number" min="0" max="100" step="0.01" value="${esc(fee.ratePercent)}"></div></div><p class="field-help">${price === null ? 'Cena za místo není dostupná.' : `Při ceně ${formatMoney(price)} za místo vychází poplatek ${formatMoneyExact(paymentFeeMinor(price, fee))}.`}</p><div class="modal-actions"><button class="button button-primary" type="submit">Uložit sazbu</button></div></form></section><section class="panel"><div class="section-head"><div><p class="section-label">Dohledatelnost</p><h2>Uložené pohledy</h2></div></div>${table(data.savedViews,[['name','Název'],['view_key','Sekce']])}</section><div class="notice notice-warning">Měnu a časové pásmo nelze z tohoto rozhraní měnit. Výpočty používají CZK a Europe/Prague.</div></div>`;
 }
 
 export function renderView(view, data, options = { chartMetric: 'result' }) {

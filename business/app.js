@@ -445,7 +445,27 @@ $('#deleteCostDialog').addEventListener('close', () => {
 $('#csvFile').addEventListener('change', (event) => event.target.files[0] && readCsv(event.target.files[0]));
 $('#importMapping').addEventListener('change', updateImportPreview); $('#runImport').addEventListener('click', runImport);
 $('#viewContent').addEventListener('click', (event) => handleViewAction(event.target).catch((error) => toast(error.message)));
-$('#viewContent').addEventListener('submit', async (event) => { if (event.target.dataset.action !== 'save-setting') return; event.preventDefault(); const percent = Number(new FormData(event.target).get('percent')); if (!Number.isFinite(percent) || percent < 0 || percent > 100) return toast('Procento musí být mezi 0 a 100.'); await store.saveSetting('advertising_budget_rate', { percent }); toast('Pravidlo uloženo.'); await load(); });
+$('#viewContent').addEventListener('submit', async (event) => {
+  if (event.target.dataset.action !== 'save-setting') return;
+  event.preventDefault();
+  const form = new FormData(event.target);
+  const key = event.target.dataset.setting || 'advertising_budget_rate';
+  let value;
+  if (key === 'payment_fee') {
+    const fixed = parseMoneyToMinor(form.get('fixed_czk'));
+    const rate = Number(form.get('rate_percent'));
+    if (fixed === null || fixed < 0) return toast('Pevná část musí být platná částka.');
+    if (!Number.isFinite(rate) || rate < 0 || rate > 100) return toast('Procento musí být mezi 0 a 100.');
+    value = { fixed_minor: fixed, rate_percent: rate };
+  } else {
+    const percent = Number(form.get('percent'));
+    if (!Number.isFinite(percent) || percent < 0 || percent > 100) return toast('Procento musí být mezi 0 a 100.');
+    value = { percent };
+  }
+  await store.saveSetting(key, value);
+  toast('Nastavení uloženo.');
+  await load();
+});
 $('#resetDemo').addEventListener('click', async () => { store.resetDemo(); toast('Ukázková data obnovena.'); await load(); });
 window.addEventListener('popstate', async () => { period = periodFromUrl() || period; await load(); });
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeMenu(); });

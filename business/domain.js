@@ -8,8 +8,27 @@ export const money = new Intl.NumberFormat('cs-CZ', {
 
 export const integer = new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 0 });
 
+// U velkých souhrnů haléře jen ruší, ale u sazby poplatku rozhodují:
+// 13,99 Kč zobrazené jako 14 Kč už neodpovídá tomu, co brána účtuje.
+const moneyExact = new Intl.NumberFormat('cs-CZ', { style: 'currency', currency: 'CZK', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+export function formatMoneyExact(minor) {
+  const amount = finiteNumber(minor);
+  return amount === null ? '—' : moneyExact.format(amount / 100);
+}
+
+// Number(null) i Number('') je 0, takže prostá kontrola na konečné číslo
+// vykreslí chybějící hodnotu jako „0 Kč". To je přesně ta záměna nuly
+// s chybějícím údajem, které se má rozhraní vyhýbat.
+export function finiteNumber(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
 export function formatMoney(minor) {
-  return Number.isFinite(Number(minor)) ? money.format(Number(minor) / 100) : '—';
+  const amount = finiteNumber(minor);
+  return amount === null ? '—' : money.format(amount / 100);
 }
 
 export function parseMoneyToMinor(value) {
@@ -205,12 +224,33 @@ export function buyerStats(bookings, period) {
 // Vše se počítá v jedné měně. Cizí měna se nesčítá s korunami — zůstane
 // stranou jako výslovná neúplnost, dokud nebude převod.
 export const BASE_CURRENCY = 'CZK';
+
+// Sazba platební brány: pevná část plus procento z částky. Ověřeno proti
+// skutečným poplatkům Stripu — 499 Kč stojí 13,99 Kč a 998 Kč stojí 21,47 Kč,
+// což vzorec trefuje na haléř. Stripe zaokrouhluje nahoru od poloviny haléře.
+export const PAYMENT_FEE_DEFAULT = { fixedMinor: 650, ratePercent: 1.5 };
+
+export function paymentFeeModel(settings = []) {
+  const stored = settings.find((row) => row.key === 'payment_fee')?.value || {};
+  const fixedMinor = Number(stored.fixed_minor);
+  const ratePercent = Number(stored.rate_percent);
+  return {
+    fixedMinor: Number.isFinite(fixedMinor) && fixedMinor >= 0 ? fixedMinor : PAYMENT_FEE_DEFAULT.fixedMinor,
+    ratePercent: Number.isFinite(ratePercent) && ratePercent >= 0 ? ratePercent : PAYMENT_FEE_DEFAULT.ratePercent,
+  };
+}
+
+export function paymentFeeMinor(amountMinor, model = PAYMENT_FEE_DEFAULT) {
+  const amount = Number(amountMinor);
+  if (!Number.isFinite(amount) || amount <= 0) return 0;
+  return Math.round(Number(model.fixedMinor || 0) + amount * Number(model.ratePercent || 0) / 100);
+}
 // Zdroje, jejichž příjem se do výsledku dostává z vlastních tabulek
 // (rezervace, poukazy). Jejich pohyb v ledgeru je jen doklad, ne další peníze.
 export const PAID_THROUGH_OWN_TABLES = new Set(['stripe']);
 const isBaseCurrency = (row) => String(row.currency || BASE_CURRENCY).toUpperCase() === BASE_CURRENCY;
 
-export function computeFinancials({ bookings = [], lessons = [], vouchers = [], ledger = [], occurrences = [] }, period) {
+export function computeFinancials({ bookings = [], lessons = [], vouchers = [], ledger = [], occurrences = [] }, period, { paymentFee = PAYMENT_FEE_DEFAULT } = {}) {
   const lessonById = new Map(lessons.map((lesson) => [lesson.id, lesson]));
   const paidBookings = bookings.filter((booking) => booking.status !== 'cancelled' && booking.payment_status === 'paid');
   let recognizedRevenueMinor = 0;
@@ -218,6 +258,9 @@ export function computeFinancials({ bookings = [], lessons = [], vouchers = [], 
   let paidSpots = 0;
   let missingPaymentAmounts = 0;
   let foreignCurrencyEntries = 0;
+  // Poplatek podle sazby. Slouží ke kontrole proti skutečně naúčtovaným
+  // poplatkům a k plánování tam, kde skutečný poplatek ještě neexistuje.
+  let expectedFeesMinor = 0;
 
   for (const booking of paidBookings) {
     const hasAmount = booking.payment_amount !== null && booking.payment_amount !== undefined && booking.payment_amount !== '';
@@ -229,7 +272,10 @@ export function computeFinancials({ bookings = [], lessons = [], vouchers = [], 
       paidSpots += Number(booking.spots || 0);
       if (Number.isFinite(amount)) recognizedRevenueMinor += amount;
     }
-    if (inCash && Number.isFinite(amount)) bookingCashMinor += amount;
+    if (inCash && Number.isFinite(amount)) {
+      bookingCashMinor += amount;
+      expectedFeesMinor += paymentFeeMinor(amount, paymentFee);
+    }
     // Jedna rezervace bez částky je jedna chybějící částka, i když spadá
     // do období lekcí i do období úhrad zároveň.
     if (!Number.isFinite(amount) && (inRecognized || inCash)) missingPaymentAmounts += 1;
@@ -316,6 +362,10 @@ export function computeFinancials({ bookings = [], lessons = [], vouchers = [], 
     adSpendMinor,
     missingPaymentAmounts,
     foreignCurrencyEntries,
+    expectedFeesMinor,
+    // Kladný rozdíl = brána si naúčtovala víc, než říká sazba, nebo část
+    // poplatků ještě nedorazila ze synchronizace. Záporný = naopak.
+    feeGapMinor: feesMinor - expectedFeesMinor,
     unmatchedIncomeMinor,
     unmatchedIncomeEntries,
     completeness: missingPaymentAmounts || foreignCurrencyEntries || unmatchedIncomeEntries ? 'partial' : 'complete',

@@ -620,3 +620,62 @@ vykázat. Druhý běh po opravě prošel.
 **Reklamní účty.** Dokud není připojená Meta, Google Ads nebo TikTok, zůstane
 Marketing prázdný — spojení kampaní přes `dimension_key = 'campaign:<id>'`
 nemá co spojovat.
+
+---
+
+## Sazba platební brány a křížové ověření 16. 9. 2026
+
+### Sazba 6,50 Kč + 1,5 %
+
+Majitelka zadala sazbu brány. **Skutečné poplatky Stripu jí odpovídají na haléř**,
+což potvrdila kontrola proti produkčním datům:
+
+| Platba | Skutečný poplatek | Vzorec 6,50 + 1,5 % | Počet |
+| --- | --- | --- | --- |
+| 499 Kč | 13,99 Kč | 13,99 Kč | 24× |
+| 998 Kč | 21,47 Kč | 21,47 Kč | 8× |
+
+Sazba proto **nenahrazuje** naúčtované poplatky — ty zůstávají zdrojem pravdy.
+Používá se tam, kde skutečný poplatek neexistuje nebo kde je potřeba kontrola:
+
+- **Finance** srovnávají naúčtované poplatky s tím, co říká sazba, a rozdíl
+  pojmenují. Za září je rozdíl −85,88 Kč, protože 141,84 Kč poplatků je
+  ve stavu `pending` a do součtu se správně nepočítá.
+- **Bod zvratu** poplatek brány konečně zná: proměnný náklad je 83,99 Kč
+  (13,99 Kč brána + 70 Kč materiál) místo dosavadních 70 Kč. Bod zvratu se
+  tím posunul z 24 na 25 míst. Model navíc funguje i bez pravidla „za
+  zaplacené místo", protože poplatek je známý vždy.
+- **Nastavení** sazbu zpřístupňují k úpravě (`business_settings.payment_fee`).
+  Bez uloženého nastavení platí ověřená výchozí hodnota v JS i v SQL.
+
+### Křížové ověření SQL proti JS
+
+Audit vytýkal, že `business_period_summary` a `computeFinancials` jsou dvě
+nezávislé implementace a testy pokrývají jen druhou. Ověřeno na skutečných
+produkčních datech: nasazená SQL funkce byla spuštěna pod identitou majitelky
+(`set local role authenticated` s jejím `sub`, celé v transakci s rollbackem),
+stejná data pak prošla JS implementací.
+
+**Všech 16 metrik ve dvou obdobích (září 2026 a červenec–září 2026) vyšlo
+identicky** — včetně `expected_fees_minor`, `fee_gap_minor`,
+`unmatched_income_entries` i `missing_payment_amounts`. Obě implementace tedy
+na živých datech souhlasí.
+
+Postup ke zopakování: vyexportovat `lessons`, `bookings`, `vouchers`,
+`business_ledger_entries`, `business_cost_occurrences` a `business_settings`
+jako JSON, pustit `computeFinancials` nad stejným obdobím a porovnat
+s výstupem `business_period_summary`.
+
+### Co kontrola ještě našla
+
+**Chybějící částka se zobrazovala jako nula.** `Number(null)` i `Number('')`
+je 0, takže `formatMoney(null)` vracelo „0 Kč" místo „—". V Přehledu to
+znamenalo, že u návrhu rozpočtu svítilo **0 Kč** vedle věty „Výsledek není
+úplný, proto automatický návrh nevznikl". Stejná chyba byla v `num()`, kde
+nespočítaný bod zvratu ukazoval „0" míst. Opraveno sdílenou funkcí
+`finiteNumber`; skutečná nula se dál zobrazuje jako nula.
+
+**Sazba se zaokrouhlovala na koruny.** `formatMoney` má
+`maximumFractionDigits: 0`, takže poplatek 13,99 Kč svítil jako „14 Kč".
+U sazby a u srovnání poplatků haléře rozhodují, proto pro ně vznikl
+`formatMoneyExact`.
