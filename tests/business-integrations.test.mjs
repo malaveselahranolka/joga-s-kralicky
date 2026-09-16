@@ -22,6 +22,8 @@ import {
   stripeBalanceUrl,
   tiktokReportUrl,
   vercelUrls,
+  stripeSessionsByPaymentIntentUrl,
+  voucherCandidates,
 } from '../supabase/functions/_shared/business-sync-contracts.js';
 
 test('internal, business, preview and test traffic is excluded', () => {
@@ -146,4 +148,33 @@ test('regrese: neexistující rezervace v metadatech neshodí celý běh', () =>
   const resolved = dropUnknown(mapped);
   assert.equal(resolved[0].booking_id, '3f1a2b4c-5d6e-4f70-8a91-b2c3d4e5f607');
   assert.equal(resolved[1].booking_id, null, 'neexistující rezervace se zahodí místo pádu');
+});
+
+test('platba za poukaz se pozná podle chybějící vazby na rezervaci', () => {
+  const rows = [
+    // Poukaz koupený po opravě: platba nese značku v metadatech.
+    { id: 'txn_novy', type: 'charge', amount: 49_900, source: { payment_intent: 'pi_novy', metadata: { type: 'voucher', count: '1' } } },
+    // Poukaz koupený před opravou: značku nemá, poznáme ho podle chybějící rezervace.
+    { id: 'txn_stary', type: 'charge', amount: 49_900, source: { payment_intent: 'pi_stary', metadata: {} } },
+    // Platba za rezervaci se dohledávat nemá, vazbu už má.
+    { id: 'txn_rezervace', type: 'charge', amount: 99_800, source: { payment_intent: 'pi_rez', metadata: { booking_id: '11111111-2222-3333-4444-555555555555' } } },
+    // Výplata ani refundace nejsou nákup.
+    { id: 'txn_payout', type: 'payout', amount: -150_000, source: null },
+    { id: 'txn_refund', type: 'charge', amount: -49_900, source: { payment_intent: 'pi_ref', metadata: {} } },
+  ];
+  const candidates = voucherCandidates(rows);
+  assert.deepEqual(candidates.map((row) => row.externalId), ['txn_novy', 'txn_stary'], 'označené jdou první');
+  assert.equal(candidates[0].marked, true);
+  assert.equal(candidates[1].marked, false);
+  assert.equal(candidates[0].paymentIntent, 'pi_novy');
+});
+
+test('dotaz na relaci Checkoutu je vázaný na platný identifikátor platby', () => {
+  assert.equal(
+    stripeSessionsByPaymentIntentUrl('pi_3UFaLXE1lyaoSjOr1pyxSxAG'),
+    'https://api.stripe.com/v1/checkout/sessions?limit=1&payment_intent=pi_3UFaLXE1lyaoSjOr1pyxSxAG',
+  );
+  for (const bad of ['', null, 'cs_live_abc', 'pi_abc; drop table', '../../secret']) {
+    assert.throws(() => stripeSessionsByPaymentIntentUrl(bad), /invalid_payment_intent/);
+  }
 });

@@ -4,7 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import {
   assertPeriod, ga4Bodies, googleAdsQuery, mapGa4Daily, mapGa4Period,
   mapStripeEntries, mapVercelDaily, mapVercelPeriod, metaInsightsUrl,
-  sklikCalls, stripeBalanceUrl, tiktokReportUrl, vercelUrls,
+  sklikCalls, stripeBalanceUrl, stripeSessionsByPaymentIntentUrl, tiktokReportUrl, vercelUrls, voucherCandidates,
 } from '../_shared/business-sync-contracts.js';
 
 const env = (name, fallback = '') => Deno.env.get(name) ?? fallback;
@@ -85,17 +85,45 @@ async function googleRefreshToken(scope = '') {
   return token.access_token;
 }
 
+// Ke každé platbě bez vazby na rezervaci se dohledá relace Checkoutu. Jen tak
+// se dá platba za poukaz spojit s poukazem — ten totiž vzniká až po zaplacení,
+// takže v metadatech platby být nemůže. Dotazů je málo (platby za poukazy jsou
+// vzácné) a strop je tvrdý, aby jedna synchronizace nikdy neutekla do stovek
+// volání. Selhání dohledání není chyba běhu: pohyb zůstane nespárovaný,
+// což souhrn umí vykázat.
+const VOUCHER_LOOKUP_LIMIT = 50;
+
+async function voucherSessionMap(rows) {
+  const candidates = voucherCandidates(rows).slice(0, VOUCHER_LOOKUP_LIMIT);
+  const pairs = await Promise.all(candidates.map(async (item) => {
+    try {
+      const data = await jsonFetch(stripeSessionsByPaymentIntentUrl(item.paymentIntent), {
+        headers: { Authorization: `Bearer ${env('STRIPE_SECRET_KEY')}` },
+      });
+      const session = data?.data?.[0]?.id;
+      return session ? [item.externalId, String(session)] : null;
+    } catch (_e) {
+      return null;
+    }
+  }));
+  return Object.fromEntries(pairs.filter(Boolean));
+}
+
 async function syncStripe(from, to) {
   requireEnv('STRIPE_SECRET_KEY');
   const ledger = [];
+  const raw = [];
   let cursor = '';
   for (let page = 0; page < 50; page += 1) {
     const data = await jsonFetch(stripeBalanceUrl(from, to, cursor), { headers: { Authorization: `Bearer ${env('STRIPE_SECRET_KEY')}` } });
+    raw.push(...(data.data || []));
     ledger.push(...(data.data || []).flatMap(mapStripeEntries));
-    if (!data.has_more || !data.data?.length) return { ledger, cursor: '', metadata: { pages: page + 1 } };
+    if (!data.has_more || !data.data?.length) {
+      return { ledger, cursor: '', voucherSessions: await voucherSessionMap(raw), metadata: { pages: page + 1 } };
+    }
     cursor = data.data.at(-1).id;
   }
-  return { ledger, cursor, complete: false, metadata: { reason: 'page_limit' } };
+  return { ledger, cursor, complete: false, voucherSessions: await voucherSessionMap(raw), metadata: { reason: 'page_limit' } };
 }
 
 async function syncGa4(from, to) {
@@ -279,9 +307,31 @@ async function resolveBookingLinks(admin, ledger) {
   return ledger.map((row) => (row.booking_id && !known.has(row.booking_id) ? { ...row, booking_id: null } : row));
 }
 
+// Platbu za poukaz spojí s poukazem přes relaci Checkoutu. Jeden nákup může
+// nést několik poukazů; vazba je pak ukazatel na nákup, ne na jeden kus —
+// částky se stejně berou z tabulky poukazů. Důležité je, že takový pohyb
+// přestane vypadat jako příjem bez vazby, tedy jako mezera v párování.
+async function resolveVoucherLinks(admin, ledger, voucherSessions = {}) {
+  const sessions = [...new Set(Object.values(voucherSessions))];
+  if (!sessions.length) return ledger;
+  const { data, error } = await admin.from('vouchers').select('id,session_id,created_at')
+    .in('session_id', sessions).order('created_at');
+  if (error) throw new Error(`database_vouchers:${error.message}`);
+  const bySession = new Map();
+  for (const row of data || []) if (!bySession.has(row.session_id)) bySession.set(row.session_id, row.id);
+  return ledger.map((row) => {
+    if (row.booking_id || row.voucher_id || row.kind !== 'income') return row;
+    const voucherId = bySession.get(voucherSessions[row.external_id]);
+    return voucherId ? { ...row, voucher_id: voucherId } : row;
+  });
+}
+
 async function persist(admin, result) {
   let imported = 0;
-  if (result.ledger?.length) result = { ...result, ledger: await resolveBookingLinks(admin, result.ledger) };
+  if (result.ledger?.length) {
+    const linked = await resolveBookingLinks(admin, result.ledger);
+    result = { ...result, ledger: await resolveVoucherLinks(admin, linked, result.voucherSessions) };
+  }
   for (const [table, rows, conflict] of [
     ['business_campaigns', result.campaigns, 'source,external_id'],
     ['business_social_posts', result.social, 'channel,external_id'],

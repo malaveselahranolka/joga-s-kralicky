@@ -178,7 +178,7 @@ export function recurrenceOccurrences(rule, period, context = {}) {
   return rows;
 }
 
-function uniqueBy(rows, keyFn) {
+export function uniqueBy(rows, keyFn) {
   const seen = new Set();
   return rows.filter((row) => {
     const key = keyFn(row);

@@ -726,6 +726,44 @@ Září se nezměnilo, protože mezi 1. a 4. 9. není v produkci jediná rezerva
 poukaz, náklad ani pohyb. Srpen se změnil z vymyšleného mínusu na poctivou
 nulu: jeho výnos i náklady byly z doby, kdy studio ještě oficiálně neběželo.
 
+## Poukazy: vlastní sekce a spojení s platbou
+
+Sekce **Poukazy** v Business ukazuje prodej za zvolené období: kolik se jich
+prodalo a za kolik, kolik jich čeká na uplatnění, kolik už bylo uplatněno
+a kolik propadlo. Míra uplatnění se počítá jen z rozhodnutých kusů
+(uplatněné + propadlé) — čerstvě prodaný poukaz s roční platností není
+„neuplatněný", jen ještě nedozrál.
+
+Nevyužitý poukaz je **závazek**: peníze na účtu už jsou, ale lekce se teprve
+odehraje. Uplatnění proto není další tržba, jen dodání služby; sekce to říká
+výslovně, aby se to nesčítalo dvakrát.
+
+### Platba za poukaz neměla vazbu
+
+Platba za poukaz dorazila do peněžních pohybů bez jakékoli značky, protože
+metadata relace Checkoutu se na platbu samy nepřenášejí. Souhrn ji pak
+vykazoval jako **nespárovaný příjem**, tedy jako mezera v párování —
+přestože šlo o poctivý prodej, jen započítaný z tabulky poukazů.
+
+Oprava má dvě části:
+
+1. `stripe-voucher` posílá `payment_intent_data.metadata` s `type=voucher`,
+   stejně jako `stripe-create` posílá `booking_id` u rezervací.
+2. `business-sync` u příjmu bez vazby na rezervaci dohledá relaci Checkoutu
+   přes `checkout/sessions?payment_intent=…` a spojí pohyb s poukazem podle
+   `vouchers.session_id`. Díky tomu se doplnily i starší platby, které značku
+   v metadatech ještě nemají.
+
+Jeden nákup může nést několik poukazů, takže vazba je ukazatel na nákup, ne
+na jeden kus — částky se stejně berou z tabulky poukazů.
+
+Ověřeno v produkci 16. 9. 2026: po nasazení a spuštění synchronizace
+(92 pohybů) má **všech pět prodaných poukazů vazbu na svou platbu**, včetně
+dvou z doby před opravou. Součty se nezměnily: září zůstává na 5 912,61 Kč,
+prodej poukazů 1 497 Kč, nespárovaný příjem 0.
+
+---
+
 ### Křížové ověření po změně
 
 Stejným postupem jako 16. 9.: nasazená SQL funkce spuštěná pod identitou

@@ -11,16 +11,20 @@ import {
   paymentFeeModel,
   pickTrafficSource,
   pragueDate,
+  pragueToday,
   TRAFFIC_SOURCE_LABELS,
   proposeAdBudget,
   recommendChannels,
   trafficSummary,
+  uniqueBy,
 } from './domain.js';
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 const date = (value) => value ? new Intl.DateTimeFormat('cs-CZ', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${String(value).slice(0, 10)}T12:00:00`)) : '—';
 const pct = (value) => Number.isFinite(Number(value)) ? `${new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 1 }).format(Number(value))} %` : '—';
 const num = (value) => (finiteNumber(value) === null ? '—' : integer.format(finiteNumber(value)));
+// Čeština má tři tvary. „1 poukazů" prozradí, že větu skládal stroj.
+const plural = (n, one, few, many) => `${integer.format(n)} ${n === 1 ? one : (n >= 2 && n <= 4 ? few : many)}`;
 const dateTime = (value) => value ? new Intl.DateTimeFormat('cs-CZ', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Prague' }).format(new Date(value)) : '—';
 
 // Databázové hodnoty jsou anglické enumy. V rozhraní nemají co dělat.
@@ -51,6 +55,7 @@ export const viewMeta = {
   finance: ['Finance', 'Co studio opravdu vydělalo?'],
   marketing: ['Marketing', 'Kde peníze přivádějí hosty?'],
   audience: ['Publikum', 'Kdo se vrací a odkud přichází?'],
+  vouchers: ['Poukazy', 'Kolik se jich prodalo a kolik jich čeká na uplatnění?'],
   plan: ['Plán', 'Co unese příští období?'],
   reports: ['Reporty', 'Co potřebujete předat dál?'],
   sources: ['Zdroje dat', 'Čemu lze v číslech věřit?'],
@@ -310,6 +315,77 @@ function audience(data) {
     <div class="split-grid"><section class="panel"><div class="section-head"><div><p class="section-label">Retence</p><h2>Opakovaní kupující</h2></div></div>${table(repeat,[['email','E-mail'],['orders','Nákupy',num],['spots','Místa',num],['value','Hodnota',formatMoney]])}</section><section class="panel"><div class="section-head"><div><p class="section-label">Metodika</p><h2>Co se nepočítá dvakrát</h2></div></div><div class="insight-list"><div class="insight"><strong>Jedna skupina = jeden kupující</strong><p>Počet míst zůstává zachovaný pro kapacitu.</p></div><div class="insight"><strong>Ruční zástupné e-maily vyloučeny</strong><p>Retenci nezkreslí záznamy bez skutečné identity.</p></div><div class="insight"><strong>Unikátní uživatelé za celé období</strong><p>Denní hodnoty se nesčítají.</p></div></div></section></div></div>`;
 }
 
+// Prodaný a neuplatněný poukaz je přijatá platba za nedodanou lekci. V účetní
+// řeči závazek: peníze na účtu už jsou, ale místo v sále se teprve odehraje.
+// Proto se nepočítá jen kolik se jich prodalo, ale i kolik jich ještě visí.
+function voucherState(row, today) {
+  if (row.redeemed) return 'redeemed';
+  const expires = row.expires_at ? pragueDate(row.expires_at) : null;
+  return expires && expires < today ? 'expired' : 'valid';
+}
+
+const VOUCHER_STATE_LABEL = { valid: 'Platný', redeemed: 'Uplatněný', expired: 'Propadlý' };
+
+function vouchers(data) {
+  const today = pragueToday();
+  const rows = uniqueBy(data.vouchers || [], (row) => row.id || row.code)
+    .map((row) => ({ ...row, state: voucherState(row, today) }))
+    .sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
+  const sum = (list) => list.reduce((total, row) => total + (finiteNumber(row.amount) ?? 0), 0);
+  const redeemed = rows.filter((row) => row.state === 'redeemed');
+  const valid = rows.filter((row) => row.state === 'valid');
+  const expired = rows.filter((row) => row.state === 'expired');
+  const soldMinor = sum(rows);
+  // Míra uplatnění se počítá jen z poukazů, které už mají rozhodnuto. Čerstvě
+  // prodaný poukaz s roční platností není „neuplatněný", jen ještě nedozrál.
+  const decided = redeemed.length + expired.length;
+  const redemptionRate = decided ? Math.round(redeemed.length / decided * 100) : null;
+  // Kupující se počítají jen z poukazů, u kterých e-mail je. Nula u záznamů
+  // bez e-mailu by tvrdila, že poukaz nikdo nekoupil.
+  const emails = rows.map((row) => normalizedBuyerEmail(row.email)).filter(Boolean);
+  const buyers = new Set(emails);
+  const withoutEmail = rows.length - emails.length;
+
+  const kpiCards = [
+    ['Prodáno', num(rows.length), rows.length ? `${formatMoney(soldMinor)} v období` : 'V tomto období ani jeden'],
+    ['Čeká na uplatnění', num(valid.length), valid.length ? `Závazek ${formatMoney(sum(valid))}` : 'Žádný nevyužitý'],
+    ['Uplatněno', num(redeemed.length), redemptionRate === null
+      ? 'Zatím není z čeho počítat míru'
+      : `${num(redemptionRate)} % z rozhodnutých`],
+    ['Propadlo', num(expired.length), expired.length ? `${formatMoney(sum(expired))} nevyužito` : 'Zatím žádný'],
+  ];
+
+  return `<div class="view-stack">${errors(data.errors)}${startNotice(data)}
+    <section class="kpi-strip">${kpiCards.map(([label, value, meta]) =>
+      `<article class="kpi"><div class="kpi-label">${esc(label)}</div><div class="kpi-value">${value}</div><div class="kpi-meta">${esc(meta)}</div></article>`).join('')}</section>
+    <div class="split-grid">
+      <section class="panel"><div class="section-head"><div><p class="section-label">Peníze</p><h2>Co poukazy znamenají</h2></div></div><div class="insight-list">
+        <div class="insight"><strong>Tržba ${formatMoney(soldMinor)}</strong><p>Počítá se dnem prodeje, ne dnem uplatnění — stejně jako v Přehledu a ve Financích.</p></div>
+        <div class="insight"><strong>Závazek ${formatMoney(sum(valid))}</strong><p>${valid.length
+          ? `${plural(valid.length, 'poukaz', 'poukazy', 'poukazů')} ${valid.length >= 2 && valid.length <= 4 ? 'čekají' : 'čeká'} na lekci, kterou studio teprve odehraje.`
+          : 'Žádný prodaný poukaz nečeká na uplatnění.'}</p></div>
+        <div class="insight"><strong>${rows.length && !emails.length
+          ? 'Kupující neznámí'
+          : plural(buyers.size, 'kupující', 'kupující', 'kupujících')}</strong><p>${rows.length && !emails.length
+          ? 'U žádného prodaného poukazu není e-mail, takže je spočítat nejde.'
+          : `Podle e-mailu. Jeden člověk může koupit víc poukazů najednou i postupně.${withoutEmail ? ` ${plural(withoutEmail, 'poukaz je', 'poukazy jsou', 'poukazů je')} bez e-mailu a do počtu nejde.` : ''}`}</p></div>
+      </div></section>
+      <section class="panel"><div class="section-head"><div><p class="section-label">Metodika</p><h2>Co tato čísla nejsou</h2></div></div><div class="insight-list">
+        <div class="insight"><strong>Jen prodeje v období</strong><p>Poukaz prodaný dřív se tu neobjeví, i kdyby se uplatnil dnes.</p></div>
+        <div class="insight"><strong>Míra uplatnění z rozhodnutých</strong><p>Do jmenovatele jdou uplatněné a propadlé. Platné se ještě mohou otočit oběma směry.</p></div>
+        <div class="insight"><strong>Uplatnění není výnos navíc</strong><p>Peníze přišly už při prodeji. Uplatnění je dodání služby, ne další tržba.</p></div>
+      </div></section>
+    </div>
+    <section class="panel"><div class="section-head"><div><p class="section-label">Doklad</p><h2>Prodané poukazy</h2><p>Uplatnění se dělá u dveří ve správě studia, ne tady.</p></div></div>${table(rows, [
+      ['code', 'Kód'],
+      ['email', 'Kupující', (value) => (String(value || '').trim() || '—')],
+      ['amount', 'Částka', formatMoney],
+      ['created_at', 'Prodáno', dateTime],
+      ['state', 'Stav', (value) => VOUCHER_STATE_LABEL[value] || value],
+      ['expires_at', 'Platí do', date],
+    ])}</section></div>`;
+}
+
 function plan(data) {
   const lessons = activeLessons(data);
   const averageCapacity = lessons.length ? capacityOf(lessons) / lessons.length : 0;
@@ -379,6 +455,7 @@ export function renderView(view, data, options = { chartMetric: 'result' }) {
   if (view === 'finance') return finance(data);
   if (view === 'marketing') return marketing(data);
   if (view === 'audience') return audience(data);
+  if (view === 'vouchers') return vouchers(data);
   if (view === 'plan') return plan(data);
   if (view === 'reports') return reports(data);
   if (view === 'sources') return sources(data);
