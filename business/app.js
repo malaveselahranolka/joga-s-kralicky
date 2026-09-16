@@ -457,6 +457,10 @@ $('#viewContent').addEventListener('submit', async (event) => {
     if (fixed === null || fixed < 0) return toast('Pevná část musí být platná částka.');
     if (!Number.isFinite(rate) || rate < 0 || rate > 100) return toast('Procento musí být mezi 0 a 100.');
     value = { fixed_minor: fixed, rate_percent: rate };
+  } else if (key === 'business_start') {
+    const den = String(form.get('date') || '').trim();
+    if (den && !/^\d{4}-\d{2}-\d{2}$/.test(den)) return toast('Zadejte platné datum.');
+    value = { date: den || null };
   } else {
     const percent = Number(form.get('percent'));
     if (!Number.isFinite(percent) || percent < 0 || percent > 100) return toast('Procento musí být mezi 0 a 100.');

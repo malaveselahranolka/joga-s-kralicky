@@ -1,4 +1,4 @@
-import { computeFinancials, ledgerIdentity, paymentFeeModel, pragueToday, recurrenceOccurrences } from './domain.js';
+import { businessStartDate, computeFinancials, ledgerIdentity, paymentFeeModel, pragueToday, recurrenceOccurrences } from './domain.js';
 import { createDemoData } from './demo-data.js';
 
 const DEMO_KEY = 'jsk:business-demo:v1';
@@ -117,7 +117,7 @@ export function createBusinessStore({ client = null, demo = false } = {}) {
           vouchers: demoData.vouchers,
           ledger: demoData.ledger,
           occurrences: demoData.occurrences,
-        }, period, { paymentFee: paymentFeeModel(demoData.settings) }), sourceAccess: true },
+        }, period, { paymentFee: paymentFeeModel(demoData.settings), startDate: businessStartDate(demoData.settings) }), sourceAccess: true },
         period,
         errors: demoData.connections.filter((item) => item.status === 'error').map((item) => ({ source: item.provider, message: item.last_error, kind: 'connection' })),
       };
@@ -174,7 +174,7 @@ export function createBusinessStore({ client = null, demo = false } = {}) {
       else occurrences.push(...(inserted || []));
     }
 
-    const localSummary = computeFinancials({ bookings, lessons, vouchers, ledger, occurrences }, period, { paymentFee: paymentFeeModel(settings) });
+    const localSummary = computeFinancials({ bookings, lessons, vouchers, ledger, occurrences }, period, { paymentFee: paymentFeeModel(settings), startDate: businessStartDate(settings) });
     const rpc = await client.rpc('business_period_summary', { p_from: period.from, p_to: period.to });
     if (rpc.error) errors.push({ source: 'Souhrnný výpočet', message: rpc.error.message, code: rpc.error.code, kind: 'query' });
     const rawSummary = rpc.data || {};
@@ -200,6 +200,9 @@ export function createBusinessStore({ client = null, demo = false } = {}) {
       refundsMinor: Number(rawSummary.refunds_minor || 0),
       feesMinor: Number(rawSummary.fees_minor || 0),
       expectedFeesMinor: Number(rawSummary.expected_fees_minor || 0),
+      excludedCostsMinor: Number(rawSummary.excluded_costs_minor || 0),
+      excludedCostEntries: Number(rawSummary.excluded_cost_entries || 0),
+      startDate: rawSummary.business_start_date || null,
       feeGapMinor: Number(rawSummary.fee_gap_minor || 0),
       adSpendMinor: Number(rawSummary.ad_spend_minor || 0),
       missingPaymentAmounts: Number(rawSummary.missing_payment_amounts || 0),
