@@ -14,6 +14,14 @@
     --paper: #ECEFE2; --cloud: #FAFBF6; --ink: #2A2E24; --ink-soft: #5A6150;
     --clover: #6E8A4E; --clover-deep: #50693A; --carrot: #E08A4B; --blush: #E8C9C2;
     --line: #D6DAC7; --r-lg: 24px; --r-md: 14px; --ease: cubic-bezier(.22,.61,.36,1);
+    --r-sm: 10px;
+    --shadow-1: 0 1px 2px rgba(42,46,36,.05);
+    --shadow-2: 0 6px 20px rgba(42,46,36,.08);
+    --state: var(--line);
+    /* Tmavší odstín mrkvové na text — samotná --carrot je na bílé nečitelná. */
+    --carrot-text: #9a5a23;
+    --slate: #6F8FB0; --slate-text: #3A526A;
+    --clover-soft: #DFE6D4; --sidebar: 236px;
   }
   * , *::before, *::after { box-sizing: border-box; }
   body { margin: 0; font-family: "Nunito Sans", system-ui, sans-serif; color: var(--ink); background: var(--paper); line-height: 1.6; -webkit-font-smoothing: antialiased; }
@@ -25,14 +33,18 @@
 
   /* buttons */
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; font-family: inherit; font-size: .95rem; font-weight: 600; padding: .7em 1.3em; border-radius: 999px; border: 1px solid transparent; cursor: pointer; transition: transform .25s var(--ease), background-color .25s var(--ease), border-color .25s var(--ease); }
+  a.btn { text-decoration: none; }
   .btn:focus-visible { outline: 2px solid var(--clover); outline-offset: 3px; }
   .btn-primary { background: var(--ink); color: var(--paper); }
   .btn-primary:hover { transform: translateY(-2px); background: var(--clover-deep); }
   .btn-ghost { background: transparent; border-color: var(--line); color: var(--ink); }
   .btn-ghost:hover { transform: translateY(-2px); border-color: var(--clover); background: var(--cloud); }
   .btn-sm { padding: .42em .9em; font-size: .85rem; }
-  .btn-danger { color: var(--carrot); border-color: color-mix(in srgb, var(--carrot) 45%, var(--line)); background: transparent; }
-  .btn-danger:hover { background: color-mix(in srgb, var(--carrot) 12%, transparent); border-color: var(--carrot); }
+  /* Rušení a mazání nemá být to nejhlasitější v řádku. Ve výchozím stavu je
+     tlumené a mrkvovou barvu dostane až pod kurzorem nebo pod prstem — jinak
+     celý seznam svítí oranžově a oko nepozná, kam se má dívat. */
+  .btn-danger { color: color-mix(in srgb, var(--carrot) 42%, var(--ink)); border-color: var(--line); background: transparent; font-weight: 600; }
+  .btn-danger:hover, .btn-danger:focus-visible { color: var(--carrot-text); background: color-mix(in srgb, var(--carrot) 12%, transparent); border-color: var(--carrot); }
 
   /* inputs */
   label { display: block; font-size: .82rem; font-weight: 700; margin-bottom: .35rem; }
@@ -51,36 +63,52 @@
   .auth-err { color: var(--carrot); font-size: .88rem; font-weight: 700; margin-top: 1rem; min-height: 1.2em; }
   .config-warn { background: color-mix(in srgb, var(--carrot) 14%, var(--cloud)); border: 1px solid color-mix(in srgb, var(--carrot) 40%, var(--line)); border-radius: var(--r-md); padding: 1rem 1.1rem; font-size: .88rem; margin-bottom: 1.4rem; color: var(--ink); }
 
-  /* ---------- app shell ---------- */
-  .topbar { background: var(--ink); color: var(--paper); position: sticky; top: 0; z-index: 40; }
-  .topbar .wrap { display: flex; align-items: center; justify-content: space-between; height: 66px; }
-  .topbar .who #whoEmail { max-width: 230px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .topbar .brand { display: flex; align-items: center; gap: .55rem; font-family: "Fraunces"; font-size: 1.18rem; }
-  .topbar .brand img { width: 30px; height: 30px; }
-  .topbar .who { display: flex; align-items: center; gap: 1rem; font-size: .85rem; color: color-mix(in srgb, var(--paper) 75%, transparent); }
-  .topbar .btn-ghost { color: var(--paper); border-color: color-mix(in srgb, var(--paper) 30%, transparent); }
-  .topbar .btn-ghost:hover { background: color-mix(in srgb, var(--paper) 12%, transparent); border-color: var(--paper); }
+  /* ---------- app shell: postranní panel ----------
+     Rozvržení i chování je převzaté ze stránky Business, jen v barvách
+     správy studia: části vlevo pod sebou, na telefonu se panel vysune
+     zpod hamburgeru. Devět záložek v řádku se stejně nikdy nevešlo. */
+  .sidebar { position: fixed; inset: 0 auto 0 0; z-index: 100; width: var(--sidebar); display: flex; flex-direction: column; padding: 20px 16px 16px; background: var(--cloud); border-right: 1px solid var(--line); overflow-y: auto; overscroll-behavior: contain; }
+  .sidebar-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: 0 4px 22px; }
+  .wordmark { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); font-family: "Fraunces", Georgia, serif; font-size: 1.05rem; line-height: 1.15; text-decoration: none; }
+  .wordmark img { display: block; width: 34px; height: 34px; flex: none; }
+  .sidebar .close-menu { display: none; }
+  .icon-button { display: grid; place-items: center; width: 44px; height: 44px; flex: none; background: transparent; border: 0; border-radius: var(--r-sm); font-family: inherit; font-size: 1.35rem; color: inherit; cursor: pointer; transition: background-color .2s var(--ease); }
+  .icon-button:hover { background: var(--paper); }
+  .icon-button:focus-visible { outline: 2px solid var(--clover); outline-offset: 2px; }
+  .primary-nav, .secondary-nav { display: grid; gap: 4px; }
+  .sidebar-bottom { display: grid; gap: 14px; margin-top: auto; }
+  .secondary-nav { padding-top: 14px; border-top: 1px solid var(--line); }
+  .studio-switch { display: flex; min-height: 44px; align-items: center; justify-content: space-between; gap: .5rem; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-sm); color: var(--ink); font-size: .92rem; font-weight: 700; text-decoration: none; transition: background-color .2s var(--ease), border-color .2s var(--ease); }
+  .studio-switch:hover { background: var(--paper); border-color: var(--clover); }
+  .account-row { display: grid; gap: 2px; padding: 0 12px; color: var(--ink-soft); font-size: .78rem; overflow-wrap: anywhere; }
+  .text-button { justify-self: start; min-height: 32px; padding: 4px 0; background: transparent; border: 0; color: var(--clover-deep); font-family: inherit; font-size: .82rem; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  .text-button:focus-visible { outline: 2px solid var(--clover); outline-offset: 2px; }
+  .sidebar-scrim { display: none; }
+  .workspace { min-height: 100svh; margin-left: var(--sidebar); padding: 0 clamp(24px, 4vw, 56px) 56px; }
+  .mobile-bar { display: none; }
 
-  .tabs { display: flex; gap: .3rem; border-bottom: 1px solid var(--line); margin: 1.8rem 0 2rem; flex-wrap: wrap; position: sticky; top: 66px; background: var(--paper); z-index: 30; }
-  .tab { background: none; border: 0; border-bottom: 2px solid transparent; padding: .7rem 1.1rem; font-family: inherit; font-size: 1rem; font-weight: 600; color: var(--ink-soft); cursor: pointer; transition: color .2s var(--ease), border-color .2s var(--ease); margin-bottom: -1px; }
-  .tab:hover { color: var(--ink); }
-  .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--clover); }
-  .tab-alarm { display: inline-block; width: .5rem; height: .5rem; margin-left: .4rem; vertical-align: middle; border-radius: 50%; background: var(--carrot); }
+  /* Položka v postranním panelu. Třídu .tab si nechává kvůli skriptu. */
+  .tab { min-height: 42px; display: flex; align-items: center; gap: .45rem; width: 100%; padding: 8px 12px; background: none; border: 0; border-radius: var(--r-sm); font-family: inherit; font-size: .95rem; font-weight: 600; color: var(--ink-soft); text-align: left; cursor: pointer; transition: background-color .2s var(--ease), color .2s var(--ease); }
+  .tab:hover { background: var(--paper); color: var(--ink); }
+  .tab[aria-selected="true"] { background: var(--clover-soft); color: var(--clover-deep); font-weight: 700; }
+  .tab:focus-visible { outline: 2px solid var(--clover); outline-offset: -2px; }
+  .tab-alarm { display: block; width: .5rem; height: .5rem; margin-left: auto; flex: none; border-radius: 50%; background: var(--carrot); }
   .email-poplach {
     display: flex; flex-wrap: wrap; align-items: center; gap: .8rem 1rem;
     background: color-mix(in srgb, var(--carrot) 14%, var(--cloud));
     border: 1px solid color-mix(in srgb, var(--carrot) 45%, var(--line));
     border-radius: var(--r-md); padding: .9rem 1.1rem;
-    margin: 1.2rem 0 0; font-size: .9rem; line-height: 1.5;
+    max-width: 1180px; margin: 1.5rem auto 0; font-size: .9rem; line-height: 1.5;
   }
   .email-poplach > div { flex: 1 1 20rem; }
-  .email-poplach strong { display: block; color: #9a5a23; }
-  .panel { display: none; padding-bottom: 4rem; }
+  .email-poplach strong { display: block; color: var(--carrot-text); }
+  .panel { display: none; max-width: 1180px; margin-inline: auto; padding-bottom: 4rem; }
   .panel.active { display: block; }
-  .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.4rem; }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.4rem; padding-top: 2.5rem; }
   .panel-head h2 { font-size: 1.7rem; }
 
-  .card { background: var(--cloud); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 1.4rem 1.5rem; }
+  .card { background: var(--cloud); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 1.4rem 1.5rem; box-shadow: var(--shadow-1); }
+  .card h3 { font-size: 1.24rem; }
 
   /* ---------- editor obsahu ---------- */
   .obsah-msg { min-height: 1.4em; margin-bottom: .9rem; font-weight: 700; font-size: .92rem; }
@@ -93,14 +121,19 @@
   .obsah-sekce[open] > summary::after { transform: rotate(180deg); }
   .obsah-sekce > summary:hover { background: color-mix(in srgb, var(--clover) 7%, transparent); }
   .obsah-telo { padding: 0 1.3rem 1.3rem; display: grid; gap: 1rem; }
-  .obsah-pole label { display: block; font-size: .84rem; font-weight: 700; color: var(--ink-soft); margin-bottom: .35rem; }
+  .obsah-pole label, .obsah-pole .obsah-popis { display: block; font-size: .84rem; font-weight: 700; color: var(--ink-soft); margin-bottom: .35rem; }
   .obsah-pole textarea { min-height: 5.2em; resize: vertical; line-height: 1.5; }
   .obsah-podskupina { border-top: 1px dashed var(--line); padding-top: 1rem; display: grid; gap: 1rem; }
-  .obsah-podskupina > h4 { font-size: .95rem; }
+  .obsah-podskupina > h4 { font-family: "Nunito Sans", system-ui, sans-serif; font-size: .76rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft); }
   .obsah-foto { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
   .obsah-foto img { width: 108px; height: 78px; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); background: var(--line); }
-  .obsah-foto input[type="file"] { width: auto; border: none; background: none; padding: 0; font-size: .88rem; }
+  .obsah-foto .btn { cursor: pointer; }
   .muted { color: var(--ink-soft); }
+  /* Vysvětlivka pod nadpisem. Doteď neměla žádný styl a tiskla se stejně
+     velká jako obsah stránky, takže přebíjela to, co má vysvětlovat. */
+  .hint { color: var(--ink-soft); font-size: .88rem; line-height: 1.55; max-width: 64ch; }
+  .summary-line { margin: -.3rem 0 1rem; font-size: .86rem; }
+  .summary-line:not(:empty) { display: inline-block; padding: .35em .85em; border-radius: 99px; background: color-mix(in srgb, var(--ink) 6%, var(--cloud)); border: 1px solid var(--line); }
   .empty { text-align: center; color: var(--ink-soft); padding: 2.5rem 1rem; border: 1px dashed var(--line); border-radius: var(--r-lg); }
 
   /* dashboard */
@@ -109,9 +142,18 @@
   .stat .n { font-family: "Fraunces"; font-size: 2rem; line-height: 1; }
   .stat .l { font-size: .82rem; color: var(--ink-soft); margin-top: .35rem; }
   .dash-list { display: grid; gap: .8rem; }
-  .dash-item { background: var(--cloud); border: 1px solid var(--line); border-radius: var(--r-md); padding: 1rem 1.2rem; display: grid; grid-template-columns: 1fr auto; gap: .5rem 1rem; align-items: center; }
+  /* Stejný jazyk jako řádky v seznamech: proužek stavu vlevo, jemný stín,
+     odznak hned vedle názvu. Dřív visel u pravého okraje karty a na širokém
+     monitoru byl od názvu lekce půl metru daleko. */
+  .dash-item { position: relative; background: var(--cloud); border: 1px solid var(--line); border-radius: var(--r-md); padding: 1rem 1.2rem 1rem 1.45rem; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .55rem 1rem; align-items: center; box-shadow: var(--shadow-1); transition: border-color .2s var(--ease), box-shadow .2s var(--ease); }
+  .dash-item::before { content: ""; position: absolute; inset: .55rem auto .55rem .5rem; width: 3px; border-radius: 99px; background: var(--state); }
+  .dash-item:hover { border-color: color-mix(in srgb, var(--clover) 45%, var(--line)); box-shadow: var(--shadow-2); }
+  .dash-item:has(.pill-ok) { --state: var(--clover); }
+  .dash-item.full { --state: var(--carrot); }
+  .dash-item > div:first-child { min-width: 0; }
+  .dash-item > div:nth-child(2) { justify-self: start; }
   .dash-item .when { font-size: .85rem; color: var(--ink-soft); }
-  .dash-item .ttl { font-family: "Fraunces"; font-size: 1.15rem; }
+  .dash-item .ttl { font-family: "Fraunces"; font-size: 1.15rem; line-height: 1.3; }
   .fill { grid-column: 1 / -1; }
   .fill-bar { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; }
   .fill-bar > span { display: block; height: 100%; background: var(--clover); border-radius: 99px; transition: width .4s var(--ease); }
@@ -120,7 +162,8 @@
 
   /* marketingové zdroje */
   .source-list { display: grid; gap: .8rem; }
-  .source-row { background: var(--cloud); border: 1px solid var(--line); border-radius: var(--r-md); padding: 1rem 1.2rem; }
+  .source-row { background: var(--cloud); border: 1px solid var(--line); border-radius: var(--r-md); padding: 1rem 1.2rem; box-shadow: var(--shadow-1); transition: border-color .2s var(--ease), box-shadow .2s var(--ease); }
+  .source-row:hover { border-color: color-mix(in srgb, var(--clover) 45%, var(--line)); box-shadow: var(--shadow-2); }
   .source-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
   .source-name { font-family: "Fraunces"; font-size: 1.14rem; }
   .source-meta { color: var(--ink-soft); font-size: .84rem; margin-top: .12rem; }
@@ -130,27 +173,54 @@
   .source-missing { color: var(--ink-soft); font-size: .88rem; padding: .85rem 1rem; border: 1px dashed var(--line); border-radius: var(--r-md); }
 
   /* lists / rows */
-  .rows { display: grid; gap: .6rem; }
-  .row { background: var(--cloud); border: 1px solid var(--line); border-radius: var(--r-md); padding: .9rem 1.1rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
-  .row .main { flex: 1 1 240px; min-width: 0; }
-  .row .ttl { font-family: "Fraunces"; font-size: 1.12rem; }
-  .row .sub { font-size: .85rem; color: var(--ink-soft); }
-  .row .acts { display: flex; gap: .4rem; flex-wrap: wrap; }
-  .pill { display: inline-block; font-size: .72rem; font-weight: 700; letter-spacing: .04em; padding: .2em .7em; border-radius: 99px; }
+  .rows { display: grid; gap: .55rem; }
+  /* Karta záznamu. Barevný proužek vlevo nese stav, takže se seznam dá
+     přejet očima bez čtení štítků. Stav se bere z odznaku uvnitř řádku,
+     proto k tomu není potřeba nic měnit v JavaScriptu. */
+  .row { position: relative; background: var(--cloud); border: 1px solid var(--line); border-radius: var(--r-md); padding: 1rem 1.15rem 1rem 1.45rem; display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap; box-shadow: var(--shadow-1); transition: border-color .2s var(--ease), box-shadow .2s var(--ease); }
+  .row::before { content: ""; position: absolute; inset: .55rem auto .55rem .5rem; width: 3px; border-radius: 99px; background: var(--state); }
+  .row { min-height: 78px; }
+  .row:hover { border-color: color-mix(in srgb, var(--clover) 45%, var(--line)); box-shadow: var(--shadow-2); }
+  .row:has(.pill-ok), .row:has(.pill-paid) { --state: var(--clover); }
+  .row:has(.pill-full), .row:has(.pill-pending) { --state: var(--carrot); }
+  .row:has(.pill-onsite) { --state: var(--slate); }
+  .row:has(.pill-wait) { --state: color-mix(in srgb, var(--carrot) 55%, var(--line)); }
+  /* Zrušené a uplatněné až nakonec — přebijí zelenou i oranžovou. */
+  .row:has(.pill-cancel) { --state: color-mix(in srgb, var(--ink) 25%, var(--line)); }
+  /* V „Kdo uvedl jaký zdroj" je odznak název kanálu, ne stav rezervace.
+     Zelený proužek by tam sliboval význam, který nemá. */
+  #sourcePeople .row { --state: var(--line); }
+  #sourcePeople .row .pill { background: color-mix(in srgb, var(--ink) 8%, var(--cloud)); color: var(--ink-soft); }
+  .row .main { flex: 1 1 260px; min-width: 0; display: grid; gap: .25rem; }
+  .row .ttl { font-family: "Fraunces"; font-size: 1.12rem; line-height: 1.35; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+  .row .sub { font-size: .87rem; color: var(--ink-soft); line-height: 1.5; overflow-wrap: break-word; }
+  .row .acts { display: flex; gap: .4rem; flex-wrap: wrap; align-items: center; justify-content: flex-end; }
+  /* Poznámka typu „zaplacené nelze smazat" se dřív válela za tlačítky.
+     Teď je to popisek pod nimi, ne další prvek v řadě. */
+  .row .acts .muted { flex: 0 0 100%; text-align: right; line-height: 1.4; }
+  .pill { display: inline-block; font-size: .72rem; font-weight: 700; letter-spacing: .04em; padding: .2em .7em; border-radius: 99px; background: color-mix(in srgb, var(--ink) 9%, var(--cloud)); color: var(--ink-soft); white-space: nowrap; }
   .pill-ok { background: color-mix(in srgb, var(--clover) 20%, var(--cloud)); color: var(--clover-deep); }
-  .pill-full { background: color-mix(in srgb, var(--carrot) 22%, var(--cloud)); color: #9a5a23; }
+  .pill-full { background: color-mix(in srgb, var(--carrot) 22%, var(--cloud)); color: var(--carrot-text); }
   .pill-cancel { background: color-mix(in srgb, var(--ink) 12%, var(--cloud)); color: var(--ink-soft); }
   .pill-paid { background: color-mix(in srgb, var(--clover) 26%, var(--cloud)); color: var(--clover-deep); }
-  .pill-pending { background: color-mix(in srgb, var(--carrot) 24%, var(--cloud)); color: #9a5a23; }
-  .pill-onsite { background: color-mix(in srgb, #6f8fb0 24%, var(--cloud)); color: #3a526a; }
+  .pill-pending { background: color-mix(in srgb, var(--carrot) 24%, var(--cloud)); color: var(--carrot-text); }
+  .pill-wait { background: color-mix(in srgb, var(--carrot) 13%, var(--cloud)); color: var(--carrot-text); }
+  .pill-fail { background: color-mix(in srgb, var(--carrot) 30%, var(--cloud)); color: var(--carrot-text); }
+  .pill-onsite { background: color-mix(in srgb, var(--slate) 24%, var(--cloud)); color: var(--slate-text); }
   .row.is-cancelled { opacity: .6; }
   .row.is-cancelled .ttl { text-decoration: line-through; }
+  /* Nedoručený e-mail je to nejnaléhavější na stránce. Dřív se kreslil jako
+     zrušený záznam — přeškrtnutý a vybledlý — takže zapadl mezi doručené. */
+  .row.is-alert { --state: var(--carrot); border-color: color-mix(in srgb, var(--carrot) 38%, var(--line)); background: color-mix(in srgb, var(--carrot) 6%, var(--cloud)); }
 
   /* form grid */
-  .form-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: .9rem; align-items: end; }
+  .form-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .9rem 1rem; align-items: end; }
   .form-grid .field-wide { grid-column: 1 / -1; }
   .form-actions { display: flex; gap: .6rem; margin-top: 1rem; flex-wrap: wrap; }
-  .collapse { max-height: 0; overflow: hidden; transition: max-height .4s var(--ease); }
+  /* Zavřená karta měla pořád odsazení i rámeček, takže v layoutu zůstával
+     proužek, který vypadal jako rozbitý prvek. */
+  .collapse { max-height: 0; overflow: hidden; transition: max-height .4s var(--ease), padding .3s var(--ease), border-color .3s var(--ease); }
+  .card.collapse:not(.open) { padding-top: 0; padding-bottom: 0; border-color: transparent; box-shadow: none; margin-bottom: 0 !important; }
   .collapse.open { max-height: 600px; }
   .attendees.collapse.open { max-height: 1200px; }
   #lessonFormWrap.collapse.open { max-height: 1500px; }
@@ -159,7 +229,7 @@
   .imgpick { display: flex; gap: .9rem; align-items: flex-start; flex-wrap: wrap; }
   .imgpick-prev { width: 92px; height: 92px; border-radius: var(--r-md); object-fit: cover; border: 1px solid var(--line); background: color-mix(in srgb, var(--ink) 5%, var(--cloud)); flex: none; }
   .imgpick-empty { width: 92px; height: 92px; border-radius: var(--r-md); border: 1px dashed var(--line); display: grid; place-items: center; text-align: center; font-size: .72rem; line-height: 1.25; color: var(--ink-soft); padding: .4rem; flex: none; }
-  .imgpick-side { flex: 1 1 260px; min-width: 0; }
+  .imgpick-side { flex: 1 1 170px; min-width: 0; }
   .imgpick-acts { display: flex; gap: .4rem; flex-wrap: wrap; }
   .imgpick-acts .btn { cursor: pointer; }
   .imgpick-note { font-size: .8rem; color: var(--ink-soft); margin: .5rem 0 0; }
@@ -173,15 +243,18 @@
 
   /* attendees (kdo je přihlášený na lekci) */
   .lesson-block { margin-bottom: .6rem; }
-  .attendees { background: color-mix(in srgb, var(--ink) 4%, var(--cloud)); border-radius: 0 0 var(--r-md) var(--r-md); }
-  .att-head { font-size: .8rem; font-weight: 700; color: var(--ink-soft); padding: .8rem 1.1rem .2rem; }
-  .att-item { display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding: .65rem 1.1rem; border-top: 1px solid var(--line); flex-wrap: wrap; }
+  .attendees { background: color-mix(in srgb, var(--ink) 4%, var(--cloud)); border: 0 solid var(--line); border-radius: 0 0 var(--r-md) var(--r-md); }
+  .attendees.open { border-width: 0 1px 1px; }
+  .lesson-block:has(.attendees.open) > .row { border-bottom-left-radius: 0; border-bottom-right-radius: 0; box-shadow: none; }
+  .lesson-block:has(.attendees.open) > .row::before { bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+  .att-head { font-size: .78rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); padding: .8rem 1.45rem .3rem; }
+  .att-item { display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding: .7rem 1.45rem; border-top: 1px solid var(--line); flex-wrap: wrap; }
   .att-item strong { font-size: 1rem; }
   .att-contact { font-size: .82rem; color: var(--ink-soft); margin-top: .15rem; }
   .att-contact a { color: var(--clover-deep); }
   .att-item.is-cancelled { opacity: .55; }
   .att-item.is-cancelled strong { text-decoration: line-through; }
-  .att-empty { padding: 1rem 1.1rem; color: var(--ink-soft); font-size: .9rem; }
+  .att-empty { padding: 1rem 1.45rem; color: var(--ink-soft); font-size: .9rem; }
   [data-view][aria-expanded="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
   /* odbavení — čtečka QR */
   .scan-wrap { max-width: 520px; margin-inline: auto; }
@@ -194,7 +267,10 @@
   .scan-manual { margin-top: 1.4rem; }
   .scan-manual label { display: block; font-size: .82rem; font-weight: 700; color: var(--ink-soft); margin-bottom: .4rem; }
   .scan-manual-row { display: flex; gap: .5rem; }
-  .scan-manual-row input { flex: 1; text-transform: uppercase; letter-spacing: .08em; }
+  .scan-manual-row input { flex: 1; min-width: 0; text-transform: uppercase; letter-spacing: .08em; }
+  /* Nápověda v poli není kód, takže se nemá psát verzálkami — po zúžení
+     se z ní stávalo „NAPŘ. 3F9A21C4 NEBO DK-X…". */
+  .scan-manual-row input::placeholder { text-transform: none; letter-spacing: normal; }
   .scan-card { margin-top: 1.4rem; border: 1px solid var(--line); border-radius: var(--r-lg); padding: 1.3rem 1.4rem; }
   .scan-card .verdict { display: flex; align-items: center; gap: .8rem; }
   .scan-card .dot { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; flex: none; }
@@ -211,50 +287,97 @@
   .scan-bad  { background: color-mix(in srgb, var(--ink) 8%, var(--cloud)); }
   .scan-bad .dot { background: var(--ink-soft); color: #fff; }
 
-  .toolbar { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; margin-bottom: 1.2rem; }
+  .toolbar { display: flex; gap: .6rem .75rem; flex-wrap: wrap; align-items: center; margin-bottom: 1.2rem; padding: .75rem .9rem; background: var(--cloud); border: 1px solid var(--line); border-radius: var(--r-md); }
+  .toolbar label { font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
   .toolbar select { width: auto; min-width: 200px; }
   .toast { position: fixed; left: 50%; bottom: 1.5rem; transform: translateX(-50%) translateY(120%); background: var(--ink); color: var(--paper); padding: .8em 1.3em; border-radius: 999px; font-size: .9rem; font-weight: 600; box-shadow: 0 16px 40px -16px rgba(0,0,0,.5); transition: transform .4s var(--ease); z-index: 100; }
   .toast.show { transform: translateX(-50%) translateY(0); }
 
+  /* Pod 900 px se panel schová a vytáhne se hamburgerem — jako na Business. */
+  @media (max-width: 900px) {
+    .sidebar { width: min(84vw, 300px); transform: translateX(-104%); box-shadow: 0 0 0 1px rgba(42,46,36,.05), 0 8px 28px rgba(42,46,36,.16); transition: transform .18s var(--ease); }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar .close-menu { display: grid; }
+    .sidebar-scrim { position: fixed; inset: 0; z-index: 90; width: 100%; height: 100%; padding: 0; background: rgba(42,46,36,.32); border: 0; cursor: pointer; }
+    .sidebar-scrim.show { display: block; }
+    .workspace { margin-left: 0; padding: 0 24px 48px; }
+    .mobile-bar { position: sticky; top: 0; z-index: 40; height: 58px; display: flex; align-items: center; justify-content: space-between; gap: .4rem; margin: 0 -24px; padding: 0 10px; background: var(--paper); border-bottom: 1px solid var(--line); font-weight: 700; }
+    .mobile-bar > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mobile-bar a { min-height: 44px; display: flex; align-items: center; padding: 0 .6rem; font-size: .84rem; text-decoration: none; font-weight: 700; }
+    .panel-head { padding-top: 1.4rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sidebar { transition-duration: 1ms; }
+  }
+
   @media (max-width: 720px) {
     .wrap { width: min(100% - 1.4rem, 1080px); }
-    .topbar .wrap { height: 58px; }
-    .topbar .brand { font-size: 1.05rem; }
-    .topbar .brand img { width: 26px; height: 26px; }
-    .topbar .who { gap: .55rem; }
-    .topbar .who #whoEmail { display: none; }
-    .tabs { top: 58px; margin: 1.1rem 0 1.3rem; gap: 0; }
-    .tab { flex: 1; padding: .75rem .3rem; font-size: .92rem; }
+    .workspace { padding: 0 16px 40px; }
+    .mobile-bar { margin: 0 -16px; }
     .panel { padding-bottom: 3rem; }
     .panel-head { margin-bottom: 1.1rem; }
     .panel-head h2 { font-size: 1.45rem; }
-    .panel-head > div, .panel-head > .btn { width: 100%; }
-    .panel-head > div { display: grid !important; grid-template-columns: 1fr; }
-    .panel-head .btn { width: 100%; }
-    .stat-row { grid-template-columns: 1fr 1fr; gap: .7rem; }
-    .stat { padding: .9rem 1rem; }
-    .stat .n { font-size: 1.7rem; }
-    .dash-item { grid-template-columns: 1fr auto; }
+    /* Skupina tlačítek jde pod nadpis přes celou šířku a pod sebe, aby se
+       do nich vešel celý popisek („Vygenerovat příští týden z rozvrhu" se
+       na půlce řádku lámalo do tří řádků). Osamocené „Obnovit" ale celý
+       řádek nepotřebuje — zůstane vedle nadpisu. */
+    .panel-head > div { width: 100%; display: grid !important; grid-template-columns: 1fr; gap: .5rem !important; }
+    .panel-head > div > .btn { width: 100%; }
+    /* Hlavní akce patří na telefonu nahoru, i když je ve značkách druhá. */
+    .panel-head > div > .btn-primary { order: -1; }
+    .panel-head > .btn-primary { width: 100%; }
+    .panel-head > .btn-ghost { width: auto; }
+    /* Čtyři dlaždice pod sebou zabraly na telefonu celou obrazovku a k
+       seznamu se člověk doscrolloval až za ně. Teď jsou po dvou. */
+    .stat-row { grid-template-columns: 1fr 1fr; gap: .55rem; margin-bottom: 1.3rem; }
+    .stat { padding: .8rem .95rem; }
+    .stat .n { font-size: 1.6rem; }
+    .stat .l { font-size: .78rem; margin-top: .25rem; }
+    /* Lichou poslední dlaždici dorovnáme, ať v mřížce nezůstane díra. */
+    .stat:last-child:nth-child(odd) { grid-column: 1 / -1; }
+    .dash-item { grid-template-columns: auto minmax(0, 1fr); padding: .9rem 1rem .9rem 1.3rem; }
     .form-grid { grid-template-columns: 1fr 1fr; }
     .form-grid .field-wide { grid-column: 1 / -1; }
     .form-actions .btn { flex: 1; }
-    /* řádky se skládají na výšku, akce do mřížky přes celou šířku */
-    .row { flex-direction: column; align-items: stretch; gap: .7rem; }
-    .row .acts { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; width: 100%; }
-    .row .acts .btn { width: 100%; }
+    /* Řádky se skládají na výšku. Dřív se .main roztahoval a uprostřed
+       karty zůstala prázdná díra; teď drží obsah u sebe. Náhled lekce sedí
+       vedle názvu, ne na samostatném řádku s prázdnem napravo. */
+    .row { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: .75rem .8rem; padding: .95rem 1rem .95rem 1.3rem; }
+    .row .main { flex: 0 0 auto; grid-column: 2 / -1; }
+    .row:not(:has(.row-thumb)) .main { grid-column: 1 / -1; }
+    .row .acts { grid-column: 1 / -1; }
+    /* Tlačítka se skládají podle role, ne podle pořadí: hlavní akce přes
+       celou šířku, ostatní po dvou vedle sebe. Osamocené dorovná flex-grow,
+       takže nikde nevisí půlka tlačítka — a palec nedopadne na „Smazat",
+       když mířil na „Označit zaplaceno". */
+    .row .acts { display: flex; flex-wrap: wrap; gap: .45rem; width: 100%; justify-content: stretch; }
+    .row .acts .btn { flex: 1 1 calc(50% - .45rem); width: auto; }
+    .row .acts .btn-primary { flex-basis: 100%; }
+    .row .acts .btn-danger { font-size: .88rem; padding: .55em .8em; }
+    .row .acts .muted { flex: 1 1 100%; text-align: center; margin-top: .1rem; }
     .att-item { flex-direction: column; align-items: stretch; gap: .55rem; }
     .att-item .acts { display: grid; grid-template-columns: 1fr; gap: .4rem; width: 100%; }
     .att-item .acts .btn { width: 100%; }
-    .toolbar { width: 100%; }
-    .toolbar select { flex: 1; min-width: 0; width: auto; }
+    /* Popisek nad ovladačem, ne vedle něj — vejde se pak celý název lekce. */
+    .toolbar { width: 100%; display: grid; grid-template-columns: 1fr; gap: .15rem .6rem; padding: .8rem .9rem; }
+    .toolbar label { margin: .4rem 0 0 !important; }
+    .toolbar label:first-child { margin-top: 0 !important; }
+    .toolbar select { flex: none; min-width: 0; width: 100%; }
     .btn-sm { padding: .6em 1em; font-size: .9rem; }
+    /* Prst není kurzor: každé tlačítko drží plochu, na kterou se dá trefit. */
+    .btn { min-height: 44px; }
+    /* Čtverec s kamerou zabíral při vypnuté kameře půl obrazovky. */
+    .scan-view { aspect-ratio: 4 / 3; }
+    .scan-view .hintline { padding: 1.4rem 1.2rem; font-size: .88rem; }
+    /* Pole na kód a tlačítko vedle sebe se na 390 px nevejdou. */
+    .scan-manual-row { flex-direction: column; }
+    .scan-manual-row .btn { width: 100%; }
   }
   @media (max-width: 430px) {
-    .form-grid { grid-template-columns: 1fr; }
-    .stat-row { grid-template-columns: 1fr; }
+    .form-grid { gap: .8rem .6rem; }
   }
   @media (max-width: 360px) {
-    .row .acts { grid-template-columns: 1fr; }
+    .row .acts .btn { flex-basis: 100%; }
   }
 </style>
 <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
@@ -282,25 +405,43 @@
 
 <!-- ============ APP ============ -->
 <div id="app" hidden>
-  <div class="topbar">
-    <div class="wrap">
-      <div class="brand"><img src="assets/logo.svg" alt="" /> Správa studia</div>
-      <div class="who"><span id="whoEmail"></span><a class="btn btn-ghost btn-sm" href="/business.html">Business</a><button class="btn btn-ghost btn-sm" id="logoutBtn">Odhlásit</button></div>
+  <!-- Stejné rozvržení jako Business: části vlevo, na telefonu pod hamburgerem.
+       Tlačítka si nechávají třídu .tab i data-tab, takže přepínání panelů
+       zůstává na stejném kódu jako dřív — mění se jen to, jak to vypadá. -->
+  <aside class="sidebar" id="sidebar" aria-label="Navigace správy studia">
+    <div class="sidebar-head">
+      <a class="wordmark" href="/admin.html"><img src="assets/logo.svg" alt="" width="34" height="34" /><span>Správa studia</span></a>
+      <button class="icon-button close-menu" id="closeMenu" type="button" aria-label="Zavřít menu"><span aria-hidden="true">×</span></button>
     </div>
-  </div>
-
-  <div class="wrap">
-    <div class="tabs" role="tablist">
+    <div class="primary-nav" role="tablist" aria-orientation="vertical" aria-label="Hlavní části">
       <button class="tab" role="tab" aria-selected="true" data-tab="dash">Přehled</button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="content">Obsah webu</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="lessons">Lekce</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="bookings">Rezervace</button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="sources">Zdroje</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="scan">Odbavení</button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="news">Newsletter</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="vouchers">Poukazy</button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="emails">E-maily<span class="tab-alarm" id="emailAlarm" hidden></span></button>
     </div>
+    <div class="sidebar-bottom">
+      <div class="secondary-nav" role="tablist" aria-orientation="vertical" aria-label="Další části">
+        <button class="tab" role="tab" aria-selected="false" data-tab="content">Obsah webu</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="news">Newsletter</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="sources">Zdroje</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="emails">E-maily<span class="tab-alarm" id="emailAlarm" hidden></span></button>
+      </div>
+      <a class="studio-switch" href="/business.html"><span>Business</span><span aria-hidden="true">&#8594;</span></a>
+      <div class="account-row">
+        <span id="whoEmail"></span>
+        <button class="text-button" id="logoutBtn" type="button">Odhlásit</button>
+      </div>
+    </div>
+  </aside>
+  <button class="sidebar-scrim" id="sidebarScrim" type="button" aria-label="Zavřít menu" tabindex="-1"></button>
+
+  <div class="workspace">
+    <header class="mobile-bar">
+      <button class="icon-button" id="openMenu" type="button" aria-label="Otevřít menu" aria-controls="sidebar" aria-expanded="false"><span aria-hidden="true">&#9776;</span></button>
+      <span id="mobileBarTitle">Přehled</span>
+      <a href="/business.html">Business</a>
+    </header>
 
     <!-- Poplach z fronty e-mailů. Fronta selhání poctivě zapisuje, ale sama
          od sebe nikomu nic neřekne — a protože v produkci neběží pg_cron,
@@ -431,7 +572,7 @@
           <option value="unpaid">Nezaplaceno</option>
         </select>
       </div>
-      <p class="muted" id="paySummary" style="margin:-.4rem 0 1rem;font-size:.86rem"></p>
+      <p class="muted summary-line" id="paySummary"></p>
       <div class="rows" id="bookingRows"></div>
     </section>
 
@@ -441,7 +582,7 @@
         <h2>Jak se o nás dozvěděli</h2>
         <button class="btn btn-ghost btn-sm" id="refreshSources">Obnovit</button>
       </div>
-      <p class="muted" style="margin:-.4rem 0 1.3rem;font-size:.88rem">
+      <p class="hint" style="margin:-.5rem 0 1.3rem">
         Počítají se potvrzené rezervace. Procenta u jednotlivých zdrojů jsou z lidí, kteří otázku vyplnili.
       </p>
       <div class="stat-row" id="sourceSummary"></div>
@@ -469,7 +610,7 @@
            Brevo, kde je i editor kampaní. -->
       <div class="card" style="margin-bottom:1.4rem">
         <h3 style="margin-bottom:.4rem">Rozeslání newsletteru</h3>
-        <p class="muted" style="font-size:.86rem;margin:0">Newsletter se píše a rozesílá v <strong>Brevu</strong>, kde běží i potvrzení rezervací. Seznam odběratelů si odsud stáhněte tlačítkem <strong>Stáhnout CSV</strong> a naimportujte ho tam do kontaktů.</p>
+        <p class="hint" style="margin:0">Newsletter se píše a rozesílá v <strong>Brevu</strong>, kde běží i potvrzení rezervací. Seznam odběratelů si odsud stáhněte tlačítkem <strong>Stáhnout CSV</strong> a naimportujte ho tam do kontaktů.</p>
       </div>
 
       <div class="rows" id="newsRows"></div>
@@ -531,7 +672,7 @@
           <button class="btn btn-ghost btn-sm" id="refreshEmails">Obnovit</button>
         </div>
       </div>
-      <p class="hint" style="margin:-.4rem 0 1rem">
+      <p class="hint" style="margin:-.5rem 0 1.2rem">
         Potvrzení rezervací a kódy poukazů posílá server. Když se odeslání
         nepovede, zůstane e-mail tady a zkusí se znovu — nic se neztratí.
       </p>
@@ -568,6 +709,8 @@
 
   // helpers ------------------------------------------------------------
   const cap = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+  // 1 místo, 2–4 místa, 5+ míst — rozhraní má mluvit česky.
+  const mista = (n) => n + ' ' + (n === 1 ? 'místo' : (n >= 2 && n <= 4 ? 'místa' : 'míst'));
   // Pražský čas — admin může být otevřený odkudkoli, ale lekce se koná
   // v Ostravě. Viz datum.js.
   const fmtDT = (iso) => cap(CAS.denVTydnu(iso)) + ' ' + CAS.datum(iso) + ' ' + CAS.cas(iso);
@@ -669,6 +812,23 @@
     if (!ok) lessonImage = null;
   }
 
+  // postranní panel na telefonu ----------------------------------------
+  function zavriMenu() {
+    $('sidebar').classList.remove('open');
+    $('sidebarScrim').classList.remove('show');
+    $('openMenu').setAttribute('aria-expanded', 'false');
+  }
+  function otevriMenu() {
+    $('sidebar').classList.add('open');
+    $('sidebarScrim').classList.add('show');
+    $('openMenu').setAttribute('aria-expanded', 'true');
+    $('closeMenu').focus();
+  }
+  $('openMenu').addEventListener('click', otevriMenu);
+  $('closeMenu').addEventListener('click', zavriMenu);
+  $('sidebarScrim').addEventListener('click', zavriMenu);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') zavriMenu(); });
+
   // tabs ---------------------------------------------------------------
   document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach((x) => x.setAttribute('aria-selected', 'false'));
@@ -676,6 +836,9 @@
     document.querySelectorAll('.panel').forEach((p) => p.classList.remove('active'));
     $('panel-' + t.dataset.tab).classList.add('active');
     if (t.dataset.tab !== 'scan') scanStop();   // kamera nemá běžet na pozadí
+    // Na telefonu je nadpis panelu až pod pruhem, takže kde jsme říká pruh.
+    $('mobileBarTitle').textContent = t.textContent.trim();
+    zavriMenu();
   }));
 
   // Tlačítko z poplachového pruhu — přepne na záložku E-maily.
@@ -888,7 +1051,7 @@
     return '<div class="att-head">Přihlášení hosté</div>' + sorted.map((b) => {
       const cancelled = b.status === 'cancelled';
       return '<div class="att-item' + (cancelled ? ' is-cancelled' : '') + '">' +
-        '<div><strong>' + esc(b.name) + '</strong> · ' + b.spots + ' míst' +
+        '<div><strong>' + esc(b.name) + '</strong> · ' + mista(b.spots) +
           (cancelled ? ' <span class="pill pill-cancel">Zrušeno</span>' : ' ' + payBadge(b)) +
           '<div class="att-contact"><a href="mailto:' + esc(b.email) + '">' + esc(b.email) + '</a>' +
           (b.phone ? ' · <a href="tel:' + esc(b.phone) + '">' + esc(b.phone) + '</a>' : '') + '</div></div>' +
@@ -1194,12 +1357,12 @@
 
     $('emailRows').innerHTML = list.length ? list.map((e) => {
       const pill = e.status === 'sent' ? '<span class="pill pill-ok">Doručeno</span>'
-        : (e.status === 'failed' ? '<span class="pill pill-cancel">Nedoručeno</span>'
-                                 : '<span class="pill">Čeká</span>');
+        : (e.status === 'failed' ? '<span class="pill pill-fail">Nedoručeno</span>'
+                                 : '<span class="pill pill-wait">Čeká</span>');
       const co = e.kind === 'voucher' ? 'Dárkový poukaz' : 'Potvrzení rezervace';
       const kdy = e.status === 'sent' && e.sent_at ? fmtDT(e.sent_at) : fmtDT(e.created_at);
       const pokusy = e.attempts ? ' · ' + e.attempts + '. pokus' : '';
-      return '<div class="row' + (e.status === 'failed' ? ' is-cancelled' : '') + '">' +
+      return '<div class="row' + (e.status === 'failed' ? ' is-alert' : '') + '">' +
         '<div class="main"><div class="ttl">' + co + ' ' + pill + '</div>' +
         '<div class="sub">' + esc(e.to_email) + ' · ' + kdy + pokusy + '</div>' +
         (e.last_error ? '<div class="sub" style="color:var(--carrot-text)">' + esc(e.last_error) + '</div>' : '') +
@@ -1340,7 +1503,7 @@
     $('bookingRows').innerHTML = list.length ? list.map((b) => {
       const l = lessonById(b.lesson_id), cancelled = b.status === 'cancelled';
       return '<div class="row' + (cancelled ? ' is-cancelled' : '') + '">' +
-        '<div class="main"><div class="ttl">' + esc(b.name) + ' · ' + b.spots + ' míst' +
+        '<div class="main"><div class="ttl">' + esc(b.name) + ' · ' + mista(b.spots) +
           (cancelled ? ' <span class="pill pill-cancel">Zrušeno</span>' : ' ' + payBadge(b)) + '</div>' +
         '<div class="sub">' + esc(l.title) + ' · ' + fmtDT(l.starts_at) + ' · ' +
           esc(b.email) + (b.phone ? ' · ' + esc(b.phone) : '') + '</div></div>' +
@@ -1823,9 +1986,13 @@
     const hodnota = cti(cesta) == null ? '' : String(cti(cesta));
     const id = 'o-' + cesta.replace(/\./g, '-');
     if (typ === 'foto') {
-      return '<div class="obsah-pole"><label>' + popis + '</label><div class="obsah-foto">'
+      // Nativní „Choose File" je anglické a vypadá jako cizí prvek uprostřed
+      // formuláře. Vstup schováme a klikací plochou je popisek stylovaný jako
+      // tlačítko — chování je stejné, jen se to dá přečíst.
+      return '<div class="obsah-pole"><span class="obsah-popis">' + popis + '</span><div class="obsah-foto">'
         + '<img id="' + id + '-nahled" src="' + (hodnota ? '/' + hodnota : '') + '" alt="" />'
-        + '<input type="file" accept="image/*" data-foto="' + cesta + '" />'
+        + '<label class="btn btn-ghost btn-sm" for="' + id + '-soubor">Vybrat fotku</label>'
+        + '<input id="' + id + '-soubor" type="file" accept="image/*" data-foto="' + cesta + '" hidden />'
         + '</div></div>';
     }
     const vstup = typ === 'text'
