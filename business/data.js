@@ -1,4 +1,4 @@
-import { businessStartDate, computeFinancials, ledgerIdentity, paymentFeeModel, pragueToday, recurrenceOccurrences } from './domain.js';
+import { businessStartDate, clampPeriod, computeFinancials, ledgerIdentity, paymentFeeModel, pragueToday, recurrenceOccurrences } from './domain.js';
 import { createDemoData } from './demo-data.js';
 
 const DEMO_KEY = 'jsk:business-demo:v1';
@@ -94,10 +94,12 @@ export function createBusinessStore({ client = null, demo = false } = {}) {
     return { allowed: Boolean(data?.active && data?.role === 'owner'), reason: data ? null : 'forbidden', session, email: session.user.email };
   }
 
-  async function load(period) {
+  async function load(requestedPeriod) {
     if (demo) {
       demoData = readDemo();
-      const derived = missingDerivedOccurrences(demoData.costRules, demoData, period).map((row) => ({ ...row, id: `occ-${crypto.randomUUID()}` }));
+      // Ořez platí i v ukázce, jinak by ukázka učila jiná pravidla než ostrý provoz.
+      const period = clampPeriod(requestedPeriod, businessStartDate(demoData.settings));
+      const derived = period.empty ? [] : missingDerivedOccurrences(demoData.costRules, demoData, period).map((row) => ({ ...row, id: `occ-${crypto.randomUUID()}` }));
       if (derived.length) { demoData.occurrences.push(...derived); writeDemo(demoData); }
       // Demo musí filtrovat období stejně jako skutečný dotaz, jinak ukazuje
       // pod hlavičkou týdne výskyty z celého měsíce.
@@ -117,14 +119,24 @@ export function createBusinessStore({ client = null, demo = false } = {}) {
           vouchers: demoData.vouchers,
           ledger: demoData.ledger,
           occurrences: demoData.occurrences,
-        }, period, { paymentFee: paymentFeeModel(demoData.settings), startDate: businessStartDate(demoData.settings) }), sourceAccess: true },
+        }, requestedPeriod, { paymentFee: paymentFeeModel(demoData.settings), startDate: businessStartDate(demoData.settings) }), sourceAccess: true },
         period,
+        requestedPeriod,
         errors: demoData.connections.filter((item) => item.status === 'error').map((item) => ({ source: item.provider, message: item.last_error, kind: 'connection' })),
       };
     }
 
     const errors = [];
-    const calendarGeneration = await client.rpc('business_generate_calendar_costs', { p_from: period.from, p_to: period.to });
+    // Nastavení se čte jako první: je v něm datum zahájení a tím se ořízne
+    // období pro úplně všechny dotazy níž. Kdyby se ořez dělal až v součtech,
+    // návštěvnost, kampaně nebo poznámky by pořád ukazovaly dobu před
+    // otevřením studia.
+    const settings = await queryOrError('Nastavení', client.from('business_settings').select('*').order('key'), errors);
+    const period = clampPeriod(requestedPeriod, businessStartDate(settings));
+    // Období celé před zahájením: negenerujeme do něj žádné náklady.
+    const calendarGeneration = period.empty
+      ? { error: null }
+      : await client.rpc('business_generate_calendar_costs', { p_from: period.from, p_to: period.to });
     if (calendarGeneration.error) errors.push({ source: 'Kalendář nákladů', message: calendarGeneration.error.message, code: calendarGeneration.error.code, kind: 'query' });
 
     // Lekce musí být známé dřív než rezervace: výnos se váže na datum lekce,
@@ -145,7 +157,7 @@ export function createBusinessStore({ client = null, demo = false } = {}) {
     ]);
     const bookings = [...new Map([...bookingsForLessons, ...bookingsPaidInPeriod].map((row) => [row.id, row])).values()];
 
-    const [vouchers, categories, costRules, occurrences, ledger, budgets, campaigns, posts, dailyMetrics, periodMetrics, connections, goals, scenarios, notes, savedViews, settings, changeLog] = await Promise.all([
+    const [vouchers, categories, costRules, occurrences, ledger, budgets, campaigns, posts, dailyMetrics, periodMetrics, connections, goals, scenarios, notes, savedViews, changeLog] = await Promise.all([
       queryOrError('Poukazy', client.from('vouchers').select('id,code,amount,created_at,redeemed,redeemed_at,expires_at').gte('created_at', from).lte('created_at', to).order('created_at', { ascending: false }).limit(1000), errors, 1000),
       queryOrError('Kategorie nákladů', client.from('business_cost_categories').select('*').order('sort_order'), errors),
       queryOrError('Pravidla nákladů', client.from('business_cost_rules').select('*').order('created_at', { ascending: false }), errors),
@@ -162,20 +174,21 @@ export function createBusinessStore({ client = null, demo = false } = {}) {
       queryOrError('Scénáře', client.from('business_scenarios').select('*').order('updated_at', { ascending: false }), errors),
       queryOrError('Poznámky', client.from('business_notes').select('*').gte('note_date', period.from).lte('note_date', period.to).order('note_date', { ascending: false }), errors),
       queryOrError('Uložené pohledy', client.from('business_saved_views').select('*').order('created_at', { ascending: false }), errors),
-      queryOrError('Nastavení', client.from('business_settings').select('*').order('key'), errors),
       queryOrError('Deník změn', client.from('business_change_log').select('*').order('changed_at', { ascending: false }).limit(200), errors),
     ]);
 
     const source = { lessons, bookings, vouchers, ledger, occurrences };
-    const derived = missingDerivedOccurrences(costRules, source, period);
+    const derived = period.empty ? [] : missingDerivedOccurrences(costRules, source, period);
     if (derived.length) {
       const { data: inserted, error } = await client.from('business_cost_occurrences').upsert(derived, { onConflict: 'occurrence_key', ignoreDuplicates: true }).select();
       if (error) errors.push({ source: 'Odvozené náklady', message: error.message, code: error.code });
       else occurrences.push(...(inserted || []));
     }
 
-    const localSummary = computeFinancials({ bookings, lessons, vouchers, ledger, occurrences }, period, { paymentFee: paymentFeeModel(settings), startDate: businessStartDate(settings) });
-    const rpc = await client.rpc('business_period_summary', { p_from: period.from, p_to: period.to });
+    const localSummary = computeFinancials({ bookings, lessons, vouchers, ledger, occurrences }, requestedPeriod, { paymentFee: paymentFeeModel(settings), startDate: businessStartDate(settings) });
+    // Souhrn dostává původní období — ořez si udělá sám a musí vyjít stejně
+    // jako místní výpočet. Právě tahle shoda je celá pointa dvojího počítání.
+    const rpc = await client.rpc('business_period_summary', { p_from: requestedPeriod.from, p_to: requestedPeriod.to });
     if (rpc.error) errors.push({ source: 'Souhrnný výpočet', message: rpc.error.message, code: rpc.error.code, kind: 'query' });
     const rawSummary = rpc.data || {};
     // Přístup k business tabulkám a přístup k rezervacím jsou dvě různá
@@ -201,8 +214,14 @@ export function createBusinessStore({ client = null, demo = false } = {}) {
       feesMinor: Number(rawSummary.fees_minor || 0),
       expectedFeesMinor: Number(rawSummary.expected_fees_minor || 0),
       excludedCostsMinor: Number(rawSummary.excluded_costs_minor || 0),
-      excludedCostEntries: Number(rawSummary.excluded_cost_entries || 0),
+      excludedRevenueMinor: Number(rawSummary.excluded_revenue_minor || 0),
+      excludedEntries: Number(rawSummary.excluded_entries || 0),
       startDate: rawSummary.business_start_date || null,
+      periodFrom: rawSummary.period_from || period.from,
+      periodTo: rawSummary.period_to || period.to,
+      requestedFrom: requestedPeriod.from,
+      periodClamped: Boolean(rawSummary.period_clamped),
+      periodEmpty: Boolean(rawSummary.period_empty),
       feeGapMinor: Number(rawSummary.fee_gap_minor || 0),
       adSpendMinor: Number(rawSummary.ad_spend_minor || 0),
       missingPaymentAmounts: Number(rawSummary.missing_payment_amounts || 0),
@@ -214,7 +233,7 @@ export function createBusinessStore({ client = null, demo = false } = {}) {
       sourceAccess,
     };
 
-    return { lessons, bookings, vouchers, categories, costRules, occurrences, ledger, budgets, campaigns, posts, dailyMetrics, periodMetrics, connections, goals, scenarios, notes, savedViews, settings, changeLog, summary, errors, period };
+    return { lessons, bookings, vouchers, categories, costRules, occurrences, ledger, budgets, campaigns, posts, dailyMetrics, periodMetrics, connections, goals, scenarios, notes, savedViews, settings, changeLog, summary, errors, period, requestedPeriod };
   }
 
   async function saveCost(rule, period, context, attachmentFile = null) {

@@ -35,9 +35,23 @@ function currentView() {
   return viewMeta[view] ? view : 'overview';
 }
 
+// Popisek ukazuje období, které se opravdu počítalo. Když ho datum zahájení
+// oříznulo, je to vidět hned pod nadpisem, ne až v poznámce uprostřed stránky.
 function labelPeriod() {
   const formatter = new Intl.DateTimeFormat('cs-CZ', { day: 'numeric', month: 'long', year: 'numeric' });
-  return `${formatter.format(new Date(`${period.from}T12:00:00`))} – ${formatter.format(new Date(`${period.to}T12:00:00`))}`;
+  const den = (value) => formatter.format(new Date(`${value}T12:00:00`));
+  const effective = effectivePeriod();
+  if (effective.empty) return `${den(period.from)} – ${den(period.to)} · celé před zahájením provozu`;
+  const base = `${den(effective.from)} – ${den(effective.to)}`;
+  return effective.clamped ? `${base} · zkráceno zahájením provozu` : base;
+}
+
+// Ořezané období, jak ho vrátil store. Než se data načtou, platí zvolené.
+function effectivePeriod() {
+  const loaded = currentData?.period;
+  return loaded && loaded.to === period.to && loaded.requestedFrom === period.from
+    ? loaded
+    : { from: period.from, to: period.to, requestedFrom: period.from, clamped: false, empty: false };
 }
 
 function setUrl(patch, replace = false) {
@@ -143,8 +157,14 @@ function escapeHtml(value) {
 }
 
 function exportSummary() {
+  const effective = effectivePeriod();
   const rows = [
-    ['obdobi_od', period.from], ['obdobi_do', period.to], ['jednotka', 'CZK_minor'], ['zdroj', 'business_period_summary'],
+    // Vyvezené číslo musí nést i to, za jaké dny platí. Bez „zvolene_od"
+    // by se z exportu nedalo poznat, že zahájení provozu období zkrátilo.
+    ['obdobi_od', effective.from], ['obdobi_do', effective.to],
+    ['zvolene_od', period.from], ['zvolene_do', period.to],
+    ['zahajeni_provozu', currentData.summary.startDate || ''],
+    ['jednotka', 'CZK_minor'], ['zdroj', 'business_period_summary'],
     ['uplnost', currentData.summary.completeness], ['vynosy_lekci', currentData.summary.recognizedRevenueMinor],
     ['provozni_naklady', currentData.summary.operatingCostsMinor], ['provozni_vysledek', currentData.summary.operatingResultMinor],
     ['zaplacena_mista', currentData.summary.paidSpots], ['penezni_tok', currentData.summary.cashFlowMinor],

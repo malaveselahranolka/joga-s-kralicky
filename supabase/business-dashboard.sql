@@ -510,10 +510,82 @@ stable
 security invoker
 set search_path = public
 as $$
-declare result jsonb;
+declare
+  result jsonb;
+  -- Datum oficiálního zahájení provozu. Co se stalo dřív, do byznysu nepatří:
+  -- není to jen o nákladech, ale i o výnosu, hotovosti a poukazech. Bez
+  -- nastavení se nefiltruje nic, proto '-infinity'.
+  v_start date := coalesce(
+    (select (value->>'date')::date from public.business_settings where key = 'business_start'),
+    '-infinity'::date
+  );
+  -- Období oříznuté zahájením. Všechny součty níž pracují jen s ním, takže
+  -- se žádný z nich nemusí na datum zahájení ptát zvlášť.
+  v_from date;
+  -- Useknutá část období. Slouží jen k dokladu, co ořez odnesl.
+  v_cut_to date;
 begin
   if not (select public.business_has_access()) then raise exception 'forbidden' using errcode = '42501'; end if;
   if p_from is null or p_to is null or p_to < p_from then raise exception 'invalid period'; end if;
+
+  v_from := greatest(p_from, v_start);
+  v_cut_to := v_from - 1;
+
+  -- Období celé před zahájením. Není to chyba ani neúplnost: tehdy se
+  -- opravdu nic nepočítalo, takže nula je správná odpověď.
+  if v_from > p_to then
+    with cut as (
+      select
+        coalesce((select sum(b.payment_amount) from public.bookings b join public.lessons l on l.id = b.lesson_id
+          where b.status <> 'cancelled' and b.payment_status = 'paid'
+            and (l.starts_at at time zone 'Europe/Prague')::date between p_from and p_to), 0)::bigint as revenue_bookings,
+        coalesce((select sum(amount) from public.vouchers
+          where (created_at at time zone 'Europe/Prague')::date between p_from and p_to), 0)::bigint as revenue_vouchers,
+        coalesce((select sum(amount_minor) from public.business_cost_occurrences
+          where status = 'paid' and include_in_operating and currency = 'CZK'
+            and period_start between p_from and p_to), 0)::bigint as costs_occurrences,
+        coalesce((select sum(amount_minor) from public.business_ledger_entries
+          where status = 'posted' and currency = 'CZK' and cost_occurrence_id is null
+            and kind in ('fee','ad_spend','expense','adjustment')
+            and (occurred_at at time zone 'Europe/Prague')::date between p_from and p_to), 0)::bigint as costs_ledger,
+        coalesce((select sum(amount_minor) from public.business_ledger_entries
+          where status = 'posted' and currency = 'CZK' and cost_occurrence_id is null
+            and kind = 'income' and booking_id is null and voucher_id is null and source <> 'stripe'
+            and (occurred_at at time zone 'Europe/Prague')::date between p_from and p_to), 0)::bigint as revenue_ledger,
+        (
+          (select count(*) from public.bookings b join public.lessons l on l.id = b.lesson_id
+            where b.status <> 'cancelled' and b.payment_status = 'paid'
+              and (l.starts_at at time zone 'Europe/Prague')::date between p_from and p_to)
+          + (select count(*) from public.vouchers
+            where (created_at at time zone 'Europe/Prague')::date between p_from and p_to)
+          + (select count(*) from public.business_cost_occurrences
+            where status = 'paid' and include_in_operating and currency = 'CZK'
+              and period_start between p_from and p_to)
+          + (select count(*) from public.business_ledger_entries
+            where status = 'posted' and currency = 'CZK' and cost_occurrence_id is null
+              and ((kind in ('fee','ad_spend','expense','adjustment'))
+                or (kind = 'income' and booking_id is null and voucher_id is null and source <> 'stripe'))
+              and (occurred_at at time zone 'Europe/Prague')::date between p_from and p_to)
+        )::bigint as rows_total
+    )
+    select jsonb_build_object(
+      'recognized_revenue_minor', 0, 'cash_sales_minor', 0, 'operating_costs_minor', 0,
+      'operating_result_minor', 0, 'cash_flow_minor', 0, 'paid_spots', 0,
+      'voucher_sales_minor', 0, 'refunds_minor', 0, 'fees_minor', 0, 'expected_fees_minor', 0,
+      'fee_gap_minor', 0, 'ad_spend_minor', 0, 'missing_payment_amounts', 0,
+      'foreign_currency_entries', 0, 'unmatched_income_minor', 0, 'unmatched_income_entries', 0,
+      'business_start_date', nullif(v_start, '-infinity'::date),
+      -- Stejně jako v JS: začátek je datum zahájení, i když je za koncem
+      -- období. Prázdnotu hlásí period_empty, ne obrácený rozsah.
+      'period_from', v_from, 'period_to', p_to, 'period_clamped', true, 'period_empty', true,
+      'excluded_revenue_minor', cut.revenue_bookings + cut.revenue_vouchers + cut.revenue_ledger,
+      'excluded_costs_minor', cut.costs_occurrences + cut.costs_ledger,
+      'excluded_entries', cut.rows_total,
+      'source_access', public.is_owner(),
+      'complete', public.is_owner()
+    ) into result from cut;
+    return result;
+  end if;
 
   with
   -- Sazba platební brány: pevná část plus procento. Ověřeno proti skutečným
@@ -523,14 +595,6 @@ begin
       coalesce((select (value->>'fixed_minor')::numeric from public.business_settings where key = 'payment_fee'), 650) as fixed_minor,
       coalesce((select (value->>'rate_percent')::numeric from public.business_settings where key = 'payment_fee'), 1.5) as rate_percent
   ),
-  -- Datum oficiálního zahájení provozu. Náklady před ním do výsledku nepatří.
-  -- Bez nastavení se nefiltruje nic, proto '-infinity'.
-  start_date as (
-    select coalesce(
-      (select (value->>'date')::date from public.business_settings where key = 'business_start'),
-      '-infinity'::date
-    ) as od
-  ),
   paid as (
     select b.*, l.starts_at
     from public.bookings b join public.lessons l on l.id = b.lesson_id
@@ -538,42 +602,50 @@ begin
   ),
   booking_values as (
     select
-      coalesce(sum(payment_amount) filter (where (starts_at at time zone 'Europe/Prague')::date between p_from and p_to), 0)::bigint as revenue,
-      coalesce(sum(payment_amount) filter (where (paid_at at time zone 'Europe/Prague')::date between p_from and p_to), 0)::bigint as cash,
-      coalesce(sum(spots) filter (where (starts_at at time zone 'Europe/Prague')::date between p_from and p_to), 0)::bigint as spots,
+      coalesce(sum(payment_amount) filter (where (starts_at at time zone 'Europe/Prague')::date between v_from and p_to), 0)::bigint as revenue,
+      coalesce(sum(payment_amount) filter (where (paid_at at time zone 'Europe/Prague')::date between v_from and p_to), 0)::bigint as cash,
+      coalesce(sum(spots) filter (where (starts_at at time zone 'Europe/Prague')::date between v_from and p_to), 0)::bigint as spots,
       coalesce(sum(round(m.fixed_minor + payment_amount * m.rate_percent / 100)) filter (
-        where payment_amount is not null and (paid_at at time zone 'Europe/Prague')::date between p_from and p_to
-          and (paid_at at time zone 'Europe/Prague')::date >= (select od from start_date)
+        where payment_amount is not null and (paid_at at time zone 'Europe/Prague')::date between v_from and p_to
       ), 0)::bigint as expected_fees,
       count(*) filter (where payment_amount is null and (
-        (starts_at at time zone 'Europe/Prague')::date between p_from and p_to
-        or (paid_at at time zone 'Europe/Prague')::date between p_from and p_to
-      ))::bigint as missing_amounts
+        (starts_at at time zone 'Europe/Prague')::date between v_from and p_to
+        or (paid_at at time zone 'Europe/Prague')::date between v_from and p_to
+      ))::bigint as missing_amounts,
+      -- Doklad o ořezu: co spadlo do useknuté části období.
+      coalesce(sum(payment_amount) filter (where (starts_at at time zone 'Europe/Prague')::date between p_from and v_cut_to), 0)::bigint as cut_revenue,
+      count(*) filter (where (starts_at at time zone 'Europe/Prague')::date between p_from and v_cut_to)::bigint as cut_rows
     from paid cross join fee_model m
   ),
   voucher_values as (
-    select coalesce(sum(amount) filter (where (created_at at time zone 'Europe/Prague')::date between p_from and p_to), 0)::bigint as cash
+    select
+      coalesce(sum(amount) filter (where (created_at at time zone 'Europe/Prague')::date between v_from and p_to), 0)::bigint as cash,
+      coalesce(sum(amount) filter (where (created_at at time zone 'Europe/Prague')::date between p_from and v_cut_to), 0)::bigint as cut_revenue,
+      count(*) filter (where (created_at at time zone 'Europe/Prague')::date between p_from and v_cut_to)::bigint as cut_rows
     from public.vouchers
   ),
   cost_values as (
     select
-      coalesce(sum(amount_minor) filter (where status = 'paid' and include_in_operating and period_start between p_from and p_to and currency = 'CZK'
-        and period_start >= (select od from start_date)), 0)::bigint as operating,
-      coalesce(sum(amount_minor) filter (where status = 'paid' and coalesce(paid_on, scheduled_on) between p_from and p_to and currency = 'CZK'
-        and coalesce(paid_on, scheduled_on) >= (select od from start_date)), 0)::bigint as cash,
-      coalesce(sum(amount_minor) filter (where status = 'paid' and include_in_operating and period_start between p_from and p_to and currency = 'CZK'
-        and period_start < (select od from start_date)), 0)::bigint as excluded_before_start,
-      count(*) filter (where status = 'paid' and include_in_operating and period_start between p_from and p_to and currency = 'CZK'
-        and period_start < (select od from start_date))::bigint as excluded_rows,
+      coalesce(sum(amount_minor) filter (where status = 'paid' and include_in_operating and period_start between v_from and p_to and currency = 'CZK'), 0)::bigint as operating,
+      coalesce(sum(amount_minor) filter (where status = 'paid' and coalesce(paid_on, scheduled_on) between v_from and p_to and currency = 'CZK'), 0)::bigint as cash,
+      coalesce(sum(amount_minor) filter (where status = 'paid' and include_in_operating and period_start between p_from and v_cut_to and currency = 'CZK'), 0)::bigint as cut_costs,
+      count(*) filter (where status = 'paid' and include_in_operating and period_start between p_from and v_cut_to and currency = 'CZK')::bigint as cut_rows,
       count(*) filter (where status = 'paid' and currency <> 'CZK'
-        and (period_start between p_from and p_to or coalesce(paid_on, scheduled_on) between p_from and p_to))::bigint as foreign_rows
+        and (period_start between v_from and p_to or coalesce(paid_on, scheduled_on) between v_from and p_to))::bigint as foreign_rows
     from public.business_cost_occurrences
   ),
   -- Cizí měna se nesčítá s korunami. Zůstane stranou jako neúplnost.
   ledger_period as (
-    select *, (occurred_at at time zone 'Europe/Prague')::date < (select od from start_date) as pred_zahajenim
+    select *
     from public.business_ledger_entries
-    where status = 'posted' and (occurred_at at time zone 'Europe/Prague')::date between p_from and p_to
+    where status = 'posted' and (occurred_at at time zone 'Europe/Prague')::date between v_from and p_to
+  ),
+  -- Useknutá část období, jen kvůli dokladu.
+  ledger_cut as (
+    select *
+    from public.business_ledger_entries
+    where status = 'posted' and currency = 'CZK' and cost_occurrence_id is null
+      and (occurred_at at time zone 'Europe/Prague')::date between p_from and v_cut_to
   ),
   ledger_values as (
     select
@@ -584,15 +656,19 @@ begin
       coalesce(sum(amount_minor) filter (where kind = 'income' and booking_id is null and voucher_id is null and source = 'stripe'), 0)::bigint as unmatched_income,
       count(*) filter (where kind = 'income' and booking_id is null and voucher_id is null and source = 'stripe')::bigint as unmatched_rows,
       coalesce(sum(amount_minor) filter (where kind = 'refund'), 0)::bigint as refunds,
-      -- Poplatky, reklama, výdaje a korekce jsou náklady; před zahájením
-      -- provozu se nezapočítávají. Příjem a refundace se tím neřídí.
-      coalesce(sum(amount_minor) filter (where kind = 'fee' and cost_occurrence_id is null and not pred_zahajenim), 0)::bigint as fees,
-      coalesce(sum(amount_minor) filter (where kind = 'ad_spend' and cost_occurrence_id is null and not pred_zahajenim), 0)::bigint as ads,
+      coalesce(sum(amount_minor) filter (where kind = 'fee' and cost_occurrence_id is null), 0)::bigint as fees,
+      coalesce(sum(amount_minor) filter (where kind = 'ad_spend' and cost_occurrence_id is null), 0)::bigint as ads,
       -- 'adjustment' nemá vlastní větev, bez tohoto by mizel ze všech součtů.
-      coalesce(sum(amount_minor) filter (where kind in ('expense','adjustment') and cost_occurrence_id is null and not pred_zahajenim), 0)::bigint as expenses,
-      coalesce(sum(amount_minor) filter (where kind in ('fee','ad_spend','expense','adjustment') and cost_occurrence_id is null and pred_zahajenim), 0)::bigint as excluded_before_start,
-      count(*) filter (where kind in ('fee','ad_spend','expense','adjustment') and cost_occurrence_id is null and pred_zahajenim)::bigint as excluded_rows
+      coalesce(sum(amount_minor) filter (where kind in ('expense','adjustment') and cost_occurrence_id is null), 0)::bigint as expenses
     from ledger_period where currency = 'CZK'
+  ),
+  cut_values as (
+    select
+      coalesce(sum(amount_minor) filter (where kind in ('fee','ad_spend','expense','adjustment')), 0)::bigint as cut_costs,
+      coalesce(sum(amount_minor) filter (where kind = 'income' and booking_id is null and voucher_id is null and source <> 'stripe'), 0)::bigint as cut_revenue,
+      count(*) filter (where kind in ('fee','ad_spend','expense','adjustment')
+        or (kind = 'income' and booking_id is null and voucher_id is null and source <> 'stripe'))::bigint as cut_rows
+    from ledger_cut
   ),
   foreign_values as (
     select count(*)::bigint as foreign_rows from ledger_period where currency <> 'CZK'
@@ -608,9 +684,16 @@ begin
     'refunds_minor', x.refunds,
     'fees_minor', x.fees,
     'expected_fees_minor', b.expected_fees,
-    'business_start_date', nullif((select od from start_date), '-infinity'::date),
-    'excluded_costs_minor', c.excluded_before_start + x.excluded_before_start,
-    'excluded_cost_entries', c.excluded_rows + x.excluded_rows,
+    'business_start_date', nullif(v_start, '-infinity'::date),
+    -- Skutečně spočítané období po ořezu, ať je v rozhraní i v exportu vidět,
+    -- odkdy se čísla berou.
+    'period_from', v_from,
+    'period_to', p_to,
+    'period_clamped', v_from > p_from,
+    'period_empty', false,
+    'excluded_revenue_minor', b.cut_revenue + v.cut_revenue + cu.cut_revenue,
+    'excluded_costs_minor', c.cut_costs + cu.cut_costs,
+    'excluded_entries', b.cut_rows + v.cut_rows + c.cut_rows + cu.cut_rows,
     'fee_gap_minor', x.fees - b.expected_fees,
     'ad_spend_minor', x.ads,
     'missing_payment_amounts', b.missing_amounts,
@@ -623,10 +706,11 @@ begin
     'complete', b.missing_amounts = 0 and f.foreign_rows + c.foreign_rows = 0 and x.unmatched_rows = 0 and public.is_owner()
   ) into result
   from booking_values b cross join voucher_values v cross join cost_values c
-    cross join ledger_values x cross join foreign_values f;
+    cross join ledger_values x cross join cut_values cu cross join foreign_values f;
   return result;
 end;
 $$;
+
 revoke execute on function public.business_period_summary(date, date) from public, anon;
 grant execute on function public.business_period_summary(date, date) to authenticated;
 
