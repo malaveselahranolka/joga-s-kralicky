@@ -59,6 +59,12 @@ Deno.serve(async (req) => {
         submit: { message: "Kódy poukazů dostanete hned po zaplacení e-mailem." },
       },
       metadata: { type: "voucher", count: String(qty) },
+      // Metadata relace se na platbu samy nepřenesou. Bez tohohle řádku
+      // dorazí platba za poukaz do peněžních pohybů bez jakékoli značky
+      // a souhrn ji vykáže jako nespárovaný příjem — přestože je to
+      // poctivý prodej, jen započítaný z tabulky poukazů.
+      // Stejný postup jako u rezervací ve stripe-create.
+      payment_intent_data: { metadata: { type: "voucher", count: String(qty) } },
       success_url: `${base}/rezervace.html?voucher=ok&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${base}/rezervace.html?voucher=zrus`,
     };

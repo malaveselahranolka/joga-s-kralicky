@@ -12,6 +12,35 @@ export function vercelPublicFilter() {
   return INTERNAL_PATHS.map((path) => `requestPath ne '${path}'`).join(' and ');
 }
 
+// Platba za poukaz nemá v pohybu vazbu na konkrétní poukaz — poukazy vznikají
+// až po zaplacení ve webhooku. Pojítkem je relace Checkoutu: vouchers.session_id
+// na jedné straně, platba na druhé. Tímhle dotazem se z platby dostaneme k relaci.
+export function stripeSessionsByPaymentIntentUrl(paymentIntent) {
+  const id = String(paymentIntent || '').trim();
+  if (!/^pi_[A-Za-z0-9_]+$/.test(id)) throw new Error('invalid_payment_intent');
+  return `https://api.stripe.com/v1/checkout/sessions?limit=1&payment_intent=${encodeURIComponent(id)}`;
+}
+
+// Pohyby, u kterých má smysl relaci dohledávat: příjem ze Stripu bez vazby na
+// rezervaci. Nově je navíc označený metadaty type=voucher, ale starší platby
+// je nemají, takže se podle nich nefiltruje — jen se podle nich řadí dopředu.
+export function voucherCandidates(rows = []) {
+  return rows
+    .filter((row) => {
+      const type = String(row?.type || '');
+      if (!['charge', 'payment'].includes(type) || Number(row?.amount) < 0) return false;
+      const source = row.source && typeof row.source === 'object' ? row.source : null;
+      if (!source || UUID_PATTERN.test(String(source?.metadata?.booking_id || ''))) return false;
+      return /^pi_[A-Za-z0-9_]+$/.test(String(source.payment_intent || ''));
+    })
+    .map((row) => ({
+      externalId: row.id,
+      paymentIntent: String(row.source.payment_intent),
+      marked: String(row.source?.metadata?.type || '') === 'voucher',
+    }))
+    .sort((a, b) => Number(b.marked) - Number(a.marked));
+}
+
 export function stripeBalanceUrl(from, to, cursor = '') {
   const { start, end } = assertPeriod(from, to);
   const params = new URLSearchParams({

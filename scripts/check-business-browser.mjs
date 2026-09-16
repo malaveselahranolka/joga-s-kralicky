@@ -152,7 +152,7 @@ try {
   await evaluate('document.querySelector("[data-action=chart-mode][data-mode=revenue]").click()');
   assert(await evaluate('document.querySelector("[data-mode=revenue]").getAttribute("aria-pressed") === "true"'), 'Přepnutí grafu nefunguje.');
 
-  for (const view of ['finance', 'marketing', 'audience', 'plan', 'reports', 'sources', 'settings']) {
+  for (const view of ['finance', 'marketing', 'audience', 'vouchers', 'plan', 'reports', 'sources', 'settings']) {
     await navigate(`${base}&view=${view}`);
     assert(await evaluate('document.querySelector("#viewContent").textContent.trim().length > 40'), `Sekce ${view} je prázdná.`);
     assert(await evaluate('document.documentElement.scrollWidth <= innerWidth'), `Sekce ${view} na mobilu přetéká vodorovně.`);
@@ -220,7 +220,7 @@ try {
   assert(await evaluate('JSON.parse(localStorage.getItem("jsk:business-demo:v1")).ledger.some((row) => row.external_id === "row-1")'), 'CSV pohyb se neuložil.');
   assert(errors.length === 0, `Chyby v konzoli: ${errors.join(' | ')}`);
   if (skippedExternal.size) console.log(`  (nenačtené externí zdroje, na demu nezáleží: ${[...skippedExternal].join(', ')})`);
-  console.log('✓ Business prohlížeč: 8 sekcí, graf, mobil, uložený pohled, vytvoření i smazání nákladu a CSV import prošly.');
+  console.log('✓ Business prohlížeč: 9 sekcí, graf, mobil, uložený pohled, vytvoření i smazání nákladu a CSV import prošly.');
 } finally {
   protocol.socket.close();
   server?.close();
