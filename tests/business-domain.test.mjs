@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   breakEven,
   budgetStatus,
+  businessStartDate,
   buyerStats,
   computeFinancials,
   forecastSeats,
@@ -401,4 +402,48 @@ test('regrese: chybějící částka se nezobrazí jako nula', () => {
   const bezZakladu = proposeAdBudget(500_000, 15, { basisKnown: false });
   assert.equal(bezZakladu.proposedMinor, null);
   assert.equal(formatMoney(bezZakladu.proposedMinor), '—');
+});
+
+test('náklady před zahájením provozu se nepočítají, výnosy ano', () => {
+  const period = { from: '2026-09-01', to: '2026-09-30' };
+  const source = {
+    lessons: [
+      { id: 'l0', starts_at: '2026-09-02T08:00:00Z', status: 'active' },
+      { id: 'l1', starts_at: '2026-09-10T08:00:00Z', status: 'active' },
+    ],
+    bookings: [
+      { id: 'b0', lesson_id: 'l0', status: 'confirmed', payment_status: 'paid', payment_amount: 49_900, paid_at: '2026-09-01T10:00:00Z', spots: 1, email: 'a@b.cz' },
+      { id: 'b1', lesson_id: 'l1', status: 'confirmed', payment_status: 'paid', payment_amount: 49_900, paid_at: '2026-09-09T10:00:00Z', spots: 1, email: 'c@d.cz' },
+    ],
+    ledger: [
+      { id: 'f0', source: 'stripe', external_id: 'txn_0:fee', kind: 'fee', status: 'posted', amount_minor: 1_399, occurred_at: '2026-09-01T10:00:00Z' },
+      { id: 'f1', source: 'stripe', external_id: 'txn_1:fee', kind: 'fee', status: 'posted', amount_minor: 1_399, occurred_at: '2026-09-09T10:00:00Z' },
+    ],
+    occurrences: [
+      { id: 'o0', occurrence_key: 'k0', status: 'paid', amount_minor: 40_000, period_start: '2026-09-02', scheduled_on: '2026-09-02', paid_on: '2026-09-02' },
+      { id: 'o1', occurrence_key: 'k1', status: 'paid', amount_minor: 40_000, period_start: '2026-09-10', scheduled_on: '2026-09-10', paid_on: '2026-09-10' },
+    ],
+  };
+  const bezData = computeFinancials(source, period);
+  assert.equal(bezData.operatingCostsMinor, 40_000 + 40_000 + 1_399 + 1_399, 'bez data zahájení se počítá vše');
+
+  const odPateho = computeFinancials(source, period, { startDate: '2026-09-05' });
+  assert.equal(odPateho.operatingCostsMinor, 40_000 + 1_399, 'náklady z 1. a 2. 9. vypadly');
+  assert.equal(odPateho.feesMinor, 1_399);
+  assert.equal(odPateho.excludedCostsMinor, 40_000 + 1_399);
+  assert.equal(odPateho.excludedCostEntries, 2);
+  // Výnosy ani hotovost se datem zahájení neřídí.
+  assert.equal(odPateho.recognizedRevenueMinor, bezData.recognizedRevenueMinor);
+  assert.equal(odPateho.cashSalesMinor, bezData.cashSalesMinor);
+  // Očekávaný poplatek se řídí stejným pravidlem jako skutečný.
+  assert.equal(odPateho.expectedFeesMinor, 1_399);
+  // Peněžní tok vynechá jen výdaje, ne příjem.
+  assert.equal(odPateho.cashFlowMinor, bezData.cashSalesMinor - 40_000 - 1_399);
+});
+
+test('datum zahájení se čte z nastavení a nesmysl se ignoruje', () => {
+  assert.equal(businessStartDate([]), null);
+  assert.equal(businessStartDate([{ key: 'business_start', value: { date: '2026-09-05' } }]), '2026-09-05');
+  assert.equal(businessStartDate([{ key: 'business_start', value: { date: '5.9.2026' } }]), null);
+  assert.equal(businessStartDate([{ key: 'business_start', value: { date: null } }]), null);
 });

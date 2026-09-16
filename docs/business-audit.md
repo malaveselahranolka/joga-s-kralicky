@@ -679,3 +679,41 @@ nespočítaný bod zvratu ukazoval „0" míst. Opraveno sdílenou funkcí
 `maximumFractionDigits: 0`, takže poplatek 13,99 Kč svítil jako „14 Kč".
 U sazby a u srovnání poplatků haléře rozhodují, proto pro ně vznikl
 `formatMoneyExact`.
+
+---
+
+## Oficiální zahájení provozu 5. 9. 2026
+
+Majitelka určila, že provoz jede oficiálně od 5. září a náklady před tímto
+datem se nemají počítat. Datum je uložené v `business_settings.business_start`
+a jde ho změnit v Nastavení; prázdná hodnota znamená, že se podle data
+nefiltruje nic.
+
+**Co se filtruje:** nákladové výskyty (podle `period_start`, u peněžního toku
+podle `paid_on`) a pohyby typu `fee`, `ad_spend`, `expense` a `adjustment`.
+Očekávaný poplatek podle sazby se řídí stejným pravidlem.
+
+**Co se nefiltruje:** výnosy z lekcí, prodej poukazů, hotovost ani refundace.
+To je záměr podle zadání, ale znamená to nesouměrnost, o které rozhraní
+nesmí mlčet: období sahající před 5. 9. vyjde příznivěji, než jaká byla
+skutečnost. Přehled i Finance proto zobrazí pruh s datem zahájení a s tím,
+kolik nákladů a za kolik zůstalo stranou.
+
+Dopad na produkční data:
+
+| Období | Vyloučeno | Poplatky po změně | Provozní výsledek |
+| --- | --- | --- | --- |
+| září 2026 | 0 položek | 112,89 Kč | 4 914,61 Kč (beze změny) |
+| červenec–září 2026 | 34 položek za 300,27 Kč | 112,89 Kč (dřív 365,68 Kč) | 4 914,61 Kč |
+
+Září se nezměnilo, protože všechny jeho náklady jsou až od 5. 9. Vyloučené
+položky jsou poplatky a korekce z července a srpna. Za zmínku stojí, že
+výnosy z lekcí před 5. 9. (2 994 Kč) byly celé refundované, takže
+nesouměrnost tu zatím nic nenafukuje — ale s příštími daty by mohla.
+
+### Křížové ověření po změně
+
+Stejným postupem jako 16. 9.: nasazená SQL funkce spuštěná pod identitou
+majitelky proti JS implementaci nad stejnými produkčními daty.
+**32 metrik ve dvou obdobích, žádný rozdíl** — včetně nových
+`excluded_costs_minor`, `excluded_cost_entries` a `business_start_date`.

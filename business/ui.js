@@ -1,6 +1,7 @@
 import {
   breakEven,
   budgetStatus,
+  businessStartDate,
   finiteNumber,
   formatMoney,
   formatMoneyExact,
@@ -194,7 +195,7 @@ function overview(data, options) {
   const lessonCapacity = capacityOf(activeLessons(data));
   const occupancy = lessonCapacity ? s.paidSpots / lessonCapacity * 100 : null;
   const traffic = websiteTraffic(data);
-  return `<div class="view-stack">${errors(data.errors)}${kpis(s)}
+  return `<div class="view-stack">${errors(data.errors)}${startNotice(data)}${kpis(s)}
     <div class="overview-grid"><section class="panel"><div class="chart-toolbar"><div><p class="section-label">Rytmus studia</p><h2>Vývoj výsledku</h2></div><div><div class="segmented" aria-label="Ukazatel grafu">${[['result','Výsledek'],['revenue','Výnosy'],['costs','Náklady']].map(([key,label]) => `<button type="button" data-action="chart-mode" data-mode="${key}" aria-pressed="${options.chartMetric === key}">${label}</button>`).join('')}</div><div class="status-tag">${completeness(s)}</div></div></div>${trendChart(data, options.chartMetric)}</section>
     <aside class="panel"><div class="section-head"><div><p class="section-label">Dnes důležité</p><h2>Signály</h2></div></div><div class="insight-list">
       <div class="insight"><strong>Obsazenost ${pct(occupancy)}</strong><p>${num(s.paidSpots)} zaplacených míst z kapacity ${num(lessonCapacity)}.</p><a href="?view=plan">Otevřít plán →</a></div>
@@ -212,7 +213,7 @@ function finance(data) {
     ['Reklama', s.adSpendMinor], ['Platební poplatky', s.feesMinor], ['Refundace', s.refundsMinor],
   ].filter(([, value]) => value > 0);
   const max = Math.max(1, ...expenses.map(([, value]) => value));
-  return `<div class="view-stack">${errors(data.errors)}<nav class="context-tabs" aria-label="Finance"><a href="#result">Výsledek</a><a href="#costs">Náklady</a><a href="#cash">Pohyby</a></nav>
+  return `<div class="view-stack">${errors(data.errors)}${startNotice(data)}<nav class="context-tabs" aria-label="Finance"><a href="#result">Výsledek</a><a href="#costs">Náklady</a><a href="#cash">Pohyby</a></nav>
     <section class="panel" id="result"><div class="section-head"><div><p class="section-label">Manažerský pohled</p><h2>Rozklad výsledku studia</h2><p>Výnos vzniká uskutečněním lekce. Peněžní tok sleduje datum úhrady.</p></div><span class="status-tag">${completeness(s)}</span></div><div class="result-trace"><div class="trace-step"><div class="label">Výnosy lekcí</div><div class="value">${formatMoney(s.recognizedRevenueMinor)}</div></div><div class="trace-op">−</div><div class="trace-step"><div class="label">Provozní náklady a refundace</div><div class="value">${formatMoney(s.operatingCostsMinor + s.refundsMinor)}</div></div><div class="trace-op">=</div><div class="trace-step result"><div class="label">Provozní výsledek</div><div class="value">${formatMoney(s.operatingResultMinor)}</div></div></div><div class="planning-step"><strong>Prodej poukazů: ${formatMoney(s.voucherSalesMinor)}</strong><p>Je v peněžním toku, ne ve výnosech lekcí. Čerpání poukazu se nezapočítá podruhé.</p></div></section>
     <div class="split-grid"><section class="panel" id="costs"><div class="section-head"><div><p class="section-label">Struktura</p><h2>Náklady</h2></div><button class="button button-primary" data-action="open-cost">Přidat náklad</button></div>${expenses.length ? `<div class="bar-list">${expenses.map(([label, value]) => `<div class="bar-row"><span>${label}</span><span class="bar-track"><span class="bar-fill" style="width:${Math.round(value / max * 100)}%"></span></span><strong class="bar-value">${formatMoney(value)}</strong></div>`).join('')}</div>` : '<div class="empty-state"><h3>Žádné náklady</h3><p>V období nejsou zaplacené nákladové položky.</p></div>'}</section>
     <section class="panel" id="cash"><div class="section-head"><div><p class="section-label">Hotovost</p><h2>Peněžní pohyby</h2></div><button class="button button-secondary" data-action="open-import">Import CSV</button></div>${feeCheck(data)}<div class="summary-grid"><div class="summary-item"><div class="label">Příjem z prodejů</div><div class="value">${formatMoney(s.cashSalesMinor)}</div></div><div class="summary-item"><div class="label">Peněžní tok</div><div class="value">${formatMoney(s.cashFlowMinor)}</div></div><div class="summary-item"><div class="label">Payouty</div><div class="value">Nejsou výnos</div></div></div>${s.unmatchedIncomeEntries ? `<div class="notice notice-warning"><strong>${num(s.unmatchedIncomeEntries)} plateb ze Stripu nemá vazbu na rezervaci ani poukaz</strong> (${formatMoney(s.unmatchedIncomeMinor)}). Do příjmu se nepřičetly, aby se nezapočítaly podruhé vedle rezervace. Zkontrolujte je v Stripe.</div>` : ''}</section></div>
@@ -224,6 +225,16 @@ function finance(data) {
 // Skutečně naúčtované poplatky proti sazbě. Rozdíl je signál: buď část
 // poplatků ještě nedorazila ze synchronizace, nebo brána účtuje jinak,
 // než říká nastavená sazba.
+// Zahájení provozu mění výsledek, takže se o něm nesmí mlčet.
+function startNotice(data) {
+  const s = data.summary;
+  const start = s.startDate || businessStartDate(data.settings);
+  if (!start || !data.period || data.period.from >= start) return '';
+  return `<div class="notice notice-info"><strong>Provoz začal ${esc(date(start))}.</strong> Zvolené období sahá před tento den, takže ${s.excludedCostEntries
+    ? `${num(s.excludedCostEntries)} nákladů za ${formatMoneyExact(s.excludedCostsMinor)} se do výsledku nepočítá`
+    : 'starší náklady se do výsledku nepočítají'}. Výnosy a refundace se tím neřídí — období před zahájením proto vyjde příznivěji, než jaká byla skutečnost.</div>`;
+}
+
 function feeCheck(data) {
   const s = data.summary;
   const model = paymentFeeModel(data.settings);
@@ -346,7 +357,8 @@ function settings(data) {
   const fee = paymentFeeModel(data.settings);
   const price = entryPriceMinor();
   return `<div class="view-stack">${errors(data.errors)}<section class="panel"><div class="section-head"><div><p class="section-label">Plánovací pravidlo</p><h2>Podíl výsledku pro reklamu</h2><p>Použije se pouze na kladný a úplný provozní výsledek.</p></div></div><form data-action="save-setting" data-setting="advertising_budget_rate"><div class="field"><label for="adRate">Procento</label><input id="adRate" name="percent" type="number" min="0" max="100" step="0.1" value="${esc(rate)}"></div><div class="modal-actions"><button class="button button-primary" type="submit">Uložit pravidlo</button></div></form></section>
-    <section class="panel"><div class="section-head"><div><p class="section-label">Platební brána</p><h2>Sazba poplatku</h2><p>Pevná část plus procento z částky. Používá se ke kontrole naúčtovaných poplatků a jako proměnný náklad v bodu zvratu.</p></div></div><form data-action="save-setting" data-setting="payment_fee"><div class="two-fields"><div class="field"><label for="feeFixed">Pevná část v Kč</label><input id="feeFixed" name="fixed_czk" type="number" min="0" step="0.01" value="${esc((fee.fixedMinor / 100).toFixed(2))}"></div><div class="field"><label for="feeRate">Procento z částky</label><input id="feeRate" name="rate_percent" type="number" min="0" max="100" step="0.01" value="${esc(fee.ratePercent)}"></div></div><p class="field-help">${price === null ? 'Cena za místo není dostupná.' : `Při ceně ${formatMoney(price)} za místo vychází poplatek ${formatMoneyExact(paymentFeeMinor(price, fee))}.`}</p><div class="modal-actions"><button class="button button-primary" type="submit">Uložit sazbu</button></div></form></section><section class="panel"><div class="section-head"><div><p class="section-label">Dohledatelnost</p><h2>Uložené pohledy</h2></div></div>${table(data.savedViews,[['name','Název'],['view_key','Sekce']])}</section><div class="notice notice-warning">Měnu a časové pásmo nelze z tohoto rozhraní měnit. Výpočty používají CZK a Europe/Prague.</div></div>`;
+    <section class="panel"><div class="section-head"><div><p class="section-label">Platební brána</p><h2>Sazba poplatku</h2><p>Pevná část plus procento z částky. Používá se ke kontrole naúčtovaných poplatků a jako proměnný náklad v bodu zvratu.</p></div></div><form data-action="save-setting" data-setting="payment_fee"><div class="two-fields"><div class="field"><label for="feeFixed">Pevná část v Kč</label><input id="feeFixed" name="fixed_czk" type="number" min="0" step="0.01" value="${esc((fee.fixedMinor / 100).toFixed(2))}"></div><div class="field"><label for="feeRate">Procento z částky</label><input id="feeRate" name="rate_percent" type="number" min="0" max="100" step="0.01" value="${esc(fee.ratePercent)}"></div></div><p class="field-help">${price === null ? 'Cena za místo není dostupná.' : `Při ceně ${formatMoney(price)} za místo vychází poplatek ${formatMoneyExact(paymentFeeMinor(price, fee))}.`}</p><div class="modal-actions"><button class="button button-primary" type="submit">Uložit sazbu</button></div></form></section>
+    <section class="panel"><div class="section-head"><div><p class="section-label">Provoz</p><h2>Oficiální zahájení</h2><p>Náklady s dřívějším datem se do provozního výsledku nepočítají. Výnosy a refundace se tím neřídí.</p></div></div><form data-action="save-setting" data-setting="business_start"><div class="field"><label for="startDate">Datum zahájení</label><input id="startDate" name="date" type="date" value="${esc(businessStartDate(data.settings) || '')}"></div><p class="field-help">Prázdné pole znamená, že se podle data nefiltruje nic.</p><div class="modal-actions"><button class="button button-primary" type="submit">Uložit datum</button></div></form></section><section class="panel"><div class="section-head"><div><p class="section-label">Dohledatelnost</p><h2>Uložené pohledy</h2></div></div>${table(data.savedViews,[['name','Název'],['view_key','Sekce']])}</section><div class="notice notice-warning">Měnu a časové pásmo nelze z tohoto rozhraní měnit. Výpočty používají CZK a Europe/Prague.</div></div>`;
 }
 
 export function renderView(view, data, options = { chartMetric: 'result' }) {
