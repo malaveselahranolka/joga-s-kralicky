@@ -6,9 +6,14 @@ import {
   buyerStats,
   computeFinancials,
   forecastSeats,
+  formatMoney,
+  formatMoneyExact,
   mergeLedgerEntries,
   proposeAdBudget,
   recommendChannels,
+  PAYMENT_FEE_DEFAULT,
+  paymentFeeMinor,
+  paymentFeeModel,
   pickTrafficSource,
   pragueDate,
   recurrenceOccurrences,
@@ -327,4 +332,73 @@ test('regrese: adjustment nemizí ze součtů', () => {
   }, { from: '2026-09-01', to: '2026-09-30' });
   assert.equal(result.operatingCostsMinor, 250, 'korekce se bere konzervativně jako výdaj');
   assert.equal(result.cashFlowMinor, -250);
+});
+
+test('sazba brány 6,50 Kč + 1,5 % sedí na skutečné poplatky Stripu', () => {
+  // Ověřeno proti produkčním datům: 499 Kč stálo 13,99 Kč (24×),
+  // 998 Kč stálo 21,47 Kč (8×). Vzorec musí trefit obojí na haléř.
+  assert.equal(paymentFeeMinor(49_900), 1_399);
+  assert.equal(paymentFeeMinor(99_800), 2_147);
+  // Poloviny haléře se zaokrouhlují nahoru jako u brány.
+  assert.equal(paymentFeeMinor(49_900), Math.round(650 + 49_900 * 0.015));
+  // Nulová ani záporná částka poplatek nevyrobí.
+  assert.equal(paymentFeeMinor(0), 0);
+  assert.equal(paymentFeeMinor(-1_000), 0);
+  assert.equal(paymentFeeMinor(null), 0);
+});
+
+test('sazba se bere z nastavení, jinak platí ověřená výchozí', () => {
+  assert.deepEqual(paymentFeeModel([]), PAYMENT_FEE_DEFAULT);
+  const vlastni = paymentFeeModel([{ key: 'payment_fee', value: { fixed_minor: 900, rate_percent: 2 } }]);
+  assert.deepEqual(vlastni, { fixedMinor: 900, ratePercent: 2 });
+  assert.equal(paymentFeeMinor(100_000, vlastni), 2_900);
+  // Nesmyslná hodnota v nastavení nesmí shodit výpočet.
+  assert.deepEqual(paymentFeeModel([{ key: 'payment_fee', value: { fixed_minor: 'x', rate_percent: -1 } }]), PAYMENT_FEE_DEFAULT);
+});
+
+test('očekávaný poplatek se počítá z úhrad období a hlásí rozdíl', () => {
+  const period = { from: '2026-09-01', to: '2026-09-30' };
+  const source = {
+    lessons: [{ id: 'l1', starts_at: '2026-09-10T08:00:00Z', status: 'active' }],
+    bookings: [
+      { id: 'b1', lesson_id: 'l1', status: 'confirmed', payment_status: 'paid', payment_amount: 49_900, paid_at: '2026-09-09T10:00:00Z', spots: 1, email: 'a@b.cz' },
+      { id: 'b2', lesson_id: 'l1', status: 'confirmed', payment_status: 'paid', payment_amount: 99_800, paid_at: '2026-09-09T10:00:00Z', spots: 2, email: 'c@d.cz' },
+    ],
+    ledger: [
+      { id: 'f1', source: 'stripe', external_id: 'txn_1:fee', kind: 'fee', status: 'posted', amount_minor: 1_399, occurred_at: '2026-09-09T10:00:00Z' },
+      { id: 'f2', source: 'stripe', external_id: 'txn_2:fee', kind: 'fee', status: 'posted', amount_minor: 2_147, occurred_at: '2026-09-09T10:00:00Z' },
+    ],
+  };
+  const result = computeFinancials(source, period);
+  assert.equal(result.expectedFeesMinor, 1_399 + 2_147);
+  assert.equal(result.feesMinor, 1_399 + 2_147);
+  assert.equal(result.feeGapMinor, 0, 'skutečnost odpovídá sazbě');
+
+  // Když poplatek ze synchronizace ještě nedorazil, rozdíl to ukáže.
+  const bezPoplatku = computeFinancials({ ...source, ledger: [] }, period);
+  assert.equal(bezPoplatku.feesMinor, 0);
+  assert.equal(bezPoplatku.expectedFeesMinor, 3_546);
+  assert.equal(bezPoplatku.feeGapMinor, -3_546);
+  // Očekávaný poplatek nesmí sám o sobě měnit náklady ani výsledek.
+  assert.equal(bezPoplatku.operatingCostsMinor, 0);
+});
+
+test('sazba poplatku se zobrazuje v haléřích, ne zaokrouhlená na koruny', () => {
+  // 13,99 Kč zobrazené jako „14 Kč" už neodpovídá tomu, co brána účtuje.
+  assert.match(formatMoneyExact(1_399), /13,99/);
+  assert.match(formatMoneyExact(650), /6,50/);
+  assert.equal(formatMoneyExact(null), '—');
+});
+
+test('regrese: chybějící částka se nezobrazí jako nula', () => {
+  // Number(null) i Number('') je 0, takže návrh rozpočtu, který nevznikl,
+  // se dřív vykreslil jako „0 Kč" — nula místo chybějícího údaje.
+  for (const prazdno of [null, undefined, '']) {
+    assert.equal(formatMoney(prazdno), '—', `formatMoney(${JSON.stringify(prazdno)})`);
+    assert.equal(formatMoneyExact(prazdno), '—');
+  }
+  assert.match(formatMoney(0), /^0\s*Kč$/, 'skutečná nula zůstává nulou');
+  const bezZakladu = proposeAdBudget(500_000, 15, { basisKnown: false });
+  assert.equal(bezZakladu.proposedMinor, null);
+  assert.equal(formatMoney(bezZakladu.proposedMinor), '—');
 });

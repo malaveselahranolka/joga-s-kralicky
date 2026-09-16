@@ -516,6 +516,13 @@ begin
   if p_from is null or p_to is null or p_to < p_from then raise exception 'invalid period'; end if;
 
   with
+  -- Sazba platební brány: pevná část plus procento. Ověřeno proti skutečným
+  -- poplatkům Stripu; výchozí hodnoty platí, dokud je majitelka nezmění.
+  fee_model as (
+    select
+      coalesce((select (value->>'fixed_minor')::numeric from public.business_settings where key = 'payment_fee'), 650) as fixed_minor,
+      coalesce((select (value->>'rate_percent')::numeric from public.business_settings where key = 'payment_fee'), 1.5) as rate_percent
+  ),
   paid as (
     select b.*, l.starts_at
     from public.bookings b join public.lessons l on l.id = b.lesson_id
@@ -526,11 +533,14 @@ begin
       coalesce(sum(payment_amount) filter (where (starts_at at time zone 'Europe/Prague')::date between p_from and p_to), 0)::bigint as revenue,
       coalesce(sum(payment_amount) filter (where (paid_at at time zone 'Europe/Prague')::date between p_from and p_to), 0)::bigint as cash,
       coalesce(sum(spots) filter (where (starts_at at time zone 'Europe/Prague')::date between p_from and p_to), 0)::bigint as spots,
+      coalesce(sum(round(m.fixed_minor + payment_amount * m.rate_percent / 100)) filter (
+        where payment_amount is not null and (paid_at at time zone 'Europe/Prague')::date between p_from and p_to
+      ), 0)::bigint as expected_fees,
       count(*) filter (where payment_amount is null and (
         (starts_at at time zone 'Europe/Prague')::date between p_from and p_to
         or (paid_at at time zone 'Europe/Prague')::date between p_from and p_to
       ))::bigint as missing_amounts
-    from paid
+    from paid cross join fee_model m
   ),
   voucher_values as (
     select coalesce(sum(amount) filter (where (created_at at time zone 'Europe/Prague')::date between p_from and p_to), 0)::bigint as cash
@@ -577,6 +587,8 @@ begin
     'voucher_sales_minor', v.cash,
     'refunds_minor', x.refunds,
     'fees_minor', x.fees,
+    'expected_fees_minor', b.expected_fees,
+    'fee_gap_minor', x.fees - b.expected_fees,
     'ad_spend_minor', x.ads,
     'missing_payment_amounts', b.missing_amounts,
     'foreign_currency_entries', f.foreign_rows + c.foreign_rows,

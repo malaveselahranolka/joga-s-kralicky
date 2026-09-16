@@ -572,21 +572,110 @@ aplikovat v transakci a vrátit rollbackem (ověření syntaxe, otisky funkcí s
 nezměnily) → teprve potom aplikovat migraci. Mění se jen dvě funkce, žádné
 tabulky, politiky ani data.
 
-### Co ještě živé není
+### Dokončení nasazení
 
-1. **Klientská část.** `www.jogaskralicky.cz/business.html` běží ze staršího
-   production deploye; všechny novější buildy jsou jen preview k PR. Živý
-   klient tedy zatím nemá opravy rozhraní (jeden zdroj návštěvnosti, období
-   v Publiku, kampaně, popisky, zvýraznění sekce). Souhrnná čísla už přitom
-   opravená jsou — bere je z `business_period_summary`, která nasazená je.
-   Zbývá sloučit PR #63 do `main`. Mimo business sekci se merge dotkne jen
-   `admin.html` (tlačítko Business), `robots.txt`, `vercel.json` a
-   `package.json`; veřejné stránky ani rezervační tok se nemění.
-2. **Poplatky Stripe se zpětně nedoplní samy.** Nasazená funkce je umí číst,
-   ale stávající pohyby poplatek nemají. Ve *Zdroje dat* je potřeba u Stripu
-   spustit **Načíst data** za požadované období. Poplatky mají vlastní
-   `external_id` (`txn_…:fee`), takže se doplní, aniž by se už uložené pohyby
-   zdvojily.
-3. **Reklamní účty.** Dokud není připojená Meta, Google Ads nebo TikTok,
-   zůstane Marketing prázdný — spojení kampaní přes
-   `dimension_key = 'campaign:<id>'` nemá co spojovat.
+**Klientská část je živá.** PR #63 sloučen do `main` (merge `287d34e`), Vercel
+nasadil produkci a `www.jogaskralicky.cz/business.html` už načítá
+`payment-config.js`, tedy novou verzi. Vedlejší efekt, který stojí za zmínku:
+produkce do té doby běžela z ručně povýšeného preview větve
+`codex/business-dashboard`, která stála na stromě **4 commity za `main`** —
+veřejnému webu tak chyběly poslední změny z mainu. Merge to srovnal.
+
+**Poplatky Stripe se doplnily.** Synchronizace za 1. 7. – 30. 9. 2026 proběhla
+úspěšně, 88 záznamů. Výsledek v ledgeru:
+
+| Typ | Počet | Částka |
+| --- | --- | --- |
+| `fee` vyrovnané | 24 | 365,68 Kč |
+| `fee` čekající | 7 | 120,37 Kč |
+| `expense` (korekce podle znaménka) | 18 | 49,98 Kč |
+| `income` vyrovnané | 24 (14 s vazbou) | 13 972 Kč |
+| `refund` | 6 | 3 493 Kč |
+| `transfer` (payouty) | 2 | 2 412,55 Kč |
+
+Dopad na září 2026: poplatky **112,89 Kč** místo dosavadní nuly, korekce
+2,50 Kč. Provozní výsledek tím klesl z 9 180 Kč na 9 064,61 Kč — přesně
+o to nadhodnocení, které audit popsal. Nespárovaných plateb je za září 0,
+takže období hlásí „Úplná data"; za celé červenec–září je jich 10 a období
+správně hlásí „Částečná data".
+
+### Co první běh shodil
+
+První pokus o synchronizaci **selhal** na cizím klíči:
+
+```
+database_business_ledger_entries: ... violates foreign key constraint
+"business_ledger_entries_booking_id_fkey"
+```
+
+Oprava z auditu ověřovala u `booking_id` z metadat Stripu jen **tvar UUID**,
+ne existenci rezervace. Platby z července nesly UUID rezervací, které už
+neexistují (zrušená lekce maže rezervace kaskádou), a celý běh spadl.
+`business-sync` proto nově ověřuje vazby proti tabulce `bookings` a neznámou
+zahodí na `null`; pohyb pak zůstane jako nespárovaný příjem, což souhrn umí
+vykázat. Druhý běh po opravě prošel.
+
+### Co živé není
+
+**Reklamní účty.** Dokud není připojená Meta, Google Ads nebo TikTok, zůstane
+Marketing prázdný — spojení kampaní přes `dimension_key = 'campaign:<id>'`
+nemá co spojovat.
+
+---
+
+## Sazba platební brány a křížové ověření 16. 9. 2026
+
+### Sazba 6,50 Kč + 1,5 %
+
+Majitelka zadala sazbu brány. **Skutečné poplatky Stripu jí odpovídají na haléř**,
+což potvrdila kontrola proti produkčním datům:
+
+| Platba | Skutečný poplatek | Vzorec 6,50 + 1,5 % | Počet |
+| --- | --- | --- | --- |
+| 499 Kč | 13,99 Kč | 13,99 Kč | 24× |
+| 998 Kč | 21,47 Kč | 21,47 Kč | 8× |
+
+Sazba proto **nenahrazuje** naúčtované poplatky — ty zůstávají zdrojem pravdy.
+Používá se tam, kde skutečný poplatek neexistuje nebo kde je potřeba kontrola:
+
+- **Finance** srovnávají naúčtované poplatky s tím, co říká sazba, a rozdíl
+  pojmenují. Za září je rozdíl −85,88 Kč, protože 141,84 Kč poplatků je
+  ve stavu `pending` a do součtu se správně nepočítá.
+- **Bod zvratu** poplatek brány konečně zná: proměnný náklad je 83,99 Kč
+  (13,99 Kč brána + 70 Kč materiál) místo dosavadních 70 Kč. Bod zvratu se
+  tím posunul z 24 na 25 míst. Model navíc funguje i bez pravidla „za
+  zaplacené místo", protože poplatek je známý vždy.
+- **Nastavení** sazbu zpřístupňují k úpravě (`business_settings.payment_fee`).
+  Bez uloženého nastavení platí ověřená výchozí hodnota v JS i v SQL.
+
+### Křížové ověření SQL proti JS
+
+Audit vytýkal, že `business_period_summary` a `computeFinancials` jsou dvě
+nezávislé implementace a testy pokrývají jen druhou. Ověřeno na skutečných
+produkčních datech: nasazená SQL funkce byla spuštěna pod identitou majitelky
+(`set local role authenticated` s jejím `sub`, celé v transakci s rollbackem),
+stejná data pak prošla JS implementací.
+
+**Všech 16 metrik ve dvou obdobích (září 2026 a červenec–září 2026) vyšlo
+identicky** — včetně `expected_fees_minor`, `fee_gap_minor`,
+`unmatched_income_entries` i `missing_payment_amounts`. Obě implementace tedy
+na živých datech souhlasí.
+
+Postup ke zopakování: vyexportovat `lessons`, `bookings`, `vouchers`,
+`business_ledger_entries`, `business_cost_occurrences` a `business_settings`
+jako JSON, pustit `computeFinancials` nad stejným obdobím a porovnat
+s výstupem `business_period_summary`.
+
+### Co kontrola ještě našla
+
+**Chybějící částka se zobrazovala jako nula.** `Number(null)` i `Number('')`
+je 0, takže `formatMoney(null)` vracelo „0 Kč" místo „—". V Přehledu to
+znamenalo, že u návrhu rozpočtu svítilo **0 Kč** vedle věty „Výsledek není
+úplný, proto automatický návrh nevznikl". Stejná chyba byla v `num()`, kde
+nespočítaný bod zvratu ukazoval „0" míst. Opraveno sdílenou funkcí
+`finiteNumber`; skutečná nula se dál zobrazuje jako nula.
+
+**Sazba se zaokrouhlovala na koruny.** `formatMoney` má
+`maximumFractionDigits: 0`, takže poplatek 13,99 Kč svítil jako „14 Kč".
+U sazby a u srovnání poplatků haléře rozhodují, proto pro ně vznikl
+`formatMoneyExact`.
