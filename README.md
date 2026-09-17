@@ -82,6 +82,28 @@ Krok 5 přibyl proto, že produkční databáze měla dvě věci, které v repu
 vůbec nebyly (`vouchers.expires_at` a celá tabulka `stripe_events`).
 Bez nich by čerstvé nasazení rozbilo webhook.
 
+## PDF dárkového poukazu
+
+K poukazovému e-mailu se přibaluje vytisknutelná poukázka
+(`supabase/functions/_shared/poukaz-pdf.ts`). Kreslí se vektorově přes
+`pdf-lib`, logo je překreslené podle `assets/logo.svg`.
+
+Fonty jsou zapečené jako base64 v `poukaz-fonty.ts`, protože do balíčku
+edge funkce nejde přiložit binární soubor. Web má Hanken i Schibsted
+Grotesk rozdělené na `latin` a `latin-ext` a **ani jeden soubor sám
+češtinu nepokryje** — latin má `á é í ó ú ý`, latin-ext `č ď ě ň ř š ť ů ž`.
+Vyrobit je znovu (potřebuje `pip install fonttools brotli`):
+
+1. z každé dvojice `.woff2` udělej statický řez
+   (`fontTools.varLib.instancer`, `wght` 400 nebo 700),
+2. slij `latin` + `latin-ext` dohromady (`fontTools.merge.Merger`),
+3. ořízni na podmnožinu znaků a ulož jako base64 do `poukaz-fonty.ts`.
+
+Podmnožina je schválně velkorysá (ASCII + celá česká abeceda +
+interpunkce). Na chybějícím glyfu `pdf-lib` spadne — e-mail pak sice
+odejde, ale bez přílohy, protože se selhání polyká záměrně: kód poukazu
+je v těle zprávy a ten je to podstatné.
+
 ## Edge funkce
 
 Ve `supabase/functions/`. Nasazují se přes Supabase CLI, `stripe-webhook`

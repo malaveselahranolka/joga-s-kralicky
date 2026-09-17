@@ -187,7 +187,7 @@ export function voucherMail(p: Record<string, string>): MailOut {
      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-top:1px solid ${LINE};border-bottom:1px solid ${LINE};">
        <tr><td style="padding:12px 0;font-size:14px;line-height:1.6;">
          <strong>1.</strong> Na <a href="https://www.jogaskralicky.cz/rezervace.html" style="color:${FOREST};font-weight:600;">jogaskralicky.cz/rezervace</a> vyberte termín, který vám sedí.<br>
-         <strong>2.</strong> Ve formuláři rozklikněte <strong>„Mám dárkový poukaz"</strong> a vepište kód výš.<br>
+         <strong>2.</strong> Ve formuláři rozklikněte <strong>„Mám dárkový poukaz“</strong> a vepište kód výš.<br>
          <strong>3.</strong> Odešlete. <strong>Nic se neplatí</strong> — poukaz je vstupné.
        </td></tr>
      </table>
@@ -196,7 +196,13 @@ export function voucherMail(p: Record<string, string>): MailOut {
        <a href="https://www.jogaskralicky.cz/rezervace.html" style="display:inline-block;background:${FOREST};color:${CREAM};text-decoration:none;font-weight:600;font-size:15px;padding:13px 26px;border-radius:999px;">Vybrat termín</a>
      </p>
      <p style="margin:26px 0 0;">Poukaz platí <strong>12 měsíců</strong> od zakoupení a může ho uplatnit kdokoliv — klidně ho rovnou přepošlete dál.</p>
-     <p style="margin:14px 0 0;font-size:13px;color:${INK_SOFT};">Uložte si prosím tenhle e-mail. Kdyby se kód ztratil, napište nám a najdeme ho.</p>`,
+     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:22px 0 0;">
+       <tr><td style="padding:14px 16px;background:${PAPER};border:1px solid ${LINE};border-radius:12px;font-size:14px;line-height:1.6;">
+         <strong>V příloze je poukaz k vytištění</strong> — hezky vysázený, s kódem a v našich barvách.
+         Hodí se, když chcete dárek předat na papíře.
+       </td></tr>
+     </table>
+     <p style="margin:18px 0 0;font-size:13px;color:${INK_SOFT};">Uložte si prosím tenhle e-mail. Kdyby se kód ztratil, napište nám a najdeme ho.</p>`,
   );
 
   // Prázdné řetězce jsou záměrné mezery mezi odstavci, `null` znamená
@@ -211,7 +217,7 @@ export function voucherMail(p: Record<string, string>): MailOut {
     "",
     "JAK SI VYBRAT TERMÍN",
     "1. Na https://www.jogaskralicky.cz/rezervace.html vyberte termín.",
-    "2. Ve formuláři rozklikněte „Mám dárkový poukaz\" a vepište kód výš.",
+    "2. Ve formuláři rozklikněte „Mám dárkový poukaz“ a vepište kód výš.",
     "3. Odešlete. Nic se neplatí — poukaz je vstupné.",
     "",
     "Potvrzení rezervace pak přijde e-mailem i s QR kódem. Ten se ukazuje",
