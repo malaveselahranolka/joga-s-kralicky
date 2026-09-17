@@ -82,7 +82,32 @@ ten se ukáže na kterékoliv záložce, ať jsi ve správě kdekoliv.
 - Přihlas se e-mailem a heslem z kroku 3.
 - **Přehled** — nejbližší lekce a jejich obsazenost.
 - **Lekce** — *+ Přidat lekci* (datum, čas, délka, kapacita, **obrázek**), nebo *Vygenerovat příští týden z rozvrhu* (vytvoří lekce podle standardního týdenního rozvrhu). Lekce lze upravit, **zrušit** (zmizí z webu, ale vidíš přihlášené, koho informovat) nebo smazat.
-- **Rezervace** — vidíš, kdo se přihlásil; rezervaci můžeš **zrušit** (místa se vrátí) nebo přidat **ruční rezervaci** (telefonický host).
+- **Rezervace** — vidíš, kdo se přihlásil; rezervaci můžeš **zrušit** (místa se vrátí), **přesunout** na jiný termín, **vystavit dárkový poukaz** místo ní nebo přidat **ruční rezervaci** (telefonický host).
+
+> **Přesun na jiný termín** (host onemocněl a chce přijít jindy): u rezervace
+> klikni na *Přesunout* a vyber lekci. Nabídnou se jen nadcházející lekce;
+> ty, kam se rezervace nevejde, jsou vypsané, ale nejdou vybrat. Hostovi
+> automaticky odejde e-mail s novým termínem — když si to už řekli po
+> telefonu, odškrtni *Poslat hostovi e-mail*.
+>
+> Přesun **nezakládá novou rezervaci**: mění se jen lekce, takže platba,
+> účetní doklad i vstupenka zůstávají. Host nemusí nic platit znovu a
+> **QR kód z původního potvrzení platí dál** — sám začne ukazovat nový
+> termín. Proto se na náhradní termín nikdy nedělá „zrušit a založit
+> znovu": tím by se platba od rezervace odtrhla.
+
+> **Vystavení poukazu z hotové rezervace** (host si to rozmyslel a chce
+> lekci věnovat dál, ne jít sám): u zaplacené rezervace klikni na *Poukaz*.
+> Rezervace se **zruší** a místo se uvolní; host dostane tolik poukazů,
+> kolik měl zaplacených míst, každý v hodnotě jednoho místa — poukaz totiž
+> platí vždycky jen na jedno místo, stejně jako při běžném nákupu.
+> E-mail s kódem (i s PDF k vytištění) odejde automaticky, stejná šablona
+> jako po nákupu přes web. Tlačítko se zobrazí jen u zaplacené rezervace se
+> skutečnou adresou — u ruční rezervace bez e-mailu nemá kam poukaz poslat.
+>
+> Platba a účetní doklad zůstávají u rezervace **beze změny** — nevzniká
+> nový příjem, jen se zaplacená částka rozdělí do poukazů. Vystavit se dá
+> jen jednou; podruhé už tlačítko najde rezervaci zrušenou.
 
 ### Veřejná stránka
 - Sekce **Rezervace** ukáže jen lekce, které jsi vypsala, a **reálný počet volných míst**.
@@ -254,6 +279,31 @@ měnila, projdi je všechny, jinak se rozbijí návraty z plateb:
 
 Kódy poukazů rozesílá server přes Brevo, stejně jako potvrzení rezervací.
 Šablona je v `supabase/functions/_shared/templates.ts`, nic se nenastavuje.
+
+**Jak se poukaz uplatňuje.** Dvěma způsoby, oba vedou ke stejnému konci:
+
+1. **Online při rezervaci** (obvyklé). Na stránce s termíny host rozklikne
+   *Mám dárkový poukaz*, zadá kód a místo platební brány se jen ověří
+   kód. Rezervace vznikne rovnou zaplacená a hostovi přijde **obyčejné
+   potvrzení s QR kódem** — stejné, jaké chodí po platbě kartou.
+2. **U dveří** (jako dřív). Ve správě → Poukazy se kód najde a odškrtne ručně.
+
+Online cesta vznikla proto, že samotné odškrtnutí u dveří nestačilo:
+držitel poukazu si nemohl udělat rezervaci, a když byla lekce plná, neměl
+se na ni jak dostat.
+
+> **V e-mailu s poukazem není QR kód** — schválně. Je v něm jen kód a návod,
+> jak si podle něj vybrat termín. QR kód, který se ukazuje ve studiu, přijde
+> až v **potvrzení rezervace**. Kdyby byly QR dva, host u dveří ukáže ten
+> špatný. Čtečka ve správě kódy poukazů pořád načíst umí, ale běžná cesta
+> je teď ta online.
+
+> **Jeden poukaz = jedno místo.** Hodnota poukazu je cena jednoho vstupu
+> (499 Kč), takže rezervace na poukaz je vždy pro jednoho. Kdo chce přijít
+> ve dvou, uplatní poukaz na sebe a druhé místo doplatí běžnou rezervací.
+
+> **Když rezervaci placenou poukazem rušíš**, vrať hostovi poukaz do oběhu —
+> jinak přijde o peníze. Ve správě → Poukazy se dá odškrtnutí zrušit.
 
 ### G) Test
 Rezervuj/kup poukaz zkušebně. Ve Stripe **Test mode** zaplať kartou

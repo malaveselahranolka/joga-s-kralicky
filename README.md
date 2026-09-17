@@ -72,11 +72,49 @@ napsané tak, aby šly spustit opakovaně. Pořadí:
 5. `vouchers-lifecycle.sql` — platnost poukazu, atomické uplatnění,
    deník Stripe událostí (`stripe_events`)
 6. `email-outbox.sql` — fronta odchozích e-mailů
-7. `newsletter.sql`, `attribution.sql`
+7. `presun-rezervace.sql` — `presun_rezervaci()` pro přesun rezervace
+   na jiný termín (potřebuje frontu z kroku 6)
+8. `poukaz-rezervace.sql` — `create_booking_poukazem()`, uplatnění
+   dárkového poukazu přímo v online rezervaci (potřebuje kroky 4–6)
+9. `rezervace-na-poukaz.sql` — `vystavit_poukaz_z_rezervace()`, opačný
+   směr: z hotové zaplacené rezervace udělá dárkový poukaz(y) stejné
+   hodnoty (potřebuje kroky 4–6)
+10. `newsletter.sql`, `attribution.sql`
 
 Krok 5 přibyl proto, že produkční databáze měla dvě věci, které v repu
 vůbec nebyly (`vouchers.expires_at` a celá tabulka `stripe_events`).
 Bez nich by čerstvé nasazení rozbilo webhook.
+
+## PDF dárkového poukazu
+
+K poukazovému e-mailu se přibaluje vytisknutelná poukázka
+(`supabase/functions/_shared/poukaz-pdf.ts`). Kreslí se vektorově přes
+`pdf-lib`, logo je překreslené podle `assets/logo.svg`.
+
+Fonty leží jako běžné soubory v `assets/fonts/pdf/` a funkce si je
+**jednou stáhne a drží v paměti** (`poukaz-fonty.ts`). Zapéct je do kódu
+jako base64 by znamenalo skoro 100 kB zdrojáku, který nejde zkontrolovat
+v code review a při každé ruční manipulaci hrozí, že se jeden znak rozbije
+a poukaz se tiše přestane generovat.
+
+> **Důsledek:** příloha funguje až ve chvíli, kdy jsou fonty nasazené na
+> webu. Dokud tam nejsou, e-mail s poukazem odejde bez přílohy — kód je
+> v těle zprávy a ten je to podstatné.
+
+Web má Hanken i Schibsted Grotesk rozdělené na `latin` a `latin-ext` a
+**ani jeden soubor sám češtinu nepokryje** — latin má `á é í ó ú ý`,
+latin-ext `č ď ě ň ř š ť ů ž`. Vyrobit je znovu
+(potřebuje `pip install fonttools brotli`):
+
+1. z každé dvojice `.woff2` udělej statický řez
+   (`fontTools.varLib.instancer`, `wght` 400 nebo 700),
+2. slij `latin` + `latin-ext` dohromady (`fontTools.merge.Merger`),
+3. ořízni na podmnožinu znaků a ulož do `assets/fonts/pdf/`.
+
+Podmnožina je schválně velkorysá (ASCII + celá česká abeceda +
+interpunkce). Na chybějícím glyfu `pdf-lib` spadne — e-mail pak sice
+odejde, ale bez přílohy, protože se selhání polyká záměrně: kód poukazu
+je v těle zprávy a ten je to podstatné.
 
 ## Edge funkce
 

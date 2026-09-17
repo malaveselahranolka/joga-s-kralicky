@@ -318,7 +318,8 @@
       return { cls: 'is-void', icon: info, lbl: 'Rezervace zrušena', note: 'Tahle vstupenka už neplatí.' };
     }
     if (t.payment_status === 'paid') {
-      const how = t.payment_method === 'cash' ? 'potvrzeno studiem' : 'online';
+      const how = t.payment_method === 'voucher' ? 'dárkovým poukazem'
+                : t.payment_method === 'cash' ? 'potvrzeno studiem' : 'online';
       return { cls: 'is-paid', icon: ok, lbl: 'Zaplaceno (' + how + ')', note: 'Vstup je vyřízený, nic dalšího neplatíte.' };
     }
     const left = holdLeftMs(t);

@@ -208,7 +208,13 @@ export function bookingEmail(bk: Booking, siteUrl: string) {
 
 // Jeden poukaz = jeden e-mail. order_key nese kód, takže je pro každý
 // poukaz jiný a při nákupu více kusů se založí tolik zpráv, kolik je kódů.
-export function voucherEmail(code: string, email: string, amountHaleru: number) {
+//
+// `expires` je nepovinné: dosadí se do PDF poukázky jako „Platí do".
+// Když ho volající nepošle, poukázka uvede obecné „12 měsíců od koupě",
+// což platí vždycky — proto se tu datum nedopočítává. Odhadnuté datum by
+// se totiž rozešlo se skutečným `vouchers.expires_at` pokaždé, když by
+// e-mail odešel se zpožděním.
+export function voucherEmail(code: string, email: string, amountHaleru: number, expires = "") {
   return {
     order_key: `voucher:${code}`,
     kind: "voucher",
@@ -219,6 +225,7 @@ export function voucherEmail(code: string, email: string, amountHaleru: number) 
       to_email: email,
       code,
       amount: czk(Math.round(Number(amountHaleru) / 100)),
+      expires,
       qr_url: qrFor(code),
     },
   };
@@ -259,6 +266,39 @@ type OutboxRow = {
   params: Record<string, string>;
 };
 
+// ---------------------------------------------------------------------
+//  PŘÍLOHA: DÁRKOVÝ POUKAZ JAKO PDF
+//
+//  Poukaz se kupuje jako dárek, a kód v těle e-mailu se nedá zabalit.
+//  K poukazovému e-mailu proto přibalíme vytisknutelnou poukázku.
+//
+//  Dvě věci tu jsou schválně:
+//
+//  1) DYNAMICKÝ IMPORT. Generátor si s sebou nese tři zapečené fonty.
+//     Načíst ho až ve chvíli, kdy opravdu odchází poukaz, znamená, že
+//     potvrzení rezervací (drtivá většina provozu) ho nikdy nesáhne.
+//
+//  2) SELHÁNÍ SE POLYKÁ. Když se PDF nepovede vyrobit, e-mail odejde
+//     BEZ přílohy. Kód poukazu je v těle zprávy a ten je to podstatné —
+//     zákazník, který zaplatil, nesmí zůstat bez kódu jen proto, že se
+//     zadrhla ozdoba. Chyba se zaloguje, ať se o ní ví.
+// ---------------------------------------------------------------------
+async function poukazPriloha(params: Record<string, string>) {
+  try {
+    const { poukazPdf, pdfBase64 } = await import("./poukaz-pdf.ts");
+    const bytes = await poukazPdf({
+      code: params.code || "",
+      amount: params.amount || "",
+      expires: params.expires || "",
+    });
+    const jmeno = `darkovy-poukaz-${String(params.code || "").toLowerCase()}.pdf`;
+    return [{ content: pdfBase64(bytes), name: jmeno }];
+  } catch (e) {
+    console.error("poukaz PDF: nevyrobeno, posilam bez prilohy", String(e).slice(0, 200));
+    return null;
+  }
+}
+
 async function sendViaBrevo(row: OutboxRow): Promise<string | null> {
   const mail = renderMail(row.kind, row.params || {});
   // Neznámý druh e-mailu neumíme vykreslit. Vracíme chybu místo prázdné
@@ -267,6 +307,8 @@ async function sendViaBrevo(row: OutboxRow): Promise<string | null> {
 
   const s = senderConfig();
   const from = parseFrom(s.from);
+
+  const attachment = row.kind === "voucher" ? await poukazPriloha(row.params || {}) : null;
 
   const res = await fetch(BREVO_API, {
     method: "POST",
@@ -283,6 +325,7 @@ async function sendViaBrevo(row: OutboxRow): Promise<string | null> {
       subject: mail.subject,
       htmlContent: mail.html,
       textContent: mail.text,
+      ...(attachment ? { attachment } : {}),
     }),
   });
 
