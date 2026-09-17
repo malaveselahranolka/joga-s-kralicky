@@ -152,15 +152,30 @@ export function bookingMail(p: Record<string, string>): MailOut {
 
 // ---------------------------------------------------------------------
 //  DÁRKOVÝ POUKAZ
-//  params: code, amount, qr_url
+//  params: code, amount   (qr_url se sem sice pořád posílá, ale nepoužívá
+//                          se — viz níž; nechává se kvůli starým řádkům
+//                          ve frontě, ať se dají vykreslit i zpětně)
+//
 //  Posílá se JEDEN e-mail na KAŽDÝ zakoupený poukaz — každý je samostatný
 //  dárek, takže se dá rovnou přeposlat obdarovanému.
+//
+//  PROČ TU NENÍ QR KÓD
+//  Byl tu, dokud šel poukaz uplatnit jedině u dveří: host ho ukázal a
+//  majitelka ho načetla čtečkou ve správě. Od zavedení uplatnění online
+//  (supabase/poukaz-rezervace.sql) ale poukaz slouží k něčemu jinému —
+//  k tomu, aby si obdarovaný udělal REZERVACI. Po jejím dokončení mu
+//  přijde běžné potvrzení, a teprve v NĚM je QR kód, který se ukazuje
+//  u dveří.
+//
+//  Dva QR kódy ve dvou různých e-mailech by znamenaly, že host u dveří
+//  ukáže ten špatný. Poukaz proto nese jen kód; vstupenkou je až
+//  potvrzení rezervace.
 // ---------------------------------------------------------------------
 export function voucherMail(p: Record<string, string>): MailOut {
   const html = shell(
     `Kód poukazu ${p.code || ""} — platí rok na kteroukoliv lekci.`,
     `<p style="margin:0 0 14px;">Dobrý den,</p>
-     <p style="margin:0 0 22px;">děkujeme za nákup. Tohle je dárkový poukaz na jednu lekci jógy s králíčky — obdarovaný ho uplatní přímo ve studiu, stačí ukázat kód.</p>
+     <p style="margin:0 0 22px;">děkujeme za nákup. Tohle je dárkový poukaz na jednu lekci jógy s králíčky.</p>
      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
        <tr><td align="center" bgcolor="${FOREST}" style="background:${FOREST};border-radius:14px;padding:26px 18px;">
          <div style="font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(247,244,236,0.7);">Kód poukazu</div>
@@ -168,10 +183,20 @@ export function voucherMail(p: Record<string, string>): MailOut {
          ${p.amount ? `<div style="margin-top:10px;font-size:14px;color:rgba(247,244,236,0.85);">Hodnota ${esc(p.amount)}</div>` : ""}
        </td></tr>
      </table>
-     ${p.qr_url ? qrBlock(p.qr_url, "Ve studiu můžete ukázat i tenhle QR kód.") : ""}
-     <p style="margin:24px 0 0;">Poukaz platí <strong>12 měsíců</strong> od zakoupení a může ho uplatnit kdokoliv — klidně ho rovnou přepošlete dál. Termín si obdarovaný vybere na
-       <a href="https://www.jogaskralicky.cz/rezervace.html" style="color:${FOREST};font-weight:600;">jogaskralicky.cz/rezervace</a>.</p>
-     <p style="margin:20px 0 0;font-size:13px;color:${INK_SOFT};">Uložte si prosím tenhle e-mail. Kdyby se kód ztratil, napište nám a najdeme ho.</p>`,
+     <p style="margin:26px 0 12px;font-weight:600;">Jak si vybrat termín</p>
+     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-top:1px solid ${LINE};border-bottom:1px solid ${LINE};">
+       <tr><td style="padding:12px 0;font-size:14px;line-height:1.6;">
+         <strong>1.</strong> Na <a href="https://www.jogaskralicky.cz/rezervace.html" style="color:${FOREST};font-weight:600;">jogaskralicky.cz/rezervace</a> vyberte termín, který vám sedí.<br>
+         <strong>2.</strong> Ve formuláři rozklikněte <strong>„Mám dárkový poukaz"</strong> a vepište kód výš.<br>
+         <strong>3.</strong> Odešlete. <strong>Nic se neplatí</strong> — poukaz je vstupné.
+       </td></tr>
+     </table>
+     <p style="margin:18px 0 0;">Potvrzení rezervace vám pak přijde e-mailem <strong>i s QR kódem</strong>. Ten se ukazuje ve studiu — tenhle e-mail s sebou brát nemusíte.</p>
+     <p style="margin:22px 0 0;text-align:center;">
+       <a href="https://www.jogaskralicky.cz/rezervace.html" style="display:inline-block;background:${FOREST};color:${CREAM};text-decoration:none;font-weight:600;font-size:15px;padding:13px 26px;border-radius:999px;">Vybrat termín</a>
+     </p>
+     <p style="margin:26px 0 0;">Poukaz platí <strong>12 měsíců</strong> od zakoupení a může ho uplatnit kdokoliv — klidně ho rovnou přepošlete dál.</p>
+     <p style="margin:14px 0 0;font-size:13px;color:${INK_SOFT};">Uložte si prosím tenhle e-mail. Kdyby se kód ztratil, napište nám a najdeme ho.</p>`,
   );
 
   // Prázdné řetězce jsou záměrné mezery mezi odstavci, `null` znamená
@@ -184,8 +209,15 @@ export function voucherMail(p: Record<string, string>): MailOut {
     `KÓD POUKAZU: ${p.code || ""}`,
     p.amount ? `Hodnota: ${p.amount}` : null,
     "",
+    "JAK SI VYBRAT TERMÍN",
+    "1. Na https://www.jogaskralicky.cz/rezervace.html vyberte termín.",
+    "2. Ve formuláři rozklikněte „Mám dárkový poukaz\" a vepište kód výš.",
+    "3. Odešlete. Nic se neplatí — poukaz je vstupné.",
+    "",
+    "Potvrzení rezervace pak přijde e-mailem i s QR kódem. Ten se ukazuje",
+    "ve studiu — tenhle e-mail s sebou brát nemusíte.",
+    "",
     "Poukaz platí 12 měsíců od zakoupení a může ho uplatnit kdokoliv.",
-    "Termín si obdarovaný vybere na https://www.jogaskralicky.cz/rezervace.html",
     "",
     "Uložte si prosím tenhle e-mail. Kdyby se kód ztratil, napište nám a najdeme ho.",
     "",

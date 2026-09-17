@@ -273,11 +273,17 @@ Kódy poukazů rozesílá server přes Brevo, stejně jako potvrzení rezervací
    *Mám dárkový poukaz*, zadá kód a místo platební brány se jen ověří
    kód. Rezervace vznikne rovnou zaplacená a hostovi přijde **obyčejné
    potvrzení s QR kódem** — stejné, jaké chodí po platbě kartou.
-2. **U dveří** (jako dřív). Ve správě → Poukazy se kód odškrtne ručně.
+2. **U dveří** (jako dřív). Ve správě → Poukazy se kód najde a odškrtne ručně.
 
 Online cesta vznikla proto, že samotné odškrtnutí u dveří nestačilo:
 držitel poukazu si nemohl udělat rezervaci, a když byla lekce plná, neměl
 se na ni jak dostat.
+
+> **V e-mailu s poukazem není QR kód** — schválně. Je v něm jen kód a návod,
+> jak si podle něj vybrat termín. QR kód, který se ukazuje ve studiu, přijde
+> až v **potvrzení rezervace**. Kdyby byly QR dva, host u dveří ukáže ten
+> špatný. Čtečka ve správě kódy poukazů pořád načíst umí, ale běžná cesta
+> je teď ta online.
 
 > **Jeden poukaz = jedno místo.** Hodnota poukazu je cena jednoho vstupu
 > (499 Kč), takže rezervace na poukaz je vždy pro jednoho. Kdo chce přijít
