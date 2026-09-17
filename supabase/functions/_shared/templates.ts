@@ -235,6 +235,105 @@ export function voucherMail(p: Record<string, string>): MailOut {
 }
 
 // ---------------------------------------------------------------------
+//  SVOLÁVACÍ E-MAIL — ZMĚNA V UPLATŇOVÁNÍ POUKAZU
+//  params: pocet ('1' pro jeden poukaz, jinak se mluví v množném čísle)
+//
+//  Posílá se jednorázově, ručně, jen držitelům poukazů vystavených PŘED
+//  zavedením online uplatnění (supabase/poukaz-rezervace.sql) — ti dostali
+//  původní e-mail s pokynem ukázat QR kód u dveří, a to teď neplatí.
+//  Kód poukazu ani jeho platnost se tímto e-mailem nemění; jde čistě o to
+//  říct DOPŘEDU, že další e-mail (přeposlaný `voucherMail`) přinese totéž,
+//  jen s novým způsobem uplatnění — ať host neváhá otevřít podezřelý druhý
+//  e-mail od stejného odesílatele týž den.
+// ---------------------------------------------------------------------
+export function poukazZmenaMail(p: Record<string, string>): MailOut {
+  // Čeština skloňuje přídavná jména, zájmena i slovesa podle čísla, takže
+  // se jednotné a množné číslo nedá poskládat prohozením jednoho slova —
+  // je to dvakrát celá věta, ne šablona s ternary uprostřed.
+  const vice = String(p.pocet || "1") !== "1";
+  const uvod = vice
+    ? "máte u nás dárkové poukazy na jógu s králíčky a chceme vás upozornit na jednu změnu."
+    : "máte u nás dárkový poukaz na jógu s králíčky a chceme vás upozornit na jednu změnu.";
+  const zmena = vice
+    ? "<strong>Dárkové poukazy se teď uplatňují jinak.</strong> Dřív se ukazovaly u dveří na místě. Nově je uplatníte přímo v rezervačním formuláři na webu, když si vybíráte termín."
+    : "<strong>Dárkový poukaz se teď uplatňuje jinak.</strong> Dřív se ukazoval u dveří na místě. Nově ho uplatníte přímo v rezervačním formuláři na webu, když si vybíráte termín.";
+  const nepropada = vice
+    ? "<strong>Vaše poukazy nepropadají a jejich hodnota se nemění</strong> — mění se jen způsob, jak je použijete."
+    : "<strong>Váš poukaz nepropadá a jeho hodnota se nemění</strong> — mění se jen způsob, jak ho použijete.";
+  const znovu = vice
+    ? "V dalším e-mailu, který přijde za chvíli, vám poukazy pošleme znovu i s kódy a s novým vzhledem k vytištění."
+    : "V dalším e-mailu, který přijde za chvíli, vám poukaz pošleme znovu i s kódem a s novým vzhledem k vytištění.";
+
+  const html = shell(
+    vice
+      ? "Vaše dárkové poukazy platí dál — jen se změnilo, jak se uplatňují."
+      : "Váš dárkový poukaz platí dál — jen se změnilo, jak se uplatňuje.",
+    `<p style="margin:0 0 14px;">Dobrý den,</p>
+     <p style="margin:0 0 22px;">${uvod}</p>
+     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 22px;">
+       <tr><td style="padding:16px 18px;background:${PAPER};border:1px solid ${LINE};border-radius:12px;font-size:14px;line-height:1.6;">
+         ${zmena}
+       </td></tr>
+     </table>
+     <p style="margin:0 0 14px;">${nepropada}</p>
+     <p style="margin:0 0 22px;">${znovu}</p>
+     <p style="margin:0;">Kapacita lekcí je omezená, takže s výběrem termínu doporučujeme nečekat na poslední chvíli —
+       volné termíny najdete na <a href="https://www.jogaskralicky.cz/rezervace.html" style="color:${FOREST};font-weight:600;">jogaskralicky.cz/rezervace</a>.</p>
+     <p style="margin:26px 0 0;font-size:13px;color:${INK_SOFT};">Kdyby cokoliv nebylo jasné, stačí odepsat na tenhle e-mail.</p>`,
+  );
+
+  const text = vice
+    ? [
+        "Dobrý den,",
+        "",
+        uvod,
+        "",
+        "DÁRKOVÉ POUKAZY SE TEĎ UPLATŇUJÍ JINAK.",
+        "Dřív se ukazovaly u dveří na místě. Nově je uplatníte přímo",
+        "v rezervačním formuláři na webu, když si vybíráte termín.",
+        "",
+        "Vaše poukazy nepropadají a jejich hodnota se nemění — mění se jen",
+        "způsob, jak je použijete.",
+        "",
+        "V dalším e-mailu, který přijde za chvíli, vám poukazy pošleme znovu",
+        "i s kódy a s novým vzhledem k vytištění.",
+        "",
+        "Kapacita lekcí je omezená, takže s výběrem termínu doporučujeme nečekat",
+        "na poslední chvíli: https://www.jogaskralicky.cz/rezervace.html",
+        "",
+        "Kdyby cokoliv nebylo jasné, stačí odepsat na tenhle e-mail.",
+        "",
+        "Jóga s králíčky, Fit&Fun Studio, Tovární 486/7, Ostrava-Mariánské Hory",
+        "info@jogaskralicky.cz, +420 603 340 860",
+      ].join("\n")
+    : [
+        "Dobrý den,",
+        "",
+        uvod,
+        "",
+        "DÁRKOVÝ POUKAZ SE TEĎ UPLATŇUJE JINAK.",
+        "Dřív se ukazoval u dveří na místě. Nově ho uplatníte přímo",
+        "v rezervačním formuláři na webu, když si vybíráte termín.",
+        "",
+        "Váš poukaz nepropadá a jeho hodnota se nemění — mění se jen způsob,",
+        "jak ho použijete.",
+        "",
+        "V dalším e-mailu, který přijde za chvíli, vám poukaz pošleme znovu",
+        "i s kódem a s novým vzhledem k vytištění.",
+        "",
+        "Kapacita lekcí je omezená, takže s výběrem termínu doporučujeme nečekat",
+        "na poslední chvíli: https://www.jogaskralicky.cz/rezervace.html",
+        "",
+        "Kdyby cokoliv nebylo jasné, stačí odepsat na tenhle e-mail.",
+        "",
+        "Jóga s králíčky, Fit&Fun Studio, Tovární 486/7, Ostrava-Mariánské Hory",
+        "info@jogaskralicky.cz, +420 603 340 860",
+      ].join("\n");
+
+  return { subject: "Změna v uplatňování dárkového poukazu", html, text };
+}
+
+// ---------------------------------------------------------------------
 //  ZRUŠENÍ LEKCE
 //  params: name, lesson, datetime, spots, price, zaplaceno ('1' | '')
 //
@@ -415,6 +514,7 @@ export function welcomeMail(p: Record<string, string>): MailOut {
 export function renderMail(kind: string, params: Record<string, string>): MailOut | null {
   if (kind === "booking") return bookingMail(params);
   if (kind === "voucher") return voucherMail(params);
+  if (kind === "poukaz_zmena") return poukazZmenaMail(params);
   if (kind === "cancel") return cancelMail(params);
   if (kind === "presun") return presunMail(params);
   if (kind === "welcome") return welcomeMail(params);
