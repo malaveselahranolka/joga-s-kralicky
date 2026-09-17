@@ -72,7 +72,9 @@ napsané tak, aby šly spustit opakovaně. Pořadí:
 5. `vouchers-lifecycle.sql` — platnost poukazu, atomické uplatnění,
    deník Stripe událostí (`stripe_events`)
 6. `email-outbox.sql` — fronta odchozích e-mailů
-7. `newsletter.sql`, `attribution.sql`
+7. `presun-rezervace.sql` — `presun_rezervaci()` pro přesun rezervace
+   na jiný termín (potřebuje frontu z kroku 6)
+8. `newsletter.sql`, `attribution.sql`
 
 Krok 5 přibyl proto, že produkční databáze měla dvě věci, které v repu
 vůbec nebyly (`vouchers.expires_at` a celá tabulka `stripe_events`).

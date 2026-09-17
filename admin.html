@@ -561,6 +561,27 @@
         </form>
       </div>
 
+      <!-- Přesun na jiný termín. Mění se jen lekce — rezervace zůstává tatáž,
+           takže s ní zůstává platba i účetní doklad. Proto se tu nezakládá
+           nová rezervace a stará neruší. -->
+      <div class="card collapse" id="moveFormWrap" style="margin-bottom:1.4rem">
+        <h3 style="margin-bottom:.35rem">Přesun na jiný termín</h3>
+        <p class="muted" id="mv-who" style="margin:0 0 1rem;font-size:.85rem"></p>
+        <form id="moveForm">
+          <div class="form-grid">
+            <div class="field-wide"><label for="mv-lesson">Nová lekce</label><select id="mv-lesson" required></select></div>
+          </div>
+          <label style="display:flex;align-items:center;gap:.5rem;margin:.2rem 0 0;font-weight:400;font-size:.9rem">
+            <input type="checkbox" id="mv-mail" checked style="width:auto;margin:0" />
+            Poslat hostovi e-mail s novým termínem
+          </label>
+          <div class="form-actions">
+            <button class="btn btn-primary" type="submit">Přesunout</button>
+            <button class="btn btn-ghost" type="button" id="moveCancel">Zrušit</button>
+          </div>
+        </form>
+      </div>
+
       <div class="toolbar">
         <label style="margin:0">Lekce:</label>
         <select id="bookingFilter"><option value="all">Všechny nadcházející</option></select>
@@ -1481,6 +1502,81 @@
     toast('Rezervace přidána'); bookingWrap.classList.remove('open'); await loadAll();
   });
 
+  // --- přesun rezervace na jiný termín --------------------------------
+  // Jde přes RPC presun_rezervaci, ne přes prostý update lesson_id:
+  // databáze u toho ohlídá kapacitu stejným pravidlem jako veřejný web
+  // (booking_holds_seat) a rovnou zařadí hostovi e-mail s novým termínem
+  // do fronty — kdyby to zařazoval prohlížeč, zavřená záložka ve špatnou
+  // chvíli by znamenala přesun, o kterém se host nedozví.
+  //
+  // Nezakládá se nová rezervace a stará se neruší. Tím by se roztrhla
+  // vazba na platbu a účetní doklad by přestal sedět na lekci, na kterou
+  // host reálně přijde.
+  const MOVE_ERR = {
+    forbidden: 'Na tohle nemáte právo',
+    booking_not_found: 'Rezervace už neexistuje',
+    booking_cancelled: 'Zrušenou rezervaci nelze přesunout — nejdřív ji obnovte',
+    lesson_not_found: 'Cílová lekce už neexistuje',
+    lesson_cancelled: 'Cílová lekce je zrušená',
+    lesson_past: 'Cílová lekce už proběhla',
+    same_lesson: 'Rezervace na téhle lekci už je',
+    full: 'Na cílové lekci není dost volných míst'
+  };
+  const moveWrap = $('moveFormWrap');
+  let moveId = null;
+
+  function openMoveForm(id) {
+    const b = bookings.find((x) => x.id === id);
+    if (!b) return;
+    const l = lessons.find((x) => x.id === b.lesson_id);
+    moveId = id;
+    $('mv-who').textContent = b.name + ' · ' + mista(b.spots)
+      + (l ? ' · teď ' + fmtDT(l.starts_at) : '')
+      + (b.payment_status === 'paid' ? ' · zaplaceno' : '');
+    // Plné lekce zůstávají v nabídce vypsané, jen nejdou vybrat — ať je
+    // vidět, že termín existuje, a rovnou i proč na něj přesunout nejde.
+    const now = Date.now();
+    const cil = lessons.filter((x) => x.status === 'active' && x.id !== b.lesson_id
+      && new Date(x.starts_at).getTime() > now);
+    $('mv-lesson').innerHTML = cil.length
+      ? cil.map((x) => {
+          const volno = x.capacity - bookedFor(x.id);
+          return '<option value="' + x.id + '"' + (volno < b.spots ? ' disabled' : '') + '>'
+            + esc(x.title) + ' — ' + fmtDT(x.starts_at) + ' (' + volno + ' volných'
+            + (volno < b.spots ? ', nevejde se' : '') + ')</option>';
+        }).join('')
+      : '<option value="">Žádná jiná nadcházející lekce</option>';
+    // Výchozí výběr ať padne na první lekci, kam se rezervace opravdu vejde.
+    const prvni = [...$('mv-lesson').options].find((o) => !o.disabled && o.value);
+    $('mv-lesson').value = prvni ? prvni.value : '';
+    // Ruční rezervace z adminu mají zástupný e-mail (rucne@studio), kam
+    // posílat nemá smysl — nabídku e-mailu u nich rovnou vypneme.
+    $('mv-mail').checked = !!(b.email && !/@studio$/.test(b.email));
+    moveWrap.classList.add('open');
+    moveWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  $('moveCancel').addEventListener('click', () => { moveWrap.classList.remove('open'); moveId = null; });
+
+  $('moveForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const lessonId = $('mv-lesson').value;
+    if (!moveId || !lessonId) { toast('Vyberte lekci'); return; }
+    const posli = $('mv-mail').checked;
+    const { data: vysl, error } = await sb.rpc('presun_rezervaci', {
+      p_booking_id: moveId, p_lesson_id: lessonId, p_email: posli
+    });
+    if (error || !vysl || !vysl.ok) {
+      toast(MOVE_ERR[(vysl || {}).error] || 'Přesun selhal — spusťte supabase/presun-rezervace.sql');
+      return;
+    }
+    toast(vysl.email ? 'Přesunuto, e-mail odchází' : 'Přesunuto');
+    moveWrap.classList.remove('open'); moveId = null;
+    await loadAll();
+    // Ať e-mail neleží ve frontě až do dalšího běhu cronu.
+    if (vysl.email) runDispatch(null);
+  });
+
   function renderBookings() {
     const now = Date.now();
     const filter = $('bookingFilter').value;
@@ -1510,7 +1606,8 @@
         '<div class="acts">' +
           (cancelled
             ? '<button class="btn btn-ghost btn-sm" data-restore="' + b.id + '">Obnovit</button>'
-            : payActionBtn(b) + '<button class="btn btn-danger btn-sm" data-cancelb="' + b.id + '">Zrušit</button>') +
+            : payActionBtn(b) + '<button class="btn btn-ghost btn-sm" data-moveb="' + b.id + '">Přesunout</button>'
+              + '<button class="btn btn-danger btn-sm" data-cancelb="' + b.id + '">Zrušit</button>') +
           (payCat(b) === 'paid'
             // Zaplacenou rezervaci nemazeme — je to ucetni doklad a penize
             // ve Stripu po ni zustanou. Zruseni misto uvolni stejne.
@@ -1521,8 +1618,9 @@
   }
 
   async function applyBookingAction(btn) {
-    const id = btn.dataset.cancelb || btn.dataset.restore || btn.dataset.delb || btn.dataset.paid || btn.dataset.unpaid;
+    const id = btn.dataset.cancelb || btn.dataset.restore || btn.dataset.delb || btn.dataset.paid || btn.dataset.unpaid || btn.dataset.moveb;
     if (!id) return false;
+    if (btn.dataset.moveb) { openMoveForm(id); return true; }
     if (btn.dataset.paid) {
       // ruční potvrzení mimo bránu (telefon, převod) — a zruší se držení místa
       const { error } = await sb.from('bookings').update({ payment_status: 'paid', payment_method: 'cash', paid_at: new Date().toISOString(), hold_expires_at: null }).eq('id', id);

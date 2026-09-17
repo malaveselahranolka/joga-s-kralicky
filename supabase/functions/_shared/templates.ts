@@ -258,6 +258,88 @@ export function cancelMail(p: Record<string, string>): MailOut {
 }
 
 // ---------------------------------------------------------------------
+//  PŘESUN NA JINÝ TERMÍN
+//  params: name, lesson, datetime, old_lesson, old_datetime, spots, price,
+//          location, ticket_url, qr_url
+//
+//  Posílá ho public.presun_rezervaci (supabase/presun-rezervace.sql), když
+//  majitelka ve správě přesune rezervaci na jinou lekci — typicky proto, že
+//  host onemocněl a napsal si o náhradní termín.
+//
+//  Starý termín je v e-mailu schválně taky, a to nahoře: host většinou píše
+//  o přesun několik dní dopředu a do doručení e-mailu si nepamatuje, ze
+//  kterého termínu se vlastně přesouval. Bez toho nejde poznat, jestli
+//  studio přesunulo to, co mělo.
+//
+//  Nic se tu neslibuje o penězích: přesun je za stejnou cenu, žádná platba
+//  se nekoná a doplatky se řeší ručně, ne e-mailem.
+// ---------------------------------------------------------------------
+export function presunMail(p: Record<string, string>): MailOut {
+  const firstName = String(p.name || "").trim().split(/\s+/)[0] || "";
+  const greeting = firstName ? `Dobrý den, ${esc(firstName)},` : "Dobrý den,";
+
+  const html = shell(
+    `Nový termín: ${p.datetime || ""}. Původní rezervace platí dál.`,
+    `<p style="margin:0 0 14px;">${greeting}</p>
+     <p style="margin:0 0 22px;">termín jsme vám přesunuli. <strong>Nic dalšího dělat nemusíte</strong> — rezervace i platba zůstávají v platnosti, mění se jen datum.</p>
+     ${p.old_datetime ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 4px;">
+       <tr><td style="padding:12px 16px;background:${PAPER};border:1px solid ${LINE};border-radius:12px;font-size:14px;color:${INK_SOFT};">
+         Původně: <span style="text-decoration:line-through;">${esc(p.old_datetime)}</span>
+       </td></tr>
+     </table>
+     <div style="text-align:center;font-size:19px;line-height:1;color:${INK_SOFT};padding:6px 0 2px;">&darr;</div>` : ""}
+     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+       <tr><td bgcolor="${FOREST}" style="background:${FOREST};border-radius:14px;padding:22px 18px;text-align:center;">
+         <div style="font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(247,244,236,0.7);">Nový termín</div>
+         <div style="margin-top:9px;font-size:19px;font-weight:700;color:${CREAM};line-height:1.4;">${esc(p.datetime)}</div>
+       </td></tr>
+     </table>
+     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:22px;border-top:1px solid ${LINE};border-bottom:1px solid ${LINE};padding:4px 0;">
+       ${row("Lekce", p.lesson)}
+       ${row("Míst", p.spots)}
+       ${row("Zaplaceno", p.price)}
+       ${row("Kde", p.location)}
+     </table>
+     ${p.qr_url ? qrBlock(p.qr_url, "Tenhle kód platí dál — je to pořád tatáž rezervace.<br>Ve studiu stačí ukázat, nic tisknout nemusíte.") : ""}
+     ${p.ticket_url ? `<p style="margin:22px 0 0;text-align:center;">
+       <a href="${esc(p.ticket_url)}" style="display:inline-block;background:${FOREST};color:${CREAM};text-decoration:none;font-weight:600;font-size:15px;padding:13px 26px;border-radius:999px;">Stav rezervace</a>
+     </p>
+     <p style="margin:14px 0 0;text-align:center;font-size:12px;color:${INK_SOFT};word-break:break-all;">${esc(p.ticket_url)}</p>` : ""}
+     <p style="margin:26px 0 0;font-size:13px;color:${INK_SOFT};">Kdyby vám nový termín nevyhovoval, stačí odepsat na tenhle e-mail a najdeme jiný.</p>`,
+  );
+
+  // Prázdné řetězce jsou záměrné mezery mezi odstavci, `null` je „tenhle
+  // údaj nemáme" — filtruje se jen to druhé.
+  const text = [
+    firstName ? `Dobrý den, ${firstName},` : "Dobrý den,",
+    "",
+    "termín jsme vám přesunuli. Nic dalšího dělat nemusíte — rezervace i platba zůstávají v platnosti, mění se jen datum.",
+    "",
+    p.old_datetime ? `Původně: ${p.old_datetime}` : null,
+    `NOVÝ TERMÍN: ${p.datetime || ""}`,
+    "",
+    p.lesson ? `Lekce: ${p.lesson}` : null,
+    p.spots ? `Míst: ${p.spots}` : null,
+    p.price ? `Zaplaceno: ${p.price}` : null,
+    p.location ? `Kde: ${p.location}` : null,
+    "",
+    p.ticket_url ? `Stav rezervace a QR kód: ${p.ticket_url}` : null,
+    p.ticket_url ? "Kód z původního potvrzení platí dál — je to tatáž rezervace." : null,
+    p.ticket_url ? "" : null,
+    "Kdyby vám nový termín nevyhovoval, stačí odepsat na tenhle e-mail a najdeme jiný.",
+    "",
+    "Jóga s králíčky, Fit&Fun Studio, Tovární 486/7, Ostrava-Mariánské Hory",
+    "info@jogaskralicky.cz, +420 603 340 860",
+  ].filter((l) => l !== null).join("\n");
+
+  return {
+    subject: p.datetime ? `Nový termín — ${p.datetime}` : "Nový termín lekce",
+    html,
+    text,
+  };
+}
+
+// ---------------------------------------------------------------------
 //  UVÍTÁNÍ V NEWSLETTERU
 //  params: email
 // ---------------------------------------------------------------------
@@ -296,6 +378,7 @@ export function renderMail(kind: string, params: Record<string, string>): MailOu
   if (kind === "booking") return bookingMail(params);
   if (kind === "voucher") return voucherMail(params);
   if (kind === "cancel") return cancelMail(params);
+  if (kind === "presun") return presunMail(params);
   if (kind === "welcome") return welcomeMail(params);
   return null;
 }
