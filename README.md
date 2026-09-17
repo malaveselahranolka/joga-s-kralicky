@@ -76,7 +76,10 @@ napsané tak, aby šly spustit opakovaně. Pořadí:
    na jiný termín (potřebuje frontu z kroku 6)
 8. `poukaz-rezervace.sql` — `create_booking_poukazem()`, uplatnění
    dárkového poukazu přímo v online rezervaci (potřebuje kroky 4–6)
-9. `newsletter.sql`, `attribution.sql`
+9. `rezervace-na-poukaz.sql` — `vystavit_poukaz_z_rezervace()`, opačný
+   směr: z hotové zaplacené rezervace udělá dárkový poukaz(y) stejné
+   hodnoty (potřebuje kroky 4–6)
+10. `newsletter.sql`, `attribution.sql`
 
 Krok 5 přibyl proto, že produkční databáze měla dvě věci, které v repu
 vůbec nebyly (`vouchers.expires_at` a celá tabulka `stripe_events`).

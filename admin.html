@@ -1584,6 +1584,46 @@
     if (vysl.email) runDispatch(null);
   });
 
+  // --- vystavení poukazu z hotové rezervace ---------------------------
+  // Odpověď na dotaz, co reálně přišel do schránky: „na hotovou rezervaci
+  // bych chtěl vystavit dárkový poukaz". Jde přes RPC, ne přes prostý
+  // update: databáze u toho rovnou rozdělí zaplacenou částku na poukazy
+  // po jednom místě a zařadí do fronty stejný e-mail, jaký chodí po
+  // běžném nákupu poukazu (šablona 'voucher', PDF v příloze).
+  //
+  // Rezervace se tím ZRUŠÍ (místo se uvolní), ale payment_status a
+  // payment_amount zůstávají — to je účetní doklad, ten se nesmí ztratit.
+  const POUKAZ_ERR = {
+    forbidden: 'Na tohle nemáte právo',
+    booking_not_found: 'Rezervace už neexistuje',
+    booking_cancelled: 'Rezervace je už zrušená',
+    not_paid: 'Rezervace není zaplacená',
+    already_issued: 'Poukaz už z téhle rezervace byl vystavený',
+    no_email: 'Rezervace nemá adresu, kam poukaz poslat'
+  };
+
+  async function vystavitPoukaz(id) {
+    const b = bookings.find((x) => x.id === id);
+    if (!b) return;
+    const kolikPoukazu = b.spots === 1 ? '1 poukaz' : b.spots + ' poukazy';
+    if (!confirm(
+      'Vystavit dárkový poukaz místo téhle rezervace?\n\n' +
+      esc(b.name) + ' · ' + mista(b.spots) + '\n\n' +
+      'Rezervace se ZRUŠÍ a místo se uvolní. Host dostane ' + kolikPoukazu +
+      ' v hodnotě zaplacené částky (na e-mail ' + esc(b.email) + ') — každý poukaz platí na jedno místo.'
+    )) return;
+
+    const { data: vysl, error } = await sb.rpc('vystavit_poukaz_z_rezervace', { p_booking_id: id });
+    if (error || !vysl || !vysl.ok) {
+      toast(POUKAZ_ERR[(vysl || {}).error] || 'Nepodařilo se vystavit — spusťte supabase/rezervace-na-poukaz.sql');
+      return;
+    }
+    toast(vysl.count === 1 ? 'Poukaz vystaven, e-mail odchází' : vysl.count + '× poukaz vystaven, e-maily odchází');
+    await loadAll();
+    // Ať e-maily neleží ve frontě až do dalšího běhu cronu.
+    runDispatch(null);
+  }
+
   function renderBookings() {
     const now = Date.now();
     const filter = $('bookingFilter').value;
@@ -1614,6 +1654,11 @@
           (cancelled
             ? '<button class="btn btn-ghost btn-sm" data-restore="' + b.id + '">Obnovit</button>'
             : payActionBtn(b) + '<button class="btn btn-ghost btn-sm" data-moveb="' + b.id + '">Přesunout</button>'
+              // Vystavit poukaz dává smysl jen u zaplacené rezervace se
+              // skutečnou adresou — ruční rezervace (rucne@studio) nemá
+              // kam poukaz poslat.
+              + (payCat(b) === 'paid' && b.email && !/@studio$/.test(b.email)
+                  ? '<button class="btn btn-ghost btn-sm" data-poukazb="' + b.id + '">Poukaz</button>' : '')
               + '<button class="btn btn-danger btn-sm" data-cancelb="' + b.id + '">Zrušit</button>') +
           (payCat(b) === 'paid'
             // Zaplacenou rezervaci nemazeme — je to ucetni doklad a penize
@@ -1625,9 +1670,10 @@
   }
 
   async function applyBookingAction(btn) {
-    const id = btn.dataset.cancelb || btn.dataset.restore || btn.dataset.delb || btn.dataset.paid || btn.dataset.unpaid || btn.dataset.moveb;
+    const id = btn.dataset.cancelb || btn.dataset.restore || btn.dataset.delb || btn.dataset.paid || btn.dataset.unpaid || btn.dataset.moveb || btn.dataset.poukazb;
     if (!id) return false;
     if (btn.dataset.moveb) { openMoveForm(id); return true; }
+    if (btn.dataset.poukazb) { await vystavitPoukaz(id); return true; }
     if (btn.dataset.paid) {
       // ruční potvrzení mimo bránu (telefon, převod) — a zruší se držení místa
       const { error } = await sb.from('bookings').update({ payment_status: 'paid', payment_method: 'cash', paid_at: new Date().toISOString(), hold_expires_at: null }).eq('id', id);

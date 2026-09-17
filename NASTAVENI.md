@@ -82,7 +82,7 @@ ten se ukáže na kterékoliv záložce, ať jsi ve správě kdekoliv.
 - Přihlas se e-mailem a heslem z kroku 3.
 - **Přehled** — nejbližší lekce a jejich obsazenost.
 - **Lekce** — *+ Přidat lekci* (datum, čas, délka, kapacita, **obrázek**), nebo *Vygenerovat příští týden z rozvrhu* (vytvoří lekce podle standardního týdenního rozvrhu). Lekce lze upravit, **zrušit** (zmizí z webu, ale vidíš přihlášené, koho informovat) nebo smazat.
-- **Rezervace** — vidíš, kdo se přihlásil; rezervaci můžeš **zrušit** (místa se vrátí), **přesunout** na jiný termín nebo přidat **ruční rezervaci** (telefonický host).
+- **Rezervace** — vidíš, kdo se přihlásil; rezervaci můžeš **zrušit** (místa se vrátí), **přesunout** na jiný termín, **vystavit dárkový poukaz** místo ní nebo přidat **ruční rezervaci** (telefonický host).
 
 > **Přesun na jiný termín** (host onemocněl a chce přijít jindy): u rezervace
 > klikni na *Přesunout* a vyber lekci. Nabídnou se jen nadcházející lekce;
@@ -95,6 +95,19 @@ ten se ukáže na kterékoliv záložce, ať jsi ve správě kdekoliv.
 > **QR kód z původního potvrzení platí dál** — sám začne ukazovat nový
 > termín. Proto se na náhradní termín nikdy nedělá „zrušit a založit
 > znovu": tím by se platba od rezervace odtrhla.
+
+> **Vystavení poukazu z hotové rezervace** (host si to rozmyslel a chce
+> lekci věnovat dál, ne jít sám): u zaplacené rezervace klikni na *Poukaz*.
+> Rezervace se **zruší** a místo se uvolní; host dostane tolik poukazů,
+> kolik měl zaplacených míst, každý v hodnotě jednoho místa — poukaz totiž
+> platí vždycky jen na jedno místo, stejně jako při běžném nákupu.
+> E-mail s kódem (i s PDF k vytištění) odejde automaticky, stejná šablona
+> jako po nákupu přes web. Tlačítko se zobrazí jen u zaplacené rezervace se
+> skutečnou adresou — u ruční rezervace bez e-mailu nemá kam poukaz poslat.
+>
+> Platba a účetní doklad zůstávají u rezervace **beze změny** — nevzniká
+> nový příjem, jen se zaplacená částka rozdělí do poukazů. Vystavit se dá
+> jen jednou; podruhé už tlačítko najde rezervaci zrušenou.
 
 ### Veřejná stránka
 - Sekce **Rezervace** ukáže jen lekce, které jsi vypsala, a **reálný počet volných míst**.
