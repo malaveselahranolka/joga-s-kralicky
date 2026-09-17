@@ -21,7 +21,7 @@
 
 import { PDFDocument, rgb, degrees, type PDFFont, type PDFPage } from "https://esm.sh/pdf-lib@1.17.1";
 import fontkit from "https://esm.sh/@pdf-lib/fontkit@1.1.1";
-import { NADPIS_GZ, TEXT_GZ, TEXT_BOLD_GZ, bajty } from "./poukaz-fonty.ts";
+import { font } from "./poukaz-fonty.ts";
 
 // Barvy webu (index.html → :root). Musí sedět, jinak poukaz vypadá
 // jako z jiné firmy než stránka, ze které přišel.
@@ -131,9 +131,11 @@ export async function poukazPdf(data: PoukazData): Promise<Uint8Array> {
   doc.setSubject("Dárkový poukaz na lekci jógy s králíčky");
   doc.setProducer("jogaskralicky.cz");
 
-  const fNadpis = await doc.embedFont(await bajty(NADPIS_GZ), { subset: true });
-  const fText = await doc.embedFont(await bajty(TEXT_GZ), { subset: true });
-  const fBold = await doc.embedFont(await bajty(TEXT_BOLD_GZ), { subset: true });
+  // Fonty se stahují z webu a drží v paměti (viz poukaz-fonty.ts).
+  // subset: true = do PDF jde jen to, co se opravdu vysází.
+  const fNadpis = await doc.embedFont(await font("nadpis"), { subset: true });
+  const fText = await doc.embedFont(await font("text"), { subset: true });
+  const fBold = await doc.embedFont(await font("text-bold"), { subset: true });
 
   const page = doc.addPage([W, H]);
 
