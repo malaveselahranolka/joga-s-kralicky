@@ -751,9 +751,16 @@
   function holdExpired(b) {
     return !!b.hold_expires_at && new Date(b.hold_expires_at).getTime() < Date.now() && b.payment_status !== 'paid';
   }
+  // Čím se platilo. Poukaz je vlastní kategorie: peníze přišly už při jeho
+  // nákupu, takže to není ani online platba za tuhle lekci, ani hotovost.
+  function zpusobPlatby(b) {
+    if (b.payment_method === 'voucher') return 'Dárkový poukaz';
+    if (b.payment_method === 'cash') return 'Zaplaceno ručně';
+    return 'Zaplaceno online';
+  }
   function payBadge(b) {
     const cat = payCat(b);
-    if (cat === 'paid') return '<span class="pill pill-paid">' + (b.payment_method === 'cash' ? 'Zaplaceno ručně' : 'Zaplaceno online') + '</span>';
+    if (cat === 'paid') return '<span class="pill pill-paid">' + zpusobPlatby(b) + '</span>';
     if (cat === 'pending') return '<span class="pill pill-pending">Čeká na platbu</span>';
     if (holdExpired(b)) return '<span class="pill pill-cancel">Propadlo — nezaplaceno</span>';
     return '<span class="pill pill-onsite">Nezaplaceno</span>';
@@ -1751,7 +1758,7 @@
     if (b.status === 'cancelled') { scanCard('scan-bad', ico.no, 'Rezervace zrušena', who); return; }
 
     if (b.payment_status === 'paid') {
-      scanCard('scan-yes', ico.ok, b.payment_method === 'cash' ? 'Zaplaceno ručně' : 'Zaplaceno online', who);
+      scanCard('scan-yes', ico.ok, zpusobPlatby(b), who);
     } else if (b.payment_status === 'pending' && !holdExpired(b)) {
       scanCard('scan-no', ico.warn, 'Platba se zpracovává', who,
         '<button class="btn btn-ghost btn-sm" data-rescan="' + b.id + '">Zkontrolovat znovu</button>' +

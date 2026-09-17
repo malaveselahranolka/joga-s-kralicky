@@ -267,6 +267,25 @@ měnila, projdi je všechny, jinak se rozbijí návraty z plateb:
 Kódy poukazů rozesílá server přes Brevo, stejně jako potvrzení rezervací.
 Šablona je v `supabase/functions/_shared/templates.ts`, nic se nenastavuje.
 
+**Jak se poukaz uplatňuje.** Dvěma způsoby, oba vedou ke stejnému konci:
+
+1. **Online při rezervaci** (obvyklé). Na stránce s termíny host rozklikne
+   *Mám dárkový poukaz*, zadá kód a místo platební brány se jen ověří
+   kód. Rezervace vznikne rovnou zaplacená a hostovi přijde **obyčejné
+   potvrzení s QR kódem** — stejné, jaké chodí po platbě kartou.
+2. **U dveří** (jako dřív). Ve správě → Poukazy se kód odškrtne ručně.
+
+Online cesta vznikla proto, že samotné odškrtnutí u dveří nestačilo:
+držitel poukazu si nemohl udělat rezervaci, a když byla lekce plná, neměl
+se na ni jak dostat.
+
+> **Jeden poukaz = jedno místo.** Hodnota poukazu je cena jednoho vstupu
+> (499 Kč), takže rezervace na poukaz je vždy pro jednoho. Kdo chce přijít
+> ve dvou, uplatní poukaz na sebe a druhé místo doplatí běžnou rezervací.
+
+> **Když rezervaci placenou poukazem rušíš**, vrať hostovi poukaz do oběhu —
+> jinak přijde o peníze. Ve správě → Poukazy se dá odškrtnutí zrušit.
+
 ### G) Test
 Rezervuj/kup poukaz zkušebně. Ve Stripe **Test mode** zaplať kartou
 `4242 4242 4242 4242` (libovolné budoucí datum a CVC). Rezervace → v Supabase

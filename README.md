@@ -74,7 +74,9 @@ napsané tak, aby šly spustit opakovaně. Pořadí:
 6. `email-outbox.sql` — fronta odchozích e-mailů
 7. `presun-rezervace.sql` — `presun_rezervaci()` pro přesun rezervace
    na jiný termín (potřebuje frontu z kroku 6)
-8. `newsletter.sql`, `attribution.sql`
+8. `poukaz-rezervace.sql` — `create_booking_poukazem()`, uplatnění
+   dárkového poukazu přímo v online rezervaci (potřebuje kroky 4–6)
+9. `newsletter.sql`, `attribution.sql`
 
 Krok 5 přibyl proto, že produkční databáze měla dvě věci, které v repu
 vůbec nebyly (`vouchers.expires_at` a celá tabulka `stripe_events`).

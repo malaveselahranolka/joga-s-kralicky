@@ -210,6 +210,19 @@
   .hint { margin-top: .5rem; font-size: .82rem; color: var(--ink-soft); }
   .price .amt { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.1rem); color: var(--forest); line-height: 1; margin-top: .2rem; }
 
+  /* Dárkový poukaz — rozbalovací, ať formulář nezhoustne těm, kdo platí kartou.
+     <details> je tu schválně místo vlastního přepínače: šipku, klávesnici
+     i odečítač obrazovky obslouží prohlížeč sám a funguje to i bez JS. */
+  .voucher { margin-top: 1rem; border: 1px solid var(--line); border-radius: 14px; padding: .1rem .9rem; background: var(--paper); }
+  .voucher > summary { cursor: pointer; padding: .8rem 0; font-size: .95rem; font-weight: 600; color: var(--clover-text); list-style: none; display: flex; align-items: center; gap: .5rem; }
+  .voucher > summary::-webkit-details-marker { display: none; }
+  .voucher > summary::before { content: "›"; display: inline-block; font-size: 1.3rem; line-height: 1; transition: transform .2s ease; }
+  .voucher[open] > summary::before { transform: rotate(90deg); }
+  .voucher > summary:focus-visible { outline: 2px solid var(--clover-text); outline-offset: 3px; border-radius: 6px; }
+  .voucher .inner { padding-bottom: .9rem; }
+  .voucher input { text-transform: uppercase; letter-spacing: .04em; font-family: 'Courier New', Courier, monospace; }
+  .voucher .stav { margin-top: .5rem; font-size: .85rem; font-weight: 600; display: none; }
+  .voucher .stav.bad { display: block; color: var(--err, #b23b3b); }
   .consent { display: flex; align-items: flex-start; gap: .6rem; font-size: .92rem; color: var(--ink-soft); margin-bottom: 1.4rem; }
   .consent input { margin-top: .25rem; width: 18px; height: 18px; accent-color: var(--forest); flex: none; }
   .consent a { color: var(--clover-text); text-decoration: underline; }
@@ -379,6 +392,18 @@
             <div class="lbl" id="priceCalc" style="font-weight:500"></div>
           </div>
         </div>
+
+        <details class="voucher" id="voucherBox">
+          <summary>Mám dárkový poukaz</summary>
+          <div class="inner">
+            <div class="field">
+              <label for="f-voucher">Kód poukazu</label>
+              <input id="f-voucher" placeholder="DK-XXXXXXXX" autocomplete="off" spellcheck="false" maxlength="40" aria-describedby="voucherHint" />
+              <p class="hint" id="voucherHint">Najdete ho v e-mailu s poukazem. Jeden poukaz platí na <strong>jedno místo</strong> — po ověření se už nic neplatí a rezervace je rovnou potvrzená.</p>
+              <p class="stav" id="voucherStav" role="alert"></p>
+            </div>
+          </div>
+        </details>
 
         <div class="field" style="margin-top:1rem">
           <label for="f-source">Jak jste se o nás dozvěděli? <span style="font-weight:400;color:var(--ink-soft)">(nepovinné)</span></label>
@@ -652,17 +677,44 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // ---- formulář ----
   function maxSpots() { return chosen ? Math.min(MAX_PER, chosen.remaining) : MAX_PER; }
+
+  // Vyplněný kód poukazu přepne celý formulář do režimu „neplatí se".
+  // Hodnota poukazu je cena jednoho vstupu, takže poukaz platí na jedno
+  // místo — kdo chce přijít ve dvou, udělá si na druhého běžnou rezervaci.
+  const voucherCode = () => ($('f-voucher').value || '').trim().toUpperCase();
+  const naPoukaz = () => voucherCode() !== '';
+
   function updateSpots() {
+    const poukaz = naPoukaz();
+    if (poukaz) spots = 1;
     if (spots > maxSpots()) spots = Math.max(1, maxSpots());
     if (spots < 1) spots = 1;
     $('spVal').textContent = spots;
-    $('spDec').disabled = spots <= 1;
-    $('spInc').disabled = spots >= maxSpots();
-    // Cena roste s počtem míst — a přesně tuhle částku pak spočítá i brána.
-    $('priceTotal').textContent = czk(PRICE * spots);
-    $('priceCalc').textContent = spots + ' × ' + czk(PRICE);
-    $('spHint').textContent = 'Na jedno jméno až ' + spotsTxt(maxSpots()) + '.';
+    $('spDec').disabled = poukaz || spots <= 1;
+    $('spInc').disabled = poukaz || spots >= maxSpots();
+    if (poukaz) {
+      $('priceTotal').textContent = 'Poukaz';
+      $('priceCalc').textContent = 'neplatí se';
+      $('spHint').textContent = 'Poukaz platí na jedno místo.';
+    } else {
+      // Cena roste s počtem míst — a přesně tuhle částku pak spočítá i brána.
+      $('priceTotal').textContent = czk(PRICE * spots);
+      $('priceCalc').textContent = spots + ' × ' + czk(PRICE);
+      $('spHint').textContent = 'Na jedno jméno až ' + spotsTxt(maxSpots()) + '.';
+    }
+    $('submitBtn').innerHTML = poukaz
+      ? 'Uplatnit poukaz a rezervovat <span class="arrow">→</span>'
+      : 'Rezervovat a zaplatit <span class="arrow">→</span>';
+    $('submitNote').textContent = poukaz
+      ? 'Ověříme kód poukazu a rezervaci rovnou potvrdíme. Na platební bránu vás neposíláme, nic dalšího se neplatí.'
+      : 'Platí se online kartou v zabezpečené bráně. Po kliknutí vás přesměrujeme na platbu — místo do té doby držíme.';
   }
+
+  $('f-voucher').addEventListener('input', () => {
+    $('voucherStav').className = 'stav';
+    $('voucherStav').textContent = '';
+    updateSpots();
+  });
   function openForm() {
     const end = new Date(chosen.dt.getTime() + chosen.duration_min * 60000);
     $('summary').innerHTML =
@@ -721,6 +773,66 @@ document.addEventListener('DOMContentLoaded', function () {
     sending = true;
     const btn = $('submitBtn'); btn.disabled = true; const label = btn.innerHTML; btn.textContent = 'Odesílám…';
     const restore = () => { sending = false; btn.disabled = false; btn.innerHTML = label; };
+
+    // ---- cesta s dárkovým poukazem ----------------------------------
+    // Na platební bránu se vůbec nejde: server ověří kód, uplatní ho
+    // a rezervace vzniká rovnou zaplacená. Placená cesta níž zůstává
+    // přesně taková, jaká byla — tohle je odbočka před ní, ne zásah do ní.
+    if (naPoukaz()) {
+      btn.textContent = 'Ověřuji poukaz…';
+      const { data: vd, error: verr } = await sb.rpc('create_booking_poukazem', {
+        p_lesson_id: chosen.id,
+        p_name: (first.value.trim() + ' ' + last.value.trim()).trim(),
+        p_email: email.value.trim(),
+        p_phone: $('f-tel').value.trim(),
+        p_code: voucherCode()
+      });
+
+      if (verr || !vd || !vd.ok) {
+        restore();
+        const c = vd && vd.error;
+        const hlaska = {
+          unknown: 'Takový kód neznáme. Zkontrolujte prosím, jestli sedí — má tvar DK-XXXXXXXX.',
+          already_redeemed: 'Tenhle poukaz už byl uplatněný.',
+          expired: 'Platnost poukazu bohužel vypršela. Napište nám na info@jogaskralicky.cz, domluvíme se.',
+          too_many_requests: 'Zkusili jste hodně kódů za sebou. Počkejte prosím pár minut, nebo nám napište na info@jogaskralicky.cz.',
+          missing_contact: 'Zkontrolujte prosím jméno, e-mail a telefon.'
+        }[c];
+        if (c === 'full' || c === 'unavailable') {
+          alert(c === 'full'
+            ? 'Mezitím se místa zaplnila. Vyberte prosím jiný termín — poukaz zůstává platný.'
+            : 'Tento termín už není dostupný. Načítám aktuální nabídku…');
+          await load(); showStep('pick'); return;
+        }
+        const st = $('voucherStav');
+        st.className = 'stav bad';
+        st.textContent = hlaska || 'Poukaz se nepodařilo uplatnit. Napište nám prosím na info@jogaskralicky.cz.';
+        $('voucherBox').open = true;
+        $('f-voucher').focus();
+        return;
+      }
+
+      lastBookingId = vd.booking_id;
+      ls.set('lastBooking', lastBookingId);
+      const vsrc = $('f-source') && $('f-source').value;
+      if (vsrc) {
+        sb.from('booking_sources')
+          .insert({ booking_id: lastBookingId, source: vsrc })
+          .then(null, () => {});
+      }
+      const vend = new Date(chosen.dt.getTime() + chosen.duration_min * 60000);
+      const vsum = esc(chosen.title) + ' · ' + fmtDate(chosen.dt) + ' · ' +
+        fmtTime(chosen.dt) + '–' + fmtTime(vend) + ' · ' + spotsTxt(1);
+      restore();
+      stateBox('ok', 'Poukaz uplatněn, místo je vaše',
+        '<p class="big">' + vsum + '</p>' +
+        '<p>Rezervaci máme potvrzenou a <strong>zaplacenou poukazem</strong> — nic dalšího neplatíte. ' +
+        'Potvrzení s QR kódem vám přijde e-mailem, může to pár minut trvat.</p>',
+        '<a class="btn btn-ghost" href="' + ticketHref(lastBookingId) + '">Stav rezervace</a>' +
+        '<a class="btn btn-ghost" href="rezervace.html">Nová rezervace</a>');
+      return;
+    }
+
     const { data, error } = await sb.rpc('create_booking', {
       p_lesson_id: chosen.id,
       p_name: (first.value.trim() + ' ' + last.value.trim()).trim(),
