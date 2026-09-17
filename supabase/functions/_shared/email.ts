@@ -274,9 +274,9 @@ type OutboxRow = {
 //
 //  Dvě věci tu jsou schválně:
 //
-//  1) DYNAMICKÝ IMPORT. Generátor si s sebou nese tři zapečené fonty.
-//     Načíst ho až ve chvíli, kdy opravdu odchází poukaz, znamená, že
-//     potvrzení rezervací (drtivá většina provozu) ho nikdy nesáhne.
+//  1) DYNAMICKÝ IMPORT. Generátor si stahuje čtyři řezy fontů. Načíst ho
+//     až ve chvíli, kdy opravdu odchází poukaz, znamená, že potvrzení
+//     rezervací (drtivá většina provozu) ho nikdy nesáhne.
 //
 //  2) SELHÁNÍ SE POLYKÁ. Když se PDF nepovede vyrobit, e-mail odejde
 //     BEZ přílohy. Kód poukazu je v těle zprávy a ten je to podstatné —
@@ -286,10 +286,15 @@ type OutboxRow = {
 async function poukazPriloha(params: Record<string, string>) {
   try {
     const { poukazPdf, pdfBase64 } = await import("./poukaz-pdf.ts");
+    // Návrh má v kartě dvě políčka: kód a platnost. Cena na poukázce
+    // schválně není — je to dárek a příjemce nemá vidět, co dárce platil.
+    // Do políčka platnosti jde skutečné datum z fronty (`expires`), ne
+    // obecné „12 měsíců" z návrhu; ten zůstává jen jako záloha, kdyby
+    // datum ve frontě chybělo.
+    const expires = (params.expires || "").trim();
     const bytes = await poukazPdf({
       code: params.code || "",
-      amount: params.amount || "",
-      expires: params.expires || "",
+      platnost: expires ? `do ${expires}` : "",
     });
     const jmeno = `darkovy-poukaz-${String(params.code || "").toLowerCase()}.pdf`;
     return [{ content: pdfBase64(bytes), name: jmeno }];

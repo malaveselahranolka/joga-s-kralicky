@@ -91,6 +91,13 @@ K poukazovému e-mailu se přibaluje vytisknutelná poukázka
 (`supabase/functions/_shared/poukaz-pdf.ts`). Kreslí se vektorově přes
 `pdf-lib`, logo je překreslené podle `assets/logo.svg`.
 
+Rozvržení je 210 × 99 mm na šířku podle schváleného návrhu: vlevo logo
+v kolečku a jméno studia, vpravo nadpis, perex, vlasová linka a smetanová
+karta se dvěma políčky — **kód poukazu** a **platnost**. Cena na poukázce
+schválně není; je to dárek a příjemce nemá vidět, co dárce platil. Míry
+v souboru jsou zapsané v milimetrech (`mm()`) a měřené shora (`shora()`),
+aby se daly číst stejně jako v návrhu.
+
 Fonty leží jako běžné soubory v `assets/fonts/pdf/` a funkce si je
 **jednou stáhne a drží v paměti** (`poukaz-fonty.ts`). Zapéct je do kódu
 jako base64 by znamenalo skoro 100 kB zdrojáku, který nejde zkontrolovat
@@ -101,13 +108,23 @@ a poukaz se tiše přestane generovat.
 > webu. Dokud tam nejsou, e-mail s poukazem odejde bez přílohy — kód je
 > v těle zprávy a ten je to podstatné.
 
+Řezy jsou čtyři a jmenují se podle rodiny a váhy, ať je z volání poznat,
+co se sází:
+
+| Soubor | Kde se používá |
+|---|---|
+| `schibsted-600.ttf` | nadpis „Dárkový poukaz" |
+| `schibsted-700.ttf` | jméno studia, kód poukazu, platnost |
+| `hanken-400.ttf` | perex a kontakty |
+| `hanken-600.ttf` | popisky v kartě |
+
 Web má Hanken i Schibsted Grotesk rozdělené na `latin` a `latin-ext` a
 **ani jeden soubor sám češtinu nepokryje** — latin má `á é í ó ú ý`,
 latin-ext `č ď ě ň ř š ť ů ž`. Vyrobit je znovu
 (potřebuje `pip install fonttools brotli`):
 
 1. z každé dvojice `.woff2` udělej statický řez
-   (`fontTools.varLib.instancer`, `wght` 400 nebo 700),
+   (`fontTools.varLib.instancer`, `wght` podle názvu souboru),
 2. slij `latin` + `latin-ext` dohromady (`fontTools.merge.Merger`),
 3. ořízni na podmnožinu znaků a ulož do `assets/fonts/pdf/`.
 

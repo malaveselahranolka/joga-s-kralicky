@@ -1,12 +1,14 @@
 // =====================================================================
 //  Fonty pro PDF dárkového poukazu
 //
-//  Jsou to TŘI STATICKÉ ŘEZY vyrobené ze stejných variabilních fontů,
-//  jaké má web (assets/fonts/*.woff2, licence OFL — assets/fonts/OFL.txt):
+//  Jsou to ČTYŘI STATICKÉ ŘEZY vyrobené ze stejných variabilních fontů,
+//  jaké má web (assets/fonts/*.woff2, licence OFL — assets/fonts/OFL.txt).
+//  Názvy odpovídají rodině a váze, ať je z volání poznat, co se sází:
 //
-//    nadpis     Schibsted Grotesk 700   nadpisy, značka, kód poukazu
-//    text       Hanken Grotesk 400      běžný text
-//    text-bold  Hanken Grotesk 700      popisky a zvýraznění
+//    schibsted-600   nadpis „Dárkový poukaz"
+//    schibsted-700   jméno studia, kód poukazu, platnost
+//    hanken-400      perex a kontakty
+//    hanken-600      popisky v kartě
 //
 //  PROČ SE STAHUJÍ, A NE ZAPÉKAJÍ DO KÓDU
 //  Do balíčku edge funkce binární soubor nepřiložíš, takže by font musel
@@ -21,17 +23,17 @@
 //  (poukazPriloha v email.ts) pošle e-mail BEZ přílohy — kód poukazu je
 //  v těle zprávy a ten je to podstatné.
 //
-//  PROČ TŘI SOUBORY A NE DVA
+//  PROČ JSOU SLITÉ
 //  Web má každou rodinu rozdělenou na „latin" a „latin-ext" a ANI JEDEN
 //  soubor sám o sobě češtinu nepokryje: latin umí á é í ó ú ý, latin-ext
-//  umí č ď ě ň ř š ť ů ž. Tyhle tři jsou slité z obou půlek a oříznuté na
+//  umí č ď ě ň ř š ť ů ž. Tyhle jsou slité z obou půlek a oříznuté na
 //  podmnožinu znaků (ASCII + celá česká abeceda + interpunkce). Postup,
 //  jak je vyrobit znovu, je v README — na chybějícím glyfu pdf-lib spadne.
 // =====================================================================
 
 const ZAKLAD = (Deno.env.get("SITE_URL") ?? "https://www.jogaskralicky.cz/").replace(/\/$/, "");
 
-export type Rez = "nadpis" | "text" | "text-bold";
+export type Rez = "schibsted-600" | "schibsted-700" | "hanken-400" | "hanken-600";
 
 // Cache na úrovni modulu: přežije jednotlivá volání v témže isolátu.
 // Ukládá se slib, ne hotové bajty — dvě souběžná odeslání tak stahují
