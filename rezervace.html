@@ -339,7 +339,7 @@
           <div>
             <span class="vc-kicker">Dárkový poukaz</span>
             <h2>Darujte zážitek</h2>
-            <p>Poukaz na jednu lekci jógy s králíčky za <b>499&nbsp;Kč</b>. Kód přijde e-mailem, obdarovaný ho uplatní přímo ve studiu. Můžete jich koupit i víc naráz.</p>
+            <p>Poukaz na jednu lekci jógy s králíčky za <b>499&nbsp;Kč</b>. Kód přijde e-mailem, obdarovaný ho uplatní přímo v tomhle formuláři u pole „Mám dárkový poukaz“. Můžete jich koupit i víc naráz.</p>
           </div>
         </div>
         <div class="vc-buy">
@@ -1040,7 +1040,7 @@ document.addEventListener('DOMContentLoaded', function () {
       const many = codes.length > 1;
       stateBox('ok', many ? 'Poukazy jsou zaplacené 🐰' : 'Poukaz je zaplacený 🐰',
         '<p>Děkujeme! Tady ' + (many ? 'jsou kódy dárkových poukazů' : 'je kód dárkového poukazu') +
-        ' — obdarovaný ho uplatní přímo ve studiu:</p>' +
+        ' — obdarovaný ho uplatní přímo v rezervačním formuláři u pole „Mám dárkový poukaz“:</p>' +
         '<div class="code-list">' + codes.map((c) => '<span class="code-box">' + c + '</span>').join('') + '</div>' +
         // Věta o e-mailu se řídí tím, co odpověděl server. Dřív stačilo, že
         // je v prohlížeči nastavený EmailJS — tvrdila by tedy „poslali jsme
