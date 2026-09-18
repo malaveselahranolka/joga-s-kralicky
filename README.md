@@ -85,6 +85,30 @@ Krok 5 přibyl proto, že produkční databáze měla dvě věci, které v repu
 vůbec nebyly (`vouchers.expires_at` a celá tabulka `stripe_events`).
 Bez nich by čerstvé nasazení rozbilo webhook.
 
+## Platnost dárkového poukazu
+
+Poukaz platí **6 měsíců** od vystavení (dřív rok). Délka žije ve třech
+prostředích, která si ji nemůžou naimportovat jedno od druhého:
+
+| Vrstva | Kde | Co |
+|---|---|---|
+| Edge funkce (Deno) | `supabase/functions/_shared/poukaz-platnost.ts` | `PLATNOST_MESICU`, `platnostDoISO()`, text do e-mailu a na PDF |
+| Databáze (Postgres) | `supabase/vouchers-lifecycle.sql` | `public.voucher_validity()` — čte ji výchozí hodnota sloupce i `vystavit_poukaz_z_rezervace()` |
+| Prohlížeč a texty | `payment-config.js` → `voucherValidityMonths` | pro kontrolu textů na webu |
+
+`npm run verify` hlídá, že všechny tři říkají totéž a že se číslo nikde
+neopisuje natvrdo. Změna platnosti = změnit `FAKTA.poukazPlatnostMesicu`
+ve `scripts/verify.mjs`, pustit kontrolu a opravit, na co ukáže.
+
+**Počítá se v kalendářních měsících**, ne v pevném počtu dní — konec
+měsíce se ořízne na poslední platný den (31. 8. → 28. 2.). Postgres
+(`interval '6 months'`) i `platnostDo()` to dělají shodně, takže datum
+v databázi sedí s datem na poukázce.
+
+Zkrácení platí **jen dopředu**. Poukazy vystavené dřív mají `expires_at`
+zapsané při vystavení a nikdo s ním nehýbe — doběhnou s roční platností,
+jak byly prodané.
+
 ## PDF dárkového poukazu
 
 K poukazovému e-mailu se přibaluje vytisknutelná poukázka

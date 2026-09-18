@@ -31,6 +31,7 @@
 import Stripe from "https://esm.sh/stripe@14.21.0?target=denonext";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { bookingEmail, voucherEmail, enqueue, dispatch } from "../_shared/email.ts";
+import { platnostDoISO } from "../_shared/poukaz-platnost.ts";
 
 const env = (n: string, d = "") => Deno.env.get(n) ?? d;
 
@@ -301,8 +302,8 @@ Deno.serve(async (req) => {
     const stem = "DK-" + String(obj.id).replace(/[^A-Za-z0-9]/g, "").slice(-8).toUpperCase();
     const email = obj?.customer_details?.email || obj?.customer_email || null;
     const each = Math.round(Number(obj.amount_total) / count);
-    // Obchodní podmínky slibují platnost 12 měsíců — držíme ji i v datech.
-    const expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
+    // Platnost se nepočítá tady — jediný zdroj je _shared/poukaz-platnost.ts.
+    const expiresAt = platnostDoISO();
 
     const rows = Array.from({ length: count }, (_, i) => ({
       code: count === 1 ? stem : `${stem}-${i + 1}`,
@@ -315,7 +316,7 @@ Deno.serve(async (req) => {
 
     // ZÁMĚRNĚ insert-ignore, NE upsert. Vystavení smí řádek založit, ale
     // nikdy ne přepsat: upsert by při opakovaném doručení události vrátil
-    // redeemed na false a posunul expires_at o rok. Uplatnění a expiraci
+    // redeemed na false a posunul expires_at o celou další platnost. Uplatnění a expiraci
     // řídí výhradně RPC redeem_voucher (supabase/vouchers-lifecycle.sql).
     const { error: vErr } = await admin
       .from("vouchers")

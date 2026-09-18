@@ -29,6 +29,7 @@
 import Stripe from "https://esm.sh/stripe@14.21.0?target=denonext";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { bookingEmail, voucherEmail, enqueue, dispatch, emailReady } from "../_shared/email.ts";
+import { platnostDoISO } from "../_shared/poukaz-platnost.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -99,8 +100,8 @@ Deno.serve(async (req) => {
       const codes = voucherCodes(String(s.id), count);
       const email = (s as any)?.customer_details?.email || s.customer_email || null;
       const each = Math.round(Number(s.amount_total) / count);
-      // Obchodní podmínky slibují platnost 12 měsíců — držíme ji i v datech.
-      const expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
+      // Platnost se nepočítá tady — jediný zdroj je _shared/poukaz-platnost.ts.
+      const expiresAt = platnostDoISO();
 
       const rows = codes.map((code) => ({
         code,
@@ -116,7 +117,7 @@ Deno.serve(async (req) => {
       // Tahle funkce běží pokaždé, když se otevře návratová adresa po platbě
       // — a tu si zákazník může uložit do záložek. S upsertem se při každém
       // dalším otevření přepsalo redeemed zpátky na false a expires_at se
-      // posunulo o rok dál. Uplatněný poukaz tak šel oživit a používat
+      // posunulo o celou další platnost. Uplatněný poukaz tak šel oživit a používat
       // donekonečna. Vystavení musí zapsat řádek JEDNOU a pak už na něj
       // nikdy nesahat; uplatnění a expiraci řídí RPC redeem_voucher.
       const { error: vErr } = await admin

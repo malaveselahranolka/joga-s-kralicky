@@ -19,6 +19,8 @@
 //      blokují, dokud odesílatele neznají) — proto je kód poukazu i jako text
 // =====================================================================
 
+import { PLATNOST_TEXT } from "./poukaz-platnost.ts";
+
 const FOREST = "#2C3B2E";
 const CREAM = "#F7F4EC";
 const PAPER = "#F1EEE5";
@@ -173,7 +175,7 @@ export function bookingMail(p: Record<string, string>): MailOut {
 // ---------------------------------------------------------------------
 export function voucherMail(p: Record<string, string>): MailOut {
   const html = shell(
-    `Kód poukazu ${p.code || ""} — platí rok na kteroukoliv lekci.`,
+    `Kód poukazu ${p.code || ""} — platí ${PLATNOST_TEXT} na kteroukoliv lekci.`,
     `<p style="margin:0 0 14px;">Dobrý den,</p>
      <p style="margin:0 0 22px;">děkujeme za nákup. Tohle je dárkový poukaz na jednu lekci jógy s králíčky.</p>
      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
@@ -195,7 +197,7 @@ export function voucherMail(p: Record<string, string>): MailOut {
      <p style="margin:22px 0 0;text-align:center;">
        <a href="https://www.jogaskralicky.cz/rezervace.html" style="display:inline-block;background:${FOREST};color:${CREAM};text-decoration:none;font-weight:600;font-size:15px;padding:13px 26px;border-radius:999px;">Vybrat termín</a>
      </p>
-     <p style="margin:26px 0 0;">Poukaz platí <strong>12 měsíců</strong> od zakoupení a může ho uplatnit kdokoliv — klidně ho rovnou přepošlete dál.</p>
+     <p style="margin:26px 0 0;">Poukaz platí <strong>${PLATNOST_TEXT}</strong> od zakoupení a může ho uplatnit kdokoliv — klidně ho rovnou přepošlete dál.</p>
      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:22px 0 0;">
        <tr><td style="padding:14px 16px;background:${PAPER};border:1px solid ${LINE};border-radius:12px;font-size:14px;line-height:1.6;">
          <strong>V příloze je poukaz k vytištění</strong> — hezky vysázený, s kódem a v našich barvách.
@@ -223,7 +225,7 @@ export function voucherMail(p: Record<string, string>): MailOut {
     "Potvrzení rezervace pak přijde e-mailem i s QR kódem. Ten se ukazuje",
     "ve studiu — tenhle e-mail s sebou brát nemusíte.",
     "",
-    "Poukaz platí 12 měsíců od zakoupení a může ho uplatnit kdokoliv.",
+    `Poukaz platí ${PLATNOST_TEXT} od zakoupení a může ho uplatnit kdokoliv.`,
     "",
     "Uložte si prosím tenhle e-mail. Kdyby se kód ztratil, napište nám a najdeme ho.",
     "",
