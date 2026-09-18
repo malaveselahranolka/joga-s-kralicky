@@ -59,7 +59,9 @@ declare
   kod      text;
   na_misto int;
   kody     text[] := '{}';
-  vstupenka_expires timestamptz := now() + interval '365 days';
+  -- Délka platnosti se tu neopisuje — jediný zdroj v databázi je
+  -- public.voucher_validity() z supabase/vouchers-lifecycle.sql.
+  vstupenka_expires timestamptz := now() + public.voucher_validity();
 begin
   if not public.is_owner() then
     return json_build_object('ok', false, 'error', 'forbidden');

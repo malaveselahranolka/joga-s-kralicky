@@ -12,18 +12,50 @@
 --
 --  A opravuje díru: uplatněný poukaz šel „oživit" tím, že zákazník znovu
 --  otevřel návratovou adresu po platbě. Funkce tam dělaly upsert, který
---  přepsal redeemed zpátky na false a posunul platnost o rok dál.
+--  přepsal redeemed zpátky na false a posunul platnost o další období.
 --  Uplatnění teď dělá jediná funkce, atomicky, a expiraci kontroluje sama.
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
 -- 1) PLATNOST POUKAZU
---    Obchodní podmínky slibují 12 měsíců — držíme ji i v datech.
---    Poukazům, které vznikly dřív, dopočítáme rok od založení.
+--    Obchodní podmínky slibují 6 měsíců — držíme ji i v datech.
+--
+--    Délka platnosti má v Postgresu JEDINÉ místo: funkci
+--    public.voucher_validity(). Čte ji jak výchozí hodnota sloupce, tak
+--    vystavit_poukaz_z_rezervace() v supabase/rezervace-na-poukaz.sql.
+--    Dřív tu stálo 'interval 365 days' opsané zvlášť na obou místech
+--    a výchozí hodnota sloupce v produkci byla ještě třetí opis, který
+--    v repozitáři vůbec nebyl — proto se to rozešlo.
+--
+--    Kalendářní měsíce, ne pevný počet dní: '6 months' ořízne konec
+--    měsíce na poslední platný den (31. 8. → 28. 2.), stejně jako
+--    platnostDo() v supabase/functions/_shared/poukaz-platnost.ts.
+--    Změnit délku platnosti = změnit číslo TADY a v tom TS souboru;
+--    `npm run verify` hlídá, že se obě čísla shodují.
 -- ---------------------------------------------------------------------
+create or replace function public.voucher_validity()
+returns interval
+language sql
+immutable
+set search_path = public
+as $$ select interval '6 months' $$;
+
+comment on function public.voucher_validity() is
+  'Jak dlouho platí nově vystavený poukaz. Jediné místo, kde délka platnosti v databázi žije.';
+
 alter table public.vouchers
   add column if not exists expires_at timestamptz;
 
+-- Výchozí hodnota sloupce je záchranná síť pro insert, který expires_at
+-- neposílá (ruční řádek v SQL editoru). Běžné vystavení ji nepoužije —
+-- Edge funkce i vystavit_poukaz_z_rezervace() datum posílají samy.
+alter table public.vouchers
+  alter column expires_at set default (now() + public.voucher_validity());
+
+-- POZOR: tenhle dopočet se týká JEN poukazů vystavených dřív, za doby
+-- roční platnosti. Ty musí doběhnout tak, jak byly prodané — zkrácení
+-- na 6 měsíců platí od nynějška dopředu, ne zpětně. Proto tu zůstává
+-- '365 days' natvrdo a NE voucher_validity().
 update public.vouchers
    set expires_at = created_at + interval '365 days'
  where expires_at is null;

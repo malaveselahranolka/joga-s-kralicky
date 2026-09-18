@@ -28,6 +28,7 @@
 import { PDFDocument, rgb, type PDFPage } from "https://esm.sh/pdf-lib@1.17.1";
 import fontkit from "https://esm.sh/@pdf-lib/fontkit@1.1.1";
 import { font } from "./poukaz-fonty.ts";
+import { PLATNOST_TEXT } from "./poukaz-platnost.ts";
 
 // Barvy webu (index.html → :root). Musí sedět, jinak poukaz vypadá
 // jako z jiné firmy než stránka, ze které přišel.
@@ -59,7 +60,7 @@ const H = mm(99);
 
 export type PoukazData = {
   code: string;
-  /** Text v poli „Platnost poukazu". Návrh počítá s „12 měsíců". */
+  /** Text v poli „Platnost poukazu". Bez něj se sází obecná doba platnosti. */
   platnost?: string;
 };
 
@@ -146,7 +147,7 @@ function ikona(page: PDFPage, cesty: string[], x: number, yShora: number, veliko
 // ---------------------------------------------------------------------
 export async function poukazPdf(data: PoukazData): Promise<Uint8Array> {
   const kod = String(data.code || "").trim().toUpperCase();
-  const platnost = String(data.platnost || "").trim() || "12 měsíců";
+  const platnost = String(data.platnost || "").trim() || PLATNOST_TEXT;
 
   const doc = await PDFDocument.create();
   doc.registerFontkit(fontkit);

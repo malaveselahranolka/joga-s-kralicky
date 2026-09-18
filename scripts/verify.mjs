@@ -92,7 +92,7 @@ for (const page of ALL_PAGES) {
 //     ve strukturovaných datech, v CMS seedu i v generátoru rozvrhu.
 //     Stačí je změnit na jednom místě a web začne lhát.
 // ---------------------------------------------------------------------
-const FAKTA = {delkaMin: 60, kapacita: 10, cenaKc: 499, kraliku: 7, vekDeti: 5}
+const FAKTA = {delkaMin: 60, kapacita: 10, cenaKc: 499, kraliku: 7, vekDeti: 5, poukazPlatnostMesicu: 6}
 
 // Zakázané formulace = staré hodnoty, které se nesmí vrátit.
 // Články o štěňatech smí psát o obecném trhu ("60 až 75 minut"), proto
@@ -132,6 +132,81 @@ if (entry !== FAKTA.cenaKc) {
 const voucher = Number((payCfg.match(/voucherCzk:\s*(\d+)/) || [])[1])
 if (voucher !== FAKTA.cenaKc) {
   fail('payment-config.js', `voucherCzk je ${voucher}, čekáme ${FAKTA.cenaKc}`)
+}
+
+// ---------------------------------------------------------------------
+//  PLATNOST POUKAZU MUSÍ SEDĚT VE VŠECH TŘECH VRSTVÁCH
+//
+//  Délka platnosti žije ve třech běhových prostředích, která si ji
+//  nemůžou naimportovat jedno od druhého (Deno, Postgres, statické HTML).
+//  Každé má proto vlastní deklaraci a tahle kontrola je drží v zákrytu —
+//  přesně tohle se totiž dřív rozešlo: funkce zapisovaly 365 dní, výchozí
+//  hodnota sloupce v produkci rok a texty slibovaly „12 měsíců", aniž by
+//  to šlo poznat odjinud než z produkční databáze.
+//
+//  Změna platnosti = změnit číslo ve FAKTA výš a pak v místech, na která
+//  tahle kontrola ukáže.
+// ---------------------------------------------------------------------
+const PLATNOST = FAKTA.poukazPlatnostMesicu
+
+const mesicuSlovo = (n) => (n === 1 ? 'měsíc' : (n >= 2 && n <= 4 ? 'měsíce' : 'měsíců'))
+
+// a) prohlížeč
+const platnostCfg = Number((payCfg.match(/voucherValidityMonths:\s*(\d+)/) || [])[1])
+if (platnostCfg !== PLATNOST) {
+  fail('payment-config.js', `voucherValidityMonths je ${platnostCfg || '?'}, čekáme ${PLATNOST}`)
+}
+
+// b) Edge funkce (Deno)
+const platnostTs = 'supabase/functions/_shared/poukaz-platnost.ts'
+if (!existsSync(join(root, platnostTs))) {
+  fail(platnostTs, 'soubor chybí — bez něj nemají Edge funkce odkud brát platnost poukazu')
+} else {
+  const ts = read(platnostTs)
+  const mesicu = Number((ts.match(/PLATNOST_MESICU\s*=\s*(\d+)/) || [])[1])
+  if (mesicu !== PLATNOST) {
+    fail(platnostTs, `PLATNOST_MESICU je ${mesicu || '?'}, čekáme ${PLATNOST}`)
+  }
+}
+
+// c) databáze
+const lifecycle = read('supabase/vouchers-lifecycle.sql')
+const sqlInterval = (lifecycle.match(/create or replace function public\.voucher_validity\(\)[\s\S]*?interval '(\d+) months?'/) || [])[1]
+if (Number(sqlInterval) !== PLATNOST) {
+  fail('supabase/vouchers-lifecycle.sql', `voucher_validity() vrací ${sqlInterval || '?'} měsíců, čekáme ${PLATNOST}`)
+}
+
+// Vystavení poukazu z rezervace si délku nesmí opisovat zvlášť — musí
+// volat voucher_validity(), jinak se obě SQL místa zase rozejdou.
+const zRezervace = read('supabase/rezervace-na-poukaz.sql')
+if (/vstupenka_expires[^;]*interval '/.test(zRezervace)) {
+  fail('supabase/rezervace-na-poukaz.sql', 'platnost poukazu je opsaná natvrdo — volej public.voucher_validity()')
+}
+
+// Edge funkce taky ne: dřív tam bylo 365 * 24 * 60 * 60 * 1000.
+for (const fn of ['supabase/functions/stripe-confirm/index.ts', 'supabase/functions/stripe-webhook/index.ts']) {
+  const kod = read(fn)
+  if (/expires_?At\s*=\s*new Date\(Date\.now\(\)\s*\+/.test(kod)) {
+    fail(fn, 'platnost poukazu se počítá na místě — použij platnostDoISO() z _shared/poukaz-platnost.ts')
+  }
+}
+
+// d) texty, které platnost slibují návštěvníkovi
+const SLIB_PLATNOSTI = ['index.html', 'darkovy-poukaz.html', 'obchodni-podminky.html', 'llms.txt']
+const spravnyText = `${PLATNOST} ${mesicuSlovo(PLATNOST)}`
+for (const soubor of SLIB_PLATNOSTI) {
+  if (!existsSync(join(root, soubor))) continue
+  const text = read(soubor)
+  for (const m of text.matchAll(/(\d+)\s+měsíc[ůe]?/g)) {
+    if (Number(m[1]) !== PLATNOST) {
+      contentProblem(soubor, `slibuje „${m[0]}", ale poukaz platí ${spravnyText}`)
+    }
+  }
+  // „platí rok" je stará formulace téhož slibu
+  const rokem = text.match(/plat[ní][^.<]{0,24}\brok\b/i)
+  if (rokem) {
+    contentProblem(soubor, `platnost poukazu popsaná v rocích („${rokem[0].trim()}") — má být ${spravnyText}`)
+  }
 }
 
 // generátor rozvrhu v adminu nesmí vyrábět lekce, které web neprodává

@@ -1325,7 +1325,8 @@
   // poukazy -----------------------------------------------------------
   $('refreshVouchers').addEventListener('click', loadAll);
   $('voucherFilter').addEventListener('change', renderVouchers);
-  // Poukaz platí 12 měsíců. Dřív se platnost nikde nekontrolovala, takže
+  // Poukaz platí 6 měsíců (payment-config.js → voucherValidityMonths).
+  // Dřív se platnost nikde nekontrolovala, takže
   // admin u dveří ukázal „Platný" i na kódu z předloňska.
   const vExpired = (v) => !!(v && v.expires_at && new Date(v.expires_at).getTime() <= Date.now());
 
@@ -1833,7 +1834,8 @@
         who + (v.redeemed_at ? '<div class="sub">' + fmtDT(v.redeemed_at) + '</div>' : ''),
         '<button class="btn btn-ghost btn-sm" data-unredeem="' + esc(v.code) + '">Vrátit platnost</button>');
     } else if (vExpired(v)) {
-      // Platnost je 12 měsíců podle obchodních podmínek. Tuhle větev tu dřív
+      // Platnost je podle obchodních podmínek (payment-config.js →
+      // voucherValidityMonths). Tuhle větev tu dřív
       // nebyla, takže propadlý kód se u dveří tvářil jako úplně v pořádku.
       scanCard('scan-bad', scanIco.no, 'Poukaz propadl',
         who + '<div class="sub">Platnost skončila ' + fmtDT(v.expires_at) + '</div>');

@@ -29,6 +29,16 @@ window.PAYMENTS = {
   voucherCzk: 499,
   maxVouchers: 10,   // kolik poukazů lze koupit najednou
 
+  // Jak dlouho platí nově vystavený poukaz (měsíce).
+  //
+  // Tohle je opis pro prohlížeč a pro kontrolu textů. Skutečnou platnost
+  // razítkují na poukaz servery a ty mají vlastní zdroj pravdy:
+  //   * Edge funkce → supabase/functions/_shared/poukaz-platnost.ts
+  //   * databáze    → public.voucher_validity() (supabase/vouchers-lifecycle.sql)
+  // `npm run verify` hlídá, že všechna tři čísla i texty na webu sedí,
+  // takže změna na jednom místě bez ostatních neprojde.
+  voucherValidityMonths: 6,
+
   // POZOR — tady BÝVALY dva pevné Stripe Payment Linky jako „záchranná brzda",
   // kdyby funkce stripe-create / stripe-voucher neodpověděly. Jsou pryč
   // a ve Stripu deaktivované, protože se daly zneužít:

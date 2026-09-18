@@ -210,10 +210,10 @@ export function bookingEmail(bk: Booking, siteUrl: string) {
 // poukaz jiný a při nákupu více kusů se založí tolik zpráv, kolik je kódů.
 //
 // `expires` je nepovinné: dosadí se do PDF poukázky jako „Platí do".
-// Když ho volající nepošle, poukázka uvede obecné „12 měsíců od koupě",
-// což platí vždycky — proto se tu datum nedopočítává. Odhadnuté datum by
-// se totiž rozešlo se skutečným `vouchers.expires_at` pokaždé, když by
-// e-mail odešel se zpožděním.
+// Když ho volající nepošle, poukázka uvede obecnou dobu platnosti
+// z _shared/poukaz-platnost.ts, což platí vždycky — proto se tu datum
+// nedopočítává. Odhadnuté datum by se totiž rozešlo se skutečným
+// `vouchers.expires_at` pokaždé, když by e-mail odešel se zpožděním.
 export function voucherEmail(code: string, email: string, amountHaleru: number, expires = "") {
   return {
     order_key: `voucher:${code}`,
@@ -289,8 +289,8 @@ async function poukazPriloha(params: Record<string, string>) {
     // Návrh má v kartě dvě políčka: kód a platnost. Cena na poukázce
     // schválně není — je to dárek a příjemce nemá vidět, co dárce platil.
     // Do políčka platnosti jde skutečné datum z fronty (`expires`), ne
-    // obecné „12 měsíců" z návrhu; ten zůstává jen jako záloha, kdyby
-    // datum ve frontě chybělo.
+    // obecná doba platnosti; ta zůstává jen jako záloha, kdyby datum
+    // ve frontě chybělo.
     const expires = (params.expires || "").trim();
     const bytes = await poukazPdf({
       code: params.code || "",
