@@ -143,6 +143,10 @@ export function obsahDoHtml(html, o) {
 
   image(root, '.gift-photo', o.giftImage, o.giftImageAlt)
 
+  text(root, '.business-intro h2', o.businessTitle)
+  text(root, '.business-intro p', o.businessBody)
+  leadingText(root, '.business-intro .btn', o.businessButtonLabel)
+
   text(root, '.gal-intro h2', o.galleryTitle)
   text(root, '.gal-intro .lead', o.galleryLead)
   text(root, '.gal-hint', o.galleryHint)
