@@ -76,7 +76,7 @@
       "alt": "Skupina cvičí v sále na podložkách"
     },
     {
-      "tag": "Pro děti od 5 let",
+      "tag": "Pro děti od 10 let",
       "title": "Děti & králíčci",
       "price": "499 Kč",
       "meta": [
@@ -88,16 +88,16 @@
       "description": "Děti se naučí králíčky pohladit, nakrmit a při tom se i hezky protáhnout.",
       "timeline": [
         {
-          "time": "0–10 min",
-          "text": "Jak se ke králíkovi přiblížit, aby neutekl."
+          "time": "0–15 min",
+          "text": "Děti se dozví spoustu zajímavostí o králíčcích, jak se k nim správně chovat, co jedí, jak žijí, jakou mají povahu a mnoho dalšího."
         },
         {
-          "time": "10–35 min",
+          "time": "15-45 min",
           "text": "Pozice se zvířecími jmény a lehké cvičení."
         },
         {
-          "time": "35–60 min",
-          "text": "Krmení a hlazení."
+          "time": "45-60 min",
+          "text": "Krmení, hlazení a focení."
         }
       ],
       "buttonLabel": "Momentálně nevypsané termíny",
