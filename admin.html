@@ -1151,16 +1151,19 @@
   });
 
   // generování týdne z rozvrhu ----------------------------------------
-  // MUSÍ sedět s tím, co web slibuje na homepage: Hatha v úterý, ve čtvrtek
-  // a v sobotu, dětská lekce v sobotu od 9:30. Obojí 60 minut, max 10 míst.
-  // Generátor tu dřív vyráběl 75 minut, 12 míst a lekce („Ranní protažení",
-  // „Soumrak & restorativní"), které se na webu vůbec neprodávají — host pak
-  // v nabídce viděl něco jiného, než co si o pár klepnutí dřív přečetl.
+  // MUSÍ sedět s tím, co web slibuje na homepage a v obsah.json
+  // (contactSchedule): pravidelně jen sobota 10:30, Hatha s králíčky,
+  // 60 minut, max 10 míst. Dětská lekce nemá pravidelný čas — na webu
+  // je u ní „Momentálně nevypsané termíny" — a nesmí se generovat sama.
+  // Generátor tu dřív vyráběl i úterní a čtvrteční večerní termín a
+  // dětskou lekci v sobotu 9:30; scripts/verify.mjs to zakazuje
+  // (ZAKAZANE: „neaktuální dětský čas (sobota 9:30)"), ale kontrola
+  // neskenuje admin.html, takže se to tu drželo, aniž by to kdy shodilo
+  // `npm run verify`. Kdo chce vypsat výjimečný termín mimo sobotu
+  // 10:30 (dětskou lekci, firemní akci), přidá ho ručně tlačítkem
+  // „+ Přidat lekci" výš.
   const WEEKLY = [
-    { d: 2, t: '18:00', title: 'Hatha s králíčky', dur: 60, cap: 10 },
-    { d: 4, t: '18:00', title: 'Hatha s králíčky', dur: 60, cap: 10 },
-    { d: 6, t: '09:30', title: 'Děti & králíci',   dur: 60, cap: 10 },
-    { d: 6, t: '11:00', title: 'Hatha s králíčky', dur: 60, cap: 10 }
+    { d: 6, t: '10:30', title: 'Hatha s králíčky', dur: 60, cap: 10 }
   ];
   $('genWeekBtn').addEventListener('click', async () => {
     // Následujících 7 dní počínaje zítřkem. Časy v rozvrhu výš jsou

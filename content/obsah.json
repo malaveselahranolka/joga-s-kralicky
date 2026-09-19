@@ -119,7 +119,7 @@
   "communityNudge": "Ještě otázky?",
   "communityNudgeLink": "Sjeďte o kousek níž",
   "faqTitle": "Než přijdete poprvé",
-  "faqIntro": "Šest věcí, na které se lidi ptají nejčastěji, než přijdou poprvé. Nenašli jste odpověď? Napište na",
+  "faqIntro": "Sedm věcí, na které se lidi ptají nejčastěji, než přijdou poprvé. Nenašli jste odpověď? Napište na",
   "faqCue": "Rozklikněte kteroukoliv otázku",
   "faqs": [
     {
@@ -145,6 +145,10 @@
     {
       "question": "Jsou králíci v pořádku?",
       "answer": "Jejich pohoda je u nás na prvním místě. Mají vlastní klidové zóny, kam se kdykoliv mohou stáhnout a veterinární péči. Na lekce bereme pouze méně bázlivé jedince."
+    },
+    {
+      "question": "Pořádáte i firemní akce nebo lekce pro soukromé skupiny?",
+      "answer": "Ano. Domluvíme lekci jen pro váš tým, oslavu nebo jinou soukromou skupinu, mimo běžný sobotní rozvrh a s programem na míru. Napište nám na info@jogaskralicky.cz."
     }
   ],
   "contactTitle": "Kde nás najdete",
