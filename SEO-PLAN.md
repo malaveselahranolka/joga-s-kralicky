@@ -21,7 +21,7 @@ Web tedy nebyl plošně neindexovaný. Uměl vyhrát značkové a velmi přesné
 |---|---|---|
 | `/` | jóga se zvířaty Ostrava, jóga se zvířátky Ostrava, pet yoga Ostrava, bunny yoga Ostrava, jóga s králíčky Ostrava, králičí jóga Ostrava | jediná hlavní stránka služby a značky |
 | `/joga-se-zviraty.html` | co je jóga se zvířaty, jak probíhá jóga se zvířaty, welfare zvířat | informační průvodce bez lokálního komerčního titulku |
-| `/joga-pro-deti-ostrava.html` | jóga pro děti Ostrava, jóga se zvířaty pro děti | dětský formát od 5 let |
+| `/joga-pro-deti-ostrava.html` | jóga pro děti Ostrava, jóga se zvířaty pro děti | dětský formát od 10 let |
 | `/darkovy-poukaz.html` | dárkový poukaz jóga Ostrava, zážitkový dárek Ostrava | nákup poukazu |
 | `/rezervace.html` | rezervace jóga s králíčky, termíny | aktuální termíny a platba |
 
@@ -34,7 +34,7 @@ Homepage je u tohoto projektu zároveň stránkou hlavní služby. Králičí j�
 - Čistá varianta `/joga-se-zviraty` trvale přesměrovává na kanonickou `.html` adresu průvodce.
 - URL o štěňatech, tedy službě, kterou studio nenabízí, vrací `410 Gone` s užitečnou vysvětlující stránkou; nepředstírá tematickou náhradu na homepage.
 - Staré adresy `/kontakt` a `/kontakt.html` přesměrovávají na kontakt na homepage.
-- Věk dětí je ve všech aktuálních podkladech sjednocen na **od 5 let**.
+- Věk dětí je ve všech aktuálních podkladech sjednocen na **od 10 let**.
 - Dětská stránka už netvrdí pevný čas 9:30; jediným zdrojem právě dostupných termínů je rezervace.
 - Právní stránky zůstávají dostupné, ale mají `noindex` a nejsou v sitemapě.
 - Homepage má title zaměřený na „jóga se zvířaty Ostrava“, značkový H1 a přirozeně vysvětluje varianty pet yoga, bunny yoga, jóga se zvířátky a králičí jóga.

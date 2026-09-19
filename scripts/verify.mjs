@@ -92,7 +92,7 @@ for (const page of ALL_PAGES) {
 //     ve strukturovaných datech, v CMS seedu i v generátoru rozvrhu.
 //     Stačí je změnit na jednom místě a web začne lhát.
 // ---------------------------------------------------------------------
-const FAKTA = {delkaMin: 60, kapacita: 10, cenaKc: 499, kraliku: 7, vekDeti: 5, poukazPlatnostMesicu: 6}
+const FAKTA = {delkaMin: 60, kapacita: 10, cenaKc: 499, kraliku: 7, vekDeti: 10, poukazPlatnostMesicu: 6}
 
 // Zakázané formulace = staré hodnoty, které se nesmí vrátit.
 // Články o štěňatech smí psát o obecném trhu ("60 až 75 minut"), proto
