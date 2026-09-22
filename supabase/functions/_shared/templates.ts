@@ -510,6 +510,41 @@ export function welcomeMail(p: Record<string, string>): MailOut {
   return { subject: "Vítejte v newsletteru Jóga s králíčky", html, text };
 }
 
+// ---------------------------------------------------------------------
+//  VLASTNÍ E-MAIL
+//  params: subject, name (nepovinné), message (prostý text; prázdný
+//  řádek = nový odstavec). Pro jednorázové ruční zprávy, které nesedí
+//  do žádné z šablon výš (např. pozvánka novináři) — proto žádnou
+//  domněnku o platbě ani o rezervaci, jen pozdrav a text.
+// ---------------------------------------------------------------------
+export function customMail(p: Record<string, string>): MailOut {
+  const firstName = String(p.name || "").trim().split(/\s+/)[0] || "";
+  const greeting = firstName ? `Dobrý den, ${esc(firstName)},` : "Dobrý den,";
+
+  const paragraphs = String(p.message || "")
+    .split(/\n{2,}/)
+    .map((par) => par.trim())
+    .filter(Boolean)
+    .map((par) => `<p style="margin:0 0 16px;">${esc(par).replace(/\n/g, "<br>")}</p>`)
+    .join("");
+
+  const html = shell(
+    p.subject || "Jóga s králíčky",
+    `<p style="margin:0 0 14px;">${greeting}</p>${paragraphs}`,
+  );
+
+  const text = [
+    firstName ? `Dobrý den, ${firstName},` : "Dobrý den,",
+    "",
+    p.message || "",
+    "",
+    "Jóga s králíčky, Fit&Fun Studio, Tovární 486/7, Ostrava-Mariánské Hory",
+    "info@jogaskralicky.cz, +420 603 340 860",
+  ].join("\n");
+
+  return { subject: p.subject || "Jóga s králíčky", html, text };
+}
+
 // Fronta nese u každého řádku `kind`, takže se podle něj vybírá šablona.
 // Neznámý druh raději shodí odeslání, než aby poslal prázdný e-mail —
 // řádek zůstane ve frontě a je vidět, že se s ním něco děje.
@@ -520,5 +555,6 @@ export function renderMail(kind: string, params: Record<string, string>): MailOu
   if (kind === "cancel") return cancelMail(params);
   if (kind === "presun") return presunMail(params);
   if (kind === "welcome") return welcomeMail(params);
+  if (kind === "custom") return customMail(params);
   return null;
 }
