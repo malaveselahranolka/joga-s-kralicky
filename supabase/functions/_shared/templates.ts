@@ -510,6 +510,85 @@ export function welcomeMail(p: Record<string, string>): MailOut {
   return { subject: "Vítejte v newsletteru Jóga s králíčky", html, text };
 }
 
+// ---------------------------------------------------------------------
+//  VLASTNÍ E-MAIL
+//  params: subject, name (nepovinné).
+//  intro/closing: prostý text (prázdný řádek = nový odstavec) — `message`
+//  je starší alias pro `intro`, kvůli řádkům už ve frontě.
+//  lesson/datetime/spots/entry/location: nepovinná tabulka s tučnými
+//  hodnotami, stejný vzhled (padding, dělicí linky) jako v bookingMail.
+//  Nepovinně až dvě vstupenky: qr_url/ticket_url a qr_url2/ticket_url2
+//  (druhá dvojice pro druhé místo, kdyby zpráva pokrývala dvě ruční
+//  rezervace najednou). qr_caption/qr_caption2 přebijí výchozí text.
+//
+//  Pro jednorázové ruční zprávy, které nesedí do žádné z šablon výš
+//  (např. pozvánka novináři) — proto žádná domněnka o platbě ani
+//  o rezervaci, jen to, co pošleme jako parametry.
+// ---------------------------------------------------------------------
+export function customMail(p: Record<string, string>): MailOut {
+  const firstName = String(p.name || "").trim().split(/\s+/)[0] || "";
+  const greeting = firstName ? `Dobrý den, ${esc(firstName)},` : "Dobrý den,";
+
+  const intro = String(p.intro || p.message || "").trim();
+  const introHtml = intro
+    .split(/\n{2,}/)
+    .map((par) => par.trim())
+    .filter(Boolean)
+    .map((par) => `<p style="margin:0 0 22px;">${esc(par).replace(/\n/g, "<br>")}</p>`)
+    .join("");
+
+  const hasTable = Boolean(p.lesson || p.datetime || p.spots || p.entry || p.location);
+  const table = hasTable
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-top:1px solid ${LINE};border-bottom:1px solid ${LINE};padding:4px 0;">
+       ${row("Lekce", p.lesson)}
+       ${row("Kdy", p.datetime)}
+       ${row("Míst", p.spots)}
+       ${row("Vstup", p.entry)}
+       ${row("Kde", p.location)}
+     </table>`
+    : "";
+
+  const tickets = [
+    { qr: p.qr_url, url: p.ticket_url, caption: p.qr_caption },
+    { qr: p.qr_url2, url: p.ticket_url2, caption: p.qr_caption2 },
+  ].filter((t): t is { qr: string; url: string; caption?: string } => Boolean(t.qr));
+
+  const qrHtml = tickets
+    .map((t) => qrBlock(t.qr, t.caption || "Ve studiu stačí ukázat tenhle kód.<br>Nemusíte nic tisknout."))
+    .join("");
+
+  const closing = String(p.closing || "").trim();
+  const closingHtml = closing
+    ? `<p style="margin:26px 0 0;font-size:13px;color:${INK_SOFT};">${esc(closing)}</p>`
+    : "";
+
+  const html = shell(
+    p.subject || "Jóga s králíčky",
+    `<p style="margin:0 0 14px;">${greeting}</p>${introHtml}${table}${qrHtml}${closingHtml}`,
+  );
+
+  const text = [
+    firstName ? `Dobrý den, ${firstName},` : "Dobrý den,",
+    "",
+    intro,
+    hasTable ? "" : null,
+    p.lesson ? `Lekce: ${p.lesson}` : null,
+    p.datetime ? `Kdy: ${p.datetime}` : null,
+    p.spots ? `Míst: ${p.spots}` : null,
+    p.entry ? `Vstup: ${p.entry}` : null,
+    p.location ? `Kde: ${p.location}` : null,
+    tickets.length ? "" : null,
+    ...tickets.map((t, i) => `Vstupenka${tickets.length > 1 ? ` ${i + 1}` : ""}: ${t.url || t.qr}`),
+    closing ? "" : null,
+    closing || null,
+    "",
+    "Jóga s králíčky, Fit&Fun Studio, Tovární 486/7, Ostrava-Mariánské Hory",
+    "info@jogaskralicky.cz, +420 603 340 860",
+  ].filter((l) => l !== null).join("\n");
+
+  return { subject: p.subject || "Jóga s králíčky", html, text };
+}
+
 // Fronta nese u každého řádku `kind`, takže se podle něj vybírá šablona.
 // Neznámý druh raději shodí odeslání, než aby poslal prázdný e-mail —
 // řádek zůstane ve frontě a je vidět, že se s ním něco děje.
@@ -520,5 +599,6 @@ export function renderMail(kind: string, params: Record<string, string>): MailOu
   if (kind === "cancel") return cancelMail(params);
   if (kind === "presun") return presunMail(params);
   if (kind === "welcome") return welcomeMail(params);
+  if (kind === "custom") return customMail(params);
   return null;
 }
