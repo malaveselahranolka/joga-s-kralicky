@@ -64,12 +64,14 @@ DĚTSKÁ LEKCE „DĚTI & KRÁLÍČCI“ (/joga-pro-deti-ostrava.html)
   Příklady: zástupce + 2 děti = 1 590 Kč, zástupce + 4 děti = 2 590 Kč.
 - Kapacita nejvýš 12 osob, počítají se dospělí i děti.
 - Rezervuje se online na /rezervace.html, v rezervaci se zvolí počet dětí. Termíny se vypisují průběžně.
-- Dárkový poukaz za 499 Kč na dětskou lekci uplatnit nejde.
+- Na dětskou lekci platí jen dětský dárkový poukaz (1 090 Kč, zástupce + 1 dítě), klasický poukaz za 499 Kč ne.
 
 DÁRKOVÝ POUKAZ (/darkovy-poukaz.html, koupě na /koupit-poukaz.html)
-- 499 Kč za jeden vstup na lekci Jóga s králíčky. Koupit jich jde víc najednou.
+- Klasický poukaz: 499 Kč za jeden vstup na lekci Jóga s králíčky.
+- Dětský poukaz: 1 090 Kč na lekci Děti & králíčci pro zákonného zástupce s jedním dítětem (další děti poukaz nepokrývá). Nákup s předvybraným dětským poukazem: /koupit-poukaz.html?druh=deti
+- Koupit jich jde víc najednou. Každý druh platí jen na svou lekci.
 - Přijde e-mailem během pár minut po zaplacení, s kódem a PDF k vytištění. Poštou se nic neposílá.
-- Platí 6 měsíců od zakoupení, na kterýkoliv vypsaný termín lekce Jóga s králíčky. Na dětskou lekci Děti & králíčci neplatí.
+- Platí 6 měsíců od zakoupení, na kterýkoliv vypsaný termín lekce, na kterou je určený.
 - Uplatnění: v rezervaci na webu vybrat termín, rozkliknout „Mám dárkový poukaz“ a vepsat kód. Nic se nedoplácí.
 - Poukaz je přenosný, uplatní ho kdokoliv s kódem. Nejde směnit zpět za peníze.
 

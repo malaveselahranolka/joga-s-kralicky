@@ -5,9 +5,10 @@
 //  Po zaplacení webhook vygeneruje kódy poukazů a uloží je.
 //
 //  Počet kusů určuje zákazník, ale částku počítá SERVER:
-//      cena za poukaz (PAYMENT_VOUCHER_CZK) × počet kusů
+//      cena za poukaz daného druhu × počet kusů
 //
-//  Secrets:  STRIPE_SECRET_KEY, PAYMENT_VOUCHER_CZK (výchozí 499), SITE_URL
+//  Secrets:  STRIPE_SECRET_KEY, PAYMENT_VOUCHER_CZK (výchozí 499),
+//            PAYMENT_DETI_CZK (výchozí 1090), SITE_URL
 // =====================================================================
 import Stripe from "https://esm.sh/stripe@14.21.0?target=denonext";
 
@@ -27,26 +28,20 @@ const MAX_VOUCHERS = 10;
 //  tenhle. Druh, který tu není aktivní, server odmítne, i kdyby si ho
 //  někdo do požadavku dopsal ručně.
 //
-//  `deti` (lekce pro rodiče s dětmi) je PŘIPRAVENÝ, ale VYPNUTÝ, protože
-//  lekce ještě není hotová. Až bude, postup spuštění:
-//    1. Databáze: sloupec public.vouchers.druh (text, výchozí 'klasik')
-//       a RPC na uplatnění (create_booking_poukazem, redeem_voucher)
-//       musí dětský poukaz pustit jen na dětskou lekci a naopak.
-//       Lekce proto potřebuje vlastní označení druhu, ne jen název.
-//    2. stripe-webhook a stripe-confirm: číst metadata.druh, zapsat ho
-//       do sloupce `druh` a ověřit částku podle ceny TOHO druhu (teď obě
-//       počítají s jednou cenou PAYMENT_VOUCHER_CZK).
-//    3. Tady: `aktivni: true` (a případně vlastní cena přes secret).
-//    4. payment-config.js: `aktivni: true` u `deti` → na webu se objeví
-//       výběr lekce.
-//    5. E-mail s poukazem a PDF: napsat, na jakou lekci poukaz platí.
+//  `deti` (lekce Děti & králíčci, zákonný zástupce + 1 dítě) je v prodeji
+//  od 24. 9. 2026. Co k němu patří jinde:
+//    * databáze: vouchers.druh a create_booking_poukazem pouští poukaz jen
+//      na lekci stejného druhu (supabase/poukaz-deti.sql)
+//    * stripe-webhook a stripe-confirm: druh z metadat, cena podle druhu
+//      (_shared/poukaz-druh.ts — ceny tam musí sedět s tabulkou níž)
+//    * e-mail a PDF: věta „na jakou lekci" podle druhu
 // ---------------------------------------------------------------------
 //  Cena: klasický poukaz PAYMENT_VOUCHER_CZK (499), dětský poukaz platí
 //  na zákonného zástupce + 1 dítě, tedy stejně jako vstup na dětskou
 //  lekci: PAYMENT_DETI_CZK (1090).
 const DRUHY: Record<string, { nazev: string; aktivni: boolean; cenaEnv: string; cenaVychozi: string }> = {
   klasik: { nazev: "Dárkový poukaz – vstup na lekci (Jóga s králíčky)", aktivni: true, cenaEnv: "PAYMENT_VOUCHER_CZK", cenaVychozi: "499" },
-  deti: { nazev: "Dárkový poukaz – lekce Děti & králíčci, zástupce + 1 dítě (Jóga s králíčky)", aktivni: false, cenaEnv: "PAYMENT_DETI_CZK", cenaVychozi: "1090" },
+  deti: { nazev: "Dárkový poukaz – lekce Děti & králíčci, zástupce + 1 dítě (Jóga s králíčky)", aktivni: true, cenaEnv: "PAYMENT_DETI_CZK", cenaVychozi: "1090" },
 };
 
 Deno.serve(async (req) => {

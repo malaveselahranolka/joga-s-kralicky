@@ -214,7 +214,9 @@ export function bookingEmail(bk: Booking, siteUrl: string) {
 // z _shared/poukaz-platnost.ts, což platí vždycky — proto se tu datum
 // nedopočítává. Odhadnuté datum by se totiž rozešlo se skutečným
 // `vouchers.expires_at` pokaždé, když by e-mail odešel se zpožděním.
-export function voucherEmail(code: string, email: string, amountHaleru: number, expires = "") {
+// `druh` ('klasik' | 'deti') řídí, na jakou lekci poukaz v e-mailu a na
+// PDF „platí" — viz _shared/poukaz-druh.ts.
+export function voucherEmail(code: string, email: string, amountHaleru: number, expires = "", druh = "klasik") {
   return {
     order_key: `voucher:${code}`,
     kind: "voucher",
@@ -226,6 +228,7 @@ export function voucherEmail(code: string, email: string, amountHaleru: number, 
       code,
       amount: czk(Math.round(Number(amountHaleru) / 100)),
       expires,
+      druh: druh === "deti" ? "deti" : "klasik",
       qr_url: qrFor(code),
     },
   };
@@ -295,6 +298,7 @@ async function poukazPriloha(params: Record<string, string>) {
     const bytes = await poukazPdf({
       code: params.code || "",
       platnost: expires ? `do ${expires}` : "",
+      druh: params.druh === "deti" ? "deti" : "klasik",
     });
     const jmeno = `darkovy-poukaz-${String(params.code || "").toLowerCase()}.pdf`;
     return [{ content: pdfBase64(bytes), name: jmeno }];

@@ -155,6 +155,14 @@ if (cisloZ(payCfg, /detiMaxDeti:\s*(\d+)/) !== DETI.maxDeti) fail('payment-confi
   if (!/dalsiDeti > 3/.test(kod)) fail(fn, `nehlídá nejvýš ${DETI.maxDeti - 1} další děti`)
   const sql = 'supabase/deti-a-kralici.sql'
   if (cisloZ(read(sql), /deti_max\s+constant int := (\d+)/) !== DETI.maxDeti + 1) fail(sql, `deti_max musí být ${DETI.maxDeti + 1} (zástupce + ${DETI.maxDeti} děti)`)
+  // Dětský dárkový poukaz stojí stejně jako vstup zástupce s dítětem.
+  if (!/id: 'deti'[\s\S]{0,300}cenaCzk:\s*1090/.test(payCfg)) fail('payment-config.js', `dětský poukaz musí stát ${DETI.cenaKc} Kč`)
+  if (!/cenaEnv: "PAYMENT_DETI_CZK", cenaVychozi: "1090"/.test(read('supabase/functions/stripe-voucher/index.ts'))) {
+    fail('supabase/functions/stripe-voucher/index.ts', `dětský poukaz musí mít výchozí cenu ${DETI.cenaKc} Kč`)
+  }
+  if (cisloZ(read('supabase/functions/_shared/poukaz-druh.ts'), /"PAYMENT_DETI_CZK",\s*"(\d+)"/) !== DETI.cenaKc) {
+    fail('supabase/functions/_shared/poukaz-druh.ts', `dětský poukaz musí mít výchozí cenu ${DETI.cenaKc} Kč`)
+  }
   if (!new RegExp(`\\$\\('lf-cap'\\)\\.value = ${DETI.kapacita}; \\$\\('lf-druh'\\)\\.value = 'deti'`).test(read('admin.html'))) {
     fail('admin.html', `šablona Děti & králíčci musí mít kapacitu ${DETI.kapacita}`)
   }
@@ -438,7 +446,8 @@ for (const page of ALL_PAGES) {
       if (!ids.has(href.slice(1))) fail(page, `kotva ${href} nikam nevede`)
       continue
     }
-    const [file] = href.split('#')
+    // ?parametry (např. koupit-poukaz.html?druh=deti) nejsou součást cesty
+    const file = href.split('#')[0].split('?')[0]
     if (!file || file.startsWith('/')) continue          // kořenové cesty řeší Vercel
     // href skládaný v JavaScriptu (href="' + fn(x) + '") není cesta k souboru
     if (/[+'`${}]/.test(file)) continue

@@ -11,8 +11,8 @@
 <link rel="preload" as="image" href="assets/photos/yoga-20-mobil.webp" fetchpriority="high" media="(max-width: 640px)" />
 <!-- Měření návštěvnosti (Google Analytics) se načte AŽ PO souhlasu. -->
 <script defer src="/souhlas.js?v=1"></script>
-<title>Dárkový poukaz na jógu s králíčky v Ostravě — zážitek za 499 Kč</title>
-<meta name="description" content="Darujte hodinu jógy a mazlení s deseti králíčky v Ostravě. Poukaz za 499 Kč přijde e-mailem během pár minut, platí 6 měsíců a termín si obdarovaný vybere sám." />
+<title>Dárkový poukaz na jógu s králíčky v Ostravě — od 499 Kč</title>
+<meta name="description" content="Darujte hodinu jógy a mazlení s deseti králíčky v Ostravě. Poukaz za 499 Kč, nebo dětský za 1 090 Kč, přijde e-mailem během pár minut, platí 6 měsíců a termín si obdarovaný vybere sám." />
 <link rel="canonical" href="https://www.jogaskralicky.cz/darkovy-poukaz.html" />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
 <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
@@ -44,13 +44,15 @@
       "@type": "Product",
       "@id": "https://www.jogaskralicky.cz/darkovy-poukaz.html#produkt",
       "name": "Dárkový poukaz na lekci jógy s králíčky",
-      "description": "Poukaz na jeden vstup na lekci Jóga s králíčky (kterýkoliv vypsaný termín) ve Fit&Fun Studiu v Ostravě-Mariánských Horách. Doručení e-mailem, platnost 6 měsíců, přenosný.",
+      "description": "Poukaz na jeden vstup na lekci Jóga s králíčky (499 Kč), nebo dětský poukaz na lekci Děti & králíčci pro zákonného zástupce s jedním dítětem (1 090 Kč). Fit&Fun Studio v Ostravě-Mariánských Horách, doručení e-mailem, platnost 6 měsíců, přenosný.",
       "image": "https://www.jogaskralicky.cz/assets/photos/yoga-20.jpg",
       "category": "Zážitkový dárek",
       "brand": {"@type": "Brand", "name": "Jóga s králíčky"},
       "offers": {
-        "@type": "Offer",
-        "price": "499",
+        "@type": "AggregateOffer",
+        "lowPrice": "499",
+        "highPrice": "1090",
+        "offerCount": 2,
         "priceCurrency": "CZK",
         "availability": "https://schema.org/InStock",
         "url": "https://www.jogaskralicky.cz/koupit-poukaz.html",
@@ -63,7 +65,7 @@
         {"@type": "Question", "name": "Jak rychle poukaz dorazí?",
          "acceptedAnswer": {"@type": "Answer", "text": "E-mailem během pár minut po zaplacení. Poštou nic neposíláme, takže poukaz stihnete koupit i večer před předáním."}},
         {"@type": "Question", "name": "Na jakou lekci poukaz platí?",
-         "acceptedAnswer": {"@type": "Answer", "text": "Na kterýkoliv vypsaný termín lekce Jóga s králíčky. Dětská lekce Děti & králíčci má vlastní cenu (1 090 Kč za zákonného zástupce s dítětem, každé další dítě 500 Kč), poukaz za 499 Kč na ni uplatnit nejde."}},
+         "acceptedAnswer": {"@type": "Answer", "text": "Klasický poukaz za 499 Kč platí na kterýkoliv vypsaný termín lekce Jóga s králíčky. Dětský poukaz za 1 090 Kč platí na lekci Děti & králíčci pro zákonného zástupce s jedním dítětem. Který druh chcete, vyberete při nákupu."}},
         {"@type": "Question", "name": "Jak obdarovaný poukaz uplatní?",
          "acceptedAnswer": {"@type": "Answer", "text": "V rezervaci na webu si vybere termín, rozklikne „Mám dárkový poukaz“ a vepíše kód. Rezervace se rovnou potvrdí a nic se nedoplácí."}},
         {"@type": "Question", "name": "Může poukaz použít někdo jiný?",
@@ -128,7 +130,7 @@
       <h1>Dárkový poukaz na <em>jógu s králíčky</em></h1>
       <p class="phero-sub">Hodina klidu, protažení a mazlení s deseti králíčky v Ostravě. Poukaz přijde e-mailem pár minut po zaplacení a termín si obdarovaný vybere sám.</p>
       <div class="phero-actions">
-        <a class="btn btn-light" href="koupit-poukaz.html">Koupit poukaz za 499&nbsp;Kč <span class="arrow">→</span></a>
+        <a class="btn btn-light" href="koupit-poukaz.html">Koupit poukaz <span class="arrow">→</span></a>
         <a class="btn btn-ghost" href="#jak-to-funguje">Jak to funguje</a>
       </div>
     </div>
@@ -138,7 +140,7 @@
   <section class="facts-sec" aria-label="Poukaz v kostce">
     <div class="wrap">
       <div class="facts">
-        <div class="fact"><b>499&nbsp;Kč</b><span>jeden vstup na lekci pro jednoho člověka</span></div>
+        <div class="fact"><b>499&nbsp;Kč</b><span>jeden vstup na lekci pro dospělé, dětský poukaz za 1&nbsp;090&nbsp;Kč</span></div>
         <div class="fact"><b>6 měsíců</b><span>platnost od zakoupení, termín si obdarovaný vybere sám</span></div>
         <div class="fact"><b>Pár minut</b><span>a poukaz s kódem i PDF k tisku je ve vaší schránce</span></div>
       </div>
@@ -169,10 +171,10 @@
           </div>
         </article>
         <article class="card reveal">
-          <div class="card-pic"><img src="assets/photos/yoga-6.webp" alt="Skupina cvičí v sále na podložkách" width="1500" height="1000" loading="lazy" decoding="async" /></div>
+          <div class="card-pic"><img src="assets/photos/yoga-15.webp" alt="Chlapec na dětské lekci drží v náručí šedého králíka" width="1500" height="1000" loading="lazy" decoding="async" /></div>
           <div class="card-body">
-            <h3>Rodičům, co potřebují pauzu</h3>
-            <p>Hodina jen pro sebe, bez telefonu a bez povinností. Jógu umět nemusí, lektorka ukáže jednodušší variantu každé polohy.</p>
+            <h3>Dětem se zákonným zástupcem</h3>
+            <p>Dětský poukaz na lekci Děti &amp; králíčci za 1&nbsp;090&nbsp;Kč platí na zákonného zástupce s jedním dítětem. Pro děti od 10 let. <a href="koupit-poukaz.html?druh=deti">Koupit dětský poukaz</a></p>
           </div>
         </article>
       </div>
@@ -190,7 +192,7 @@
       <ol class="steps">
         <li class="reveal">
           <h3>Zaplatíte online</h3>
-          <p>Kartou, 499&nbsp;Kč za poukaz. Můžete jich koupit víc najednou.</p>
+          <p>Kartou, 499&nbsp;Kč za poukaz, dětský 1&nbsp;090&nbsp;Kč. Můžete jich koupit víc najednou.</p>
         </li>
         <li class="reveal">
           <h3>Přijde e-mail</h3>
@@ -236,7 +238,7 @@
         <h2>Žádné háčky</h2>
       </div>
       <div class="terms reveal">
-        <div><b>Na lekci Jóga s králíčky</b><span>na kterýkoliv vypsaný termín; na dětskou lekci Děti &amp; králíčci neplatí</span></div>
+        <div><b>Na lekci podle druhu</b><span>klasický na Jóga s králíčky, dětský na Děti &amp; králíčci (zástupce + 1 dítě)</span></div>
         <div><b>Přenosný</b><span>uplatní ho kdokoliv, kdo má kód</span></div>
         <div><b>Bez doplácení</b><span>poukaz je vstupné, při rezervaci se už nic neplatí</span></div>
         <div><b>Nevyměnitelný za peníze</b><span>zpět na hotovost ho nesměňujeme</span></div>
@@ -260,7 +262,7 @@
         </div>
         <div class="faq-item">
           <button class="faq-q" aria-expanded="false">Na jakou lekci poukaz platí?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4v14M4 11h14"/></svg></button>
-          <div class="faq-a"><div><p>Na kterýkoliv vypsaný termín lekce Jóga s králíčky. Dětská lekce Děti &amp; králíčci má vlastní cenu (1 090 Kč za zákonného zástupce s dítětem, každé další dítě 500 Kč), poukaz za 499 Kč na ni uplatnit nejde.</p></div></div>
+          <div class="faq-a"><div><p>Klasický poukaz za 499 Kč platí na kterýkoliv vypsaný termín lekce Jóga s králíčky. Dětský poukaz za 1 090 Kč platí na lekci Děti &amp; králíčci pro zákonného zástupce s jedním dítětem. Který druh chcete, vyberete při nákupu.</p></div></div>
         </div>
         <div class="faq-item">
           <button class="faq-q" aria-expanded="false">Jak obdarovaný poukaz uplatní?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4v14M4 11h14"/></svg></button>
@@ -285,23 +287,19 @@
   <!-- ============ ZÁVĚREČNÁ VÝZVA S LÍSTKEM ============ -->
   <section class="on-dark">
     <div class="wrap split">
-      <div class="ticket reveal" aria-hidden="true">
-        <div class="ticket-main">
-          <span class="ticket-kicker">Dárkový poukaz</span>
-          <h3>Jóga s králíčky</h3>
-          <p>Jeden vstup na lekci ve Fit&amp;Fun Studiu Ostrava</p>
-          <span class="ticket-code">KRALICEK</span>
-        </div>
-        <div class="ticket-stub">
-          <img src="assets/logo.svg" alt="" width="34" height="34" loading="lazy" />
-          <span class="ticket-price">499<small> Kč</small></span>
-          <span class="ticket-valid">platí 6 měsíců</span>
-        </div>
-      </div>
+      <!-- Skutečný poukaz z e-mailu (PDF příloha) s ukázkovým kódem,
+           vykreslený z supabase/functions/_shared/poukaz-pdf.ts. -->
+      <figure class="real-poukaz reveal">
+        <img src="assets/photos/poukaz-ukazka.webp"
+             srcset="assets/photos/poukaz-ukazka-640.webp 640w, assets/photos/poukaz-ukazka.webp 1200w"
+             sizes="(max-width: 860px) 100vw, 50vw" width="1200" height="565" loading="lazy" decoding="async"
+             alt="Ukázka dárkového poukazu Jóga s králíčky: kód poukazu a platnost 6 měsíců" />
+        <figcaption>Takhle poukaz přijde e-mailem, jako PDF k vytištění.</figcaption>
+      </figure>
       <div class="split-text reveal">
         <span class="eyebrow">Hotovo za pár minut</span>
         <h2>Dárek, na který se nezapomíná</h2>
-        <p>Zaplatíte kartou, kód přijde e-mailem a zbytek je na obdarovaném. Králíci už se těší.</p>
+        <p>Zaplatíte kartou a poukaz přijde e-mailem i jako PDF k vytištění, přesně takový, jaký vidíte vedle. Zbytek je na obdarovaném. Králíci už se těší.</p>
         <a class="btn btn-light" href="koupit-poukaz.html">Koupit poukaz <span class="arrow">→</span></a>
       </div>
     </div>

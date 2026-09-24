@@ -24,12 +24,13 @@
 //  počet míst, shoda session). Kdyby je dělal jen webhook, stačilo by
 //  útočníkovi jít touhle cestou. Měníš-li kontroly tady, změň je i tam.
 //
-//  Secrets:  STRIPE_SECRET_KEY, PAYMENT_ENTRY_CZK, PAYMENT_VOUCHER_CZK
+//  Secrets:  STRIPE_SECRET_KEY, PAYMENT_ENTRY_CZK, PAYMENT_VOUCHER_CZK, PAYMENT_DETI_CZK
 // =====================================================================
 import Stripe from "https://esm.sh/stripe@14.21.0?target=denonext";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { bookingEmail, voucherEmail, enqueue, dispatch, emailReady } from "../_shared/email.ts";
 import { platnostDoISO } from "../_shared/poukaz-platnost.ts";
+import { cenaPoukazuKc, poukazDruh } from "../_shared/poukaz-druh.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -91,8 +92,9 @@ Deno.serve(async (req) => {
     // ---------------------------------------------------------------
     if (meta.type === "voucher") {
       const count = Math.max(1, Number(meta.count) || 1);
-      const voucherCzk = Number(env("PAYMENT_VOUCHER_CZK", env("PAYMENT_ENTRY_CZK", "499")));
-      const expected = Math.round(voucherCzk * 100) * count;
+      // Druh poukazu (klasik / deti) z metadat; starší platby ho nemají.
+      const druh = poukazDruh(meta.druh);
+      const expected = Math.round(cenaPoukazuKc(druh) * 100) * count;
       if (Number(s.amount_total) !== expected) {
         return json({ ok: false, error: "amount_mismatch" }, 409);
       }
@@ -110,6 +112,7 @@ Deno.serve(async (req) => {
         session_id: String(s.id),
         redeemed: false,
         expires_at: expiresAt,
+        druh,
       }));
 
       // ZÁMĚRNĚ insert-ignore, NE upsert.
@@ -129,14 +132,14 @@ Deno.serve(async (req) => {
       // kdo ji zavřel dřív, než smyčka doběhla, zůstal bez nich a chyba
       // se spolkla. Teď je odesílá server a co selže, zůstane ve frontě.
       if (email) {
-        const mailErr = await enqueue(admin, rows.map((r) => voucherEmail(r.code, email, r.amount)));
+        const mailErr = await enqueue(admin, rows.map((r) => voucherEmail(r.code, email, r.amount, "", druh)));
         if (mailErr) return json({ ok: false, error: "voucher_email_enqueue_failed", detail: mailErr.message }, 500);
         sendInBackground(admin, rows.length);
       }
 
       // serverEmail říká prohlížeči, jestli má mlčet (posíláme my)
       // nebo poslat sám (chybí EMAILJS_PRIVATE_KEY, tak ať host neostrouhá)
-      return json({ ok: true, paid: true, kind: "voucher", codes, serverEmail: emailReady() });
+      return json({ ok: true, paid: true, kind: "voucher", codes, druh, serverEmail: emailReady() });
     }
 
     // ---------------------------------------------------------------

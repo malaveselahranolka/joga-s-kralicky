@@ -10,7 +10,7 @@
 <!-- Měření návštěvnosti (Google Analytics) se načte AŽ PO souhlasu. -->
 <script defer src="/souhlas.js?v=1"></script>
 <title>Koupit dárkový poukaz — Jóga s králíčky</title>
-<meta name="description" content="Kupte dárkový poukaz na lekci jógy s králíčky v Ostravě. 499 Kč, kód přijde e-mailem hned po zaplacení, platí 6 měsíců." />
+<meta name="description" content="Kupte dárkový poukaz na lekci jógy s králíčky v Ostravě: 499 Kč na lekci pro dospělé, 1 090 Kč na Děti &amp; králíčci. Kód přijde e-mailem hned po zaplacení, platí 6 měsíců." />
 <link rel="canonical" href="https://www.jogaskralicky.cz/koupit-poukaz.html" />
 <!-- Nákupní krok, ne obsah pro vyhledávače. Ve výsledcích hledání má být
      darkovy-poukaz.html, odkud sem vede tlačítko. -->
@@ -34,15 +34,15 @@
   .buy-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); grid-template-areas: "intro order" "ticket order"; gap: clamp(2rem, 4vw, 3rem) clamp(2rem, 5vw, 4.5rem); align-items: start; }
   .buy-intro { grid-area: intro; }
   .order { grid-area: order; }
-  .buy-ticket { grid-area: ticket; }
+  .buy-poukaz { grid-area: ticket; margin: 0; }
   .buy-intro h1 { font-size: clamp(2.1rem, 1.5rem + 2.6vw, 3.6rem); margin-top: 1rem; }
   .buy-intro h1 em { font-style: normal; color: var(--carrot); }
   .buy-intro .lead { margin-top: 1rem; color: rgba(255,255,255,.8); max-width: 44ch; }
   .buy .crumbs { margin-bottom: .6rem; }
-  .buy .ticket { justify-self: start; }
-  .buy .ticket h3 { color: var(--forest); font-size: clamp(1.3rem, 1.1rem + .9vw, 1.8rem); margin-top: .5rem; }
-  .buy .ticket p { color: var(--ink-soft); margin-top: .5rem; font-size: .92rem; }
-  .ticket-count { display: inline-block; margin-top: 1rem; font-weight: 700; font-size: .9rem; color: var(--forest); background: rgba(110,138,78,.14); border-radius: 999px; padding: .3em .8em; }
+  /* skutečný poukaz z e-mailu: zelený na zeleném pozadí, proto světlý rámeček */
+  .buy-poukaz img { width: 100%; height: auto; border-radius: 16px; box-shadow: 0 0 0 1px rgba(247,244,236,.22), 0 28px 54px -26px rgba(0,0,0,.7); transform: rotate(-1.5deg); }
+  .buy-poukaz figcaption { margin-top: 1.1rem; display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .8rem; font-size: .92rem; color: rgba(255,255,255,.75); }
+  .buy-poukaz figcaption b { font-weight: 700; color: var(--forest-deep); background: var(--cream); border-radius: 999px; padding: .25em .75em; font-size: .85rem; }
 
   /* karta s objednávkou */
   .order { background: var(--surface); color: var(--ink); border-radius: var(--r-xl); padding: clamp(1.3rem, 3vw, 2.2rem); box-shadow: var(--sh-dark); }
@@ -59,7 +59,8 @@
   .druh { position: relative; display: flex; gap: .85rem; align-items: flex-start; padding: .95rem 1rem; border: 1.5px solid var(--line); border-radius: var(--r-md); background: var(--paper); cursor: pointer; transition: border-color .2s var(--ease), background-color .2s var(--ease); }
   .druh input { position: absolute; opacity: 0; pointer-events: none; }
   .druh .dot { flex: none; width: 1.3rem; height: 1.3rem; margin-top: .1rem; border-radius: 50%; border: 2px solid var(--line); background: var(--surface); transition: border-color .2s var(--ease), box-shadow .2s var(--ease); }
-  .druh b { display: block; font-family: "Schibsted Grotesk"; font-weight: 600; font-size: 1.05rem; }
+  .druh b { display: flex; justify-content: space-between; gap: .8rem; font-family: "Schibsted Grotesk"; font-weight: 600; font-size: 1.05rem; }
+  .druh b .cena { font-style: normal; white-space: nowrap; color: var(--carrot-text); }
   .druh span.t { display: block; margin-top: .15rem; font-size: .9rem; color: var(--ink-soft); line-height: 1.45; }
   .druh:has(input:checked) { border-color: var(--forest); background: color-mix(in srgb, var(--clover) 9%, var(--surface)); }
   .druh:has(input:checked) .dot { border-color: var(--forest); box-shadow: inset 0 0 0 4px var(--surface); background: var(--forest); }
@@ -113,7 +114,7 @@
     /* telefon: nadpis → objednávka → lístek. Kdo přišel z reklamy koupit,
        nesmí k tlačítku scrollovat přes obrázek. */
     .buy-grid { grid-template-columns: 1fr; grid-template-areas: "intro" "order" "ticket"; }
-    .buy .ticket { justify-self: center; }
+    .buy-poukaz img { transform: none; }
   }
   @media (max-width: 640px) {
     /* úvod co nejkratší, ať je objednávka hned na první obrazovce */
@@ -176,7 +177,7 @@
       <div class="order" id="order">
         <div id="orderForm">
           <h2>Vaše objednávka</h2>
-          <p class="o-sub">Každý poukaz platí na jeden vstup na lekci.</p>
+          <p class="o-sub" id="oSub">Každý poukaz platí na jeden vstup na lekci.</p>
 
           <!-- Výběr lekce: skript ho vyplní z payment-config.js a ukáže,
                jen když jsou v nabídce aspoň dva druhy poukazu. -->
@@ -214,21 +215,17 @@
         <div class="state" id="stav" hidden tabindex="-1"></div>
       </div>
 
-      <div class="buy-ticket" aria-hidden="true">
-        <div class="ticket">
-          <div class="ticket-main">
-            <span class="ticket-kicker">Dárkový poukaz</span>
-            <h3 id="lNazev">Jóga s králíčky</h3>
-            <p id="lPopis">Jeden vstup na lekci ve Fit&amp;Fun Studiu Ostrava</p>
-            <span class="ticket-count" id="lPocet">1 poukaz</span>
-          </div>
-          <div class="ticket-stub">
-            <img src="assets/logo.svg" alt="" width="34" height="34" />
-            <span class="ticket-price" id="lCena">499<small> Kč</small></span>
-            <span class="ticket-valid">platí 6 měsíců</span>
-          </div>
-        </div>
-      </div>
+      <!-- Skutečný poukaz tak, jak přijde v e-mailu (PDF příloha), jen
+           s ukázkovým kódem. Obrázky jsou vykreslené přímo z generátoru
+           supabase/functions/_shared/poukaz-pdf.ts — když se změní návrh
+           poukazu, vyrenderovat znovu (postup v README). -->
+      <figure class="buy-poukaz">
+        <img id="lObr" src="assets/photos/poukaz-ukazka.webp"
+             srcset="assets/photos/poukaz-ukazka-640.webp 640w, assets/photos/poukaz-ukazka.webp 1200w"
+             sizes="(max-width: 900px) 100vw, 45vw" width="1200" height="565" decoding="async"
+             alt="Ukázka dárkového poukazu Jóga s králíčky: kód poukazu a platnost 6 měsíců" />
+        <figcaption><span id="lPopis">Takhle poukaz přijde e-mailem, jako PDF k vytištění.</span> <b id="lPocet">1 poukaz</b></figcaption>
+      </figure>
     </div>
   </section>
 
@@ -289,9 +286,9 @@
 </footer>
 
 <script defer src="supabase-config.js?v=2"></script>
-<script defer src="payment-config.js?v=5"></script>
+<script defer src="payment-config.js?v=6"></script>
 <script defer src="assets/podstranka.js?v=1"></script>
-<script defer src="assets/poukaz-koupit.js?v=1"></script>
+<script defer src="assets/poukaz-koupit.js?v=2"></script>
 <script defer src="/assets/chat.js?v=5"></script>
 </body>
 </html>

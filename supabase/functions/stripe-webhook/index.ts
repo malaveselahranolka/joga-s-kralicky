@@ -32,6 +32,7 @@ import Stripe from "https://esm.sh/stripe@14.21.0?target=denonext";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { bookingEmail, voucherEmail, enqueue, dispatch } from "../_shared/email.ts";
 import { platnostDoISO } from "../_shared/poukaz-platnost.ts";
+import { cenaPoukazuKc, poukazDruh } from "../_shared/poukaz-druh.ts";
 
 const env = (n: string, d = "") => Deno.env.get(n) ?? d;
 
@@ -293,8 +294,10 @@ Deno.serve(async (req) => {
     }
 
     const count = Math.max(1, Number(obj?.metadata?.count) || 1);
-    const voucherCzk = Number(env("PAYMENT_VOUCHER_CZK", env("PAYMENT_ENTRY_CZK", "499")));
-    const expected = Math.round(voucherCzk * 100) * count;
+    // Druh poukazu (klasik / deti) poslala stripe-voucher v metadatech.
+    // Starší platby ho nemají — ty jsou klasické.
+    const druh = poukazDruh(obj?.metadata?.druh);
+    const expected = Math.round(cenaPoukazuKc(druh) * 100) * count;
     if (Number(obj?.amount_total) !== expected) {
       return await reject("voucher_amount_mismatch:" + String(obj?.amount_total) + "/" + String(expected));
     }
@@ -312,6 +315,7 @@ Deno.serve(async (req) => {
       session_id: obj.id,
       redeemed: false,
       expires_at: expiresAt,
+      druh,
     }));
 
     // ZÁMĚRNĚ insert-ignore, NE upsert. Vystavení smí řádek založit, ale
@@ -327,7 +331,7 @@ Deno.serve(async (req) => {
     // rovnou přeposlat obdarovanému. Bez e-mailové adresy nemáme kam poslat;
     // kódy pak host uvidí aspoň na návratové stránce.
     if (email) {
-      const mailErr = await enqueue(admin, rows.map((r) => voucherEmail(r.code, email, r.amount)));
+      const mailErr = await enqueue(admin, rows.map((r) => voucherEmail(r.code, email, r.amount, "", druh)));
       if (mailErr) return await retry("voucher_email_enqueue_failed: " + mailErr.message);
       sendInBackground(admin, rows.length);
     }

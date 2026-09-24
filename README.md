@@ -84,6 +84,19 @@ napsané tak, aby šly spustit opakovaně. Pořadí:
     Děti & králíčci: zákonný zástupce + 1 až 4 děti (2–5 míst, kapacita
     = lidé), dárkový poukaz za 499 Kč na ni neplatí. Cenu (1 090 Kč +
     500 Kč za každé další dítě) počítá `stripe-create`.
+12. `poukaz-deti.sql` — `vouchers.druh` a dětský dárkový poukaz (1 090 Kč,
+    zákonný zástupce + 1 dítě); každý druh poukazu jde uplatnit jen na
+    lekci stejného druhu
+
+### Ukázka poukazu na webu
+
+`assets/photos/poukaz-ukazka*.webp` jsou vykreslené přímo z generátoru PDF
+(`supabase/functions/_shared/poukaz-pdf.ts`) s ukázkovým kódem, aby web
+ukazoval přesně ten poukaz, který přijde e-mailem. Když se změní návrh
+poukazu, vyrenderuj je znovu: sbal `poukaz-pdf.ts` esbuildem pro Node
+(importy z esm.sh přepsat na npm balíčky `pdf-lib` a `@pdf-lib/fontkit`,
+fonty číst z `assets/fonts/pdf/`), PDF vykresli přes pdf.js a převeď do
+WebP v šířkách 1200 a 640 px.
 
 Krok 5 přibyl proto, že produkční databáze měla dvě věci, které v repu
 vůbec nebyly (`vouchers.expires_at` a celá tabulka `stripe_events`).

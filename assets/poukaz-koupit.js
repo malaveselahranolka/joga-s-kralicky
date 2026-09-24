@@ -24,7 +24,9 @@
   var FN = String(window.SUPABASE_URL || '').replace(/\/$/, '') + '/functions/v1/';
 
   var pocet = 1;
-  var druh = DRUHY[0] || null;
+  // ?druh=deti v adrese (odkaz z dětské lekce) rovnou předvybere dětský poukaz
+  var chci = new URLSearchParams(location.search).get('druh');
+  var druh = DRUHY.filter(function (d) { return d.id === chci; })[0] || DRUHY[0] || null;
   // Cena za kus podle druhu (dětský poukaz = zástupce + 1 dítě).
   var cenaKus = function () { return Number((druh && druh.cenaCzk) || CENA); };
 
@@ -70,8 +72,8 @@
     if (DRUHY.length < 2) { box.hidden = true; return; }
     var html = '';
     DRUHY.forEach(function (d, i) {
-      html += '<label class="druh"><input type="radio" name="druh" value="' + esc(d.id) + '"' + (i === 0 ? ' checked' : '') + ' />' +
-        '<span class="dot" aria-hidden="true"></span><span><b>' + esc(d.nazev) + '</b>' +
+      html += '<label class="druh"><input type="radio" name="druh" value="' + esc(d.id) + '"' + (d === druh ? ' checked' : '') + ' />' +
+        '<span class="dot" aria-hidden="true"></span><span><b>' + esc(d.nazev) + ' <em class="cena">' + kc(d.cenaCzk || CENA) + '</em></b>' +
         (d.popis ? '<span class="t">' + esc(d.popis) + '</span>' : '') + '</span></label>';
     });
     $('druhy').innerHTML = html;
@@ -83,7 +85,12 @@
     });
   }
 
-  // ---- souhrn a lístek ------------------------------------------------
+  // ---- souhrn a ukázka poukazu ---------------------------------------
+  // Ukázka je skutečný poukaz z e-mailu (PDF), pro každý druh vlastní.
+  var OBRAZKY = {
+    klasik: { src: 'assets/photos/poukaz-ukazka', alt: 'Ukázka dárkového poukazu Jóga s králíčky: kód poukazu a platnost 6 měsíců' },
+    deti: { src: 'assets/photos/poukaz-ukazka-deti', alt: 'Ukázka dárkového poukazu na lekci Děti & králíčci pro zákonného zástupce s jedním dítětem' }
+  };
   function prekresli() {
     $('pocet').textContent = pocet;
     $('minus').disabled = pocet <= 1;
@@ -93,12 +100,17 @@
     $('celkem').textContent = kc(c * pocet);
     $('zaplatit').innerHTML = 'Zaplatit ' + kc(c * pocet) + ' <span class="arrow">→</span>';
     $('lPocet').textContent = kusy(pocet);
-    $('lCena').innerHTML = esc(String(c * pocet).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')) + '<small> Kč</small>';
-    if (druh) {
-      $('lNazev').textContent = druh.nazev;
-      // Jediný druh = klasická lekce, lístek drží původní popis se studiem.
-      if (DRUHY.length > 1 && druh.popis) $('lPopis').textContent = druh.popis;
+    var o = OBRAZKY[druh && druh.id === 'deti' ? 'deti' : 'klasik'];
+    var img = $('lObr');
+    if (img.getAttribute('data-src') !== o.src) {
+      img.setAttribute('data-src', o.src);
+      img.srcset = o.src + '-640.webp 640w, ' + o.src + '.webp 1200w';
+      img.src = o.src + '.webp';
+      img.alt = o.alt;
     }
+    $('oSub').textContent = druh && druh.id === 'deti'
+      ? 'Dětský poukaz platí na zákonného zástupce s jedním dítětem na lekci Děti & králíčci.'
+      : 'Každý poukaz platí na jeden vstup na lekci.';
   }
 
   // ---- platba ---------------------------------------------------------

@@ -29,6 +29,7 @@ import { PDFDocument, rgb, type PDFPage } from "https://esm.sh/pdf-lib@1.17.1";
 import fontkit from "https://esm.sh/@pdf-lib/fontkit@1.1.1";
 import { font } from "./poukaz-fonty.ts";
 import { PLATNOST_TEXT } from "./poukaz-platnost.ts";
+import type { PoukazDruh } from "./poukaz-druh.ts";
 
 // Barvy webu (index.html → :root). Musí sedět, jinak poukaz vypadá
 // jako z jiné firmy než stránka, ze které přišel.
@@ -62,6 +63,8 @@ export type PoukazData = {
   code: string;
   /** Text v poli „Platnost poukazu". Bez něj se sází obecná doba platnosti. */
   platnost?: string;
+  /** Na jakou lekci poukaz platí (mění perex). Výchozí je klasická lekce. */
+  druh?: PoukazDruh;
 };
 
 // ---------------------------------------------------------------------
@@ -182,11 +185,17 @@ export async function poukazPdf(data: PoukazData): Promise<Uint8Array> {
     x: L, y: shora(19.2), font: fNadpis, size: mm(8.7), color: CREAM,
   });
 
-  // Perex se láme na dva řádky přesně jako v návrhu.
-  const perex = [
-    "Darujte hodinu klidu mezi králíčky. Poukaz na jednu lekci jógy v",
-    "Ostravě.",
-  ];
+  // Perex se láme na dva řádky přesně jako v návrhu. Dětský poukaz říká,
+  // že platí na lekci Děti & králíčci pro zástupce s jedním dítětem.
+  const perex = data.druh === "deti"
+    ? [
+      "Poukaz na lekci Děti & králíčci v Ostravě pro zákonného",
+      "zástupce s jedním dítětem.",
+    ]
+    : [
+      "Darujte hodinu klidu mezi králíčky. Poukaz na jednu lekci jógy v",
+      "Ostravě.",
+    ];
   perex.forEach((r, i) => {
     page.drawText(r, {
       x: L, y: shora(29.5 + i * 4.4), font: fText, size: mm(3.2), color: CREAM_86,
