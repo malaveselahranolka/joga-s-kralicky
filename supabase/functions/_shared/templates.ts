@@ -20,7 +20,7 @@
 // =====================================================================
 
 import { PLATNOST_TEXT } from "./poukaz-platnost.ts";
-import { POUKAZ_NA, poukazDruh } from "./poukaz-druh.ts";
+import { poukazDeti, poukazDruh, poukazNa } from "./poukaz-druh.ts";
 
 const FOREST = "#2C3B2E";
 const CREAM = "#F7F4EC";
@@ -175,8 +175,10 @@ export function bookingMail(p: Record<string, string>): MailOut {
 //  potvrzení rezervace.
 // ---------------------------------------------------------------------
 export function voucherMail(p: Record<string, string>): MailOut {
-  // Starší řádky ve frontě druh nemají — ty jsou klasické.
-  const na = POUKAZ_NA[poukazDruh(p.druh)];
+  // Starší řádky ve frontě druh ani počet dětí nemají — ty jsou klasické,
+  // případně dětské s jedním dítětem.
+  const druh = poukazDruh(p.druh);
+  const na = poukazNa(druh, poukazDeti(druh, p.deti));
   const html = shell(
     `Kód poukazu ${p.code || ""} — platí ${PLATNOST_TEXT} na ${na}.`,
     `<p style="margin:0 0 14px;">Dobrý den,</p>

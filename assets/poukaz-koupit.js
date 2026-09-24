@@ -1,7 +1,8 @@
 // =====================================================================
 //  KOUPĚ DÁRKOVÉHO POUKAZU — logika stránky koupit-poukaz.html
 //
-//  1) Výběr druhu (na jakou lekci), počtu a e-mailu → funkce stripe-voucher
+//  1) Výběr druhu (na jakou lekci), u dětského poukazu počtu dětí, počtu
+//     kusů a e-mailu → funkce stripe-voucher
 //     založí platbu u Stripu a vrátí adresu brány.
 //  2) Po zaplacení vrátí Stripe hosta sem s ?voucher=ok&session_id=…
 //     a funkce stripe-confirm ověří platbu, uloží poukazy a vrátí kódy.
@@ -24,11 +25,20 @@
   var FN = String(window.SUPABASE_URL || '').replace(/\/$/, '') + '/functions/v1/';
 
   var pocet = 1;
+  // Dětský poukaz: zákonný zástupce + 1 až DETI_MAX dětí, každé další za DITE_CZK.
+  var deti = 1;
+  var DETI_MAX = Math.min(4, Math.max(1, Number(PAY.detiMaxDeti) || 4));
+  var DITE_CZK = Number(PAY.detiDiteCzk || 500);
   // ?druh=deti v adrese (odkaz z dětské lekce) rovnou předvybere dětský poukaz
   var chci = new URLSearchParams(location.search).get('druh');
   var druh = DRUHY.filter(function (d) { return d.id === chci; })[0] || DRUHY[0] || null;
-  // Cena za kus podle druhu (dětský poukaz = zástupce + 1 dítě).
-  var cenaKus = function () { return Number((druh && druh.cenaCzk) || CENA); };
+  var jeDeti = function () { return !!druh && druh.id === 'deti'; };
+  // Cena za kus podle druhu (dětský poukaz = zástupce + 1 dítě, další děti navíc).
+  var cenaKus = function () {
+    return Number((druh && druh.cenaCzk) || CENA) + (jeDeti() ? DITE_CZK * (deti - 1) : 0);
+  };
+  var detiTxt = function (n) { return 'zástupce + ' + n + (n === 1 ? ' dítě' : ' děti'); };
+  var sDetmi = function (n) { return ['s jedním dítětem', 'se dvěma dětmi', 'se třemi dětmi', 'se čtyřmi dětmi'][n - 1]; };
 
   // Úložiště prohlížeče umí vyhodit chybu (anonymní režim, přísné cookies).
   var ls = {
@@ -73,7 +83,7 @@
     var html = '';
     DRUHY.forEach(function (d, i) {
       html += '<label class="druh"><input type="radio" name="druh" value="' + esc(d.id) + '"' + (d === druh ? ' checked' : '') + ' />' +
-        '<span class="dot" aria-hidden="true"></span><span><b>' + esc(d.nazev) + ' <em class="cena">' + kc(d.cenaCzk || CENA) + '</em></b>' +
+        '<span class="dot" aria-hidden="true"></span><span><b>' + esc(d.nazev) + ' <em class="cena">' + (d.id === 'deti' ? 'od ' : '') + kc(d.cenaCzk || CENA) + '</em></b>' +
         (d.popis ? '<span class="t">' + esc(d.popis) + '</span>' : '') + '</span></label>';
     });
     $('druhy').innerHTML = html;
@@ -86,21 +96,32 @@
   }
 
   // ---- souhrn a ukázka poukazu ---------------------------------------
-  // Ukázka je skutečný poukaz z e-mailu (PDF), pro každý druh vlastní.
+  // Ukázka je skutečný poukaz z e-mailu (PDF), pro každý druh vlastní
+  // a u dětského i pro každý počet dětí (text na poukazu se liší).
   var OBRAZKY = {
-    klasik: { src: 'assets/photos/poukaz-ukazka', alt: 'Ukázka dárkového poukazu Jóga s králíčky: kód poukazu a platnost 6 měsíců' },
-    deti: { src: 'assets/photos/poukaz-ukazka-deti', alt: 'Ukázka dárkového poukazu na lekci Děti & králíčci pro zákonného zástupce s jedním dítětem' }
+    klasik: { src: 'assets/photos/poukaz-ukazka', alt: 'Ukázka dárkového poukazu Jóga s králíčky: kód poukazu a platnost 6 měsíců' }
+  };
+  var obrazek = function () {
+    if (!jeDeti()) return OBRAZKY.klasik;
+    return {
+      src: 'assets/photos/poukaz-ukazka-deti' + (deti > 1 ? '-' + deti : ''),
+      alt: 'Ukázka dárkového poukazu na lekci Děti & králíčci pro zákonného zástupce ' + sDetmi(deti)
+    };
   };
   function prekresli() {
     $('pocet').textContent = pocet;
     $('minus').disabled = pocet <= 1;
     $('plus').disabled = pocet >= MAX;
+    $('detiBox').hidden = !jeDeti();
+    $('detiPocet').textContent = deti;
+    $('detiMinus').disabled = deti <= 1;
+    $('detiPlus').disabled = deti >= DETI_MAX;
     var c = cenaKus();
-    $('souhrn').textContent = kusy(pocet) + ' × ' + kc(c);
+    $('souhrn').textContent = kusy(pocet) + ' × ' + kc(c) + (jeDeti() ? ' (' + detiTxt(deti) + ')' : '');
     $('celkem').textContent = kc(c * pocet);
     $('zaplatit').innerHTML = 'Zaplatit ' + kc(c * pocet) + ' <span class="arrow">→</span>';
     $('lPocet').textContent = kusy(pocet);
-    var o = OBRAZKY[druh && druh.id === 'deti' ? 'deti' : 'klasik'];
+    var o = obrazek();
     var img = $('lObr');
     if (img.getAttribute('data-src') !== o.src) {
       img.setAttribute('data-src', o.src);
@@ -108,8 +129,8 @@
       img.src = o.src + '.webp';
       img.alt = o.alt;
     }
-    $('oSub').textContent = druh && druh.id === 'deti'
-      ? 'Dětský poukaz platí na zákonného zástupce s jedním dítětem na lekci Děti & králíčci.'
+    $('oSub').textContent = jeDeti()
+      ? 'Dětský poukaz platí na lekci Děti & králíčci pro zákonného zástupce ' + sDetmi(deti) + '.'
       : 'Každý poukaz platí na jeden vstup na lekci.';
   }
 
@@ -132,6 +153,7 @@
     ls.set('voucherEmail', em);
     ls.set('voucherCount', String(pocet));
     ls.set('voucherDruh', druh ? druh.id : 'klasik');
+    ls.set('voucherCena', String(cenaKus()));
 
     var puvodni = btn.innerHTML;
     btn.disabled = true;
@@ -139,10 +161,10 @@
 
     if (window.jskUdalost) window.jskUdalost('begin_checkout', {
       currency: 'CZK', value: cenaKus() * pocet,
-      items: [{ item_id: 'poukaz', item_name: 'Dárkový poukaz na lekci', item_variant: druh ? druh.id : 'klasik', price: cenaKus(), quantity: pocet }]
+      items: [{ item_id: 'poukaz', item_name: 'Dárkový poukaz na lekci', item_variant: jeDeti() ? 'deti-' + deti : 'klasik', price: cenaKus(), quantity: pocet }]
     });
 
-    fnPost('stripe-voucher', { email: em, count: pocet, druh: druh ? druh.id : 'klasik' }).then(function (b) {
+    fnPost('stripe-voucher', { email: em, count: pocet, druh: druh ? druh.id : 'klasik', deti: jeDeti() ? deti : 1 }).then(function (b) {
       if (b && b.ok && b.url) { window.location.href = b.url; return; }
       btn.disabled = false;
       btn.innerHTML = puvodni;
@@ -191,11 +213,12 @@
     fnPost('stripe-confirm', { session_id: sid }).then(function (vb) {
       var kody = (vb && vb.ok && Array.isArray(vb.codes) && vb.codes.length) ? vb.codes : kodyPoukazu(sid, n);
       var vic = kody.length > 1;
+      var cena = Number(ls.get('voucherCena')) || CENA;
 
       // Klíčem je ID platební relace, takže obnovení stránky nákup nezapočítá dvakrát.
       if (window.jskUdalostJednou && sid) window.jskUdalostJednou(sid, 'purchase', {
-        transaction_id: sid, currency: 'CZK', value: CENA * kody.length,
-        items: [{ item_id: 'poukaz', item_name: 'Dárkový poukaz na lekci', item_variant: ls.get('voucherDruh') || 'klasik', price: CENA, quantity: kody.length }]
+        transaction_id: sid, currency: 'CZK', value: cena * kody.length,
+        items: [{ item_id: 'poukaz', item_name: 'Dárkový poukaz na lekci', item_variant: ls.get('voucherDruh') || 'klasik', price: cena, quantity: kody.length }]
       });
 
       stav('ok', vic ? 'Poukazy jsou zaplacené 🐰' : 'Poukaz je zaplacený 🐰',
@@ -208,7 +231,7 @@
           ? ('Poslali jsme ' + (vic ? 'je' : 'ho') + ' i na ' + esc(em) + '.')
           : ('Uložte si ' + (vic ? 'je' : 'ho') + ' prosím (opište nebo udělejte snímek obrazovky).')) + '</p>',
         '<a class="btn btn-primary" href="rezervace.html">Vybrat termín <span class="arrow">→</span></a>' + ZNOVU);
-      ls.del('voucherEmail'); ls.del('voucherCount'); ls.del('voucherDruh');
+      ls.del('voucherEmail'); ls.del('voucherCount'); ls.del('voucherDruh'); ls.del('voucherCena');
     });
   }
 
@@ -223,6 +246,7 @@
     $('vypnuto').hidden = false;
     $('zaplatit').disabled = true;
     $('plus').disabled = true;
+    $('detiPlus').disabled = true;
     $('email').disabled = true;
     return;
   }
@@ -232,6 +256,8 @@
 
   $('minus').addEventListener('click', function () { if (pocet > 1) { pocet--; prekresli(); } });
   $('plus').addEventListener('click', function () { if (pocet < MAX) { pocet++; prekresli(); } });
+  $('detiMinus').addEventListener('click', function () { if (deti > 1) { deti--; prekresli(); } });
+  $('detiPlus').addEventListener('click', function () { if (deti < DETI_MAX) { deti++; prekresli(); } });
   $('zaplatit').addEventListener('click', zaplat);
   $('email').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); zaplat(); } });
   $('email').addEventListener('input', function () { $('email').removeAttribute('aria-invalid'); $('zprava').textContent = ''; });

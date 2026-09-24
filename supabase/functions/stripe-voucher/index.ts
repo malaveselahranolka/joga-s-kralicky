@@ -1,14 +1,16 @@
 // =====================================================================
 //  stripe-voucher — Stripe Checkout na koupi dárkových poukazů
-//  Volá se z koupit-poukaz.html. Vstup: { email, count, druh }
+//  Volá se z koupit-poukaz.html. Vstup: { email, count, druh, deti }
 //  → Výstup: { ok, url, amount_czk }
 //  Po zaplacení webhook vygeneruje kódy poukazů a uloží je.
 //
-//  Počet kusů určuje zákazník, ale částku počítá SERVER:
+//  Počet kusů (a u dětského poukazu počet dětí) určuje zákazník, ale
+//  částku počítá SERVER:
 //      cena za poukaz daného druhu × počet kusů
 //
 //  Secrets:  STRIPE_SECRET_KEY, PAYMENT_VOUCHER_CZK (výchozí 499),
-//            PAYMENT_DETI_CZK (výchozí 1090), SITE_URL
+//            PAYMENT_DETI_CZK (výchozí 1090), PAYMENT_DETI_DITE_CZK
+//            (výchozí 500), SITE_URL
 // =====================================================================
 import Stripe from "https://esm.sh/stripe@14.21.0?target=denonext";
 
@@ -28,21 +30,33 @@ const MAX_VOUCHERS = 10;
 //  tenhle. Druh, který tu není aktivní, server odmítne, i kdyby si ho
 //  někdo do požadavku dopsal ručně.
 //
-//  `deti` (lekce Děti & králíčci, zákonný zástupce + 1 dítě) je v prodeji
-//  od 24. 9. 2026. Co k němu patří jinde:
+//  `deti` (lekce Děti & králíčci, zákonný zástupce + 1 až 4 děti) je
+//  v prodeji od 24. 9. 2026. Co k němu patří jinde:
 //    * databáze: vouchers.druh a create_booking_poukazem pouští poukaz jen
-//      na lekci stejného druhu (supabase/poukaz-deti.sql)
+//      na lekci stejného druhu (supabase/poukaz-deti.sql), vouchers.deti
+//      a 1 + deti míst při uplatnění (supabase/poukaz-deti-pocet.sql)
 //    * stripe-webhook a stripe-confirm: druh z metadat, cena podle druhu
 //      (_shared/poukaz-druh.ts — ceny tam musí sedět s tabulkou níž)
 //    * e-mail a PDF: věta „na jakou lekci" podle druhu
 // ---------------------------------------------------------------------
-//  Cena: klasický poukaz PAYMENT_VOUCHER_CZK (499), dětský poukaz platí
-//  na zákonného zástupce + 1 dítě, tedy stejně jako vstup na dětskou
-//  lekci: PAYMENT_DETI_CZK (1090).
-const DRUHY: Record<string, { nazev: string; aktivni: boolean; cenaEnv: string; cenaVychozi: string }> = {
-  klasik: { nazev: "Dárkový poukaz – vstup na lekci (Jóga s králíčky)", aktivni: true, cenaEnv: "PAYMENT_VOUCHER_CZK", cenaVychozi: "499" },
-  deti: { nazev: "Dárkový poukaz – lekce Děti & králíčci, zástupce + 1 dítě (Jóga s králíčky)", aktivni: true, cenaEnv: "PAYMENT_DETI_CZK", cenaVychozi: "1090" },
+//  Cena: klasický poukaz PAYMENT_VOUCHER_CZK (499). Dětský poukaz stojí
+//  stejně jako vstup na dětskou lekci: zákonný zástupce + 1 dítě
+//  PAYMENT_DETI_CZK (1090), každé další dítě PAYMENT_DETI_DITE_CZK (500),
+//  nejvýš maxDeti dětí na poukaz. Počet dětí jde do metadat (deti)
+//  a databáze podle něj při uplatnění zabere 1 + deti míst.
+type Druh = {
+  nazev: string; aktivni: boolean; cenaEnv: string; cenaVychozi: string;
+  diteEnv?: string; diteVychozi?: string; maxDeti?: number;
 };
+const DRUHY: Record<string, Druh> = {
+  klasik: { nazev: "Dárkový poukaz – vstup na lekci (Jóga s králíčky)", aktivni: true, cenaEnv: "PAYMENT_VOUCHER_CZK", cenaVychozi: "499" },
+  deti: {
+    nazev: "Dárkový poukaz – lekce Děti & králíčci (Jóga s králíčky)", aktivni: true,
+    cenaEnv: "PAYMENT_DETI_CZK", cenaVychozi: "1090",
+    diteEnv: "PAYMENT_DETI_DITE_CZK", diteVychozi: "500", maxDeti: 4,
+  },
+};
+const S_DETMI = ["s jedním dítětem", "se dvěma dětmi", "se třemi dětmi", "se čtyřmi dětmi"];
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -50,7 +64,7 @@ Deno.serve(async (req) => {
     new Response(JSON.stringify(b), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
 
   try {
-    const { email, count, druh } = await req.json().catch(() => ({}));
+    const { email, count, druh, deti } = await req.json().catch(() => ({}));
     const sk = env("STRIPE_SECRET_KEY");
     if (!sk) return json({ ok: false, error: "stripe_not_configured" }, 500);
 
@@ -62,7 +76,17 @@ Deno.serve(async (req) => {
     // Verzi API schválně nefixujeme — výchozí verze účtu umí branding_settings.
     const stripe = new Stripe(sk, { httpClient: Stripe.createFetchHttpClient() });
 
-    const czk = Number(env(typ.cenaEnv, typ.cenaVychozi));
+    // Počet dětí má smysl jen u dětského poukazu; mimo rozsah se odmítne,
+    // ať zákazník nezaplatí za jiný počet, než si vybral.
+    let detiN = 1;
+    if (typ.maxDeti) {
+      detiN = deti === undefined || deti === null || deti === "" ? 1 : Number(deti);
+      if (!Number.isInteger(detiN) || detiN < 1 || detiN > typ.maxDeti) {
+        return json({ ok: false, error: "invalid_deti" }, 400);
+      }
+    }
+    const czk = Number(env(typ.cenaEnv, typ.cenaVychozi)) +
+      (typ.diteEnv ? Number(env(typ.diteEnv, typ.diteVychozi)) * (detiN - 1) : 0);
     const qty = Math.min(MAX_VOUCHERS, Math.max(1, Number(count) || 1));
     const base = env("SITE_URL", "https://www.jogaskralicky.cz/").replace(/\/$/, "");
     const pieces = qty === 1 ? "1 poukaz" : (qty < 5 ? qty + " poukazy" : qty + " poukazů");
@@ -79,7 +103,9 @@ Deno.serve(async (req) => {
           unit_amount: Math.round(czk * 100),
           product_data: {
             name: typ.nazev,
-            description: `${pieces} × ${czk} Kč`,
+            description: typ.maxDeti
+              ? `${pieces} × ${czk} Kč · zákonný zástupce ${S_DETMI[detiN - 1]}`
+              : `${pieces} × ${czk} Kč`,
             // Vycentrovaný králík — Stripe fotku ořízne do čtverce.
             images: [`${base}/assets/photos/rabbit-1.jpg`],
           },
@@ -88,13 +114,13 @@ Deno.serve(async (req) => {
       custom_text: {
         submit: { message: "Kódy poukazů dostanete hned po zaplacení e-mailem." },
       },
-      metadata: { type: "voucher", count: String(qty), druh: druhId },
+      metadata: { type: "voucher", count: String(qty), druh: druhId, deti: String(detiN) },
       // Metadata relace se na platbu samy nepřenesou. Bez tohohle řádku
       // dorazí platba za poukaz do peněžních pohybů bez jakékoli značky
       // a souhrn ji vykáže jako nespárovaný příjem — přestože je to
       // poctivý prodej, jen započítaný z tabulky poukazů.
       // Stejný postup jako u rezervací ve stripe-create.
-      payment_intent_data: { metadata: { type: "voucher", count: String(qty), druh: druhId } },
+      payment_intent_data: { metadata: { type: "voucher", count: String(qty), druh: druhId, deti: String(detiN) } },
       // Poukaz se kupuje na vlastní stránce (dřív na rezervace.html, ta
       // teď starý návrat s ?voucher= jen přesměruje sem).
       success_url: `${base}/koupit-poukaz.html?voucher=ok&session_id={CHECKOUT_SESSION_ID}`,
@@ -121,7 +147,7 @@ Deno.serve(async (req) => {
       session = await stripe.checkout.sessions.create(params);
     }
 
-    return json({ ok: true, url: session.url, amount_czk: czk * qty, count: qty });
+    return json({ ok: true, url: session.url, amount_czk: czk * qty, count: qty, deti: detiN });
   } catch (e) {
     return json({ ok: false, error: "server_error", detail: String(e) }, 500);
   }

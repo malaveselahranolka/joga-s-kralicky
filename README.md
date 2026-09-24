@@ -87,6 +87,9 @@ napsané tak, aby šly spustit opakovaně. Pořadí:
 12. `poukaz-deti.sql` — `vouchers.druh` a dětský dárkový poukaz (1 090 Kč,
     zákonný zástupce + 1 dítě); každý druh poukazu jde uplatnit jen na
     lekci stejného druhu
+13. `poukaz-deti-pocet.sql` — `vouchers.deti`: dětský poukaz na zástupce
+    + 1 až 4 děti (1 090 Kč + 500 Kč za každé další dítě), při uplatnění
+    zabere 1 + deti míst
 
 ### Ukázka poukazu na webu
 
@@ -96,7 +99,8 @@ ukazoval přesně ten poukaz, který přijde e-mailem. Když se změní návrh
 poukazu, vyrenderuj je znovu: sbal `poukaz-pdf.ts` esbuildem pro Node
 (importy z esm.sh přepsat na npm balíčky `pdf-lib` a `@pdf-lib/fontkit`,
 fonty číst z `assets/fonts/pdf/`), PDF vykresli přes pdf.js a převeď do
-WebP v šířkách 1200 a 640 px.
+WebP v šířkách 1200 a 640 px. Dětský poukaz má variantu pro každý počet
+dětí (`poukaz-ukazka-deti.webp` = 1 dítě, `-deti-2` až `-deti-4`).
 
 Krok 5 přibyl proto, že produkční databáze měla dvě věci, které v repu
 vůbec nebyly (`vouchers.expires_at` a celá tabulka `stripe_events`).

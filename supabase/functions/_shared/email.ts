@@ -146,6 +146,11 @@ const fmtDow = (iso: string) => {
 };
 
 const spotsTxt = (n: number) => n + (n === 1 ? " místo" : (n < 5 ? " místa" : " míst"));
+// Lekce Děti & králíčci: místa = zástupce + děti, v e-mailu to rozepíšeme.
+const detiSpotsTxt = (n: number) => {
+  const deti = Math.max(1, n - 1);
+  return "zástupce + " + deti + (deti === 1 ? " dítě" : " děti");
+};
 
 const czk = (n: number) => Number(n).toLocaleString("cs-CZ") + " Kč";
 
@@ -166,7 +171,7 @@ export type Booking = {
   email: string;
   spots: number;
   payment_amount: number | null;
-  lesson?: {title?: string; starts_at?: string; duration_min?: number} | null;
+  lesson?: {title?: string; starts_at?: string; duration_min?: number; druh?: string} | null;
 };
 
 export function bookingEmail(bk: Booking, siteUrl: string) {
@@ -194,7 +199,7 @@ export function bookingEmail(bk: Booking, siteUrl: string) {
       name: bk.name,
       lesson: title,
       datetime,
-      spots: spotsTxt(spots),
+      spots: bk.lesson?.druh === "deti" ? detiSpotsTxt(spots) : spotsTxt(spots),
       // haléře → koruny; když sloupec chybí, radši nic než špatné číslo
       price: bk.payment_amount ? czk(Math.round(Number(bk.payment_amount) / 100)) : "",
       location: PLACE,
@@ -215,8 +220,9 @@ export function bookingEmail(bk: Booking, siteUrl: string) {
 // nedopočítává. Odhadnuté datum by se totiž rozešlo se skutečným
 // `vouchers.expires_at` pokaždé, když by e-mail odešel se zpožděním.
 // `druh` ('klasik' | 'deti') řídí, na jakou lekci poukaz v e-mailu a na
-// PDF „platí" — viz _shared/poukaz-druh.ts.
-export function voucherEmail(code: string, email: string, amountHaleru: number, expires = "", druh = "klasik") {
+// PDF „platí", `deti` kolik dětí dětský poukaz pokrývá — viz
+// _shared/poukaz-druh.ts.
+export function voucherEmail(code: string, email: string, amountHaleru: number, expires = "", druh = "klasik", deti = 1) {
   return {
     order_key: `voucher:${code}`,
     kind: "voucher",
@@ -229,6 +235,7 @@ export function voucherEmail(code: string, email: string, amountHaleru: number, 
       amount: czk(Math.round(Number(amountHaleru) / 100)),
       expires,
       druh: druh === "deti" ? "deti" : "klasik",
+      deti: String(druh === "deti" ? Math.min(4, Math.max(1, Math.floor(Number(deti) || 1))) : 1),
       qr_url: qrFor(code),
     },
   };
@@ -299,6 +306,7 @@ async function poukazPriloha(params: Record<string, string>) {
       code: params.code || "",
       platnost: expires ? `do ${expires}` : "",
       druh: params.druh === "deti" ? "deti" : "klasik",
+      deti: Number(params.deti) || 1,
     });
     const jmeno = `darkovy-poukaz-${String(params.code || "").toLowerCase()}.pdf`;
     return [{ content: pdfBase64(bytes), name: jmeno }];

@@ -1375,6 +1375,12 @@
   // Poukaz platí 6 měsíců (payment-config.js → voucherValidityMonths).
   // Dřív se platnost nikde nekontrolovala, takže
   // admin u dveří ukázal „Platný" i na kódu z předloňska.
+  // Dětský poukaz pokrývá zákonného zástupce + 1 až 4 děti (vouchers.deti,
+  // starší poukazy ho nemají = 1 dítě).
+  const detiPoukazTxt = (v) => {
+    const n = Math.min(4, Math.max(1, Number(v && v.deti) || 1));
+    return 'zástupce + ' + n + ' ' + (n === 1 ? 'dítě' : 'děti');
+  };
   const vExpired = (v) => !!(v && v.expires_at && new Date(v.expires_at).getTime() <= Date.now());
 
   // Uplatnění NIKDY nedělej přímým UPDATE. Podmínka „ještě neuplatněný a ještě
@@ -1516,7 +1522,7 @@
       return '<div class="row' + (v.redeemed || dead ? ' is-cancelled' : '') + '">' +
         '<div class="main"><div class="ttl" style="font-family:monospace;letter-spacing:.04em">' + esc(v.code) +
           ' ' + pill + '</div>' +
-        '<div class="sub">' + (v.druh === 'deti' ? 'Dětský (zástupce + 1 dítě) · ' : '') + (v.email ? esc(v.email) + ' · ' : '') + (kc ? kc + ' · ' : '') + fmtDT(v.created_at) + till + '</div></div>' +
+        '<div class="sub">' + (v.druh === 'deti' ? 'Dětský (' + detiPoukazTxt(v) + ') · ' : '') + (v.email ? esc(v.email) + ' · ' : '') + (kc ? kc + ' · ' : '') + fmtDT(v.created_at) + till + '</div></div>' +
         '<div class="acts">' + (v.redeemed
           ? '<button class="btn btn-ghost btn-sm" data-unredeem="' + esc(v.code) + '">Vrátit platnost</button>'
           : (dead ? '' : '<button class="btn btn-primary btn-sm" data-redeem="' + esc(v.code) + '">Označit uplatněno</button>')) +
@@ -1878,7 +1884,7 @@
     }
     const kc = v.amount ? ((v.amount / 100) | 0) + ' Kč' : '';
     const who = '<strong style="font-family:monospace;letter-spacing:.04em">' + esc(v.code) + '</strong>' +
-      '<div class="sub">' + (v.druh === 'deti' ? 'Dětský poukaz na Děti &amp; králíčci (zástupce + 1 dítě)' : 'Dárkový poukaz') + (kc ? ' · ' + kc : '') + (v.email ? ' · ' + esc(v.email) : '') + '</div>';
+      '<div class="sub">' + (v.druh === 'deti' ? 'Dětský poukaz na Děti &amp; králíčci (' + detiPoukazTxt(v) + ')' : 'Dárkový poukaz') + (kc ? ' · ' + kc : '') + (v.email ? ' · ' + esc(v.email) : '') + '</div>';
 
     if (v.redeemed) {
       scanCard('scan-bad', scanIco.no, 'Poukaz už byl uplatněn',

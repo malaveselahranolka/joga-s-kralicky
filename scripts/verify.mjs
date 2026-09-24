@@ -163,6 +163,19 @@ if (cisloZ(payCfg, /detiMaxDeti:\s*(\d+)/) !== DETI.maxDeti) fail('payment-confi
   if (cisloZ(read('supabase/functions/_shared/poukaz-druh.ts'), /"PAYMENT_DETI_CZK",\s*"(\d+)"/) !== DETI.cenaKc) {
     fail('supabase/functions/_shared/poukaz-druh.ts', `dětský poukaz musí mít výchozí cenu ${DETI.cenaKc} Kč`)
   }
+  // Dětský poukaz jde koupit i na víc dětí — cena za další dítě a strop
+  // dětí musí sedět s rezervací (prohlížeč, stripe-voucher, webhook i DB).
+  {
+    const sv = read('supabase/functions/stripe-voucher/index.ts')
+    if (!new RegExp(`diteEnv: "PAYMENT_DETI_DITE_CZK", diteVychozi: "${DETI.diteKc}", maxDeti: ${DETI.maxDeti}`).test(sv)) {
+      fail('supabase/functions/stripe-voucher/index.ts', `dětský poukaz: další dítě ${DETI.diteKc} Kč, nejvýš ${DETI.maxDeti} děti`)
+    }
+    const pd = read('supabase/functions/_shared/poukaz-druh.ts')
+    if (cisloZ(pd, /"PAYMENT_DETI_DITE_CZK",\s*"(\d+)"/) !== DETI.diteKc) fail('supabase/functions/_shared/poukaz-druh.ts', `další dítě na poukazu musí stát ${DETI.diteKc} Kč`)
+    if (cisloZ(pd, /POUKAZ_MAX_DETI = (\d+)/) !== DETI.maxDeti) fail('supabase/functions/_shared/poukaz-druh.ts', `POUKAZ_MAX_DETI musí být ${DETI.maxDeti}`)
+    const sqlP = 'supabase/poukaz-deti-pocet.sql'
+    if (!new RegExp(`deti between 1 and ${DETI.maxDeti}`).test(read(sqlP))) fail(sqlP, `vouchers.deti musí být 1 až ${DETI.maxDeti}`)
+  }
   if (!new RegExp(`\\$\\('lf-cap'\\)\\.value = ${DETI.kapacita}; \\$\\('lf-druh'\\)\\.value = 'deti'`).test(read('admin.html'))) {
     fail('admin.html', `šablona Děti & králíčci musí mít kapacitu ${DETI.kapacita}`)
   }
