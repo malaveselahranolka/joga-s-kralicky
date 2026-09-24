@@ -411,7 +411,7 @@
      BREVO_API_KEY. -->
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="supabase-config.js?v=2"></script>
-<script defer src="payment-config.js?v=5"></script>
+<script defer src="payment-config.js?v=6"></script>
 <script defer src="datum.js?v=1"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -648,13 +648,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function updateSpots() {
     const deti = jeDeti(chosen);
-    // Poukaz za 499 Kč je na jedno místo klasické lekce; u dětské lekce
-    // pole vůbec nenabízíme (databáze by ho stejně odmítla).
-    $('voucherBox').hidden = deti;
-    if (deti && $('f-voucher').value) $('f-voucher').value = '';
+    // Poukaz platí jen na lekci svého druhu: klasický (499 Kč) na jedno místo
+    // lekce Jóga s králíčky, dětský (1 090 Kč) na zástupce + 1 dítě na lekci
+    // Děti & králíčci. Který je který, pozná až databáze podle kódu.
     const poukaz = naPoukaz();
     const min = minMist(chosen);
-    if (poukaz) spots = 1;
+    $('voucherHint').innerHTML = deti
+      ? 'Najdete ho v e-mailu s poukazem. Na tuhle lekci platí <strong>dětský poukaz</strong>, a to na zákonného zástupce s jedním dítětem. Rezervace je pak rovnou potvrzená.'
+      : 'Najdete ho v e-mailu s poukazem. Jeden poukaz platí na <strong>jedno místo</strong> — po ověření se už nic neplatí a rezervace je rovnou potvrzená.';
+    if (poukaz) spots = min;
     if (spots > maxSpots()) spots = Math.max(min, maxSpots());
     if (spots < min) spots = min;
     $('spLbl').textContent = deti ? 'Počet dětí' : 'Počet účastníků';
@@ -670,11 +672,14 @@ document.addEventListener('DOMContentLoaded', function () {
         : 'zástupce + 1 dítě';
       $('spHint').textContent = 'Zákonný zástupce s dítětem ' + czk(DETI_CZK) + ', každé další dítě ' + czk(DITE_CZK) +
         '. Nejvýš ' + detiTxt(Math.max(1, maxSpots() - 1)) + ' na jednoho zástupce.';
-    } else if (poukaz) {
+    }
+    if (poukaz) {
       $('priceTotal').textContent = 'Poukaz';
       $('priceCalc').textContent = 'neplatí se';
-      $('spHint').textContent = 'Poukaz platí na jedno místo.';
-    } else {
+      $('spHint').textContent = deti
+        ? 'Poukaz platí na zástupce s jedním dítětem. Chcete vzít víc dětí? Napište nám na info@jogaskralicky.cz.'
+        : 'Poukaz platí na jedno místo.';
+    } else if (!deti) {
       // Cena roste s počtem míst — a přesně tuhle částku pak spočítá i brána.
       $('priceTotal').textContent = czk(PRICE * spots);
       $('priceCalc').textContent = spots + ' × ' + czk(PRICE);
@@ -775,7 +780,8 @@ document.addEventListener('DOMContentLoaded', function () {
           expired: 'Platnost poukazu bohužel vypršela. Napište nám na info@jogaskralicky.cz, domluvíme se.',
           too_many_requests: 'Zkusili jste hodně kódů za sebou. Počkejte prosím pár minut, nebo nám napište na info@jogaskralicky.cz.',
           missing_contact: 'Zkontrolujte prosím jméno, e-mail a telefon.',
-          deti_lekce: 'Dárkový poukaz platí na lekci Jóga s králíčky, na Děti & králíčci ho uplatnit nejde.'
+          deti_lekce: 'Tenhle poukaz je na lekci Jóga s králíčky. Na Děti & králíčci platí dětský poukaz.',
+          klasik_lekce: 'Tenhle poukaz je dětský, platí na lekci Děti & králíčci. Vyberte prosím její termín.'
         }[c];
         if (c === 'full' || c === 'unavailable') {
           alert(c === 'full'
@@ -801,7 +807,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
       const vend = new Date(chosen.dt.getTime() + chosen.duration_min * 60000);
       const vsum = esc(chosen.title) + ' · ' + fmtDate(chosen.dt) + ' · ' +
-        fmtTime(chosen.dt) + '–' + fmtTime(vend) + ' · ' + spotsTxt(1);
+        fmtTime(chosen.dt) + '–' + fmtTime(vend) + ' · ' + kdoTxt(chosen, vd.spots || minMist(chosen));
       restore();
       stateBox('ok', 'Poukaz uplatněn, místo je vaše',
         '<p class="big">' + vsum + '</p>' +
