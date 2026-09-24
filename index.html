@@ -553,6 +553,10 @@
   .hero h1 .dash { color: var(--carrot); font-weight: 400; }
   .hero .hero-sub { margin-top: 1.3rem; max-width: 40ch; font-size: clamp(1.05rem, 1rem + .35vw, 1.2rem); color: rgba(255,255,255,.9); }
   .hero-actions { margin-top: 2rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
+  /* Druhé tlačítko v hero: průhledné s krémovým obrysem, ať na fotce
+     nesoupeří s hlavním „Rezervovat lekci". */
+  .hero-gift { background: rgba(20,28,22,.28); border-color: rgba(247,244,236,.6); color: var(--cream); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+  @media (hover: hover) and (pointer: fine) { .hero-gift:hover { transform: translateY(-2px); background: rgba(247,244,236,.16); border-color: var(--cream); } }
 
   /* hero photo deck — three rabbit portraits that fan out on load, so the promise
      of the page (yoga + rabbits) is visible before a single word is read */
@@ -1099,11 +1103,19 @@
     .brand .word { display: none; }
     .brand .mark { width: 32px; height: 32px; }
   }
+  @media (max-width: 360px) {
+    .hero-actions .btn { font-size: .92rem; }
+  }
   @media (max-width: 560px) {
     section { padding: clamp(3.5rem, 9vw, 5rem) 0; }
     .tcard { flex-basis: 100%; }
-    .hero-actions .cta-split { width: 100%; }
+    /* Na telefonu dvě stejně široká tlačítka vedle sebe: Rezervovat lekci
+       a Koupit poukaz. Šipka vedle rezervace by se sem už nevešla. */
+    .hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+    .hero-actions .cta-split { width: 100%; min-width: 0; }
     .hero-actions .cta-split .btn-light { flex: 1; }
+    .hero-actions .cta-split .arrow-btn { display: none; }
+    .hero-actions .btn { min-width: 0; padding-inline: .5em; white-space: nowrap; }
     .l-run div { grid-template-columns: 4.8rem 1fr; gap: .6rem; }
     .foot-grid, .foot-news { grid-template-columns: 1fr; }
     .foot-bottom { flex-direction: column; }
@@ -1209,6 +1221,7 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M9 7h8v8"/></svg>
           </a>
         </div>
+        <a class="btn hero-gift" href="koupit-poukaz.html">Koupit poukaz</a>
       </div>
       <!-- three of the ten, so the promise of the page is visible before a word is read -->
       <div class="hero-deck deck-anim" id="heroDeck" aria-hidden="true">
