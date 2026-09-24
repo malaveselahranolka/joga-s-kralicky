@@ -483,6 +483,7 @@
         <h2>Lekce</h2>
         <div style="display:flex;gap:.6rem;flex-wrap:wrap">
           <button class="btn btn-ghost btn-sm" id="genWeekBtn">Vygenerovat příští týden z rozvrhu</button>
+          <button class="btn btn-ghost btn-sm" id="newKidsLessonBtn" title="Šablona: 60 minut, kapacita 12 osob, 1 090 Kč zástupce + dítě, další dítě 500 Kč">+ Děti &amp; králíčci</button>
           <button class="btn btn-primary btn-sm" id="newLessonBtn">+ Přidat lekci</button>
         </div>
       </div>
@@ -494,12 +495,21 @@
             <div class="field-wide"><label for="lf-title">Název lekce</label><input id="lf-title" list="titleOptions" required placeholder="např. Hatha s králíčky" /></div>
             <datalist id="titleOptions">
               <option>Ranní protažení</option><option>Hatha s králíčky</option>
-              <option>Děti &amp; králíci</option><option>Soumrak &amp; restorativní</option>
+              <option>Děti &amp; králíčci</option><option>Soumrak &amp; restorativní</option>
             </datalist>
             <div><label for="lf-date">Datum</label><input id="lf-date" type="date" required /></div>
             <div><label for="lf-time">Čas</label><input id="lf-time" type="time" required /></div>
             <div><label for="lf-dur">Délka (min)</label><input id="lf-dur" type="number" min="15" step="5" value="60" required /></div>
             <div><label for="lf-cap">Kapacita</label><input id="lf-cap" type="number" min="1" max="40" value="10" required /></div>
+            <!-- Druh řídí cenu a pravidla rezervace (supabase/deti-a-kralici.sql).
+                 Dětská lekce: zákonný zástupce + 1 až 4 děti, 1 090 Kč za
+                 zástupce s dítětem, každé další dítě 500 Kč. Kapacita = lidé. -->
+            <div class="field-wide"><label for="lf-druh">Druh lekce</label>
+              <select id="lf-druh">
+                <option value="klasik">Klasická lekce: 499 Kč za místo</option>
+                <option value="deti">Děti &amp; králíčci: 1 090 Kč zástupce + dítě, další dítě 500 Kč (max 4 děti)</option>
+              </select>
+            </div>
             <div class="field-wide"><label for="lf-note">Poznámka (nepovinné)</label><input id="lf-note" placeholder="např. jen pro začátečníky" /></div>
             <div class="field-wide" id="lf-imgfield">
               <label>Obrázek lekce (nepovinné)</label>
@@ -901,7 +911,22 @@
 
   // lessons ------------------------------------------------------------
   const lessonWrap = $('lessonFormWrap');
-  $('newLessonBtn').addEventListener('click', () => { editingId = null; $('lessonFormTitle').textContent = 'Nová lekce'; $('lessonForm').reset(); $('lf-dur').value = 60; $('lf-cap').value = 10; setLessonImage(null); lessonWrap.classList.add('open'); $('lf-title').focus(); });
+  $('newLessonBtn').addEventListener('click', () => { editingId = null; $('lessonFormTitle').textContent = 'Nová lekce'; $('lessonForm').reset(); $('lf-dur').value = 60; $('lf-cap').value = 10; $('lf-druh').value = 'klasik'; setLessonImage(null); lessonWrap.classList.add('open'); $('lf-title').focus(); });
+  // Šablona lekce Děti & králíčci: stačí doplnit datum a čas.
+  // Kapacita 12 = 12 LIDÍ (zástupci i děti), cenu počítá server podle druhu.
+  $('newKidsLessonBtn').addEventListener('click', () => {
+    editingId = null; $('lessonFormTitle').textContent = 'Nová lekce: Děti & králíčci';
+    $('lessonForm').reset();
+    $('lf-title').value = 'Děti & králíčci';
+    $('lf-dur').value = 60; $('lf-cap').value = 12; $('lf-druh').value = 'deti';
+    setLessonImage(null);
+    lessonWrap.classList.add('open'); $('lf-date').focus();
+  });
+  // Kdo název vybere z nabídky ručně, tomu druh a kapacitu nastavíme sami.
+  $('lf-title').addEventListener('change', () => {
+    if (editingId || $('lf-druh').value === 'deti') return;
+    if (/^děti\s*(?:&|a)\s*králíč?c?i$/i.test($('lf-title').value.trim())) { $('lf-druh').value = 'deti'; $('lf-cap').value = 12; }
+  });
   $('lessonCancel').addEventListener('click', () => lessonWrap.classList.remove('open'));
   $('lessonFilter').addEventListener('change', renderLessons);
 
@@ -1029,8 +1054,18 @@
     const payload = {
       title: $('lf-title').value.trim(), starts_at: startsISO,
       duration_min: parseInt($('lf-dur').value, 10), capacity: parseInt($('lf-cap').value, 10),
-      note: $('lf-note').value.trim() || null
+      note: $('lf-note').value.trim() || null,
+      druh: $('lf-druh').value === 'deti' ? 'deti' : 'klasik'
     };
+    // Druh mění cenu. U lekce, na kterou už někdo má rezervaci, ho neměnit —
+    // zaplatil podle původního ceníku.
+    if (editingId) {
+      const puvodni = lessons.find((x) => x.id === editingId);
+      const maRezervace = bookings.some((x) => x.lesson_id === editingId && x.status !== 'cancelled');
+      if (puvodni && (puvodni.druh || 'klasik') !== payload.druh && maRezervace) {
+        toast('Lekce už má rezervace, druh lekce nejde změnit'); return;
+      }
+    }
     if (imagesReady) payload.image_url = lessonImage;
     const save = () => editingId
       ? sb.from('lessons').update(payload).eq('id', editingId)
@@ -1043,6 +1078,7 @@
       res = await save();
       if (!res.error) toast('Lekce uložena bez obrázku — spusťte supabase/lesson-images.sql');
     }
+    if (res.error && /druh/.test(res.error.message || '')) { toast('Databáze nezná druh lekce — spusťte supabase/deti-a-kralici.sql'); return; }
     if (res.error) { toast('Uložení selhalo'); return; }
     toast(editingId ? 'Lekce upravena' : 'Lekce přidána');
     lessonWrap.classList.remove('open'); editingId = null;
@@ -1065,7 +1101,7 @@
         '<div class="row' + (cancelled ? ' is-cancelled' : '') + '">' +
         (l.image_url ? '<img class="row-thumb" src="' + esc(l.image_url) + '" alt="" loading="lazy" />' : '') +
         '<div class="main"><div class="ttl">' + esc(l.title) + ' ' + pill + '</div>' +
-        '<div class="sub">' + fmtDT(l.starts_at) + ' · ' + l.duration_min + ' min · ' + b + '/' + l.capacity + ' míst' + (l.note ? ' · ' + esc(l.note) : '') + '</div></div>' +
+        '<div class="sub">' + fmtDT(l.starts_at) + ' · ' + l.duration_min + ' min · ' + b + '/' + l.capacity + ' míst' + (l.druh === 'deti' ? ' · Děti & králíčci (1 090 Kč zástupce + dítě)' : '') + (l.note ? ' · ' + esc(l.note) : '') + '</div></div>' +
         '<div class="acts">' +
           '<button class="btn btn-ghost btn-sm" data-view="' + l.id + '" aria-expanded="false">Přihlášení (' + active.length + ')</button>' +
           '<button class="btn btn-ghost btn-sm" data-edit="' + l.id + '">Upravit</button>' +
@@ -1115,6 +1151,7 @@
       $('lf-date').value = CAS.proInputDate(l.starts_at);
       $('lf-time').value = CAS.proInputTime(l.starts_at);
       $('lf-dur').value = l.duration_min; $('lf-cap').value = l.capacity; $('lf-note').value = l.note || '';
+      $('lf-druh').value = l.druh === 'deti' ? 'deti' : 'klasik';
       setLessonImage(l.image_url || null);
       $('lf-imgnote').textContent = 'Ukáže se u lekce v rezervacích. Bez obrázku se použije výchozí fotka podle názvu lekce.';
       lessonWrap.classList.add('open'); lessonWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1559,9 +1596,12 @@
     $('mv-lesson').innerHTML = cil.length
       ? cil.map((x) => {
           const volno = x.capacity - bookedFor(x.id);
-          return '<option value="' + x.id + '"' + (volno < b.spots ? ' disabled' : '') + '>'
+          // Mezi klasickou a dětskou lekcí se nepřesouvá: jiná cena, jiná pravidla.
+          const jinyDruh = (x.druh || 'klasik') !== ((l && l.druh) || 'klasik');
+          const nejde = volno < b.spots || jinyDruh;
+          return '<option value="' + x.id + '"' + (nejde ? ' disabled' : '') + '>'
             + esc(x.title) + ' — ' + fmtDT(x.starts_at) + ' (' + volno + ' volných'
-            + (volno < b.spots ? ', nevejde se' : '') + ')</option>';
+            + (jinyDruh ? ', jiný druh lekce' : (volno < b.spots ? ', nevejde se' : '')) + ')</option>';
         }).join('')
       : '<option value="">Žádná jiná nadcházející lekce</option>';
     // Výchozí výběr ať padne na první lekci, kam se rezervace opravdu vejde.
@@ -1610,7 +1650,8 @@
     booking_cancelled: 'Rezervace je už zrušená',
     not_paid: 'Rezervace není zaplacená',
     already_issued: 'Poukaz už z téhle rezervace byl vystavený',
-    no_email: 'Rezervace nemá adresu, kam poukaz poslat'
+    no_email: 'Rezervace nemá adresu, kam poukaz poslat',
+    deti_lekce: 'Z rezervace na Děti & králíčci se poukaz nevystavuje — zrušte ji a vraťte platbu ve Stripu'
   };
 
   async function vystavitPoukaz(id) {
@@ -1952,6 +1993,7 @@
         ['Kdy se koná', 'lessons.' + i + '.meta.1'],
         ['Kapacita', 'lessons.' + i + '.meta.2'],
         ['Pro koho', 'lessons.' + i + '.meta.3'],
+        ...(i === 1 ? [['Poznámka k ceně (zástupce + dítě)', 'lessons.1.priceNote', 'text']] : []),
         ['Popis lekce', 'lessons.' + i + '.description', 'text'],
         ['Průběh 1 — čas', 'lessons.' + i + '.timeline.0.time'],
         ['Průběh 1 — co se děje', 'lessons.' + i + '.timeline.0.text'],

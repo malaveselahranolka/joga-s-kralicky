@@ -80,6 +80,10 @@ napsané tak, aby šly spustit opakovaně. Pořadí:
    směr: z hotové zaplacené rezervace udělá dárkový poukaz(y) stejné
    hodnoty (potřebuje kroky 4–6)
 10. `newsletter.sql`, `attribution.sql`
+11. `deti-a-kralici.sql` — druh lekce `lessons.druh` a pravidla lekce
+    Děti & králíčci: zákonný zástupce + 1 až 4 děti (2–5 míst, kapacita
+    = lidé), dárkový poukaz za 499 Kč na ni neplatí. Cenu (1 090 Kč +
+    500 Kč za každé další dítě) počítá `stripe-create`.
 
 Krok 5 přibyl proto, že produkční databáze měla dvě věci, které v repu
 vůbec nebyly (`vouchers.expires_at` a celá tabulka `stripe_events`).

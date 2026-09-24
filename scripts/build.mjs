@@ -247,7 +247,13 @@ if (existsSync(rezervacePath)) {
 
   if (terminy.length) {
     const misto = 'Fit&Fun Studio Ostrava, Tovární 486/7, 709 00 Ostrava-Mariánské Hory'
-    const cena = 499
+    // Ceny se berou z payment-config.js, ať se nerozejdou s rezervací.
+    const payCfg = readFileSync(join(root, 'payment-config.js'), 'utf8')
+    const cisloZ = (klic, vychozi) => Number((payCfg.match(new RegExp(klic + ':\\s*(\\d+)')) || [])[1]) || vychozi
+    const cena = cisloZ('entryCzk', 499)
+    const cenaDeti = cisloZ('detiCzk', 1090)
+    const cenaDite = cisloZ('detiDiteCzk', 500)
+    const jeDeti = (l) => l && l.druh === 'deti'
 
     // MARKUP SE SCHVÁLNĚ SHODUJE S TÍM, CO VYKRESLÍ renderDays() V PROHLÍŽEČI.
     //
@@ -286,6 +292,7 @@ if (existsSync(rezervacePath)) {
           + `<span class="dur">${l.duration_min || 60} min</span></div>`
           + `<div class="info"><img class="thumb" src="${escHtml(nahled(l))}" alt="" loading="lazy" />`
           + `<div class="meta"><div class="lbl">Lekce</div><div class="val">${escHtml(l.title)}</div>`
+          + (jeDeti(l) ? `<div class="deti-cena">${cenaDeti.toLocaleString('cs-CZ')} Kč zástupce + dítě · další dítě ${cenaDite.toLocaleString('cs-CZ')} Kč</div>` : '')
           + `<div class="place"><div class="lbl">Místo</div><div class="val">${escHtml(misto)}</div></div></div></div>`
           + `<div class="book"><div class="cap">&nbsp;</div>`
           + `<button class="btn btn-primary" data-id="${escHtml(l.id)}">Rezervovat</button></div></div>`
@@ -299,9 +306,14 @@ if (existsSync(rezervacePath)) {
       '@context': 'https://schema.org',
       '@type': 'Event',
       name: l.title,
-      description: `${l.title} ve Fit&Fun Studiu v Ostravě-Mariánských Horách. `
-        + `${l.duration_min || 60} minut jemné hatha jógy, při které mezi cvičícími `
-        + `volně pobíhá deset domácích králíků. Vstup ${cena} Kč, platí se online při rezervaci.`,
+      description: jeDeti(l)
+        ? `${l.title} ve Fit&Fun Studiu v Ostravě-Mariánských Horách. `
+          + `${l.duration_min || 60} minut pro děti se zákonným zástupcem: povídání o králících, `
+          + `lehké cvičení a krmení a mazlení s deseti domácími králíky. Vstup ${cenaDeti} Kč `
+          + `za zákonného zástupce s dítětem, každé další dítě ${cenaDite} Kč. Platí se online při rezervaci.`
+        : `${l.title} ve Fit&Fun Studiu v Ostravě-Mariánských Horách. `
+          + `${l.duration_min || 60} minut jemné hatha jógy, při které mezi cvičícími `
+          + `volně pobíhá deset domácích králíků. Vstup ${cena} Kč, platí se online při rezervaci.`,
       startDate: new Date(l.starts_at).toISOString(),
       endDate: new Date(new Date(l.starts_at).getTime() + (l.duration_min || 60) * 60000).toISOString(),
       eventStatus: 'https://schema.org/EventScheduled',
@@ -324,9 +336,9 @@ if (existsSync(rezervacePath)) {
       image: ['https://www.jogaskralicky.cz/assets/og-jogaskralicky.png'],
       offers: {
         '@type': 'Offer',
-        price: String(cena),
+        price: String(jeDeti(l) ? cenaDeti : cena),
         priceCurrency: 'CZK',
-        availability: Number(l.remaining) > 0
+        availability: Number(l.remaining) >= (jeDeti(l) ? 2 : 1)
           ? 'https://schema.org/InStock'
           : 'https://schema.org/SoldOut',
         url: 'https://www.jogaskralicky.cz/rezervace.html',

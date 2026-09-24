@@ -41,9 +41,12 @@ const MAX_VOUCHERS = 10;
 //       výběr lekce.
 //    5. E-mail s poukazem a PDF: napsat, na jakou lekci poukaz platí.
 // ---------------------------------------------------------------------
-const DRUHY: Record<string, { nazev: string; aktivni: boolean }> = {
-  klasik: { nazev: "Dárkový poukaz – vstup na lekci (Jóga s králíčky)", aktivni: true },
-  deti: { nazev: "Dárkový poukaz – lekce Děti a králíci (Jóga s králíčky)", aktivni: false },
+//  Cena: klasický poukaz PAYMENT_VOUCHER_CZK (499), dětský poukaz platí
+//  na zákonného zástupce + 1 dítě, tedy stejně jako vstup na dětskou
+//  lekci: PAYMENT_DETI_CZK (1090).
+const DRUHY: Record<string, { nazev: string; aktivni: boolean; cenaEnv: string; cenaVychozi: string }> = {
+  klasik: { nazev: "Dárkový poukaz – vstup na lekci (Jóga s králíčky)", aktivni: true, cenaEnv: "PAYMENT_VOUCHER_CZK", cenaVychozi: "499" },
+  deti: { nazev: "Dárkový poukaz – lekce Děti & králíčci, zástupce + 1 dítě (Jóga s králíčky)", aktivni: false, cenaEnv: "PAYMENT_DETI_CZK", cenaVychozi: "1090" },
 };
 
 Deno.serve(async (req) => {
@@ -64,7 +67,7 @@ Deno.serve(async (req) => {
     // Verzi API schválně nefixujeme — výchozí verze účtu umí branding_settings.
     const stripe = new Stripe(sk, { httpClient: Stripe.createFetchHttpClient() });
 
-    const czk = Number(env("PAYMENT_VOUCHER_CZK", "499"));
+    const czk = Number(env(typ.cenaEnv, typ.cenaVychozi));
     const qty = Math.min(MAX_VOUCHERS, Math.max(1, Number(count) || 1));
     const base = env("SITE_URL", "https://www.jogaskralicky.cz/").replace(/\/$/, "");
     const pieces = qty === 1 ? "1 poukaz" : (qty < 5 ? qty + " poukazy" : qty + " poukazů");

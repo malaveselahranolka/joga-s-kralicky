@@ -151,9 +151,9 @@
           },
           {
             "@type": "Offer",
-            "name": "Děti & králíci",
-            "description": "60minutová lekce pro děti od 10 let v doprovodu rodiče. Víc her než ásan. Maximálně 10 míst.",
-            "price": "499",
+            "name": "Děti & králíčci",
+            "description": "60minutová lekce pro děti od 10 let v doprovodu zákonného zástupce. Víc her než ásan. Nejvýš 12 osob včetně doprovodu. Cena 1 090 Kč za zákonného zástupce s jedním dítětem, každé další dítě 500 Kč (nejvýš 3 další děti).",
+            "price": "1090",
             "priceCurrency": "CZK",
             "url": "https://www.jogaskralicky.cz/rezervace.html",
             "category": "Jóga pro děti se zvířaty",
@@ -645,6 +645,8 @@
   .l-meta { list-style: none; display: flex; flex-wrap: wrap; gap: .45rem; padding: 0; margin: 1rem 0 0; }
   .l-meta li { font-size: .82rem; font-weight: 600; padding: .35em .8em; border-radius: 999px; background: rgba(255,255,255,.1); color: rgba(255,255,255,.88); }
   .l-desc { margin-top: 1.1rem; color: rgba(255,255,255,.8); font-size: .98rem; }
+  /* cena dětské lekce je složená (zástupce + dítě, další dítě zvlášť) — musí být vidět hned pod cenou */
+  .l-note { margin-top: 1rem; padding: .75rem .95rem; border-radius: var(--r-md); background: rgba(210,133,74,.14); border: 1px solid rgba(210,133,74,.35); color: var(--cream); font-size: .92rem; line-height: 1.5; }
   .l-run { margin-top: 1.4rem; border-top: 1px solid rgba(255,255,255,.14); }
   .l-run div { display: grid; grid-template-columns: 5.6rem 1fr; gap: .8rem; padding: .62rem 0; font-size: .9rem; color: rgba(255,255,255,.76); border-bottom: 1px solid rgba(255,255,255,.08); }
   .l-run div:last-child { border-bottom: 0; }
@@ -1332,11 +1334,12 @@
           <div class="l-body">
             <div class="l-top">
               <h3>Děti &amp; králíčci</h3>
-              <span class="l-price">499 Kč</span>
+              <span class="l-price">1 090 Kč</span>
             </div>
             <ul class="l-meta">
-              <li>60 minut</li><li>-</li><li>max 10 míst</li><li>dítě s rodičem</li>
+              <li>60 minut</li><li>-</li><li>max 12 osob</li><li>dítě se zákonným zástupcem</li>
             </ul>
+            <p class="l-note">Cena 1 090 Kč platí za zákonného zástupce s jedním dítětem. Každé další dítě je za 500 Kč, s sebou můžete vzít nejvýš 3 další děti. Lekce je vždy pro dítě s doprovodem zákonného zástupce.</p>
             <p class="l-desc">Děti se naučí králíčky pohladit, nakrmit a při tom se i hezky protáhnout.</p>
             <div class="l-run">
               <div><b>0–10 min</b><span>Jak se ke králíkovi přiblížit, aby neutekl.</span></div>

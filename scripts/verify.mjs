@@ -104,7 +104,9 @@ const ZAKAZANE = [
   [/(?<!60 až )\b75 minut\b/, 'stará délka lekce (75 min)'],
   // Chytá VŠECHNY tvary, ne jen „maximálně dvanácti". Presne tenhle
   // uzky vzor propasl popisek fotky u poukazu, kde stalo „Maximálně
-  // dvanáct lidí" — o dvanácti u nás nikdy nemluvíme legitimně.
+  // dvanáct lidí". Klasická lekce má 10 míst. Dvanáct má jen dětská
+  // lekce Děti & králíčci a ta se píše číslicí jako „12 osob"
+  // (včetně doprovodu), nikdy slovem a nikdy jako „12 míst".
   [/dvanáct/i, 'stará kapacita (12 osob)'],
   [/max 12 míst/i, 'stará kapacita (12 míst)'],
   [/230\s*(\+|hodnocení|klidných)/i, 'nedoložená statistika (230 hostů/hodnocení)'],
@@ -135,6 +137,27 @@ if (entry !== FAKTA.cenaKc) {
 const voucher = Number((payCfg.match(/voucherCzk:\s*(\d+)/) || [])[1])
 if (voucher !== FAKTA.cenaKc) {
   fail('payment-config.js', `voucherCzk je ${voucher}, čekáme ${FAKTA.cenaKc}`)
+}
+
+// Dětská lekce Děti & králíčci: zákonný zástupce + 1 dítě 1 090 Kč, každé
+// další dítě 500 Kč, nejvýš 4 děti na zástupce, kapacita 12 osob. Cena
+// a limity žijí v prohlížeči, v platební funkci i v databázi — musí sedět.
+const DETI = {cenaKc: 1090, diteKc: 500, maxDeti: 4, kapacita: 12}
+const cisloZ = (text, re) => Number((text.match(re) || [])[1])
+if (cisloZ(payCfg, /detiCzk:\s*(\d+)/) !== DETI.cenaKc) fail('payment-config.js', `detiCzk musí být ${DETI.cenaKc}`)
+if (cisloZ(payCfg, /detiDiteCzk:\s*(\d+)/) !== DETI.diteKc) fail('payment-config.js', `detiDiteCzk musí být ${DETI.diteKc}`)
+if (cisloZ(payCfg, /detiMaxDeti:\s*(\d+)/) !== DETI.maxDeti) fail('payment-config.js', `detiMaxDeti musí být ${DETI.maxDeti}`)
+{
+  const fn = 'supabase/functions/stripe-create/index.ts'
+  const kod = read(fn)
+  if (cisloZ(kod, /"PAYMENT_DETI_CZK",\s*"(\d+)"/) !== DETI.cenaKc) fail(fn, `výchozí PAYMENT_DETI_CZK musí být ${DETI.cenaKc}`)
+  if (cisloZ(kod, /"PAYMENT_DETI_DITE_CZK",\s*"(\d+)"/) !== DETI.diteKc) fail(fn, `výchozí PAYMENT_DETI_DITE_CZK musí být ${DETI.diteKc}`)
+  if (!/dalsiDeti > 3/.test(kod)) fail(fn, `nehlídá nejvýš ${DETI.maxDeti - 1} další děti`)
+  const sql = 'supabase/deti-a-kralici.sql'
+  if (cisloZ(read(sql), /deti_max\s+constant int := (\d+)/) !== DETI.maxDeti + 1) fail(sql, `deti_max musí být ${DETI.maxDeti + 1} (zástupce + ${DETI.maxDeti} děti)`)
+  if (!new RegExp(`\\$\\('lf-cap'\\)\\.value = ${DETI.kapacita}; \\$\\('lf-druh'\\)\\.value = 'deti'`).test(read('admin.html'))) {
+    fail('admin.html', `šablona Děti & králíčci musí mít kapacitu ${DETI.kapacita}`)
+  }
 }
 
 // ---------------------------------------------------------------------
@@ -393,6 +416,12 @@ if (!/pravidelně v sobotu 10:30/i.test(String(obsah.contactSchedule || ''))) {
 const detskaLekce = (obsah.lessons || []).find((lekce) => /děti/i.test(lekce.title || ''))
 if (!detskaLekce || !new RegExp(`od ${FAKTA.vekDeti} let`, 'i').test(detskaLekce.tag || '')) {
   contentProblem('content/obsah.json', `dětská lekce musí uvádět věk od ${FAKTA.vekDeti} let`)
+}
+if (detskaLekce && !/1\s?090\s*Kč/.test(String(detskaLekce.price || ''))) {
+  contentProblem('content/obsah.json', `dětská lekce musí mít cenu ${DETI.cenaKc} Kč (zástupce + dítě)`)
+}
+if (detskaLekce && !/500\s*Kč/.test(String(detskaLekce.priceNote || ''))) {
+  contentProblem('content/obsah.json', `u dětské lekce musí být vidět, že každé další dítě stojí ${DETI.diteKc} Kč`)
 }
 
 // ---------------------------------------------------------------------
