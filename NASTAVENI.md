@@ -221,7 +221,7 @@ window.PAYMENTS = {
 > platba radši nespustí a host dostane výzvu napsat vám. Až bude `stripe-create`
 > nasazená, tahle cesta se nikdy nepoužije — nech ji tam jako pojistku.
 Commitni + pushni. Hotovo — po odeslání formuláře jde host rovnou do platby
-a na stránce s termíny je i karta na koupi dárkového poukazu.
+a dárkový poukaz se kupuje na vlastní stránce `koupit-poukaz.html`.
 
 > **Cenu měň na dvou místech naráz:** `entryCzk` v `payment-config.js`
 > (co host vidí) a secret `PAYMENT_ENTRY_CZK` (co brána opravdu strhne).

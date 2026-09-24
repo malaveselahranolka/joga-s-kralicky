@@ -280,7 +280,7 @@ Deno.serve(async (req) => {
   // ---------------------------------------------------------------
   //  DÁRKOVÉ POUKAZY
   //  Kódy jsou DETERMINISTICKÉ ze session id, protože úplně stejný výpočet
-  //  dělá i web v rezervace.html (funkce voucherCodes) — jinak by host viděl
+  //  dělá i web v assets/poukaz-koupit.js (funkce kodyPoukazu) — jinak by host viděl
   //  jiné kódy, než jaké máš v adminu. Když ten výpočet měníš, změň ho na
   //  obou místech naráz.
   // ---------------------------------------------------------------

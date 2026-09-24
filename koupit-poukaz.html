@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content" />
+<link rel="preload" href="/assets/fonts/schibsted-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/assets/fonts/schibsted-grotesk-latin-ext.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/assets/fonts/hanken-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/assets/fonts/hanken-grotesk-latin-ext.woff2" as="font" type="font/woff2" crossorigin />
+<!-- Měření návštěvnosti (Google Analytics) se načte AŽ PO souhlasu. -->
+<script defer src="/souhlas.js?v=1"></script>
+<title>Koupit dárkový poukaz — Jóga s králíčky</title>
+<meta name="description" content="Kupte dárkový poukaz na lekci jógy s králíčky v Ostravě. 499 Kč, kód přijde e-mailem hned po zaplacení, platí 6 měsíců." />
+<link rel="canonical" href="https://www.jogaskralicky.cz/koupit-poukaz.html" />
+<!-- Nákupní krok, ne obsah pro vyhledávače. Ve výsledcích hledání má být
+     darkovy-poukaz.html, odkud sem vede tlačítko. -->
+<meta name="robots" content="noindex, follow" />
+<link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
+<meta name="theme-color" content="#1E2920" />
+<link rel="stylesheet" href="assets/podstranka.css" />
+<script>document.documentElement.classList.add('js');</script>
+<!-- =====================================================================
+     KOUPĚ DÁRKOVÉHO POUKAZU
+     Dřív se poukaz kupoval kartou na stránce s termíny (rezervace.html).
+     Teď má vlastní stránku, kam vedou tlačítka z hlavní stránky
+     i z darkovy-poukaz.html. Rezervace zůstává jen na rezervace.
+
+     Druhy poukazů (na jakou lekci platí) jsou v payment-config.js
+     → voucherDruhy. Dokud je aktivní jen jeden, výběr se vůbec neukáže.
+     Logika je v assets/poukaz-koupit.js.
+     ===================================================================== -->
+<style>
+  .buy { padding: calc(78px + clamp(1.6rem, 4vw, 3.2rem)) 0 clamp(3.4rem, 6vw, 5.5rem); }
+  .buy-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); grid-template-areas: "intro order" "ticket order"; gap: clamp(2rem, 4vw, 3rem) clamp(2rem, 5vw, 4.5rem); align-items: start; }
+  .buy-intro { grid-area: intro; }
+  .order { grid-area: order; }
+  .buy-ticket { grid-area: ticket; }
+  .buy-intro h1 { font-size: clamp(2.1rem, 1.5rem + 2.6vw, 3.6rem); margin-top: 1rem; }
+  .buy-intro h1 em { font-style: normal; color: var(--carrot); }
+  .buy-intro .lead { margin-top: 1rem; color: rgba(255,255,255,.8); max-width: 44ch; }
+  .buy .crumbs { margin-bottom: .6rem; }
+  .buy .ticket { justify-self: start; }
+  .buy .ticket h3 { color: var(--forest); font-size: clamp(1.3rem, 1.1rem + .9vw, 1.8rem); margin-top: .5rem; }
+  .buy .ticket p { color: var(--ink-soft); margin-top: .5rem; font-size: .92rem; }
+  .ticket-count { display: inline-block; margin-top: 1rem; font-weight: 700; font-size: .9rem; color: var(--forest); background: rgba(110,138,78,.14); border-radius: 999px; padding: .3em .8em; }
+
+  /* karta s objednávkou */
+  .order { background: var(--surface); color: var(--ink); border-radius: var(--r-xl); padding: clamp(1.3rem, 3vw, 2.2rem); box-shadow: var(--sh-dark); }
+  /* .on-dark barví všechny odstavce do bíla — v bílé kartě musí zpátky */
+  .buy .order p { color: var(--ink-soft); }
+  .order h2 { font-size: clamp(1.35rem, 1.15rem + .8vw, 1.75rem); color: var(--ink); }
+  .order .o-sub { margin-top: .4rem; color: var(--ink-soft); font-size: .95rem; }
+  .o-block { margin-top: 1.5rem; border: 0; padding: 0; min-width: 0; }
+  .o-label { display: block; font-size: .9rem; font-weight: 700; margin-bottom: .6rem; padding: 0; }
+  .o-label small { font-weight: 400; color: var(--ink-soft); }
+
+  /* výběr lekce — velké dlaždice místo malých koleček, na telefon palcem */
+  .druhy { display: grid; gap: .6rem; }
+  .druh { position: relative; display: flex; gap: .85rem; align-items: flex-start; padding: .95rem 1rem; border: 1.5px solid var(--line); border-radius: var(--r-md); background: var(--paper); cursor: pointer; transition: border-color .2s var(--ease), background-color .2s var(--ease); }
+  .druh input { position: absolute; opacity: 0; pointer-events: none; }
+  .druh .dot { flex: none; width: 1.3rem; height: 1.3rem; margin-top: .1rem; border-radius: 50%; border: 2px solid var(--line); background: var(--surface); transition: border-color .2s var(--ease), box-shadow .2s var(--ease); }
+  .druh b { display: block; font-family: "Schibsted Grotesk"; font-weight: 600; font-size: 1.05rem; }
+  .druh span.t { display: block; margin-top: .15rem; font-size: .9rem; color: var(--ink-soft); line-height: 1.45; }
+  .druh:has(input:checked) { border-color: var(--forest); background: color-mix(in srgb, var(--clover) 9%, var(--surface)); }
+  .druh:has(input:checked) .dot { border-color: var(--forest); box-shadow: inset 0 0 0 4px var(--surface); background: var(--forest); }
+  .druh:has(input:focus-visible) { outline: 2px solid var(--clover); outline-offset: 3px; }
+
+  .o-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .o-row .o-label { margin: 0; }
+  .o-row .o-hint { display: block; font-size: .85rem; font-weight: 400; color: var(--ink-soft); margin-top: .15rem; }
+  .stepper { display: inline-flex; align-items: center; gap: .4rem; border: 1px solid var(--line); border-radius: 999px; padding: .25rem; background: var(--surface); flex: none; }
+  .stepper button { width: 2.75rem; height: 2.75rem; border-radius: 50%; border: 0; background: var(--forest); color: var(--cream); font-size: 1.3rem; line-height: 1; cursor: pointer; display: grid; place-items: center; touch-action: manipulation; transition: background-color .3s var(--ease), transform .2s var(--ease); }
+  .stepper button:active:not(:disabled) { transform: scale(.92); }
+  .stepper button:disabled { opacity: .3; cursor: not-allowed; }
+  .stepper .val { min-width: 2rem; text-align: center; font-family: "Schibsted Grotesk"; font-weight: 600; font-size: 1.25rem; color: var(--ink); }
+
+  .o-email { width: 100%; font: inherit; font-size: 1rem; color: var(--ink); padding: .85em 1em; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--paper); transition: border-color .25s var(--ease), box-shadow .25s var(--ease); }
+  .o-email:focus { outline: none; border-color: var(--clover); box-shadow: 0 0 0 3px color-mix(in srgb, var(--clover) 30%, transparent); }
+  .o-email[aria-invalid="true"] { border-color: var(--carrot-text); }
+
+  .o-total { margin-top: 1.6rem; padding-top: 1.1rem; border-top: 1px dashed var(--line); display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+  .o-total span { color: var(--ink-soft); font-size: .95rem; }
+  .o-total strong { font-family: "Schibsted Grotesk"; font-weight: 700; font-size: clamp(1.6rem, 1.3rem + 1vw, 2rem); letter-spacing: -.02em; color: var(--ink); }
+  .o-pay { width: 100%; margin-top: 1rem; }
+  .buy .order .o-msg { margin-top: .7rem; font-size: .9rem; min-height: 1.2em; color: var(--carrot-text); }
+  .o-safe { margin-top: .4rem; display: flex; gap: .55rem; align-items: flex-start; font-size: .84rem; line-height: 1.5; color: var(--ink-soft); }
+  .o-safe svg { flex: none; margin-top: .15rem; color: var(--clover-text); }
+  .o-safe a { text-decoration: underline; text-underline-offset: 2px; }
+  .buy .order .o-off { margin-top: 1.4rem; padding: 1rem 1.1rem; border-radius: var(--r-md); background: #FBF1E8; color: var(--ink); font-size: .95rem; }
+  .o-off a { text-decoration: underline; font-weight: 600; }
+
+  /* výsledek po návratu z platby */
+  .state { text-align: center; }
+  .state:focus { outline: none; }
+  .state .icon { width: 64px; height: 64px; margin: 0 auto 1.1rem; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--clover) 18%, var(--surface)); color: var(--forest); }
+  .state .icon.info { background: color-mix(in srgb, var(--ink) 7%, var(--surface)); color: var(--ink-soft); }
+  .state .icon svg { width: 30px; height: 30px; }
+  .state p { margin-top: .8rem; color: var(--ink-soft); }
+  .state p a { color: var(--forest); text-decoration: underline; }
+  .state .acts { margin-top: 1.5rem; display: flex; gap: .7rem; justify-content: center; flex-wrap: wrap; }
+  .code-list { display: flex; flex-wrap: wrap; gap: .6rem; justify-content: center; margin: 1.1rem 0 .3rem; }
+  .code-box { font-family: "Schibsted Grotesk", sans-serif; font-weight: 700; font-size: clamp(1.1rem, .95rem + .8vw, 1.5rem); letter-spacing: .06em; color: var(--forest); background: var(--cream); border: 2px dashed var(--clover); border-radius: var(--r-md); padding: .6em .9em; user-select: all; -webkit-user-select: all; }
+
+  /* pod objednávkou: jak to dál funguje */
+  .after { background: var(--paper); padding-block: clamp(3.2rem, 6vw, 5rem); }
+  .after .steps { margin-top: 2rem; }
+  .after .steps li { background: var(--surface); border-color: var(--line); box-shadow: var(--sh-2); }
+  .after .steps p { color: var(--ink-soft); }
+  .after-more { margin-top: 2rem; }
+  .after-more a { color: var(--clover-text); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+
+  @media (max-width: 900px) {
+    /* telefon: nadpis → objednávka → lístek. Kdo přišel z reklamy koupit,
+       nesmí k tlačítku scrollovat přes obrázek. */
+    .buy-grid { grid-template-columns: 1fr; grid-template-areas: "intro" "order" "ticket"; }
+    .buy .ticket { justify-self: center; }
+  }
+  @media (max-width: 640px) {
+    /* úvod co nejkratší, ať je objednávka hned na první obrazovce */
+    .buy { padding-top: calc(78px + .2rem); }
+    .buy .crumbs { margin-bottom: .1rem; font-size: .8rem; }
+    .buy-intro .eyebrow { display: none; }
+    .buy-intro h1 { font-size: 2.05rem; margin-top: .2rem; }
+    .buy-intro .lead { font-size: .98rem; margin-top: .6rem; }
+    .buy-grid { row-gap: 1.4rem; }
+    .order { padding: 1.2rem 1.05rem 1.3rem; border-radius: 24px; }
+    .o-block { margin-top: 1.25rem; }
+    .druh { padding: .85rem .9rem; }
+  }
+</style>
+<script defer src="/speed-insights.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#obsah">Přeskočit na obsah</a>
+
+<header class="nav" id="nav">
+  <div class="wrap nav-inner">
+    <div class="nav-left">
+      <a class="btn nav-cta" href="rezervace.html">Rezervovat</a>
+      <nav class="nav-quick" aria-label="Stránky">
+        <a href="darkovy-poukaz.html" aria-current="page">Dárkový poukaz</a>
+        <a href="skupinove-lekce.html">Skupinové lekce</a>
+      </nav>
+    </div>
+    <a class="brand" href="/" aria-label="Jóga s králíčky — domů">
+      <img decoding="async" class="mark" src="assets/logo.svg" alt="" width="34" height="34" />
+      <span class="word">Jóga&nbsp;s&nbsp;králíčky</span>
+    </a>
+    <div class="nav-right">
+      <button class="menu-toggle" id="menuToggle" aria-label="Otevřít menu" aria-controls="navLinks" aria-expanded="false">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+    </div>
+  </div>
+</header>
+<div class="nav-backdrop" id="navBackdrop"></div>
+<nav class="nav-links" id="navLinks" aria-label="Hlavní menu">
+  <a href="/">Domů</a>
+  <a href="darkovy-poukaz.html" aria-current="page">Dárkový poukaz</a>
+  <a href="skupinove-lekce.html">Skupinové lekce</a>
+  <a href="o-nas.html">O nás</a>
+  <a class="btn btn-primary menu-cta" href="rezervace.html">Rezervovat lekci <span class="arrow">→</span></a>
+</nav>
+
+<main id="obsah">
+  <section class="buy on-dark">
+    <div class="wrap buy-grid">
+      <div class="buy-intro">
+        <nav class="crumbs" aria-label="Drobečková navigace"><a href="/">Jóga s králíčky</a> / <a href="darkovy-poukaz.html">Dárkový poukaz</a> / Koupit</nav>
+        <span class="eyebrow">Dárek během pár minut</span>
+        <h1>Koupit <em>dárkový poukaz</em></h1>
+        <p class="lead">Zaplatíte kartou, kód přijde e-mailem hned po zaplacení. Poukaz platí 6&nbsp;měsíců a termín si obdarovaný vybere sám.</p>
+      </div>
+
+      <!-- Objednávka. Na telefonu je hned pod nadpisem, lístek až za ní. -->
+      <div class="order" id="order">
+        <div id="orderForm">
+          <h2>Vaše objednávka</h2>
+          <p class="o-sub">Každý poukaz platí na jeden vstup na lekci.</p>
+
+          <!-- Výběr lekce: skript ho vyplní z payment-config.js a ukáže,
+               jen když jsou v nabídce aspoň dva druhy poukazu. -->
+          <fieldset class="o-block" id="druhBox" hidden>
+            <legend class="o-label">Na jakou lekci</legend>
+            <div class="druhy" id="druhy"></div>
+          </fieldset>
+
+          <div class="o-block o-row">
+            <span class="o-label" id="pocetLbl">Počet poukazů<span class="o-hint">Až 10 kusů naráz</span></span>
+            <div class="stepper" role="group" aria-labelledby="pocetLbl">
+              <button type="button" id="minus" aria-label="Ubrat poukaz" disabled>−</button>
+              <span class="val" id="pocet" aria-live="polite">1</span>
+              <button type="button" id="plus" aria-label="Přidat poukaz">+</button>
+            </div>
+          </div>
+
+          <div class="o-block">
+            <label class="o-label" for="email">Kam poslat kód <small>(váš e-mail)</small></label>
+            <input class="o-email" id="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="vas@email.cz" enterkeyhint="go" />
+          </div>
+
+          <div class="o-total" aria-live="polite">
+            <span id="souhrn">1 poukaz × 499&nbsp;Kč</span>
+            <strong id="celkem">499&nbsp;Kč</strong>
+          </div>
+          <button class="btn btn-primary o-pay" id="zaplatit" type="button">Zaplatit 499&nbsp;Kč <span class="arrow">→</span></button>
+          <p class="o-msg" id="zprava" role="status"></p>
+          <p class="o-safe">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+            <span>Platíte kartou, Apple Pay nebo Google Pay přes zabezpečenou bránu Stripe. Nákupem souhlasíte s <a href="obchodni-podminky.html">obchodními podmínkami</a>.</span>
+          </p>
+          <p class="o-off" id="vypnuto" hidden>Online nákup poukazu je teď dočasně vypnutý. Napište nám prosím na <a href="mailto:info@jogaskralicky.cz">info@jogaskralicky.cz</a> a poukaz vám vystavíme ručně.</p>
+        </div>
+        <div class="state" id="stav" hidden tabindex="-1"></div>
+      </div>
+
+      <div class="buy-ticket" aria-hidden="true">
+        <div class="ticket">
+          <div class="ticket-main">
+            <span class="ticket-kicker">Dárkový poukaz</span>
+            <h3 id="lNazev">Jóga s králíčky</h3>
+            <p id="lPopis">Jeden vstup na lekci ve Fit&amp;Fun Studiu Ostrava</p>
+            <span class="ticket-count" id="lPocet">1 poukaz</span>
+          </div>
+          <div class="ticket-stub">
+            <img src="assets/logo.svg" alt="" width="34" height="34" />
+            <span class="ticket-price" id="lCena">499<small> Kč</small></span>
+            <span class="ticket-valid">platí 6 měsíců</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="after">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Co bude dál</span>
+        <h2>Po zaplacení</h2>
+      </div>
+      <ol class="steps">
+        <li><h3>Kód hned na obrazovce</h3><p>Po zaplacení ho uvidíte tady na stránce a zároveň vám přijde e-mailem.</p></li>
+        <li><h3>Předáte ho dál</h3><p>Přepošlete e-mail, vytiskněte ho, nebo kód napište do přáníčka. Poukaz je přenosný.</p></li>
+        <li><h3>Obdarovaný si vybere termín</h3><p>V rezervaci zvolí lekci, rozklikne „Mám dárkový poukaz“ a vepíše kód.</p></li>
+        <li><h3>Přijde na lekci</h3><p>Nic se nedoplácí. Poukaz platí 6 měsíců od zakoupení.</p></li>
+      </ol>
+      <p class="after-more">Víc o poukazu a časté otázky najdete na stránce <a href="darkovy-poukaz.html">Dárkový poukaz</a>.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="brand-cell">
+        <a class="brand" href="/" aria-label="Jóga s králíčky — domů"><img decoding="async" class="mark" src="assets/logo.svg" alt="" width="34" height="34" /> <span class="word">Jóga&nbsp;s&nbsp;králíčky</span></a>
+        <p class="ftag">Studio klidu, kde tempo udávají králíci. Fit&amp;Fun Studio Ostrava, Tovární 486/7, Ostrava-Mariánské Hory.</p>
+        <div class="socials">
+          <a href="https://www.instagram.com/zooterapie_joga" target="_blank" rel="noopener me" aria-label="Instagram"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+          <a href="https://www.facebook.com/share/188akYWtuR/" target="_blank" rel="noopener me" aria-label="Facebook"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 9V7c0-1 .5-2 2-2h2V2h-3c-2.5 0-4 1.5-4 4v3H8v3h3v8h3v-8h3l1-3z"/></svg></a>
+        </div>
+      </div>
+      <nav class="foot-col" aria-label="Stránky">
+        <h3>Stránky</h3>
+        <a href="/">Domů</a>
+        <a href="darkovy-poukaz.html">Dárkový poukaz</a>
+        <a href="skupinove-lekce.html">Skupinové lekce</a>
+        <a href="o-nas.html">O nás</a>
+      </nav>
+      <nav class="foot-col" aria-label="Více">
+        <h3>Více</h3>
+        <a href="rezervace.html">Rezervace</a>
+        <a href="joga-pro-deti-ostrava.html">Jóga pro děti</a>
+        <a href="joga-se-zviraty.html">Průvodce jógou se zvířaty</a>
+        <a href="obchodni-podminky.html">Obchodní podmínky</a>
+        <a href="zasady-osobnich-udaju.html">Zpracování osobních údajů</a>
+      </nav>
+      <div class="foot-col">
+        <h3>Ozvěte se</h3>
+        <a class="foot-contact" href="mailto:info@jogaskralicky.cz">info@jogaskralicky.cz</a>
+        <a class="foot-contact" href="tel:+420603340860" style="margin-top:.6rem">+420 603 340 860</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 Jóga s králíčky · Barbora Kovačíková, IČO 29731828. Dýchejte pomalu.</span>
+      <span><a href="obchodni-podminky.html">Obchodní podmínky</a> · <a href="zasady-osobnich-udaju.html">Osobní údaje</a></span>
+    </div>
+  </div>
+</footer>
+
+<script defer src="supabase-config.js?v=2"></script>
+<script defer src="payment-config.js?v=5"></script>
+<script defer src="assets/podstranka.js?v=1"></script>
+<script defer src="assets/poukaz-koupit.js?v=1"></script>
+<script defer src="/assets/chat.js?v=5"></script>
+</body>
+</html>

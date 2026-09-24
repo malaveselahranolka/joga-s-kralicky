@@ -20,6 +20,7 @@ const files = [
   'skupinove-lekce.html',
   'o-nas.html',
   'asistent.html',
+  'koupit-poukaz.html',
   'joga-pro-deti-ostrava.html',
   'joga-se-zviraty.html',
   'robots.txt',

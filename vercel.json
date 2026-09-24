@@ -97,6 +97,13 @@
       }
     },
     {
+      "src": "/koupit-poukaz",
+      "status": 308,
+      "headers": {
+        "Location": "/koupit-poukaz.html"
+      }
+    },
+    {
       "src": "/rezervace",
       "status": 308,
       "headers": {
