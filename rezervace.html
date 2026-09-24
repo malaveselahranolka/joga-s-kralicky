@@ -411,7 +411,7 @@
      BREVO_API_KEY. -->
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="supabase-config.js?v=2"></script>
-<script defer src="payment-config.js?v=6"></script>
+<script defer src="payment-config.js?v=7"></script>
 <script defer src="datum.js?v=1"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -649,18 +649,20 @@ document.addEventListener('DOMContentLoaded', function () {
   function updateSpots() {
     const deti = jeDeti(chosen);
     // Poukaz platí jen na lekci svého druhu: klasický (499 Kč) na jedno místo
-    // lekce Jóga s králíčky, dětský (1 090 Kč) na zástupce + 1 dítě na lekci
-    // Děti & králíčci. Který je který, pozná až databáze podle kódu.
+    // lekce Jóga s králíčky, dětský na zástupce + 1 až 4 děti na lekci
+    // Děti & králíčci (kolik dětí, je uložené u poukazu). Který je který
+    // a na kolik dětí, pozná až databáze podle kódu.
     const poukaz = naPoukaz();
     const min = minMist(chosen);
     $('voucherHint').innerHTML = deti
-      ? 'Najdete ho v e-mailu s poukazem. Na tuhle lekci platí <strong>dětský poukaz</strong>, a to na zákonného zástupce s jedním dítětem. Rezervace je pak rovnou potvrzená.'
+      ? 'Najdete ho v e-mailu s poukazem. Na tuhle lekci platí <strong>dětský poukaz</strong>, a to na zákonného zástupce s tolika dětmi, kolik je uvedeno na poukazu. Rezervace je pak rovnou potvrzená.'
       : 'Najdete ho v e-mailu s poukazem. Jeden poukaz platí na <strong>jedno místo</strong> — po ověření se už nic neplatí a rezervace je rovnou potvrzená.';
     if (poukaz) spots = min;
     if (spots > maxSpots()) spots = Math.max(min, maxSpots());
     if (spots < min) spots = min;
     $('spLbl').textContent = deti ? 'Počet dětí' : 'Počet účastníků';
-    $('spVal').textContent = deti ? spots - 1 : spots;
+    // S dětským poukazem počet dětí určuje poukaz, ne formulář.
+    $('spVal').textContent = deti ? (poukaz ? '–' : spots - 1) : spots;
     $('spDec').setAttribute('aria-label', deti ? 'Ubrat dítě' : 'Ubrat');
     $('spInc').setAttribute('aria-label', deti ? 'Přidat dítě' : 'Přidat');
     $('spDec').disabled = poukaz || spots <= min;
@@ -677,7 +679,7 @@ document.addEventListener('DOMContentLoaded', function () {
       $('priceTotal').textContent = 'Poukaz';
       $('priceCalc').textContent = 'neplatí se';
       $('spHint').textContent = deti
-        ? 'Poukaz platí na zástupce s jedním dítětem. Chcete vzít víc dětí? Napište nám na info@jogaskralicky.cz.'
+        ? 'Počet dětí je daný poukazem (zástupce s 1 až 4 dětmi, jak je uvedeno na poukazu). Chcete vzít víc dětí? Napište nám na info@jogaskralicky.cz.'
         : 'Poukaz platí na jedno místo.';
     } else if (!deti) {
       // Cena roste s počtem míst — a přesně tuhle částku pak spočítá i brána.

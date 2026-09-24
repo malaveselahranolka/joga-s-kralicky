@@ -29,7 +29,7 @@ import { PDFDocument, rgb, type PDFPage } from "https://esm.sh/pdf-lib@1.17.1";
 import fontkit from "https://esm.sh/@pdf-lib/fontkit@1.1.1";
 import { font } from "./poukaz-fonty.ts";
 import { PLATNOST_TEXT } from "./poukaz-platnost.ts";
-import type { PoukazDruh } from "./poukaz-druh.ts";
+import { sDetmi, type PoukazDruh } from "./poukaz-druh.ts";
 
 // Barvy webu (index.html → :root). Musí sedět, jinak poukaz vypadá
 // jako z jiné firmy než stránka, ze které přišel.
@@ -65,6 +65,8 @@ export type PoukazData = {
   platnost?: string;
   /** Na jakou lekci poukaz platí (mění perex). Výchozí je klasická lekce. */
   druh?: PoukazDruh;
+  /** Kolik dětí dětský poukaz pokrývá (1–4). Výchozí je jedno. */
+  deti?: number;
 };
 
 // ---------------------------------------------------------------------
@@ -186,11 +188,11 @@ export async function poukazPdf(data: PoukazData): Promise<Uint8Array> {
   });
 
   // Perex se láme na dva řádky přesně jako v návrhu. Dětský poukaz říká,
-  // že platí na lekci Děti & králíčci pro zástupce s jedním dítětem.
+  // že platí na lekci Děti & králíčci pro zástupce s kolika dětmi.
   const perex = data.druh === "deti"
     ? [
       "Poukaz na lekci Děti & králíčci v Ostravě pro zákonného",
-      "zástupce s jedním dítětem.",
+      `zástupce ${sDetmi(Number(data.deti) || 1)}.`,
     ]
     : [
       "Darujte hodinu klidu mezi králíčky. Poukaz na jednu lekci jógy v",

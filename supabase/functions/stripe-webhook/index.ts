@@ -32,7 +32,7 @@ import Stripe from "https://esm.sh/stripe@14.21.0?target=denonext";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { bookingEmail, voucherEmail, enqueue, dispatch } from "../_shared/email.ts";
 import { platnostDoISO } from "../_shared/poukaz-platnost.ts";
-import { cenaPoukazuKc, poukazDruh } from "../_shared/poukaz-druh.ts";
+import { cenaPoukazuKc, poukazDeti, poukazDruh } from "../_shared/poukaz-druh.ts";
 
 const env = (n: string, d = "") => Deno.env.get(n) ?? d;
 
@@ -178,7 +178,7 @@ Deno.serve(async (req) => {
   if (bookingId) {
     const { data: bk, error: bkErr } = await admin
       .from("bookings")
-      .select("id, name, email, spots, status, payment_status, payment_amount, payment_ref, lesson:lessons(title, starts_at, duration_min)")
+      .select("id, name, email, spots, status, payment_status, payment_amount, payment_ref, lesson:lessons(title, starts_at, duration_min, druh)")
       .eq("id", bookingId)
       .maybeSingle();
     if (bkErr) return await retry("booking_lookup_failed: " + bkErr.message);
@@ -295,9 +295,11 @@ Deno.serve(async (req) => {
 
     const count = Math.max(1, Number(obj?.metadata?.count) || 1);
     // Druh poukazu (klasik / deti) poslala stripe-voucher v metadatech.
-    // Starší platby ho nemají — ty jsou klasické.
+    // Starší platby ho nemají — ty jsou klasické. U dětského poukazu je
+    // v metadatech i počet dětí (bez něj 1 dítě).
     const druh = poukazDruh(obj?.metadata?.druh);
-    const expected = Math.round(cenaPoukazuKc(druh) * 100) * count;
+    const deti = poukazDeti(druh, obj?.metadata?.deti);
+    const expected = Math.round(cenaPoukazuKc(druh, deti) * 100) * count;
     if (Number(obj?.amount_total) !== expected) {
       return await reject("voucher_amount_mismatch:" + String(obj?.amount_total) + "/" + String(expected));
     }
@@ -316,6 +318,7 @@ Deno.serve(async (req) => {
       redeemed: false,
       expires_at: expiresAt,
       druh,
+      deti,
     }));
 
     // ZÁMĚRNĚ insert-ignore, NE upsert. Vystavení smí řádek založit, ale
@@ -331,7 +334,7 @@ Deno.serve(async (req) => {
     // rovnou přeposlat obdarovanému. Bez e-mailové adresy nemáme kam poslat;
     // kódy pak host uvidí aspoň na návratové stránce.
     if (email) {
-      const mailErr = await enqueue(admin, rows.map((r) => voucherEmail(r.code, email, r.amount, "", druh)));
+      const mailErr = await enqueue(admin, rows.map((r) => voucherEmail(r.code, email, r.amount, "", druh, deti)));
       if (mailErr) return await retry("voucher_email_enqueue_failed: " + mailErr.message);
       sendInBackground(admin, rows.length);
     }

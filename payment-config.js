@@ -43,13 +43,14 @@ window.PAYMENTS = {
   // ukáže, když jsou aktivní aspoň dva druhy). O tom, co jde koupit a za
   // kolik, rozhoduje server (supabase/functions/stripe-voucher → DRUHY);
   // tady je jen opis pro zobrazení. Dětský poukaz platí na zákonného
-  // zástupce s jedním dítětem, uplatní se jen na lekci Děti & králíčci.
+  // zástupce s 1 až detiMaxDeti dětmi (cena jako vstup: detiCzk + detiDiteCzk
+  // za každé další dítě), uplatní se jen na lekci Děti & králíčci.
   voucherDruhy: [
     { id: 'klasik', nazev: 'Jóga s králíčky',
       popis: 'Jeden vstup na lekci jógy s králíčky pro dospělé.',
       aktivni: true },
     { id: 'deti', nazev: 'Děti & králíčci',
-      popis: 'Lekce pro děti od 10 let. Poukaz platí na zákonného zástupce s jedním dítětem.',
+      popis: 'Lekce pro děti od 10 let. Poukaz platí na zákonného zástupce s 1 až 4 dětmi, každé další dítě 500 Kč.',
       cenaCzk: 1090,
       aktivni: true },
   ],

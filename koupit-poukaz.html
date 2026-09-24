@@ -186,6 +186,16 @@
             <div class="druhy" id="druhy"></div>
           </fieldset>
 
+          <!-- Jen u dětského poukazu: zákonný zástupce + 1 až 4 děti. -->
+          <div class="o-block o-row" id="detiBox" hidden>
+            <span class="o-label" id="detiLbl">Počet dětí<span class="o-hint" id="detiHint">Zástupce + 1 dítě v ceně, každé další +500&nbsp;Kč</span></span>
+            <div class="stepper" role="group" aria-labelledby="detiLbl">
+              <button type="button" id="detiMinus" aria-label="Ubrat dítě" disabled>−</button>
+              <span class="val" id="detiPocet" aria-live="polite">1</span>
+              <button type="button" id="detiPlus" aria-label="Přidat dítě">+</button>
+            </div>
+          </div>
+
           <div class="o-block o-row">
             <span class="o-label" id="pocetLbl">Počet poukazů<span class="o-hint">Až 10 kusů naráz</span></span>
             <div class="stepper" role="group" aria-labelledby="pocetLbl">
@@ -286,9 +296,9 @@
 </footer>
 
 <script defer src="supabase-config.js?v=2"></script>
-<script defer src="payment-config.js?v=6"></script>
+<script defer src="payment-config.js?v=7"></script>
 <script defer src="assets/podstranka.js?v=1"></script>
-<script defer src="assets/poukaz-koupit.js?v=2"></script>
+<script defer src="assets/poukaz-koupit.js?v=3"></script>
 <script defer src="/assets/chat.js?v=5"></script>
 </body>
 </html>
