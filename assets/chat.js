@@ -26,7 +26,19 @@
     '@media (max-width:640px){.jsk-chat-btn{padding:0;width:56px;justify-content:center}.jsk-chat-btn .t{display:none}}',
     // lišta souhlasu s měřením sedí taky dole — dokud je vidět, bublina se schová
     'body:has(.jsk-souhlas.je-videt) .jsk-chat-btn{opacity:0;pointer-events:none}',
-    '@media (prefers-reduced-motion:reduce){.jsk-chat-btn{transition:none}}'
+    '@media (prefers-reduced-motion:reduce){.jsk-chat-btn{transition:none}}',
+    // Plynulý přechod na stránku chatu a zpět (View Transitions mezi
+    // stránkami). Sem se vždycky vrací jen z chatu — ostatní přechody
+    // mezi stránkami se níž v „pageswap" ruší — takže tu stačí popsat
+    // zavírání: chat sjede dolů a pod ním zůstane stránka, kde host byl.
+    // Otevírání popisuje asistent.html. Prohlížeč, který to neumí, prostě
+    // přejde bez animace jako dřív.
+    '@media (prefers-reduced-motion:no-preference){',
+    '  @view-transition{navigation:auto}',
+    '  ::view-transition-new(root){animation:none}',
+    '  ::view-transition-old(root){z-index:1;animation:jskChatVen .28s cubic-bezier(.4,0,.9,.6) both}',
+    '}',
+    '@keyframes jskChatVen{to{opacity:0;transform:translateY(64px)}}'
   ].join('\n');
 
   var styl = document.createElement('style');
@@ -40,6 +52,15 @@
   a.setAttribute('aria-label', 'Otevřít AI asistenta');
   a.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 4v-4h0A1.5 1.5 0 0 1 4 14.5z"/><path d="M8.5 9.5h.01M12 9.5h.01M15.5 9.5h.01"/></svg><span class="t">Máte otázku?</span>';
   document.body.appendChild(a);
+
+  // Animovat jen cestu do chatu. Bez tohohle by se kvůli @view-transition
+  // prolínaly i všechny ostatní přechody mezi stránkami, které chat mají.
+  window.addEventListener('pageswap', function (e) {
+    if (!e.viewTransition) return;
+    var cil = '';
+    try { cil = new URL(e.activation.entry.url).pathname; } catch (_e) {}
+    if (cil !== '/asistent.html' && cil !== '/asistent') e.viewTransition.skipTransition();
+  });
 
   var prednacteno = false;
   function prednacti() {

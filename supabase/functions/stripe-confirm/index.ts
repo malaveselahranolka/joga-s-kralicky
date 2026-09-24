@@ -52,7 +52,7 @@ function sendInBackground(admin: unknown, limit = 3) {
 }
 
 // Kódy poukazů jsou DETERMINISTICKÉ ze session id. Úplně stejný výpočet dělá
-// stripe-webhook i web v rezervace.html (funkce voucherCodes) — jinak by host
+// stripe-webhook i web v assets/poukaz-koupit.js (funkce kodyPoukazu) — jinak by host
 // viděl jiné kódy, než jaké jsou v adminu. Měníš-li to, změň to na všech třech
 // místech naráz.
 function voucherCodes(sessionId: string, count: number): string[] {

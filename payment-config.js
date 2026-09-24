@@ -29,6 +29,22 @@ window.PAYMENTS = {
   voucherCzk: 499,
   maxVouchers: 10,   // kolik poukazů lze koupit najednou
 
+  // Na jakou lekci poukaz platí. Kupuje se na koupit-poukaz.html; dokud je
+  // aktivní jen jeden druh, výběr se tam vůbec neukáže.
+  //
+  // `deti` je PŘIPRAVENÝ, ale VYPNUTÝ — lekce pro rodiče s dětmi ještě není
+  // hotová. Samotné přepnutí `aktivni: true` tady NESTAČÍ (a nic nerozbije):
+  // server (supabase/functions/stripe-voucher → DRUHY) takový nákup odmítne,
+  // dokud ho nezapneš i tam. Kompletní postup spuštění je popsaný tamtéž.
+  voucherDruhy: [
+    { id: 'klasik', nazev: 'Jóga s králíčky',
+      popis: 'Lekce jógy s králíčky pro dospělé i děti od 10 let s rodičem.',
+      aktivni: true },
+    { id: 'deti', nazev: 'Děti a králíci',
+      popis: 'Lekce pro rodiče s dětmi, hraní a mazlení s králíčky.',
+      aktivni: false },
+  ],
+
   // Jak dlouho platí nově vystavený poukaz (měsíce).
   //
   // Tohle je opis pro prohlížeč a pro kontrolu textů. Skutečnou platnost

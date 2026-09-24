@@ -58,7 +58,7 @@ JAK TO VE STUDIU CHODÍ (provozní řád)
 - Děti jsou vítané na dětských lekcích (od 10 let) a chodí s jedním rodičem, který za ně po celou dobu zodpovídá.
 - Hrubé chování ke zvířatům = ukončení lekce bez náhrady.
 
-DÁRKOVÝ POUKAZ (/darkovy-poukaz.html, koupě na /rezervace.html#voucherCard)
+DÁRKOVÝ POUKAZ (/darkovy-poukaz.html, koupě na /koupit-poukaz.html)
 - 499 Kč za jeden vstup na lekci. Koupit jich jde víc najednou.
 - Přijde e-mailem během pár minut po zaplacení, s kódem a PDF k vytištění. Poštou se nic neposílá.
 - Platí 6 měsíců od zakoupení, na kteroukoliv vypsanou lekci (pro dospělé i dětskou).
