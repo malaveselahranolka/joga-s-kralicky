@@ -1,226 +1,223 @@
 # Jóga s králíčky 🐰
 
-Web studia klidu, kde po lekcích jógy volně pobíhají domácí králíčci.
+Web studia v Ostravě, kde se cvičí jóga a mezi podložkami pobíhá deset
+domácích králíčků. Rezervace, platby kartou, dárkové poukazy, e-maily
+i správa obsahu běží z tohoto repozitáře.
 
 **Živě:** https://www.jogaskralicky.cz/
 
-## Co to doopravdy je
-
-Nejde už o jednostránkový web na GitHub Pages. Ve skutečnosti jsou
-propojené tyto části:
+## Jak je to poskládané
 
 | Část | Kde běží | K čemu |
 |---|---|---|
-| Statické HTML + `assets/` | Vercel | Web sám. Build ho skládá do `public/`. |
-| `content/obsah.json` | GitHub + build | Zdroj aktuálního obsahu homepage; při buildu se vsadí přímo do HTML. |
-| `admin.html` + `api/obsah.js` | Vercel + GitHub | Správa obsahu; uložení vytvoří commit a spustí nové nasazení. |
-| Supabase (databáze + Edge funkce) | Supabase | Lekce, rezervace, poukazy, platby přes Stripe. |
+| Statické HTML + `assets/` | Vercel | Web sám. `npm run build` ho skládá do `public/`. |
+| `content/obsah.json` | repo → build | Jediný zdroj textů a fotek homepage. Build je vsadí přímo do HTML. |
+| `admin.html` + `api/obsah.js` | Vercel + GitHub | Správa pro majitelku. Uložení obsahu vytvoří commit a Vercel nasadí nový web. |
+| Supabase (Postgres + Edge funkce) | Supabase | Lekce, rezervace, poukazy, fronta e-mailů, newsletter, business data. |
+| Stripe Checkout | Stripe | Platba kartou (včetně Apple Pay a Google Pay) za lekce i poukazy. |
+| Brevo | Brevo | Odesílání e-mailů. Podobu e-mailů drží repo (`_shared/templates.ts`). |
+| `api/chat.js` | Vercel + AI Gateway | Chat „Máte otázku?“ na webu. Odpovídá jen z `api/_chat-znalosti.js`. |
+| `business.html` + `business/` | Vercel + Supabase | Soukromý business přehled (tržby, náklady, zdroje návštěv). |
 
-HTML v repozitáři není zástupný text. Homepage se při buildu doplní z
-`content/obsah.json`, takže vyhledávač i návštěvník dostanou stejný obsah
-bez čekání na JavaScript. Proto musí být obě vrstvy srovnané a dohlíží na
-to automatické kontroly.
+### Hlavní pravidlo
 
-Text se proto **nemění přímo v HTML** — mění se v `content/obsah.json` nebo ve
-správě. Úprava v `index.html` se při dalším buildu ztratí. (Sanity, která obsah
-dřív dotahovala až v prohlížeči, byla 7. 9. 2026 odstraněna.)
+**Text na webu se nemění v HTML.** Mění se v `content/obsah.json` nebo ve
+správě (záložka *Obsah webu*). Build ho vsadí do `index.html`, takže
+vyhledávač i návštěvník dostanou hotový text bez čekání na JavaScript.
+Ruční úprava textu v `index.html` se při dalším buildu přepíše.
+Výjimka: `obsah.json` → `galerie` se edituje ručně v souboru.
 
-## Lokální práce
+## Stránky
 
-```bash
-npm ci
-```
-
-```bash
-vercel env pull .env.local
-```
-
-```bash
-npm run build
-```
-
-Build vyrobí `public/`. Bez lokálních proměnných doběhne také, jen do
-rezervační stránky nevloží statický snímek právě vypsaných termínů.
-
-## Než něco nasadíš
-
-```bash
-npm run check
-```
-
-`check` přísně zkontroluje zdroje, sestaví `public/` a projde i hotový
-balík. Hlídá skripty, JSON-LD, provozní fakta, věk dětí, sitemapu,
-indexaci, canonicaly, přesměrování, chybějící odkazy i soubory.
-
-Vercel používá `npm run build`. Strukturální chyby při něm nasazení dál
-zastaví, ale odchylka v titulku, popisku nebo jiném textu upraveném
-majitelkou v administraci pouze vypíše varování. Uložení běžného obsahu
-tak nemůže tiše zablokovat nové nasazení.
-
-Návratový kód 1 z `npm run check` = nenasazuj. Není to náhrada za testy plateb, ale chytí
-to přesně ty rozpory, které se na webu objevovaly opakovaně.
-
-## Databáze
-
-SQL soubory ve `supabase/` se pouštějí v Supabase → SQL Editor. Jsou
-napsané tak, aby šly spustit opakovaně. Pořadí:
-
-1. `schema.sql` — tabulky, RLS, `is_owner()`
-2. `payments.sql`, `tickets.sql`
-3. `online-only.sql` — držení místa, kapacita, `create_booking`
-4. `vouchers.sql` — tabulka poukazů
-5. `vouchers-lifecycle.sql` — platnost poukazu, atomické uplatnění,
-   deník Stripe událostí (`stripe_events`)
-6. `email-outbox.sql` — fronta odchozích e-mailů
-7. `presun-rezervace.sql` — `presun_rezervaci()` pro přesun rezervace
-   na jiný termín (potřebuje frontu z kroku 6)
-8. `poukaz-rezervace.sql` — `create_booking_poukazem()`, uplatnění
-   dárkového poukazu přímo v online rezervaci (potřebuje kroky 4–6)
-9. `rezervace-na-poukaz.sql` — `vystavit_poukaz_z_rezervace()`, opačný
-   směr: z hotové zaplacené rezervace udělá dárkový poukaz(y) stejné
-   hodnoty (potřebuje kroky 4–6)
-10. `newsletter.sql`, `attribution.sql`
-11. `deti-a-kralici.sql` — druh lekce `lessons.druh` a pravidla lekce
-    Děti & králíčci: zákonný zástupce + 1 až 4 děti (2–5 míst, kapacita
-    = lidé), dárkový poukaz za 499 Kč na ni neplatí. Cenu (1 090 Kč +
-    500 Kč za každé další dítě) počítá `stripe-create`.
-12. `poukaz-deti.sql` — `vouchers.druh` a dětský dárkový poukaz (1 090 Kč,
-    zákonný zástupce + 1 dítě); každý druh poukazu jde uplatnit jen na
-    lekci stejného druhu
-13. `poukaz-deti-pocet.sql` — `vouchers.deti`: dětský poukaz na zástupce
-    + 1 až 4 děti (1 090 Kč + 500 Kč za každé další dítě), při uplatnění
-    zabere 1 + deti míst
-
-### Ukázka poukazu na webu
-
-`assets/photos/poukaz-ukazka*.webp` jsou vykreslené přímo z generátoru PDF
-(`supabase/functions/_shared/poukaz-pdf.ts`) s ukázkovým kódem, aby web
-ukazoval přesně ten poukaz, který přijde e-mailem. Když se změní návrh
-poukazu, vyrenderuj je znovu: sbal `poukaz-pdf.ts` esbuildem pro Node
-(importy z esm.sh přepsat na npm balíčky `pdf-lib` a `@pdf-lib/fontkit`,
-fonty číst z `assets/fonts/pdf/`), PDF vykresli přes pdf.js a převeď do
-WebP v šířkách 1200 a 640 px. Dětský poukaz má variantu pro každý počet
-dětí (`poukaz-ukazka-deti.webp` = 1 dítě, `-deti-2` až `-deti-4`).
-
-Krok 5 přibyl proto, že produkční databáze měla dvě věci, které v repu
-vůbec nebyly (`vouchers.expires_at` a celá tabulka `stripe_events`).
-Bez nich by čerstvé nasazení rozbilo webhook.
-
-## Platnost dárkového poukazu
-
-Poukaz platí **6 měsíců** od vystavení (dřív rok). Délka žije ve třech
-prostředích, která si ji nemůžou naimportovat jedno od druhého:
-
-| Vrstva | Kde | Co |
-|---|---|---|
-| Edge funkce (Deno) | `supabase/functions/_shared/poukaz-platnost.ts` | `PLATNOST_MESICU`, `platnostDoISO()`, text do e-mailu a na PDF |
-| Databáze (Postgres) | `supabase/vouchers-lifecycle.sql` | `public.voucher_validity()` — čte ji výchozí hodnota sloupce i `vystavit_poukaz_z_rezervace()` |
-| Prohlížeč a texty | `payment-config.js` → `voucherValidityMonths` | pro kontrolu textů na webu |
-
-`npm run verify` hlídá, že všechny tři říkají totéž a že se číslo nikde
-neopisuje natvrdo. Změna platnosti = změnit `FAKTA.poukazPlatnostMesicu`
-ve `scripts/verify.mjs`, pustit kontrolu a opravit, na co ukáže.
-
-**Počítá se v kalendářních měsících**, ne v pevném počtu dní — konec
-měsíce se ořízne na poslední platný den (31. 8. → 28. 2.). Postgres
-(`interval '6 months'`) i `platnostDo()` to dělají shodně, takže datum
-v databázi sedí s datem na poukázce.
-
-Zkrácení platí **jen dopředu**. Poukazy vystavené dřív mají `expires_at`
-zapsané při vystavení a nikdo s ním nehýbe — doběhnou s roční platností,
-jak byly prodané.
-
-## PDF dárkového poukazu
-
-K poukazovému e-mailu se přibaluje vytisknutelná poukázka
-(`supabase/functions/_shared/poukaz-pdf.ts`). Kreslí se vektorově přes
-`pdf-lib`, logo je překreslené podle `assets/logo.svg`.
-
-Rozvržení je 210 × 99 mm na šířku podle schváleného návrhu: vlevo logo
-v kolečku a jméno studia, vpravo nadpis, perex, vlasová linka a smetanová
-karta se dvěma políčky — **kód poukazu** a **platnost**. Cena na poukázce
-schválně není; je to dárek a příjemce nemá vidět, co dárce platil. Míry
-v souboru jsou zapsané v milimetrech (`mm()`) a měřené shora (`shora()`),
-aby se daly číst stejně jako v návrhu.
-
-Fonty leží jako běžné soubory v `assets/fonts/pdf/` a funkce si je
-**jednou stáhne a drží v paměti** (`poukaz-fonty.ts`). Zapéct je do kódu
-jako base64 by znamenalo skoro 100 kB zdrojáku, který nejde zkontrolovat
-v code review a při každé ruční manipulaci hrozí, že se jeden znak rozbije
-a poukaz se tiše přestane generovat.
-
-> **Důsledek:** příloha funguje až ve chvíli, kdy jsou fonty nasazené na
-> webu. Dokud tam nejsou, e-mail s poukazem odejde bez přílohy — kód je
-> v těle zprávy a ten je to podstatné.
-
-Řezy jsou čtyři a jmenují se podle rodiny a váhy, ať je z volání poznat,
-co se sází:
-
-| Soubor | Kde se používá |
+| Stránka | Co na ní je |
 |---|---|
-| `schibsted-600.ttf` | nadpis „Dárkový poukaz" |
-| `schibsted-700.ttf` | jméno studia, kód poukazu, platnost |
-| `hanken-400.ttf` | perex a kontakty |
-| `hanken-600.ttf` | popisky v kartě |
+| `index.html` | Homepage: lekce, ceny, galerie, FAQ, kontakt |
+| `rezervace.html` | Výběr termínu, rezervace, platba, uplatnění poukazu |
+| `koupit-poukaz.html` | Koupě dárkového poukazu (klasický / dětský, počet dětí, počet kusů) |
+| `darkovy-poukaz.html` | Představení poukazu, ukázka skutečného poukazu z e-mailu |
+| `skupinove-lekce.html` | Soukromé lekce pro firmy a oslavy, u nás ve studiu nebo u zákazníka, s poptávkovým formulářem |
+| `joga-pro-deti-ostrava.html` | Lekce Děti & králíčci |
+| `joga-se-zviraty.html`, `o-nas.html` | Články a informace o studiu |
+| `vstupenka.html` | Stav rezervace a QR kód pro odbavení u dveří |
+| `obchodni-podminky.html`, `zasady-osobnich-udaju.html` | Právní texty |
+| `asistent.html` | Celostránková verze chatu |
+| `admin.html`, `business.html` | Správa a business přehled (noindex, přihlášení přes Supabase) |
 
-Web má Hanken i Schibsted Grotesk rozdělené na `latin` a `latin-ext` a
-**ani jeden soubor sám češtinu nepokryje** — latin má `á é í ó ú ý`,
-latin-ext `č ď ě ň ř š ť ů ž`. Vyrobit je znovu
-(potřebuje `pip install fonttools brotli`):
+## Lekce, ceny a poukazy
 
-1. z každé dvojice `.woff2` udělej statický řez
-   (`fontTools.varLib.instancer`, `wght` podle názvu souboru),
-2. slij `latin` + `latin-ext` dohromady (`fontTools.merge.Merger`),
-3. ořízni na podmnožinu znaků a ulož do `assets/fonts/pdf/`.
+Ceny počítá vždy **server** (Edge funkce), prohlížeč je jen ukazuje.
+Veřejná konfigurace pro zobrazení je v `payment-config.js` a musí sedět se
+Supabase secrets. Na shodu dohlíží `npm run verify`.
 
-Podmnožina je schválně velkorysá (ASCII + celá česká abeceda +
-interpunkce). Na chybějícím glyfu `pdf-lib` spadne — e-mail pak sice
-odejde, ale bez přílohy, protože se selhání polyká záměrně: kód poukazu
-je v těle zprávy a ten je to podstatné.
+| Co | Cena | Poznámka |
+|---|---|---|
+| Lekce Jóga s králíčky | 499 Kč / osoba | až 4 místa na jedno jméno |
+| Lekce Děti & králíčci (`lessons.druh = 'deti'`) | 1 090 Kč zákonný zástupce + 1 dítě, každé další dítě 500 Kč | nejvýš 4 děti na zástupce, kapacita 12 osob včetně dospělých |
+| Dárkový poukaz klasický | 499 Kč | jeden vstup na lekci Jóga s králíčky |
+| Dárkový poukaz dětský | 1 090 Kč + 500 Kč za další dítě | zástupce + 1 až 4 děti (`vouchers.deti`), jen na lekci Děti & králíčci |
 
-## Edge funkce
+Poukaz platí **6 měsíců** v kalendářních měsících (31. 8. → 28. 2.).
+Délka žije na třech místech, která si ji nemůžou importovat: Edge funkce
+(`_shared/poukaz-platnost.ts`), databáze (`public.voucher_validity()`)
+a web (`payment-config.js → voucherValidityMonths`). `npm run verify`
+hlídá, že všechna tři říkají totéž. Změna platnosti = změnit
+`FAKTA.poukazPlatnostMesicu` ve `scripts/verify.mjs` a opravit, na co
+kontrola ukáže. Zkrácení platí jen pro nově vystavené poukazy.
 
-Ve `supabase/functions/`. Nasazují se přes Supabase CLI, `stripe-webhook`
-a `stripe-confirm` **bez** ověřování JWT:
+Každý druh poukazu jde uplatnit jen na lekci svého druhu. Dětský poukaz
+zabere při uplatnění 1 + počet dětí míst (`create_booking_poukazem`).
+
+### PDF poukazu
+
+K e-mailu s poukazem se přibaluje poukázka k vytištění
+(`supabase/functions/_shared/poukaz-pdf.ts`, `pdf-lib`, 210 × 99 mm).
+Nese kód a platnost, cenu schválně ne. U dětského poukazu píše, na kolik
+dětí platí. Fonty leží v `assets/fonts/pdf/` a funkce si je stáhne z webu.
+Když chybí nebo selže vykreslení, e-mail odejde bez přílohy, protože kód
+je i v těle zprávy.
+
+Obrázky `assets/photos/poukaz-ukazka*.webp` na webu jsou vykreslené přímo
+z tohoto generátoru, aby web ukazoval skutečný poukaz. Dětský má variantu
+pro každý počet dětí (`-deti`, `-deti-2` až `-deti-4`). Po změně návrhu je
+vyrenderuj znovu:
+1. Sbal `poukaz-pdf.ts` esbuildem pro Node. Importy z esm.sh přepiš na
+   npm balíčky `pdf-lib` a `@pdf-lib/fontkit`.
+2. Vykresli PDF přes pdf.js.
+3. Ulož do WebP v šířkách 1200 a 640 px.
+
+České fonty pro PDF vznikly sloučením `latin` + `latin-ext` řezů
+Schibsted Grotesk a Hanken Grotesk (fonttools: instancer → merge →
+subset). Ani jedna z těch sad sama češtinu nepokryje.
+
+## E-maily
+
+Potvrzení rezervací, kódy poukazů, přesuny a zrušení lekcí posílá
+**server** přes **Brevo** (secret `BREVO_API_KEY`). Šablony jsou v repu
+v `supabase/functions/_shared/templates.ts`:
+
+| Šablona | Kdy |
+|---|---|
+| `bookingMail` | potvrzení zaplacené rezervace s QR kódem |
+| `detiBookingMail` | potvrzení lekce Děti & králíčci („Kdo: zástupce + N děti“, pokyny „Než vyrazíte“) |
+| `voucherMail` | dárkový poukaz s kódem a PDF přílohou |
+| `presunMail`, `cancelMail` | přesun rezervace, zrušená lekce |
+| `welcomeMail` | přihlášení k newsletteru |
+| `customMail` | ruční zpráva ze správy |
+
+Každý e-mail se nejdřív zapíše do fronty `public.email_outbox` a teprve
+pak se odešle. Co selže, zkouší se znovu (1 min → 5 min → 30 min → 2 h)
+a pak čeká na člověka. Stav fronty je ve správě v záložce **E-maily**,
+odkud jde zprávu poslat znovu. Díky frontě se potvrzení neztratí ani
+tehdy, když host zavře stránku hned po zaplacení.
+
+EmailJS se z prohlížeče odstranil 3. 9. 2026. Resend je v kódu připravený
+(`RESEND_API_KEY` má přednost před Brevem), ale dokud DNS domény bydlí
+u emailprofi.cz, nejde nastavit. Podrobnosti jsou v `.env.example`.
+
+## Edge funkce (`supabase/functions/`)
+
+| Funkce | JWT | K čemu |
+|---|---|---|
+| `stripe-create` | ne | Založí platbu za rezervaci. Cenu spočítá podle druhu lekce a počtu míst. |
+| `stripe-voucher` | ne | Založí platbu za poukazy (druh, počet dětí, počet kusů). |
+| `stripe-webhook` | ne | Příjem událostí ze Stripu (ověřený podpis). Potvrdí platbu, vystaví poukazy, zařadí e-maily. |
+| `stripe-confirm` | ne | Totéž z návratové stránky, rychlejší cesta vedle webhooku. |
+| `email-dispatch` | ano | Rozeslání fronty e-mailů. Volá ji správa nebo server. |
+| `business-sync`, `business-zapier` | ano / ne | Importy do business přehledu (Stripe, Vercel, GA4, Sklik) |
+
+Sdílený kód je v `_shared/`: e-maily, šablony, PDF poukazu, druh a cena
+poukazu, platnost. Funkce se nasazují přes Supabase CLI nebo MCP.
+Stripe funkce jdou s `--no-verify-jwt`:
 
 ```bash
 supabase functions deploy stripe-webhook --no-verify-jwt
 ```
 
-`email-dispatch` se nasazuje normálně (s JWT) — volá ji admin po přihlášení.
+Pořadí při změně plateb: **databáze → webhook/confirm/dispatch →
+stripe-create/stripe-voucher → web**. Starší kód tak nikdy nedostane data,
+kterým nerozumí.
 
-Tajné klíče nikdy nejdou do repozitáře, jen do Supabase secrets — seznam
-je v [`.env.example`](.env.example).
+## Databáze (`supabase/*.sql`)
 
-## E-maily
+Spouští se v Supabase → SQL Editor. Všechny soubory jsou bezpečné pustit
+opakovaně. Pořadí:
 
-Potvrzení rezervací a kódy poukazů posílá **server**, ne prohlížeč hosta.
-Pořád přes EmailJS a přes tytéž šablony; změnilo se jen to, odkud se
-odeslání spouští.
+1. `schema.sql` — tabulky, RLS, `is_owner()`
+2. `payments.sql`, `tickets.sql`
+3. `online-only.sql` — držení místa po dobu platby, kapacita, `create_booking`
+4. `lesson-images.sql` — obrázek u lekce (`image_url`, úložiště `lesson-images`)
+5. `vouchers.sql`, `vouchers-lifecycle.sql` — poukazy, platnost,
+   atomické uplatnění, deník Stripe událostí (`stripe_events`)
+6. `email-outbox.sql` — fronta odchozích e-mailů
+7. `provoz-a-brzdy.sql` — provozní pojistky (zaplacenou rezervaci nejde smazat ad.)
+8. `presun-rezervace.sql` — přesun rezervace na jiný termín
+9. `poukaz-rezervace.sql` — `create_booking_poukazem()`, uplatnění poukazu v rezervaci
+10. `rezervace-na-poukaz.sql` — ze zaplacené rezervace udělá poukaz stejné hodnoty
+11. `newsletter.sql`, `attribution.sql` — odběr novinek, odkud zákazník přišel
+12. `deti-a-kralici.sql` — `lessons.druh`, pravidla lekce Děti & králíčci
+13. `poukaz-deti.sql` — `vouchers.druh`, dětský poukaz jen na dětskou lekci
+14. `poukaz-deti-pocet.sql` — `vouchers.deti`, dětský poukaz na 1–4 děti
+15. `business-dashboard.sql` — business tabulky a RLS (viz `docs/business-dashboard.md`)
 
-Dřív ho spouštěla návratová stránka po platbě. Kdo zavřel záložku, zaplatil
-na mobilu a potvrzení otevřel na notebooku, nebo koho trefil výpadek
-EmailJS, zůstal bez vstupenky — a chyba se přitom spolkla, takže se to
-nikdo nedozvěděl. Přesně tak 21. 8. 2026 skončil zaplacený poukaz bez kódu.
+> Produkční databáze se v minulosti rozcházela s repem. Tvrzení o
+> produkci si vždy ověř dotazem, ne z paměti.
 
-Teď se e-mail nejdřív zapíše do fronty `public.email_outbox` a teprve pak
-se zkusí odeslat. Co selže, zůstane a zkusí se znovu (1 min → 5 min →
-30 min → 2 h, pak čeká na člověka). V adminu je na to záložka **E-maily**:
-je vidět, co čeká, co se nepovedlo a proč, a jde to poslat znovu.
+## Chat na webu
 
-Jediné, co k tomu chybí, je secret `EMAILJS_PRIVATE_KEY`:
+Bublina „Máte otázku?“ (`assets/chat.js`) volá `api/chat.js`. Ten posílá
+dotaz přes Vercel AI Gateway (`AI_GATEWAY_API_KEY`, model v `CHAT_MODEL`)
+a odpovídá jen z faktů v `api/_chat-znalosti.js`. Co tam není, pošle na
+e-mail. Konverzace se neukládají. Při změně cen, lekcí nebo poukazů
+aktualizuj i tenhle soubor (a `llms.txt`).
+
+## Lokální práce
 
 ```bash
-supabase secrets set EMAILJS_PRIVATE_KEY=...
+npm ci
+vercel env pull .env.local   # volitelné, jen kvůli snímku termínů
+npm run build                # → public/
 ```
 
-Dokud není nastavený, nic se nerozbije — server se do fronty zapisuje dál
-a odesílání zatím obstará prohlížeč jako dřív. Jakmile klíč přibude,
-prohlížeč sám zmlkne (server to hlásí v odpovědi jako `serverEmail`), takže
-nehrozí, že by e-mail přišel dvakrát.
+Bez `.env.local` build doběhne také, jen do `rezervace.html` nevloží
+statický snímek vypsaných termínů. `public/` do gitu nepatří.
+
+### Než něco nasadíš
+
+```bash
+npm run check
+```
+
+Spustí testy (business, chat), `verify` nad zdroji, build a `verify-public`
+nad hotovým `public/`. Hlídá fakta (ceny, kapacity, věk dětí, platnost
+poukazu), shodu serveru a webu, JSON-LD vs. viditelné FAQ, sitemapu,
+indexaci, canonicaly, přesměrování, odkazy i soubory. Návratový kód 1 =
+nenasazuj.
+
+Vercel při nasazení pouští `npm run build`. Strukturální chyby nasazení
+zastaví. Odchylka v textu upraveném majitelkou ve správě jen vypíše
+varování, aby uložení obsahu nezablokovalo web.
+
+## Proměnné prostředí
+
+Seznam je v [`.env.example`](.env.example). Tajné hodnoty nikdy nejdou do
+repozitáře.
+
+- **Vercel:**
+  - `GITHUB_TOKEN`, `GITHUB_REPO`, `GITHUB_BRANCH`, `OBSAH_EMAILY` pro ukládání obsahu,
+  - `AI_GATEWAY_API_KEY` pro chat,
+  - `SUPABASE_URL` a `SUPABASE_ANON_KEY` pro snímek termínů při buildu.
+- **Supabase secrets:**
+  - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
+  - `BREVO_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO`,
+  - `PAYMENT_ENTRY_CZK`, `PAYMENT_VOUCHER_CZK`, `PAYMENT_DETI_CZK`, `PAYMENT_DETI_DITE_CZK`,
+  - `SITE_URL`, `OWNER_EMAIL`.
 
 ## Nasazení
 
-Push do `main` → Vercel Production. Náhled každé větve → Vercel Preview.
+Push do `main` spustí Vercel Production a každá větev dostane Vercel
+Preview. Edge funkce a SQL se nasazují zvlášť do Supabase (projekt
+`mglopjlgpfpturvqtjcj`).
 
-Podrobnosti k nastavení účtů, klíčů a Stripu jsou v [NASTAVENI.md](NASTAVENI.md).
+Návod na Supabase, Stripe, QR odbavení, obrázky lekcí a newsletter krok
+za krokem je v [NASTAVENI.md](NASTAVENI.md). Business přehled popisuje
+[`docs/business-dashboard.md`](docs/business-dashboard.md).
