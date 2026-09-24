@@ -306,6 +306,7 @@ header.nav.open .nav-quick, header.nav.open .nav-cta { opacity: 0; pointer-event
 .form { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-xl); padding: clamp(1.4rem, 3vw, 2.2rem); box-shadow: var(--sh-2); display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 1.1rem; }
 .field { display: grid; gap: .4rem; }
 .field.full { grid-column: 1 / -1; }
+.field[hidden] { display: none; }
 .field label { font-size: .88rem; font-weight: 600; }
 .field label small { font-weight: 400; color: var(--ink-soft); }
 .field input, .field select, .field textarea { width: 100%; font: inherit; font-size: 1rem; color: var(--ink); padding: .8em 1em; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--paper); transition: border-color .25s var(--ease), box-shadow .25s var(--ease); }
