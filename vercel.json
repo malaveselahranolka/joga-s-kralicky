@@ -90,6 +90,13 @@
       }
     },
     {
+      "src": "/asistent",
+      "status": 308,
+      "headers": {
+        "Location": "/asistent.html"
+      }
+    },
+    {
       "src": "/rezervace",
       "status": 308,
       "headers": {

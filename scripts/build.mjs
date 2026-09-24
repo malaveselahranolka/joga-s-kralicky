@@ -19,6 +19,7 @@ const files = [
   'darkovy-poukaz.html',
   'skupinove-lekce.html',
   'o-nas.html',
+  'asistent.html',
   'joga-pro-deti-ostrava.html',
   'joga-se-zviraty.html',
   'robots.txt',

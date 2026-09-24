@@ -36,6 +36,7 @@ const INDEXABLE_PAGES = [
 ]
 const NOINDEX_PAGES = [
   'obchodni-podminky.html', 'zasady-osobnich-udaju.html',
+  'asistent.html',
 ]
 const PUBLIC_PAGES = [...INDEXABLE_PAGES, ...NOINDEX_PAGES]
 const ALL_PAGES = [...PUBLIC_PAGES, 'admin.html', 'business.html', 'vstupenka.html', '404.html', '410.html']
