@@ -169,8 +169,8 @@
   <div class="wrap">
     <h1>Zásady zpracování osobních údajů</h1>
     <p class="lead">Bez balastu: co o vás víme, proč to potřebujeme, komu se to dostane do ruky a jak nám to můžete zakázat.</p>
-    <p class="updated">Účinné od <strong>3. 9. 2026</strong> · předchozí znění platilo od 20. 8. 2026.<br />
-      Co se změnilo: přibylo měření návštěvnosti přes Google Analytics, které běží <strong>jen s vaším souhlasem</strong> — viz oddíl 4. Google jsme doplnili mezi zpracovatele v oddílu 3.</p>
+    <p class="updated">Účinné od <strong>24. 9. 2026</strong> · předchozí znění platilo od 3. 9. 2026.<br />
+      Co se změnilo: na webu přibyl chat s automatickým pomocníkem. Co se děje se zprávami, popisujeme v oddílech 2 až 4; Vercel AI Gateway a OpenAI jsme doplnili mezi zpracovatele v oddílu 3.</p>
 
     <h2>1. Kdo s vašimi údaji pracuje</h2>
     <p>Správcem osobních údajů je:</p>
@@ -224,6 +224,12 @@
             <td>Do odhlášení</td>
           </tr>
           <tr>
+            <td>Text zpráv, které napíšete do chatu na webu</td>
+            <td>Abychom vám automaticky odpověděli na časté dotazy o lekcích, poukazech a cestě k nám. Do chatu prosím nepište jméno, kontakty ani zdravotní údaje — nepotřebujeme je.</td>
+            <td>Náš oprávněný zájem<br /><span style="color:var(--ink-soft)">čl. 6 odst. 1 písm. f) GDPR</span></td>
+            <td>U nás se <strong>neukládají</strong>: zpráva se pošle k vyhodnocení a po odpovědi ji zahodíme. Poskytovatelé ji mohou krátce uchovat podle oddílu 3.</td>
+          </tr>
+          <tr>
             <td>E-mail u dárkového poukazu, kód poukazu</td>
             <td>Doručení poukazu a jeho uplatnění ve studiu</td>
             <td>Plnění smlouvy</td>
@@ -246,6 +252,7 @@
           <tr><td><strong>Vercel</strong></td><td>Provoz webu</td><td>Technické údaje o návštěvě, včetně IP adresy</td></tr>
           <tr><td><strong>Vercel Web Analytics</strong></td><td>Anonymní návštěvnost — kolik lidí přišlo a na které stránky</td><td>Adresa navštívené stránky, odkud jste přišli, typ zařízení a prohlížeče, země. Bez cookies, bez IP adresy v uložených datech, bez profilování.</td></tr>
           <tr><td><strong>Google Analytics</strong> (Google Ireland Ltd.)<br><em>jen s vaším souhlasem</em></td><td>Statistika návštěvnosti — kolik lidí web navštívilo, odkud přišli a které stránky si prohlédli</td><td>Náhodné číslo návštěvníka uložené v cookie, navštívené stránky, odkud jste přišli, typ zařízení, prohlížeč a přibližná poloha podle IP adresy. Bez souhlasu se tenhle nástroj vůbec nespustí a neodešle se nic.</td></tr>
+          <tr><td><strong>Vercel AI Gateway</strong> (Vercel Inc., USA) a <strong>OpenAI</strong> (OpenAI, L.L.C., USA)</td><td>Automatické odpovědi v chatu na webu (jazykový model GPT-6 Luna)</td><td>Text vašich zpráv a předchozích odpovědí v téže konverzaci. Jméno ani e-mail ne, pokud je do chatu sami nenapíšete. Poskytovatelé mohou zprávy krátce uchovat kvůli ochraně proti zneužití služby podle svých podmínek; k tréninku modelů je nepoužíváme ani neposkytujeme.</td></tr>
           <tr><td><strong>QR Server (goqr.me)</strong></td><td>Vygenerování QR kódu do potvrzovacího e-mailu</td><td>Odkaz na vaši rezervaci nebo kód poukazu</td></tr>
           <tr><td><strong>Google Fonts</strong></td><td>Písma na webu</td><td>IP adresa při načtení stránky</td></tr>
         </tbody>
@@ -265,9 +272,11 @@
       <li><code>lastBooking</code>, <code>pendingBooking</code> — číslo vaší poslední rezervace a její detaily, abychom vám po návratu z platby uměli ukázat stav a poslat potvrzení</li>
       <li><code>voucherEmail</code>, <code>voucherCount</code> — e-mail a počet poukazů, abychom po zaplacení věděli, kam a kolik kódů poslat</li>
       <li><code>jsk-souhlas</code> — vaše odpověď na otázku o měření a datum, kdy jste ji dali. Bez ní bychom se ptali při každém otevření webu. Neodesílá se nikam.</li>
+      <li><code>jsk-chat-v1</code> — rozepsaná konverzace s pomocníkem v chatu, aby nezmizela, když přejdete na jinou stránku webu. Ukládá se jen do sessionStorage, tedy do zavření karty prohlížeče.</li>
       <li><code>jsk-mereno</code> — čísla posledních rezervací a plateb, které už se do statistiky započítaly, aby se stejný nákup nezapočítal dvakrát po obnovení stránky. Vzniká jen tehdy, když jste souhlas s měřením dali.</li>
     </ul>
     <p>Zůstává to jen ve vašem zařízení a smažete to vymazáním dat webu v prohlížeči.</p>
+    <p>Aby chat nešel zahltit, server si <strong>na chvíli v paměti</strong> pamatuje, kolik zpráv přišlo z jedné IP adresy (nejdéle 24 hodin, nikam se neukládá a po restartu serveru zmizí).</p>
 
     <h2>5. Vaše práva</h2>
     <p>Vůči nám máte tato práva a stačí nám napsat na <a href="mailto:info@jogaskralicky.cz">info@jogaskralicky.cz</a>:</p>

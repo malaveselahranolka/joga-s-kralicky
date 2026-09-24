@@ -93,7 +93,7 @@ for (const page of ALL_PAGES) {
 //     ve strukturovaných datech, v CMS seedu i v generátoru rozvrhu.
 //     Stačí je změnit na jednom místě a web začne lhát.
 // ---------------------------------------------------------------------
-const FAKTA = {delkaMin: 60, kapacita: 10, cenaKc: 499, kraliku: 7, vekDeti: 10, poukazPlatnostMesicu: 6}
+const FAKTA = {delkaMin: 60, kapacita: 10, cenaKc: 499, kraliku: 10, vekDeti: 10, poukazPlatnostMesicu: 6}
 
 // Zakázané formulace = staré hodnoty, které se nesmí vrátit.
 // Články o štěňatech smí psát o obecném trhu ("60 až 75 minut"), proto
@@ -107,16 +107,17 @@ const ZAKAZANE = [
   [/dvanáct/i, 'stará kapacita (12 osob)'],
   [/max 12 míst/i, 'stará kapacita (12 míst)'],
   [/230\s*(\+|hodnocení|klidných)/i, 'nedoložená statistika (230 hostů/hodnocení)'],
-  // Kapacita je deset MÍST, králíků je ale sedm. Obě desítky se v textu
-  // potkávají, tak hlídáme jen tu, která patří ke králíkům — „deset lidí",
-  // „deset míst" i „o deset minut dřív" musí projít.
-  [/\b(deset|deseti|10)\s+králí/i, 'starý počet králíků (10)'],
-  [/\bz\s+desítky\b/i, 'starý počet králíků (10)'],
+  // Králíků je od 24. 9. 2026 deset (dřív sedm). Hlídáme jen číslovku,
+  // která stojí u králíků — „Sedm věcí, na které se lidi ptají" v úvodu
+  // FAQ je počet otázek a projít musí.
+  [/\b(sedm|sedmi|7)\s+(?:domácí\w*\s+)?králí/i, 'starý počet králíků (7)'],
+  [/\bze\s+sedmi\s+má\b/i, 'starý počet králíků (7)'],
   [/(?:děti|dítě)[^.\n]{0,35}(?:od\s*)?7\s*(?:let|\+)/i, 'nesprávný minimální věk dětí (7 let)'],
   [/sobot(?:a|ní)[^.\n]{0,25}(?:od\s*)?9:30/i, 'neaktuální dětský čas (sobota 9:30)'],
 ]
 
-for (const page of [...PUBLIC_PAGES, 'content/obsah.json', 'llms.txt']) {
+// Znalosti chatbota a popis termínů pro Google musí říkat totéž co web.
+for (const page of [...PUBLIC_PAGES, 'content/obsah.json', 'llms.txt', 'api/_chat-znalosti.js', 'scripts/build.mjs']) {
   if (!existsSync(join(root, page))) continue
   const text = read(page)
   for (const [re, popis] of ZAKAZANE) {
@@ -193,7 +194,7 @@ for (const fn of ['supabase/functions/stripe-confirm/index.ts', 'supabase/functi
 }
 
 // d) texty, které platnost slibují návštěvníkovi
-const SLIB_PLATNOSTI = ['index.html', 'darkovy-poukaz.html', 'obchodni-podminky.html', 'llms.txt']
+const SLIB_PLATNOSTI = ['index.html', 'darkovy-poukaz.html', 'obchodni-podminky.html', 'llms.txt', 'api/_chat-znalosti.js']
 const spravnyText = `${PLATNOST} ${mesicuSlovo(PLATNOST)}`
 for (const soubor of SLIB_PLATNOSTI) {
   if (!existsSync(join(root, soubor))) continue

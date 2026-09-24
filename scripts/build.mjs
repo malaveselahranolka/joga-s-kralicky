@@ -299,7 +299,7 @@ if (existsSync(rezervacePath)) {
       name: l.title,
       description: `${l.title} ve Fit&Fun Studiu v Ostravě-Mariánských Horách. `
         + `${l.duration_min || 60} minut jemné hatha jógy, při které mezi cvičícími `
-        + `volně pobíhá sedm domácích králíků. Vstup ${cena} Kč, platí se online při rezervaci.`,
+        + `volně pobíhá deset domácích králíků. Vstup ${cena} Kč, platí se online při rezervaci.`,
       startDate: new Date(l.starts_at).toISOString(),
       endDate: new Date(new Date(l.starts_at).getTime() + (l.duration_min || 60) * 60000).toISOString(),
       eventStatus: 'https://schema.org/EventScheduled',

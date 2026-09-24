@@ -75,6 +75,11 @@
   const form = document.getElementById('poptavkaForm');
   if (form) {
     const msg = document.getElementById('poptavkaMsg');
+    // Minulé dny v kalendáři nenabízet. Datum se skládá z místního času,
+    // toISOString() by kolem půlnoci vrátil včerejšek.
+    const dnes = new Date();
+    const dvoj = (n) => String(n).padStart(2, '0');
+    if (form.elements.datum) form.elements.datum.min = `${dnes.getFullYear()}-${dvoj(dnes.getMonth() + 1)}-${dvoj(dnes.getDate())}`;
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const val = (name) => (form.elements[name] && form.elements[name].value || '').trim();
@@ -83,6 +88,15 @@
         msg.classList.add('err');
         return;
       }
+      if (!val('datum') || !val('cas')) {
+        msg.textContent = 'Vyberte prosím datum i čas, kdy by se vám lekce hodila.';
+        msg.classList.add('err');
+        (form.elements[val('datum') ? 'cas' : 'datum']).focus();
+        return;
+      }
+      // 2026-11-12 → 12. 11. 2026 (tak, jak se datum píše česky)
+      const [rok, mesic, den] = val('datum').split('-').map(Number);
+      const termin = `${den}. ${mesic}. ${rok} v ${val('cas')}`;
       msg.classList.remove('err');
       const radky = [
         'Dobrý den,',
@@ -91,7 +105,7 @@
         '',
         'Příležitost: ' + (val('typ') || '—'),
         'Počet lidí: ' + (val('pocet') || '—'),
-        'Termín, který by se nám hodil: ' + (val('termin') || '—'),
+        'Termín, který by se nám hodil: ' + termin,
         '',
         val('zprava'),
         '',

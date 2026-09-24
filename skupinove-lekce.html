@@ -117,7 +117,7 @@
       <nav class="crumbs" aria-label="Drobečková navigace"><a href="/">Jóga s králíčky</a> / Skupinové lekce</nav>
       <span class="eyebrow">Firmy, oslavy, parta přátel</span>
       <h1>Skupinová lekce <em>jen pro vás</em></h1>
-      <p class="phero-sub">Celý sál, lektorka a sedm králíčků jen pro váš tým nebo partu. Termín domluvíme mimo běžný sobotní rozvrh a program uděláme na míru.</p>
+      <p class="phero-sub">Celý sál, lektorka a deset králíčků jen pro váš tým nebo partu. Termín domluvíme mimo běžný sobotní rozvrh a program uděláme na míru.</p>
       <div class="phero-actions">
         <a class="btn btn-light" href="#poptavka">Poptat termín <span class="arrow">→</span></a>
         <a class="btn btn-ghost" href="#prubeh">Jak to probíhá</a>
@@ -201,7 +201,7 @@
         <ul class="ticks">
           <li><b>Sál jen pro vaši skupinu</b>, žádní cizí lidé</li>
           <li><b>Lektorka</b>, která vede i úplné začátečníky</li>
-          <li><b>Sedm králíčků</b>, kteří si sami vyberou, ke komu přijdou</li>
+          <li><b>Deset králíčků</b>, kteří si sami vyberou, ke komu přijdou</li>
           <li><b>Podložky, dečky a polštáře</b> půjčíme, stačí pohodlné oblečení</li>
           <li><b>Parkování zdarma</b> přímo u studia</li>
         </ul>
@@ -241,6 +241,10 @@
           <input id="p-telefon" name="telefon" type="tel" autocomplete="tel" />
         </div>
         <div class="field">
+          <label for="p-pocet">Počet lidí</label>
+          <input id="p-pocet" name="pocet" type="number" min="1" inputmode="numeric" />
+        </div>
+        <div class="field full">
           <label for="p-typ">Příležitost</label>
           <select id="p-typ" name="typ">
             <option>Firemní akce / teambuilding</option>
@@ -251,16 +255,16 @@
           </select>
         </div>
         <div class="field">
-          <label for="p-pocet">Počet lidí</label>
-          <input id="p-pocet" name="pocet" type="number" min="1" inputmode="numeric" />
+          <label for="p-datum">Datum, které by se hodilo</label>
+          <input id="p-datum" name="datum" type="date" required />
         </div>
         <div class="field">
-          <label for="p-termin">Termín, který by se hodil</label>
-          <input id="p-termin" name="termin" type="text" placeholder="např. pátek odpoledne v listopadu" />
+          <label for="p-cas">Čas začátku</label>
+          <input id="p-cas" name="cas" type="time" step="900" required />
         </div>
         <div class="field full">
           <label for="p-zprava">Cokoliv dalšího <small>(nepovinné)</small></label>
-          <textarea id="p-zprava" name="zprava" placeholder="Věk dětí, speciální přání, jestli má jít o překvapení…"></textarea>
+          <textarea id="p-zprava" name="zprava" placeholder="Náhradní termín, věk dětí, speciální přání, jestli má jít o překvapení…"></textarea>
         </div>
         <button class="btn btn-primary" type="submit">Připravit e-mail <span class="arrow">→</span></button>
         <p class="form-note">Údaje nikam neukládáme. Formulář jen otevře váš e-mail s připravenou zprávou na info@jogaskralicky.cz.</p>
@@ -355,5 +359,7 @@
 </footer>
 
 <script defer src="assets/podstranka.js?v=1"></script>
+<!-- Chat s pomocníkem: defer, vytvoří jen bublinu; okno se staví až po kliknutí. -->
+<script defer src="/assets/chat.js?v=1"></script>
 </body>
 </html>
