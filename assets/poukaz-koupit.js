@@ -25,6 +25,8 @@
 
   var pocet = 1;
   var druh = DRUHY[0] || null;
+  // Cena za kus podle druhu (dětský poukaz = zástupce + 1 dítě).
+  var cenaKus = function () { return Number((druh && druh.cenaCzk) || CENA); };
 
   // Úložiště prohlížeče umí vyhodit chybu (anonymní režim, přísné cookies).
   var ls = {
@@ -86,11 +88,12 @@
     $('pocet').textContent = pocet;
     $('minus').disabled = pocet <= 1;
     $('plus').disabled = pocet >= MAX;
-    $('souhrn').textContent = kusy(pocet) + ' × ' + kc(CENA);
-    $('celkem').textContent = kc(CENA * pocet);
-    $('zaplatit').innerHTML = 'Zaplatit ' + kc(CENA * pocet) + ' <span class="arrow">→</span>';
+    var c = cenaKus();
+    $('souhrn').textContent = kusy(pocet) + ' × ' + kc(c);
+    $('celkem').textContent = kc(c * pocet);
+    $('zaplatit').innerHTML = 'Zaplatit ' + kc(c * pocet) + ' <span class="arrow">→</span>';
     $('lPocet').textContent = kusy(pocet);
-    $('lCena').innerHTML = esc(String(CENA * pocet).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')) + '<small> Kč</small>';
+    $('lCena').innerHTML = esc(String(c * pocet).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')) + '<small> Kč</small>';
     if (druh) {
       $('lNazev').textContent = druh.nazev;
       // Jediný druh = klasická lekce, lístek drží původní popis se studiem.
@@ -123,8 +126,8 @@
     btn.textContent = 'Otevírám platbu…';
 
     if (window.jskUdalost) window.jskUdalost('begin_checkout', {
-      currency: 'CZK', value: CENA * pocet,
-      items: [{ item_id: 'poukaz', item_name: 'Dárkový poukaz na lekci', item_variant: druh ? druh.id : 'klasik', price: CENA, quantity: pocet }]
+      currency: 'CZK', value: cenaKus() * pocet,
+      items: [{ item_id: 'poukaz', item_name: 'Dárkový poukaz na lekci', item_variant: druh ? druh.id : 'klasik', price: cenaKus(), quantity: pocet }]
     });
 
     fnPost('stripe-voucher', { email: em, count: pocet, druh: druh ? druh.id : 'klasik' }).then(function (b) {

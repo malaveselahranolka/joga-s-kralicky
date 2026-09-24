@@ -21,6 +21,16 @@ window.PAYMENTS = {
   // Kolik míst smí host koupit v jedné rezervaci (na jedno jméno).
   maxSpots: 4,
 
+  // Lekce „Děti & králíčci“ (v databázi lessons.druh = 'deti'):
+  // zákonný zástupce s jedním dítětem za detiCzk, každé další dítě detiDiteCzk,
+  // nejvýš detiMaxDeti dětí na jednoho zástupce (1 + 3 navíc).
+  // Místa v kapacitě = lidé, takže zástupce + 2 děti zaberou 3 místa.
+  // Server: stripe-create (PAYMENT_DETI_CZK / PAYMENT_DETI_DITE_CZK, výchozí
+  // 1090 / 500) a limit míst v supabase/deti-a-kralici.sql. Musí sedět.
+  detiCzk: 1090,
+  detiDiteCzk: 500,
+  detiMaxDeti: 4,
+
   // Jak dlouho držíme místo nezaplacené rezervaci (minuty).
   // Musí odpovídat tomu, co nastavuje supabase/online-only.sql (35 min).
   holdMinutes: 35,
@@ -38,10 +48,11 @@ window.PAYMENTS = {
   // dokud ho nezapneš i tam. Kompletní postup spuštění je popsaný tamtéž.
   voucherDruhy: [
     { id: 'klasik', nazev: 'Jóga s králíčky',
-      popis: 'Lekce jógy s králíčky pro dospělé i děti od 10 let s rodičem.',
+      popis: 'Jeden vstup na lekci Jóga s králíčky.',
       aktivni: true },
-    { id: 'deti', nazev: 'Děti a králíci',
-      popis: 'Lekce pro rodiče s dětmi, hraní a mazlení s králíčky.',
+    { id: 'deti', nazev: 'Děti & králíčci',
+      popis: 'Lekce pro zákonného zástupce s dítětem. Poukaz platí na zástupce + 1 dítě.',
+      cenaCzk: 1090,
       aktivni: false },
   ],
 

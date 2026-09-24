@@ -4,13 +4,22 @@
 //  Výstup: { ok, url, amount_czk, spots }  → web na 'url' přesměruje hosta.
 //
 //  Platí se VÝHRADNĚ ONLINE a částku určuje SERVER, ne prohlížeč:
-//      cena za místo (PAYMENT_ENTRY_CZK) × počet míst v rezervaci
-//  Díky quantity vidí host v bráně i rozpis „499 Kč × 3 osoby".
+//    * klasická lekce: cena za místo (PAYMENT_ENTRY_CZK) × počet míst
+//      Díky quantity vidí host v bráně i rozpis „499 Kč × 3 osoby".
+//    * lekce Děti & králíčci (lessons.druh = 'deti'): zákonný zástupce
+//      s jedním dítětem 1 090 Kč + 500 Kč za každé další dítě (nejvýš 3).
+//      Místa = lidé, takže spots 2 = zástupce + 1 dítě, 5 = zástupce + 4 děti.
+//      Rozsah hlídá už databáze (supabase/deti-a-kralici.sql).
+//  Webhook i stripe-confirm pak porovnávají zaplacenou částku s tím, co
+//  se tu zapíše do bookings.payment_amount, takže cena žije jen tady.
 //
 //  Tajný klíč Stripe je jen v prostředí (Supabase secrets):
-//    STRIPE_SECRET_KEY   – sk_test_... / sk_live_...
-//    PAYMENT_ENTRY_CZK   – cena za jedno místo v Kč (výchozí 499)
-//    SITE_URL            – adresa webu (návrat po platbě)
+//    STRIPE_SECRET_KEY      – sk_test_... / sk_live_...
+//    PAYMENT_ENTRY_CZK      – cena za jedno místo v Kč (výchozí 499)
+//    PAYMENT_DETI_CZK       – dětská lekce, zástupce + 1 dítě (výchozí 1090)
+//    PAYMENT_DETI_DITE_CZK  – dětská lekce, každé další dítě (výchozí 500)
+//    SITE_URL               – adresa webu (návrat po platbě)
+//  Ceny musí sedět s payment-config.js (entryCzk, detiCzk, detiDiteCzk).
 // =====================================================================
 import Stripe from "https://esm.sh/stripe@14.21.0?target=denonext";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -45,7 +54,7 @@ Deno.serve(async (req) => {
     const admin = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"));
     const { data: bk, error } = await admin
       .from("bookings")
-      .select("id, email, spots, status, payment_status, payment_ref, lesson:lessons(title)")
+      .select("id, email, spots, status, payment_status, payment_ref, lesson:lessons(title, druh)")
       .eq("id", booking_id)
       .single();
     if (error || !bk) return json({ ok: false, error: "booking_not_found" }, 404);
@@ -91,8 +100,22 @@ Deno.serve(async (req) => {
     const unit = Math.round(entryCzk * 100); // haléře
     const qty = Math.max(1, Number(bk.spots) || 1);
     const lessonTitle = (bk as any).lesson?.title ?? "Lekce jógy";
+    const deti = (bk as any).lesson?.druh === "deti";
     const base = env("SITE_URL", "https://www.jogaskralicky.cz/").replace(/\/$/, "");
     const persons = qty === 1 ? "1 osoba" : (qty < 5 ? qty + " osoby" : qty + " osob");
+
+    // Dětská lekce: zástupce + děti. Databáze pustí jen 2–5 míst; kdyby
+    // přesto přišlo něco jiného (ruční zásah), platbu nezakládáme.
+    const detiCzk = Number(env("PAYMENT_DETI_CZK", "1090"));
+    const diteCzk = Number(env("PAYMENT_DETI_DITE_CZK", "500"));
+    const dalsiDeti = qty - 2;
+    if (deti && (dalsiDeti < 0 || dalsiDeti > 3)) {
+      return json({ ok: false, error: "invalid_spots" }, 409);
+    }
+    const detiTxt = (n: number) => n === 1 ? "1 dítě" : (n < 5 ? n + " děti" : n + " dětí");
+    const totalHal = deti
+      ? Math.round(detiCzk * 100) + dalsiDeti * Math.round(diteCzk * 100)
+      : unit * qty;
 
     // Fotka k lekci — v platební bráně se ukáže nad názvem, ať to není holá plocha.
     //
@@ -102,7 +125,7 @@ Deno.serve(async (req) => {
     // mají subjekt uprostřed a ořez jim nevadí. Než sem dáš jinou fotku,
     // podívej se, jak vypadá ve čtvercovém výřezu.
     const t = lessonTitle.toLowerCase();
-    const photo = t.includes("děti") ? "rabbit-6.jpg" : "rabbit-1.jpg";
+    const photo = deti || t.includes("děti") ? "rabbit-6.jpg" : "rabbit-1.jpg";
 
     // Idempotency okno proti dvojkliku: dva požadavky na tutéž rezervaci
     // v témže dvouminutovém okně dostanou jednu session, ne dvě.
@@ -119,6 +142,44 @@ Deno.serve(async (req) => {
     const idem = `booking:${bk.id}:${bucket}`;
     const expiresAt = Math.floor((bucket * BUCKET_MS) / 1000) + (SESSION_MINUTES + 3) * 60;
 
+    // Položky v bráně. U dětské lekce zvlášť „zástupce + dítě" a „další
+    // dítě", ať host vidí, za co platí.
+    const polozky: any[] = deti
+      ? [{
+          quantity: 1,
+          price_data: {
+            currency: "czk",
+            unit_amount: Math.round(detiCzk * 100),
+            product_data: {
+              name: `${lessonTitle} — zákonný zástupce + dítě (Jóga s králíčky)`,
+              description: `Rezervace na jméno, celkem zástupce + ${detiTxt(qty - 1)}`,
+              images: [`${base}/assets/photos/${photo}`],
+            },
+          },
+        }]
+      : [{
+          quantity: qty,
+          price_data: {
+            currency: "czk",
+            unit_amount: unit,
+            product_data: {
+              name: `${lessonTitle} — vstup (Jóga s králíčky)`,
+              description: `Rezervace na jméno, ${persons} × ${entryCzk} Kč`,
+              images: [`${base}/assets/photos/${photo}`],
+            },
+          },
+        }];
+    if (deti && dalsiDeti > 0) {
+      polozky.push({
+        quantity: dalsiDeti,
+        price_data: {
+          currency: "czk",
+          unit_amount: Math.round(diteCzk * 100),
+          product_data: { name: "Další dítě", description: `${diteCzk} Kč za každé další dítě` },
+        },
+      });
+    }
+
     const params: any = {
       mode: "payment",
       customer_email: bk.email,
@@ -128,18 +189,7 @@ Deno.serve(async (req) => {
       // Chceš někdy přidat další způsob platby? Přidej ho sem do seznamu.
       payment_method_types: ["card"],
       expires_at: expiresAt,
-      line_items: [{
-        quantity: qty,
-        price_data: {
-          currency: "czk",
-          unit_amount: unit,
-          product_data: {
-            name: `${lessonTitle} — vstup (Jóga s králíčky)`,
-            description: `Rezervace na jméno, ${persons} × ${entryCzk} Kč`,
-            images: [`${base}/assets/photos/${photo}`],
-          },
-        },
-      }],
+      line_items: polozky,
       custom_text: {
         submit: { message: "Místo na lekci držíme 35 minut, než platbu dokončíte." },
       },
@@ -208,7 +258,7 @@ Deno.serve(async (req) => {
     // a host by měl zaplaceno, ale rezervaci ne.
     let claim = admin.from("bookings").update({
       payment_status: "pending",
-      payment_amount: unit * qty,
+      payment_amount: totalHal,
       payment_ref: session.id,
       payment_method: "online",
     }).eq("id", bk.id);
@@ -229,7 +279,7 @@ Deno.serve(async (req) => {
       return json({ ok: false, error: "payment_in_progress" }, 409);
     }
 
-    return json({ ok: true, url: session.url, amount_czk: entryCzk * qty, spots: qty });
+    return json({ ok: true, url: session.url, amount_czk: Math.round(totalHal / 100), spots: qty });
   } catch (e) {
     return json({ ok: false, error: "server_error", detail: String(e) }, 500);
   }

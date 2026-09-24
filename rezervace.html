@@ -161,6 +161,8 @@
   .slot .meta { min-width: 0; }
   .slot .meta .lbl { font-size: .76rem; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-soft); }
   .slot .meta .val { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: 1.02rem; color: var(--ink); }
+  /* dětská lekce má jinou cenu než ostatní — ať je vidět hned v seznamu */
+  .slot .meta .deti-cena { margin-top: .2rem; font-size: .84rem; font-weight: 600; color: var(--clover-text); }
   .slot .meta .place { margin-top: .4rem; }
   .slot .meta .place .val { font-family: "Hanken Grotesk"; font-weight: 500; font-size: .92rem; color: var(--ink-soft); }
   .slot .book { text-align: center; }
@@ -324,8 +326,8 @@
 
         <div class="rowline">
           <div>
-            <div class="lbl">Počet účastníků</div>
-            <div class="stepper" role="group" aria-label="Počet účastníků" style="margin-top:.5rem">
+            <div class="lbl" id="spLbl">Počet účastníků</div>
+            <div class="stepper" role="group" aria-labelledby="spLbl" style="margin-top:.5rem">
               <button type="button" id="spDec" aria-label="Ubrat">−</button>
               <span class="val" id="spVal" aria-live="polite">1</span>
               <button type="button" id="spInc" aria-label="Přidat">+</button>
@@ -433,6 +435,17 @@ document.addEventListener('DOMContentLoaded', function () {
   const ticketHref = (id) => 'vstupenka.html#' + id;
   const PRICE = Number(PAY.entryCzk || PAY.depositCzk || 499);   // cena za JEDNO místo (Kč)
   const MAX_PER = Math.min(8, Math.max(1, Number(PAY.maxSpots) || 4));
+  // Lekce „Děti & králíčci“ (druh 'deti'): zákonný zástupce + 1 až 4 děti.
+  // Místa = lidé, takže `spots` je vždy zástupce + děti (2 až 5).
+  // Cenu i tady jen ukazujeme — skutečnou spočítá server (stripe-create).
+  const DETI_CZK = Number(PAY.detiCzk || 1090);        // zástupce + 1 dítě
+  const DITE_CZK = Number(PAY.detiDiteCzk || 500);     // každé další dítě
+  const DETI_MAX = Math.min(4, Math.max(1, Number(PAY.detiMaxDeti) || 4));
+  const jeDeti = (l) => !!l && l.druh === 'deti';
+  const minMist = (l) => jeDeti(l) ? 2 : 1;
+  const cenaZa = (l, n) => jeDeti(l) ? DETI_CZK + Math.max(0, n - 2) * DITE_CZK : PRICE * n;
+  const detiTxt = (n) => n === 1 ? '1 dítě' : (n < 5 ? n + ' děti' : n + ' dětí');
+  const kdoTxt = (l, n) => jeDeti(l) ? 'zástupce + ' + detiTxt(n - 1) : (n + (n === 1 ? ' místo' : (n < 5 ? ' místa' : ' míst')));
   const HOLD_MIN = Math.max(5, Number(PAY.holdMinutes) || 35);
   const czk = (n) => Number(n).toLocaleString('cs-CZ') + ' Kč';
 
@@ -597,11 +610,12 @@ document.addEventListener('DOMContentLoaded', function () {
       html += '<div class="day-group"><div class="day-head"><span class="date">' + fmtDate(d0) + '</span><span class="dow">' + fmtDow(d0) + '</span></div>';
       html += items.map((l) => {
         const end = new Date(l.dt.getTime() + l.duration_min * 60000);
-        const full = l.remaining <= 0;
+        const full = l.remaining < minMist(l);
         return '<div class="slot' + (full ? ' full' : '') + '">' +
           '<div class="time"><span class="rng">' + fmtTime(l.dt) + ' – ' + fmtTime(end) + '</span><span class="dur">' + l.duration_min + ' min</span></div>' +
           '<div class="info"><img class="thumb" src="' + esc(thumbFor(l)) + '" alt="" loading="lazy" />' +
             '<div class="meta"><div class="lbl">Lekce</div><div class="val">' + esc(l.title) + '</div>' +
+            (jeDeti(l) ? '<div class="deti-cena">' + czk(DETI_CZK) + ' zástupce + dítě · další dítě ' + czk(DITE_CZK) + '</div>' : '') +
             '<div class="place"><div class="lbl">Místo</div><div class="val">' + PLACE + '</div></div></div></div>' +
           '<div class="book"><div class="cap"><b>' + Math.min(l.capacity - l.remaining, l.capacity) + '</b>/' + l.capacity + '</div>' +
             (full ? '<button class="btn btn-ghost" disabled>Obsazeno</button>'
@@ -616,12 +630,15 @@ document.addEventListener('DOMContentLoaded', function () {
   $('dayList').addEventListener('click', (e) => {
     const btn = e.target.closest('button[data-id]'); if (!btn) return;
     chosen = lessons.find((l) => l.id === btn.dataset.id); if (!chosen) return;
-    spots = 1;
+    spots = minMist(chosen);
     openForm();
   });
 
   // ---- formulář ----
-  function maxSpots() { return chosen ? Math.min(MAX_PER, chosen.remaining) : MAX_PER; }
+  function maxSpots() {
+    const strop = jeDeti(chosen) ? DETI_MAX + 1 : MAX_PER;
+    return chosen ? Math.min(strop, chosen.remaining) : strop;
+  }
 
   // Vyplněný kód poukazu přepne celý formulář do režimu „neplatí se".
   // Hodnota poukazu je cena jednoho vstupu, takže poukaz platí na jedno
@@ -630,14 +647,30 @@ document.addEventListener('DOMContentLoaded', function () {
   const naPoukaz = () => voucherCode() !== '';
 
   function updateSpots() {
+    const deti = jeDeti(chosen);
+    // Poukaz za 499 Kč je na jedno místo klasické lekce; u dětské lekce
+    // pole vůbec nenabízíme (databáze by ho stejně odmítla).
+    $('voucherBox').hidden = deti;
+    if (deti && $('f-voucher').value) $('f-voucher').value = '';
     const poukaz = naPoukaz();
+    const min = minMist(chosen);
     if (poukaz) spots = 1;
-    if (spots > maxSpots()) spots = Math.max(1, maxSpots());
-    if (spots < 1) spots = 1;
-    $('spVal').textContent = spots;
-    $('spDec').disabled = poukaz || spots <= 1;
+    if (spots > maxSpots()) spots = Math.max(min, maxSpots());
+    if (spots < min) spots = min;
+    $('spLbl').textContent = deti ? 'Počet dětí' : 'Počet účastníků';
+    $('spVal').textContent = deti ? spots - 1 : spots;
+    $('spDec').setAttribute('aria-label', deti ? 'Ubrat dítě' : 'Ubrat');
+    $('spInc').setAttribute('aria-label', deti ? 'Přidat dítě' : 'Přidat');
+    $('spDec').disabled = poukaz || spots <= min;
     $('spInc').disabled = poukaz || spots >= maxSpots();
-    if (poukaz) {
+    if (deti) {
+      $('priceTotal').textContent = czk(cenaZa(chosen, spots));
+      $('priceCalc').textContent = spots > 2
+        ? czk(DETI_CZK) + ' + ' + (spots - 2) + ' × ' + czk(DITE_CZK)
+        : 'zástupce + 1 dítě';
+      $('spHint').textContent = 'Zákonný zástupce s dítětem ' + czk(DETI_CZK) + ', každé další dítě ' + czk(DITE_CZK) +
+        '. Nejvýš ' + detiTxt(Math.max(1, maxSpots() - 1)) + ' na jednoho zástupce.';
+    } else if (poukaz) {
       $('priceTotal').textContent = 'Poukaz';
       $('priceCalc').textContent = 'neplatí se';
       $('spHint').textContent = 'Poukaz platí na jedno místo.';
@@ -675,7 +708,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   $('backLink').addEventListener('click', (e) => { e.preventDefault(); showStep('pick'); });
-  $('spDec').addEventListener('click', () => { if (spots > 1) { spots--; updateSpots(); } });
+  $('spDec').addEventListener('click', () => { if (spots > minMist(chosen)) { spots--; updateSpots(); } });
   $('spInc').addEventListener('click', () => { if (spots < maxSpots()) { spots++; updateSpots(); } });
 
   let sending = false;
@@ -741,7 +774,8 @@ document.addEventListener('DOMContentLoaded', function () {
           already_redeemed: 'Tenhle poukaz už byl uplatněný.',
           expired: 'Platnost poukazu bohužel vypršela. Napište nám na info@jogaskralicky.cz, domluvíme se.',
           too_many_requests: 'Zkusili jste hodně kódů za sebou. Počkejte prosím pár minut, nebo nám napište na info@jogaskralicky.cz.',
-          missing_contact: 'Zkontrolujte prosím jméno, e-mail a telefon.'
+          missing_contact: 'Zkontrolujte prosím jméno, e-mail a telefon.',
+          deti_lekce: 'Dárkový poukaz platí na lekci Jóga s králíčky, na Děti & králíčci ho uplatnit nejde.'
         }[c];
         if (c === 'full' || c === 'unavailable') {
           alert(c === 'full'
@@ -809,8 +843,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     const end = new Date(chosen.dt.getTime() + chosen.duration_min * 60000);
     const summaryTxt = esc(chosen.title) + ' · ' + fmtDate(chosen.dt) + ' · ' + fmtTime(chosen.dt) + '–' + fmtTime(end) +
-      ' · ' + spotsTxt(spots);
-    const total = PRICE * spots;
+      ' · ' + kdoTxt(chosen, spots);
+    const total = cenaZa(chosen, spots);
 
     ls.set('lastBooking', lastBookingId);
     ls.set('pendingBooking', JSON.stringify({ id: lastBookingId, summary: summaryTxt, amount: total, spots: spots }));
@@ -836,7 +870,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // Měření: odchod do brány. Bez souhlasu se neodešle nic (viz souhlas.js).
     if (window.jskUdalost) window.jskUdalost('begin_checkout', {
       currency: 'CZK', value: total,
-      items: [{ item_id: 'vstup', item_name: 'Vstup na lekci jógy s králíčky', price: PRICE, quantity: spots }],
+      items: jeDeti(chosen)
+        ? [{ item_id: 'vstup-deti', item_name: 'Děti & králíčci: zástupce + ' + detiTxt(spots - 1), price: total, quantity: 1 }]
+        : [{ item_id: 'vstup', item_name: 'Vstup na lekci jógy s králíčky', price: PRICE, quantity: spots }],
     });
     try {
       window.location.href = await startCheckout(lastBookingId);
@@ -881,7 +917,7 @@ document.addEventListener('DOMContentLoaded', function () {
           // navíc hlídá, že se nákup nezapočítá dvakrát po obnovení stránky.
           if (window.jskUdalostJednou) window.jskUdalostJednou(pending.id, 'purchase', {
             transaction_id: pending.id, currency: 'CZK', value: pending.amount,
-            items: [{ item_id: 'vstup', item_name: 'Vstup na lekci jógy s králíčky', price: PRICE, quantity: pending.spots }],
+            items: [{ item_id: 'vstup', item_name: 'Vstup na lekci jógy s králíčky', price: Math.round(pending.amount / Math.max(1, pending.spots)), quantity: pending.spots }],
           });
           ls.del('pendingBooking');
         }

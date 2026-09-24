@@ -78,13 +78,14 @@
     {
       "tag": "Pro děti od 10 let",
       "title": "Děti & králíčci",
-      "price": "499 Kč",
+      "price": "1 090 Kč",
       "meta": [
         "60 minut",
         "-",
-        "max 10 míst",
-        "dítě s rodičem"
+        "max 12 osob",
+        "dítě se zákonným zástupcem"
       ],
+      "priceNote": "Cena 1 090 Kč platí za zákonného zástupce s jedním dítětem. Každé další dítě je za 500 Kč, s sebou můžete vzít nejvýš 3 další děti. Lekce je vždy pro dítě s doprovodem zákonného zástupce.",
       "description": "Děti se naučí králíčky pohladit, nakrmit a při tom se i hezky protáhnout.",
       "timeline": [
         {

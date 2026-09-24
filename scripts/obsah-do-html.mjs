@@ -119,6 +119,13 @@ export function obsahDoHtml(html, o) {
     card.querySelectorAll('.l-meta li').forEach((li, mi) => {
       if (item.meta?.[mi] != null) li.set_content(esc(item.meta[mi]))
     })
+    // Poznámka k ceně (dětská lekce: zástupce + dítě, další dítě zvlášť).
+    // Prázdná hodnota ve správě poznámku z karty odstraní.
+    const note = card.querySelector('.l-note')
+    if (note && item.priceNote != null) {
+      if (String(item.priceNote).trim()) note.set_content(sazba(item.priceNote))
+      else note.remove()
+    }
     const desc = card.querySelector('.l-desc')
     if (desc && item.description != null) desc.set_content(sazba(item.description))
     card.querySelectorAll('.l-run > div').forEach((row, ri) => {

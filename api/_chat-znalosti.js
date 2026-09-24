@@ -55,13 +55,21 @@ JAK TO VE STUDIU CHODÍ (provozní řád)
 - Lekce je i pro úplné začátečníky, lektorka ukáže jednodušší variantu každé polohy.
 - Cvičí se na vlastní odpovědnost. Zdravotní potíže, těhotenství nebo úraz řekněte lektorce před lekcí, přizpůsobí polohy.
 - Alergie na srst: lekci zvažte a případně se poraďte s lékařem; sál větráme a čistíme, ale alergenům se nevyhneme.
-- Děti jsou vítané na dětských lekcích (od 10 let) a chodí s jedním rodičem, který za ně po celou dobu zodpovídá.
+- Děti jsou vítané na dětských lekcích (od 10 let) a chodí vždy se zákonným zástupcem, který za ně po celou dobu zodpovídá.
 - Hrubé chování ke zvířatům = ukončení lekce bez náhrady.
 
+DĚTSKÁ LEKCE „DĚTI & KRÁLÍČCI“ (/joga-pro-deti-ostrava.html)
+- Pro děti od 10 let, vždy s doprovodem zákonného zástupce. 60 minut: povídání o králících, pozice se zvířecími jmény a lehké cvičení, krmení a hlazení.
+- Cena: 1 090 Kč za zákonného zástupce s jedním dítětem. Každé další dítě 500 Kč. Jeden zástupce může vzít nejvýš 3 další děti (celkem 4 děti).
+  Příklady: zástupce + 2 děti = 1 590 Kč, zástupce + 4 děti = 2 590 Kč.
+- Kapacita nejvýš 12 osob, počítají se dospělí i děti.
+- Rezervuje se online na /rezervace.html, v rezervaci se zvolí počet dětí. Termíny se vypisují průběžně.
+- Dárkový poukaz za 499 Kč na dětskou lekci uplatnit nejde.
+
 DÁRKOVÝ POUKAZ (/darkovy-poukaz.html, koupě na /koupit-poukaz.html)
-- 499 Kč za jeden vstup na lekci. Koupit jich jde víc najednou.
+- 499 Kč za jeden vstup na lekci Jóga s králíčky. Koupit jich jde víc najednou.
 - Přijde e-mailem během pár minut po zaplacení, s kódem a PDF k vytištění. Poštou se nic neposílá.
-- Platí 6 měsíců od zakoupení, na kteroukoliv vypsanou lekci (pro dospělé i dětskou).
+- Platí 6 měsíců od zakoupení, na kterýkoliv vypsaný termín lekce Jóga s králíčky. Na dětskou lekci Děti & králíčci neplatí.
 - Uplatnění: v rezervaci na webu vybrat termín, rozkliknout „Mám dárkový poukaz“ a vepsat kód. Nic se nedoplácí.
 - Poukaz je přenosný, uplatní ho kdokoliv s kódem. Nejde směnit zpět za peníze.
 
@@ -84,7 +92,6 @@ STRÁNKY WEBU
 - Obchodní podmínky: /obchodni-podminky.html
 
 CO V PODKLADECH NENÍ (na to neodpovídej, pošli na e-mail)
-- Zda platí vstup i rodič, který doprovází dítě na dětské lekci.
 - Jména jednotlivých králíků, jejich plemena a věk.
 - Slevy, permanentky, věrnostní programy — žádné nejsou uvedené, nic neslibuj.
 `.trim()
