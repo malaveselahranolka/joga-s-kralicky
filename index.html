@@ -1796,6 +1796,33 @@
     });
   })();
 
+  // ============ GALERIE: fotky stáhnout a dekódovat DOPŘEDU ============
+  // Fotky v galerii mají loading="lazy", jenže ty schované vpravo za
+  // okrajem (.gal-view má overflow: hidden) prohlížeč bere jako neviditelné.
+  // Stahoval a dekódoval je až ve chvíli, kdy do záběru vjely — přesně
+  // uprostřed jízdy do strany, a tam se galerie zadrhla a fotka doskočila.
+  // V testu na telefonu zůstalo po projetí celé galerie 6 fotek nenačtených.
+  // Proto: jakmile se návštěvník ke galerii blíží (zhruba obrazovka a půl
+  // předem), přepnou se všechny její fotky na eager a dekódují se mimo
+  // hlavní vlákno, takže během jízdy už není co dělat.
+  (function () {
+    const wrap = document.getElementById('galWrap');
+    if (!wrap) return;
+    const pripravit = () => {
+      wrap.querySelectorAll('img').forEach((img) => {
+        img.loading = 'eager';
+        if (img.decode) img.decode().catch(() => {});
+      });
+    };
+    if (!('IntersectionObserver' in window)) { pripravit(); return; }
+    const io = new IntersectionObserver((entries) => {
+      if (!entries.some((e) => e.isIntersecting)) return;
+      io.disconnect();
+      pripravit();
+    }, { rootMargin: '150% 0px 150% 0px' });
+    io.observe(wrap);
+  })();
+
   // ============ LIGHTBOX ============
   (function () {
     const lb = document.getElementById('lightbox');
@@ -1975,10 +2002,18 @@
     //
     // Teď se ten jediný rozměr měnící zápis udělá jako první a všechno
     // ostatní se už jen čte — jeden přepočet místo deseti.
+    let posledniSirka = -1;
     function measure() {
       const pinned = galPinned();
+      // Na telefonu se při scrollu schovává a zase ukazuje adresní řádek,
+      // což je `resize` jen na výšku. Šířka stopy (a tedy --travel) se tím
+      // nemění, takže ji nepřepisujeme — zápis by přepočítal layout celé
+      // stránky zrovna uprostřed scrollování.
+      const sirka = [window.innerWidth, galTrack ? galTrack.scrollWidth : 0, pinned].join('|');
+      const zmenaSirky = sirka !== posledniSirka;
+      posledniSirka = sirka;
 
-      if (galWrap && galTrack) {
+      if (galWrap && galTrack && zmenaSirky) {
         if (pinned) {
           // stopa ujede celou šířku za kratší scroll, jinak by pin trval věčnost
           galTravel = Math.max(galTrack.scrollWidth - window.innerWidth, 0);
@@ -2004,7 +2039,7 @@
       glowBoxes.length = 0;
       glows.forEach((g) => {
         const sec = g.parentElement;
-        glowBoxes.push({ el: g, top: docTop(sec), h: Math.max(sec.offsetHeight, 1) });
+        glowBoxes.push({ el: g, top: docTop(sec), h: Math.max(sec.offsetHeight, 1), last: null });
       });
     }
 
@@ -2045,12 +2080,18 @@
         if (d > 0.985) ctaLead.classList.add('armed');
       }
 
-      // světlo v tmavých pruzích se veze se scrollem — jen translate, nic se nepřekresluje
+      // světlo v tmavých pruzích se veze se scrollem — jen translate, nic se nepřekresluje.
+      // Zapisuje se jen u sekce, která je zrovna na obrazovce, a jen když se
+      // hodnota opravdu změnila: každý zápis CSS proměnné znamená přepočet
+      // stylu a dřív se dělal v každém snímku u všech světel na stránce.
       if (!REDUCE) {
         for (let i = 0; i < glowBoxes.length; i++) {
           const g = glowBoxes[i];
-          const p = clamp((y + vh - g.top) / (g.h + vh));
-          g.el.style.setProperty('--gy', ((p - 0.5) * g.h * 0.55).toFixed(0) + 'px');
+          if (y + vh < g.top || y > g.top + g.h) continue;
+          const gy = Math.round((clamp((y + vh - g.top) / (g.h + vh)) - 0.5) * g.h * 0.55);
+          if (gy === g.last) continue;
+          g.last = gy;
+          g.el.style.setProperty('--gy', gy + 'px');
         }
       }
 
