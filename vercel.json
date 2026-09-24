@@ -70,6 +70,20 @@
       }
     },
     {
+      "src": "/o-nas",
+      "status": 308,
+      "headers": {
+        "Location": "/o-nas.html"
+      }
+    },
+    {
+      "src": "/skupinove-lekce",
+      "status": 308,
+      "headers": {
+        "Location": "/skupinove-lekce.html"
+      }
+    },
+    {
       "src": "/rezervace",
       "status": 308,
       "headers": {

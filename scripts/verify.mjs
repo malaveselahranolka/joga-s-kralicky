@@ -31,6 +31,7 @@ const contentProblem = (where, what) => (contentDriftAllowed ? warnings : proble
 // zabírat místo v sitemapě ani ve výsledcích hledání.
 const INDEXABLE_PAGES = [
   'index.html', 'rezervace.html', 'darkovy-poukaz.html',
+  'skupinove-lekce.html', 'o-nas.html',
   'joga-pro-deti-ostrava.html', 'joga-se-zviraty.html',
 ]
 const NOINDEX_PAGES = [
@@ -362,8 +363,11 @@ try {
   fail('index.html', `lokální profily v JSON-LD nejdou ověřit — ${error.message}`)
 }
 
+// Doprava se z homepage přestěhovala na stránku O nás (sekce Kde nás
+// najdete). Ověřené údaje o MHD a parkování tam musí zůstat celé.
+const oNasHtml = read('o-nas.html')
 for (const fakt of ['Daliborova', '3, 4, 8, 18 a 19', '100 metrů', 'dvě minuty', 'bezplatné parkování']) {
-  if (!homeHtml.includes(fakt)) fail('index.html', `sekce dopravy neobsahuje ověřený údaj „${fakt}“`)
+  if (!oNasHtml.includes(fakt)) fail('o-nas.html', `sekce dopravy neobsahuje ověřený údaj „${fakt}“`)
 }
 
 let obsah = {}
@@ -552,6 +556,8 @@ try {
     ['/joga-se-zviraty', '/joga-se-zviraty.html'],
     ['/joga-pro-deti-ostrava', '/joga-pro-deti-ostrava.html'],
     ['/darkovy-poukaz', '/darkovy-poukaz.html'],
+    ['/skupinove-lekce', '/skupinove-lekce.html'],
+    ['/o-nas', '/o-nas.html'],
     ['/rezervace', '/rezervace.html'],
   ])
   for (const [path, target] of requiredRedirects) {
