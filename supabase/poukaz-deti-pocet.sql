@@ -13,8 +13,9 @@
 --
 --  UPLATNĚNÍ (create_booking_poukazem)
 --  Dětský poukaz založí rezervaci na 1 + deti míst (místa = lidé),
---  a proto jich potřebuje tolik volných. Jinak beze změny proti
---  poukaz-deti.sql.
+--  a proto jich potřebuje tolik volných. E-mail s potvrzením nese druh
+--  lekce, podle něj se u dětské lekce použije vlastní šablona. Jinak beze
+--  změny proti poukaz-deti.sql.
 -- =====================================================================
 
 -- 1) POČET DĚTÍ NA POUKAZU ---------------------------------------------
@@ -155,6 +156,7 @@ begin
                          else '1 místo' end,
       'price',      case when v.amount is not null
                          then to_char(round(v.amount / 100.0), 'FM999G999') || ' Kč' else '' end,
+      'druh',       l.druh,   -- Děti & králíčci mají vlastní šablonu potvrzení
       'location',   misto,
       'ticket_url', vstupenka,
       'qr_url',     'https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data='
