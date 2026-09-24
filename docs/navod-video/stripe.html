@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jóga s králíčky</title>
+<!-- Kopie mobilní Stripe Checkout jen pro návodové video. Recorder ji podstrčí
+     místo checkout.stripe.com a dosadí sem údaje z objednávky (window.OBJ).
+     Vzhled odpovídá branding_settings ze supabase/functions/stripe-create:
+     zelený horní panel #2C3B2E, zelené tlačítko, zaoblené rohy. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Inter, -apple-system, "Segoe UI", Roboto, sans-serif; color: #1A1A1A; background: #fff; -webkit-font-smoothing: antialiased; }
+  .top { background: #2C3B2E; color: #fff; padding: 18px 20px 26px; }
+  .bar { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; }
+  .bar .back { font-size: 18px; opacity: .75; margin-right: 2px; }
+  .bar .ico { width: 28px; height: 28px; border-radius: 50%; background: #F7F4EC; display: flex; align-items: center; justify-content: center; }
+  .bar .ico img { width: 20px; height: 20px; }
+  .bar .det { margin-left: auto; font-size: 13px; font-weight: 500; opacity: .8; }
+  .prod { text-align: center; margin-top: 22px; }
+  .prod img { width: 84px; height: 84px; border-radius: 10px; object-fit: cover; display: block; margin: 0 auto 14px; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+  .prod .n { font-size: 14px; font-weight: 500; color: rgba(255,255,255,.72); padding: 0 12px; }
+  .prod .a { font-size: 34px; font-weight: 600; letter-spacing: -.02em; margin-top: 4px; }
+  .prod .q { font-size: 13px; color: rgba(255,255,255,.62); margin-top: 2px; }
+  main { padding: 22px 20px 30px; }
+  .gp { height: 46px; border-radius: 8px; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 16px; font-weight: 500; }
+  .gp b { font-weight: 600; }
+  .or { display: flex; align-items: center; gap: 12px; color: #6B6B6B; font-size: 13px; margin: 20px 0 16px; }
+  .or::before, .or::after { content: ""; flex: 1; height: 1px; background: #E6E6E6; }
+  h3 { font-size: 15px; font-weight: 600; margin: 18px 0 10px; }
+  label { display: block; font-size: 13px; color: #4F4F4F; font-weight: 500; margin: 14px 0 6px; }
+  .in { width: 100%; height: 44px; border: 1px solid #E0E0E0; border-radius: 8px; padding: 0 12px; font: 15px Inter, sans-serif; color: #1A1A1A; box-shadow: 0 1px 1px rgba(0,0,0,.03); outline: none; background: #fff; }
+  .in:focus { border-color: #2C3B2E; box-shadow: 0 0 0 3px rgba(44,59,46,.22); }
+  .in::placeholder { color: #A3A3A3; }
+  .grp { border: 1px solid #E0E0E0; border-radius: 8px; overflow: hidden; }
+  .grp .in { border: 0; border-radius: 0; box-shadow: none; }
+  .grp .row { display: flex; border-top: 1px solid #E0E0E0; }
+  .grp .row .in + .in { border-left: 1px solid #E0E0E0; }
+  .grp:focus-within { border-color: #2C3B2E; box-shadow: 0 0 0 3px rgba(44,59,46,.22); }
+  .cardline { position: relative; }
+  .brands { position: absolute; right: 10px; top: 13px; display: flex; gap: 4px; }
+  .brands i { display: block; width: 26px; height: 18px; border-radius: 3px; }
+  .brands .v { background: #1A1F71; } .brands .m { background: linear-gradient(90deg,#EB001B 50%,#F79E1B 50%); } .brands .x { background: #2E77BC; }
+  select.in { appearance: none; background: #fff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="%236B6B6B" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>') no-repeat right 12px center; }
+  .pay { margin-top: 22px; width: 100%; height: 48px; border: 0; border-radius: 8px; background: #2C3B2E; color: #fff; font: 600 16px Inter, sans-serif; display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .pay .sp { display: none; width: 20px; height: 20px; border-radius: 50%; border: 2.5px solid rgba(255,255,255,.35); border-top-color: #fff; animation: r .8s linear infinite; }
+  .pay.busy .t { display: none; } .pay.busy .sp { display: block; }
+  .pay.ok { background: #3E7B3A; } .pay.ok .t, .pay.ok .sp { display: none; }
+  .pay .ck { display: none; } .pay.ok .ck { display: block; }
+  @keyframes r { to { transform: rotate(360deg); } }
+  .msg { font-size: 13px; color: #4F4F4F; text-align: center; margin-top: 14px; line-height: 1.45; }
+  .foot { display: flex; justify-content: center; gap: 14px; font-size: 12px; color: #8A8A8A; margin-top: 26px; }
+  .foot b { color: #6B6B6B; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="bar"><span class="back">←</span><span class="ico"><img src="https://www.jogaskralicky.cz/assets/logo.svg" alt=""></span>Jóga s králíčky<span class="det">Podrobnosti ⌄</span></div>
+  <div class="prod">
+    <img src="https://www.jogaskralicky.cz/assets/photos/rabbit-1.jpg" alt="">
+    <div class="n" id="n"></div>
+    <div class="a" id="a"></div>
+    <div class="q" id="q"></div>
+  </div>
+</div>
+<main>
+  <div class="gp"><svg width="17" height="20" viewBox="0 0 17 20" fill="#fff"><path d="M14.1 10.6c0-2.5 2-3.7 2.1-3.8-1.2-1.7-3-1.9-3.6-2-1.5-.2-3 .9-3.8.9-.8 0-2-.9-3.3-.9C3.8 4.9 2.2 5.9 1.3 7.5c-1.9 3.2-.5 8 1.3 10.6.9 1.3 1.9 2.7 3.3 2.6 1.3-.1 1.8-.8 3.4-.8 1.6 0 2 .8 3.4.8 1.4 0 2.3-1.3 3.2-2.6 1-1.5 1.4-2.9 1.4-3-.1 0-2.9-1.1-2.9-4.5ZM11.5 3c.7-.9 1.2-2 1.1-3.2-1 0-2.3.7-3 1.6-.7.8-1.2 2-1.1 3.1 1.1.1 2.3-.6 3-1.5Z"/></svg><b>Pay</b></div>
+  <div class="or">Nebo zaplaťte kartou</div>
+  <h3>Kontaktní údaje</h3>
+  <label>E-mail</label>
+  <input class="in" id="em" value="" readonly>
+  <h3>Platební metoda</h3>
+  <label>Údaje o kartě</label>
+  <div class="grp">
+    <div class="cardline"><input class="in" id="cn" placeholder="1234 1234 1234 1234" inputmode="numeric"><span class="brands"><i class="v"></i><i class="m"></i><i class="x"></i></span></div>
+    <div class="row"><input class="in" id="ce" placeholder="MM / RR"><input class="in" id="cc" placeholder="CVC"></div>
+  </div>
+  <label>Jméno držitele karty</label>
+  <input class="in" id="nm" placeholder="Celé jméno">
+  <label>Země nebo oblast</label>
+  <select class="in"><option>Česko</option></select>
+  <button class="pay" id="pay" type="button"><span class="t">Zaplatit</span><span class="sp"></span><svg class="ck" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></button>
+  <div class="msg" id="msg"></div>
+  <div class="foot"><span>Powered by <b>stripe</b></span><span>Podmínky</span><span>Ochrana soukromí</span></div>
+</main>
+<script>
+  const O = window.OBJ || {};
+  document.getElementById('n').textContent = O.name || '';
+  document.getElementById('a').textContent = O.amount || '';
+  document.getElementById('q').textContent = O.qty || '';
+  document.getElementById('em').value = O.email || '';
+  document.getElementById('msg').textContent = O.msg || '';
+  // formátování jako u Stripu: mezery po čtyřech číslicích, lomítko v datu
+  const cn = document.getElementById('cn'), ce = document.getElementById('ce');
+  cn.addEventListener('input', () => { cn.value = cn.value.replace(/\D/g, '').slice(0, 16).replace(/(\d{4})(?=\d)/g, '$1 '); });
+  ce.addEventListener('input', () => { const d = ce.value.replace(/\D/g, '').slice(0, 4); ce.value = d.length > 2 ? d.slice(0, 2) + ' / ' + d.slice(2) : d; });
+  document.getElementById('pay').addEventListener('click', (e) => {
+    const b = e.currentTarget; b.classList.add('busy');
+    setTimeout(() => { b.classList.remove('busy'); b.classList.add('ok'); }, 1800);
+    setTimeout(() => { location.href = O.success; }, 2600);
+  });
+</script>
+</body>
+</html>
