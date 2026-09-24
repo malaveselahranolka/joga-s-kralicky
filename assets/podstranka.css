@@ -195,8 +195,23 @@ header.nav.open .nav-quick, header.nav.open .nav-cta { opacity: 0; pointer-event
 .phero-bg { position: absolute; inset: 0; z-index: -1; }
 .phero-bg picture { display: contents; }
 .phero-bg img { width: 100%; height: 100%; object-fit: cover; }
-.phero-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20,24,18,.6) 0%, rgba(20,24,18,.2) 34%, rgba(20,24,18,.55) 66%, rgba(20,24,18,.92) 100%); }
-.phero-bg::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(165deg, rgba(110,138,78,.45) 0%, rgba(44,59,46,.3) 55%, rgba(44,59,46,.45) 100%); mix-blend-mode: multiply; }
+/* Zelený závoj jako v hero na homepage, jen hustší tam, kde leží text.
+   Na homepage je nadpis dole v nejtmavší části; tady text začíná už
+   v horní třetině a na světlé fotce (bílá zeď, blond vlasy) se ztrácel.
+   ::before barví fotku do zelena (multiply), ::after ji ztmaví: zleva
+   pod textem na počítači a zdola nahoru, kde jsou tlačítka. */
+.phero-bg::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(165deg, rgba(110,138,78,.62) 0%, rgba(44,59,46,.5) 55%, rgba(44,59,46,.6) 100%); mix-blend-mode: multiply; }
+.phero-bg::after {
+  content: ""; position: absolute; inset: 0; z-index: 2;
+  background:
+    linear-gradient(90deg, rgba(30,41,32,.72) 0%, rgba(30,41,32,.45) 45%, rgba(30,41,32,0) 78%),
+    linear-gradient(180deg, rgba(20,28,20,.55) 0%, rgba(30,41,32,.3) 28%, rgba(30,41,32,.6) 62%, rgba(24,33,26,.94) 100%);
+}
+@media (max-width: 640px) {
+  /* na telefonu text zabírá skoro celou výšku fotky, tak závoj drží souvisle */
+  .phero-bg::after { background: linear-gradient(180deg, rgba(20,28,20,.55) 0%, rgba(30,41,32,.55) 22%, rgba(30,41,32,.72) 55%, rgba(24,33,26,.95) 100%); }
+}
+.phero h1, .phero-sub, .crumbs, .phero .eyebrow { text-shadow: 0 1px 2px rgba(0,0,0,.25), 0 4px 22px rgba(0,0,0,.35); }
 .phero .wrap { padding-bottom: clamp(2.6rem, 5vw, 4.4rem); }
 .crumbs { font-size: .85rem; color: rgba(255,255,255,.78); margin-bottom: 1.4rem; }
 .crumbs a { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(255,255,255,.4); }
