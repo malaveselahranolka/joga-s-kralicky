@@ -67,6 +67,9 @@
   .druh:has(input:focus-visible) { outline: 2px solid var(--clover); outline-offset: 3px; }
 
   .o-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  /* Skryté bloky (počet dětí u klasického poukazu, výběr druhu) musí zůstat
+     skryté, i když mají vlastní display: flex/grid. */
+  .order [hidden] { display: none !important; }
   .o-row .o-label { margin: 0; }
   .o-row .o-hint { display: block; font-size: .85rem; font-weight: 400; color: var(--ink-soft); margin-top: .15rem; }
   .stepper { display: inline-flex; align-items: center; gap: .4rem; border: 1px solid var(--line); border-radius: 999px; padding: .25rem; background: var(--surface); flex: none; }
