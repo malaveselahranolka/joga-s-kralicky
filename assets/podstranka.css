@@ -352,12 +352,10 @@ html.js .phero .wrap > :nth-child(5) { animation-delay: .42s; }
 }
 
 /* ---------- šířky ---------- */
-/* Počítač: vlevo Rezervovat + poukaz, uprostřed logo, vpravo dvě stránky,
-   hamburger vůbec. Užší obrazovky: odkazy schované, hamburger jen se stránkami. */
-@media (min-width: 901px) {
-  .menu-toggle, .nav-links, .nav-backdrop { display: none; }
-}
-@media (max-width: 900px) {
+/* Počítač: vlevo Rezervovat, poukaz a skupinové lekce, uprostřed logo,
+   vpravo hamburger (v něm O nás a ostatní stránky). Pod 1120 px by se tři
+   položky vlevo nevešly vedle loga, tak zůstane jen Rezervovat a hamburger. */
+@media (max-width: 1120px) {
   .nav-quick { display: none; }
 }
 @media (max-width: 1040px) {

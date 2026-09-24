@@ -1046,13 +1046,11 @@
   }
 
   /* ---------- responsive ---------- */
-  /* Počítač: vlevo Rezervovat + poukaz, uprostřed logo, vpravo dvě stránky,
-     hamburger vůbec. Užší obrazovky: odkazy schované, hamburger jen se
-     stránkami webu (sekce homepage v něm záměrně nejsou). */
-  @media (min-width: 901px) {
-    .menu-toggle, .nav-links, .nav-backdrop { display: none; }
-  }
-  @media (max-width: 900px) {
+  /* Počítač: vlevo Rezervovat, poukaz a skupinové lekce, uprostřed logo,
+     vpravo hamburger (v něm O nás a ostatní stránky; sekce homepage v něm
+     záměrně nejsou). Pod 1120 px by se tři položky vlevo nevešly vedle
+     loga, tak zůstane jen Rezervovat a hamburger. */
+  @media (max-width: 1120px) {
     .nav-quick { display: none; }
   }
   @media (max-width: 1040px) {
@@ -1139,8 +1137,9 @@
   <div class="wrap nav-inner">
     <div class="nav-left">
       <a class="btn nav-cta" href="rezervace.html">Rezervovat</a>
-      <nav class="nav-quick" aria-label="Stránky vlevo">
+      <nav class="nav-quick" aria-label="Stránky">
         <a href="darkovy-poukaz.html">Dárkový poukaz</a>
+        <a href="skupinove-lekce.html">Skupinové lekce</a>
       </nav>
     </div>
     <a class="brand" href="#top" aria-label="Jóga s králíčky — domů">
@@ -1148,10 +1147,6 @@
       <span class="word">Jóga&nbsp;s&nbsp;králíčky</span>
     </a>
     <div class="nav-right">
-      <nav class="nav-quick" aria-label="Stránky vpravo">
-        <a href="skupinove-lekce.html">Skupinové lekce</a>
-        <a href="o-nas.html">O nás</a>
-      </nav>
       <button class="menu-toggle" id="menuToggle" aria-label="Otevřít menu" aria-controls="navLinks" aria-expanded="false">
         <span class="bar"></span><span class="bar"></span><span class="bar"></span>
       </button>
