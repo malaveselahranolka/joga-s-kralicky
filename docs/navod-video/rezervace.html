@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Návod: rezervace lekce</title>
+<link rel="stylesheet" href="stage.css">
+</head>
+<body>
+<div id="stage">
+  <div class="head">
+    <div class="kicker"><span class="brand"><img src="../../assets/logo.svg" alt="">Jóga s králíčky · návod</span><span>Rezervace lekce</span></div>
+    <div class="progress"><i></i></div>
+  </div>
+  <div class="cap"><div class="num">1</div><div class="txt"></div></div>
+
+  <div class="phone"><div class="screen">
+    <div class="status"><span>9:41</span><span class="isl"></span><span class="ic"><b></b><b></b><i></i></span></div>
+
+    <!-- 1) úvodní stránka -->
+    <div class="scr" id="s-home" style="visibility:hidden;transform:translateX(100%)">
+      <div class="addr"><div class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>jogaskralicky.cz</div><i class="load"></i></div>
+      <div class="body">
+        <div class="nav"><div class="logo"><img src="../../assets/logo.svg" alt="">Jóga s králíčky</div><div class="row"><span class="btn sm ghost">Rezervovat</span><div class="burger"></div></div></div>
+        <div class="img" style="height:220px"><span class="tag">Fotka · jóga s králíky</span></div>
+        <div style="padding-top:16px">
+          <div class="eyebrow">Fit&amp;Fun Studio Ostrava</div>
+          <div class="h1">Jóga s králíčky v&nbsp;Ostravě — Jóga pro klid, králíčci pro radost</div>
+          <div class="ln" style="width:96%"></div><div class="ln" style="width:90%"></div><div class="ln" style="width:58%"></div>
+          <div class="row" style="margin-top:16px"><span class="btn" id="h-rez">Rezervovat lekci →</span><span class="btn ghost">Koupit poukaz</span></div>
+        </div>
+        <div style="margin-top:26px" class="row"><div class="img" style="height:120px;flex:1"></div><div class="img" style="height:120px;flex:1"></div></div>
+        <div class="ln" style="width:70%;margin-top:16px"></div><div class="ln" style="width:85%"></div>
+      </div>
+    </div>
+
+    <!-- 2) seznam termínů -->
+    <div class="scr" id="s-list" style="visibility:hidden;transform:translateX(100%)">
+      <div class="addr"><div class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>jogaskralicky.cz/rezervace</div><i class="load"></i></div>
+      <div class="body">
+        <div class="nav"><div class="logo"><img src="../../assets/logo.svg" alt="">Jóga s králíčky</div><div class="burger"></div></div>
+        <div class="eyebrow" style="margin-top:6px">Rezervace</div>
+        <div class="h1">Aktuální termíny</div>
+        <div class="p">Vyberte si termín a rezervujte místo. Vstup se platí online hned při rezervaci.</div>
+
+        <div class="day"><div class="dayhead"><b>4. 10. 2026</b><span>neděle</span></div>
+          <div class="slot full"><div class="time"><b>18:00 – 19:00</b><span>60 min</span></div><div class="img"></div>
+            <div class="meta"><b>Jóga s králíčky</b><span>Fit&amp;Fun Studio Ostrava</span></div>
+            <div class="book"><div class="cap2"><b>10</b>/10</div><span class="btn sm off">Obsazeno</span></div></div></div>
+        <div class="day"><div class="dayhead"><b>9. 10. 2026</b><span>pátek</span></div>
+          <div class="slot"><div class="time"><b>17:00 – 18:00</b><span>60 min</span></div><div class="img"></div>
+            <div class="meta"><b>Jóga s králíčky</b><span>Fit&amp;Fun Studio Ostrava</span></div>
+            <div class="book"><div class="cap2"><b>2</b>/10</div><span class="btn sm" id="l-book">Rezervovat</span></div></div></div>
+        <div class="day"><div class="dayhead"><b>11. 10. 2026</b><span>neděle</span></div>
+          <div class="slot"><div class="time"><b>18:00 – 19:00</b><span>60 min</span></div><div class="img"></div>
+            <div class="meta"><b>Jóga s králíčky</b><span>Fit&amp;Fun Studio Ostrava</span></div>
+            <div class="book"><div class="cap2"><b>0</b>/10</div><span class="btn sm">Rezervovat</span></div></div></div>
+        <div class="day"><div class="dayhead"><b>24. 10. 2026</b><span>sobota</span></div>
+          <div class="slot"><div class="time"><b>10:30 – 11:30</b><span>60 min</span></div><div class="img"></div>
+            <div class="meta"><b>Děti &amp; králíčci</b><span>1 090 Kč zástupce + dítě</span></div>
+            <div class="book"><div class="cap2"><b>2</b>/12</div><span class="btn sm">Rezervovat</span></div></div></div>
+      </div>
+    </div>
+
+    <!-- 3) formulář -->
+    <div class="scr" id="s-form" style="visibility:hidden;transform:translateX(100%)">
+      <div class="addr"><div class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>jogaskralicky.cz/rezervace</div></div>
+      <div class="body">
+        <div class="p" style="margin-top:12px;color:var(--forest);font-weight:600">‹ Zpět na výběr termínu</div>
+        <div class="h2">Rezervace</div>
+        <div class="card row" style="gap:12px">
+          <div style="flex:1"><div class="lbl">Termín</div><div class="big">9. 10. 2026</div><div class="sub">Pátek · 17:00 – 18:00</div></div>
+          <div style="flex:1"><div class="lbl">Lekce</div><div class="big">Jóga s králíčky</div><div class="sub">Fit&amp;Fun Studio Ostrava</div></div>
+        </div>
+        <div style="margin-top:6px">
+          <div class="field"><label>Vaše jméno</label><div class="input" id="f-first"><span class="v"></span><span class="caret"></span><span class="ph">Jméno</span></div></div>
+          <div class="field"><label>Vaše příjmení</label><div class="input" id="f-last"><span class="v"></span><span class="caret"></span><span class="ph">Příjmení</span></div></div>
+          <div class="field"><label>Váš telefon <em>(nepovinné)</em></label><div class="input" id="f-tel"><span class="v"></span><span class="caret"></span><span class="ph">777 888 999</span></div></div>
+          <div class="field"><label>Váš email</label><div class="input" id="f-email"><span class="v"></span><span class="caret"></span><span class="ph">vas@email.cz</span></div></div>
+        </div>
+        <div class="row" style="justify-content:space-between;align-items:flex-start;margin-top:14px;padding-top:12px;border-top:1.5px solid var(--hair)">
+          <div><div class="lbl">Počet účastníků</div>
+            <div class="stepper" style="margin-top:7px"><i class="dis" id="sp-dec">−</i><b id="sp-val">1</b><i id="sp-inc">+</i></div>
+            <div class="sub" style="margin-top:6px">Na jedno jméno až 4 místa.</div></div>
+          <div class="price"><div class="lbl" style="text-align:right">Cena celkem</div><b id="pr-total">499 Kč</b><span id="pr-calc">1 × 499 Kč</span></div>
+        </div>
+        <div class="details" style="margin-top:14px">▸ Mám dárkový poukaz</div>
+        <div class="field" style="margin-top:12px"><label>Jak jste se o nás dozvěděli? <em>(nepovinné)</em></label><div class="input"><span class="v"></span><span class="ph">Vyberte…</span><span style="margin-left:auto;color:var(--soft)">▾</span></div></div>
+        <div class="check" id="f-consent"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#F7F4EC" stroke-width="3.2"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <span>Seznámil(a) jsem se se <u>zásadami zpracování osobních údajů</u> a souhlasím s <u>obchodními podmínkami</u>.</span></div>
+        <span class="btn wide" id="f-submit">Rezervovat a zaplatit →</span>
+        <div class="note">Platí se online kartou v zabezpečené bráně. Po kliknutí vás přesměrujeme na platbu — místo do té doby držíme.</div>
+      </div>
+    </div>
+
+    <!-- 4) platební brána -->
+    <div class="scr gw" id="s-pay" style="visibility:hidden;transform:translateX(100%)">
+      <div class="addr"><div class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>checkout.stripe.com</div><i class="load"></i></div>
+      <div class="body">
+        <div class="top"><span class="back">←</span><span class="mark"></span>Jóga s králíčky</div>
+        <div class="sub">Zaplatit Jóga s králíčky</div>
+        <div class="amount">998,00 Kč</div>
+        <div class="item"><div class="img"></div><div><b>Jóga s králíčky — vstup (Jóga s králíčky)</b><span>Množství 2 · 499,00 Kč / ks</span></div></div>
+        <div class="wallet">Apple Pay · Google Pay</div>
+        <div class="or">nebo zaplaťte kartou</div>
+        <div class="field"><label>E-mail</label><div class="input"><span class="v">jana.novakova@email.cz</span></div></div>
+        <div class="field"><label>Údaje o kartě</label>
+          <div class="cardbox" id="c-box">
+            <div class="input" id="c-num"><span class="v"></span><span class="caret"></span><span class="ph">1234 1234 1234 1234</span><span class="cardbrands"><i></i><i></i><i></i></span></div>
+            <div class="split"><div class="input" id="c-exp"><span class="v"></span><span class="caret"></span><span class="ph">MM / RR</span></div><div class="input" id="c-cvc"><span class="v"></span><span class="caret"></span><span class="ph">CVC</span></div></div>
+          </div></div>
+        <div class="field"><label>Jméno držitele karty</label><div class="input" id="c-name"><span class="v"></span><span class="caret"></span><span class="ph">Celé jméno</span></div></div>
+        <div class="paybtn" id="c-pay"><span class="t">Zaplatit</span><span class="spin" id="c-spin"></span><svg class="ok" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <div class="secure">🔒 Zabezpečeno přes Stripe</div>
+      </div>
+    </div>
+
+    <!-- 5) návrat na web -->
+    <div class="scr" id="s-done" style="visibility:hidden;transform:translateX(100%)">
+      <div class="addr"><div class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>jogaskralicky.cz/rezervace</div><i class="load"></i></div>
+      <div class="body">
+        <div class="nav"><div class="logo"><img src="../../assets/logo.svg" alt="">Jóga s králíčky</div><div class="burger"></div></div>
+        <div class="card state" style="margin-top:10px">
+          <div id="d-wait">
+            <div class="ic info"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg></div>
+            <div class="h2">Ověřujeme platbu…</div>
+            <div class="p">Chviličku strpení, ptáme se platební brány na potvrzení.</div>
+          </div>
+          <div id="d-ok" style="display:none">
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg></div>
+            <div class="h2">Zaplaceno ✓</div>
+            <div class="bigline">Jóga s králíčky · 9. 10. 2026 · 17:00–18:00 · 2 místa</div>
+            <div class="p">Děkujeme, platba je potvrzená a místo je vaše. QR kód pro vstup máte v potvrzovacím e-mailu — ve studiu ho jen ukážete.</div>
+            <div class="acts"><span class="btn">Stav rezervace</span><span class="btn ghost">Zpět na termíny</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6) e-mail -->
+    <div class="scr noaddr" id="s-mail" style="visibility:hidden;transform:translateX(100%)">
+      <div class="body">
+        <div class="mailbar"><span>‹ Doručená pošta</span><span class="icons"><i></i><i></i></span></div>
+        <div class="subject">Rezervace potvrzena — Pátek 9. 10. 2026 · 17:00–18:00</div>
+        <div class="from"><div class="av"><img src="../../assets/logo.svg" alt=""></div><div><b>Jóga s králíčky</b><span>info@jogaskralicky.cz</span></div><span class="sub when">teď</span></div>
+        <div class="mail">
+          <div class="mh"><span class="lc"><img src="../../assets/logo.svg" alt=""></span>Jóga s králíčky</div>
+          <div class="mb">
+            <p>Dobrý den, Jana,</p>
+            <p>platba dorazila a místo je vaše. Tady je všechno na jednom místě:</p>
+            <table>
+              <tr><td>Lekce</td><td>Jóga s králíčky</td></tr>
+              <tr><td>Kdy</td><td>Pátek 9. 10. 2026 · 17:00–18:00</td></tr>
+              <tr><td>Míst</td><td>2 místa</td></tr>
+              <tr><td>Zaplaceno</td><td>998 Kč</td></tr>
+              <tr><td>Kde</td><td>Fit&amp;Fun Studio Ostrava, Tovární 486/7, 709 00 Ostrava-Mariánské Hory</td></tr>
+            </table>
+            <div class="qrwrap" id="m-qr"><span id="qr"></span><div class="c">Ve studiu stačí ukázat tenhle kód.<br>Nemusíte nic tisknout.</div></div>
+            <span class="mbtn">Stav rezervace</span>
+            <p style="margin-top:12px;font-size:11.5px;color:var(--soft)">Přijďte prosím o pár minut dřív, ať stihnete pozdravit králíky. Kdyby cokoliv, odepište na tenhle e-mail.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notif" id="notif"><div class="app"><svg viewBox="0 0 24 24" fill="none" stroke="#F7F4EC" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></div>
+      <div style="flex:1"><div class="top"><span>POŠTA</span><span>teď</span></div><b>Jóga s králíčky</b><span class="s">Rezervace potvrzena — Pátek 9. 10. 2026 · 17:00–18:00</span></div></div>
+  </div></div>
+
+  <div class="finger"></div><div class="ripple"></div>
+
+  <div class="end">
+    <div class="lc"><img src="../../assets/logo.svg" alt=""></div>
+    <h2>Těšíme se na vás<br>i s králíčky</h2>
+    <p>Termíny a rezervace najdete na webu. Platí se online, potvrzení s QR kódem přijde e-mailem.</p>
+    <div class="url">jogaskralicky.cz/rezervace</div>
+    <div class="small">Dotazy: info@jogaskralicky.cz · +420 603 340 860</div>
+  </div>
+</div>
+
+<script src="engine.js"></script>
+<script>
+(function () {
+  const { D, fakeQr, $ } = NAVOD;
+  $('#qr').innerHTML = fakeQr(11);
+  const N = 10;
+
+  D.show('#s-home');
+  D.step(1, N, 'Otevřete jogaskralicky.cz', 'Rezervace funguje na mobilu i na počítači.');
+  D.wait(1.2).fingerIn().wait(.8);
+  D.scroll('#s-home', 60, 1.0).wait(.4);
+
+  D.step(2, N, 'Klepněte na „Rezervovat lekci“');
+  D.wait(.7).tap($('#h-rez')).wait(.25);
+  D.show('#s-list').wait(.6);
+
+  D.step(3, N, 'Vyberte si termín', 'U každého termínu vidíte, kolik míst je už obsazeno.');
+  D.wait(.9).scrollTo($('#l-book'), .45, 1.2).wait(.5);
+  D.tap($('#l-book')).wait(.25);
+  D.show('#s-form').wait(.5);
+
+  D.step(4, N, 'Vyplňte jméno, příjmení a e-mail', 'Na e-mail přijde potvrzení s QR kódem. Telefon je nepovinný.');
+  D.wait(.8).scroll('#s-form', 170, .9).wait(.2);
+  D.tap($('#f-first'), { press: null }).type($('#f-first'), 'Jana').wait(.25).blur($('#f-first'));
+  D.tap($('#f-last'), { press: null, d: .45 }).type($('#f-last'), 'Nováková').wait(.25).blur($('#f-last'));
+  D.tap($('#f-tel'), { press: null, d: .45 }).type($('#f-tel'), '777 123 456').wait(.25).blur($('#f-tel'));
+  D.tap($('#f-email'), { press: null, d: .45 }).type($('#f-email'), 'jana.novakova@email.cz', 16).wait(.4).blur($('#f-email'));
+
+  D.step(5, N, 'Kolik vás přijde?', 'Na jedno jméno až 4 místa. Cena se sama přepočítá.');
+  D.wait(.3).scrollTo($('#sp-inc'), .5, .9).wait(.5);
+  D.tap($('#sp-inc'));
+  D.text($('#sp-val'), '2').cls($('#sp-dec'), 'dis', false).text($('#pr-total'), '998 Kč').text($('#pr-calc'), '2 × 499 Kč');
+  D.wait(1.4);
+
+  D.step(6, N, 'Potvrďte souhlas a klepněte na „Rezervovat a zaplatit“', 'Místo vám po dobu platby podržíme.');
+  D.wait(.4).scrollTo($('#f-submit'), .62, 1.0).wait(.3);
+  D.tap($('#f-consent .box'));
+  D.cls($('#f-consent'), 'on').wait(.6);
+  D.tap($('#f-submit'));
+  D.text($('#f-submit'), 'Přesměrovávám na platbu…').wait(.9);
+  D.show('#s-pay').wait(.5);
+
+  D.step(7, N, 'Zaplaťte kartou', 'Nebo přes Apple Pay či Google Pay. Platba jde přes zabezpečenou bránu Stripe.');
+  D.wait(1.2).scrollTo($('#c-num'), .42, .9).wait(.2);
+  D.tap($('#c-num'), { press: null }).cls($('#c-box'), 'focus').type($('#c-num'), '4242 4242 4242 4242', 15).blur($('#c-num'));
+  D.tap($('#c-exp'), { press: null, d: .4 }).type($('#c-exp'), '12 / 28', 10).blur($('#c-exp'));
+  D.tap($('#c-cvc'), { press: null, d: .4 }).type($('#c-cvc'), '123', 8).blur($('#c-cvc')).cls($('#c-box'), 'focus', false);
+  D.tap($('#c-name'), { press: null, d: .45 }).type($('#c-name'), 'Jana Nováková').wait(.2).blur($('#c-name'));
+  D.wait(.2).tap($('#c-pay'));
+  D.cls($('#c-pay'), 'busy');
+  const spin = $('#c-spin');
+  D.at(D.now, 1.6, [spin], (p) => { spin.style.transform = `rotate(${p * 720}deg)`; }, D.E.lin);
+  D.fingerOut().wait(1.6).cls($('#c-pay'), 'busy', false).cls($('#c-pay'), 'done').wait(.8);
+  D.show('#s-done').wait(.2);
+
+  D.step(8, N, 'Hotovo — místo je vaše', 'Po platbě vás brána sama vrátí zpátky na web.');
+  D.wait(1.3);
+  D.set($('#d-wait'), (el) => { el.style.display = 'none'; }).set($('#d-ok'), (el) => { el.style.display = 'block'; });
+  D.fadeIn($('#d-ok'), .5).wait(2.4);
+
+  D.step(9, N, 'Za chvíli přijde potvrzovací e-mail', 'Od Jóga s králíčky, obvykle během pár minut.');
+  D.wait(.6).notify($('#notif')).fingerIn().wait(1.4);
+  D.tap($('#notif'), { press: null });
+  D.hideNotify($('#notif'));
+  D.show('#s-mail').wait(1.2);
+
+  D.step(10, N, 'Ve studiu jen ukážete QR kód', 'Nic se netiskne. Přijďte prosím o pár minut dřív.');
+  D.wait(.5).scrollTo($('#m-qr'), .5, 1.6).wait(.3);
+  D.moveTo($('#qr'), .8, 60, 40).wait(2.2);
+  D.fingerOut().wait(.3);
+  D.endCard().wait(2.6);
+})();
+</script>
+</body>
+</html>

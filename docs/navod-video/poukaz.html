@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Návod: dárkový poukaz</title>
+<link rel="stylesheet" href="stage.css">
+<style>
+  /* PDF poukaz je tmavý (zelený podklad, smetanové písmo) — viz poukaz-pdf.ts */
+  .voucher { background: var(--forest); color: var(--cream); }
+  .voucher .l { border-right-color: rgba(247,244,236,.18); }
+  .voucher .l .c { background: var(--cream); }
+  .voucher .l b { color: var(--cream); }
+  .voucher .r .t { color: var(--cream); }
+  .voucher .r .p2 { font-size: 8px; line-height: 1.4; color: rgba(247,244,236,.86); margin: 3px 0 6px; }
+  .voucher .r .k { background: var(--cream); }
+  .voucher .r .k div + div { border-left: 1px solid var(--hair); padding-left: 9px; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="head">
+    <div class="kicker"><span class="brand"><img src="../../assets/logo.svg" alt="">Jóga s králíčky · návod</span><span>Dárkový poukaz</span></div>
+    <div class="progress"><i></i></div>
+  </div>
+  <div class="cap"><div class="num">1</div><div class="txt"></div></div>
+
+  <div class="phone"><div class="screen">
+    <div class="status"><span>9:41</span><span class="isl"></span><span class="ic"><b></b><b></b><i></i></span></div>
+
+    <!-- 1) úvodní stránka -->
+    <div class="scr" id="s-home" style="visibility:hidden;transform:translateX(100%)">
+      <div class="addr"><div class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>jogaskralicky.cz</div><i class="load"></i></div>
+      <div class="body">
+        <div class="nav"><div class="logo"><img src="../../assets/logo.svg" alt="">Jóga s králíčky</div><div class="row"><span class="btn sm ghost">Rezervovat</span><div class="burger"></div></div></div>
+        <div class="img" style="height:220px"><span class="tag">Fotka · jóga s králíky</span></div>
+        <div style="padding-top:16px">
+          <div class="eyebrow">Fit&amp;Fun Studio Ostrava</div>
+          <div class="h1">Jóga s králíčky v&nbsp;Ostravě — Jóga pro klid, králíčci pro radost</div>
+          <div class="ln" style="width:96%"></div><div class="ln" style="width:90%"></div><div class="ln" style="width:58%"></div>
+          <div class="row" style="margin-top:16px"><span class="btn">Rezervovat lekci →</span><span class="btn ghost" id="h-pk">Koupit poukaz</span></div>
+        </div>
+        <div style="margin-top:26px" class="row"><div class="img" style="height:120px;flex:1"></div><div class="img" style="height:120px;flex:1"></div></div>
+        <div class="ln" style="width:70%;margin-top:16px"></div><div class="ln" style="width:85%"></div>
+      </div>
+    </div>
+
+    <!-- 2) koupit-poukaz -->
+    <div class="scr" id="s-buy" style="visibility:hidden;transform:translateX(100%)">
+      <div class="addr"><div class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>jogaskralicky.cz/koupit-poukaz</div><i class="load"></i></div>
+      <div class="body">
+        <div class="nav"><div class="logo"><img src="../../assets/logo.svg" alt="">Jóga s králíčky</div><div class="burger"></div></div>
+        <div class="h1" style="margin-top:6px">Koupit dárkový poukaz</div>
+        <div class="p">Zaplatíte kartou, kód přijde e-mailem hned po zaplacení. Poukaz platí 6&nbsp;měsíců a termín si obdarovaný vybere sám.</div>
+        <div class="card" style="margin-top:14px">
+          <div class="h2" style="margin:0 0 2px">Vaše objednávka</div>
+          <div class="sub" id="o-sub">Každý poukaz platí na jeden vstup na lekci.</div>
+          <div class="lbl" style="margin-top:14px">Na jakou lekci</div>
+          <div class="druh on" id="d-klasik"><span class="dot"></span><span><b>Jóga s králíčky <em>499 Kč</em></b><span>Jeden vstup na lekci jógy s králíčky pro dospělé.</span></span></div>
+          <div class="druh" id="d-deti"><span class="dot"></span><span><b>Děti &amp; králíčci <em>od 1 090 Kč</em></b><span>Lekce pro děti od 10 let. Poukaz platí na zákonného zástupce s 1 až 4 dětmi.</span></span></div>
+          <div class="row" style="justify-content:space-between;margin-top:14px">
+            <div><div style="font-size:13px;font-weight:700">Počet poukazů</div><div class="sub">Až 10 kusů naráz</div></div>
+            <div class="stepper"><i class="dis">−</i><b>1</b><i id="p-inc">+</i></div>
+          </div>
+          <div class="field" style="margin-top:14px"><label>Kam poslat kód <em>(váš e-mail)</em></label><div class="input" id="p-email"><span class="v"></span><span class="caret"></span><span class="ph">vas@email.cz</span></div></div>
+          <div class="total"><span>1 poukaz × 499 Kč</span><b>499 Kč</b></div>
+          <span class="btn wide" id="p-pay">Zaplatit 499 Kč →</span>
+          <div class="note" style="text-align:left;margin:10px 0 0">🔒 Platíte kartou, Apple Pay nebo Google Pay přes zabezpečenou bránu Stripe. Nákupem souhlasíte s obchodními podmínkami.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3) platební brána -->
+    <div class="scr gw" id="s-pay" style="visibility:hidden;transform:translateX(100%)">
+      <div class="addr"><div class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>checkout.stripe.com</div><i class="load"></i></div>
+      <div class="body">
+        <div class="top"><span class="back">←</span><span class="mark"></span>Jóga s králíčky</div>
+        <div class="sub">Zaplatit Jóga s králíčky</div>
+        <div class="amount">499,00 Kč</div>
+        <div class="item"><div class="img"></div><div><b>Jóga s králíčky</b><span>1 × 499 Kč</span></div></div>
+        <div class="wallet">Apple Pay · Google Pay</div>
+        <div class="or">nebo zaplaťte kartou</div>
+        <div class="field"><label>E-mail</label><div class="input"><span class="v">petr.dvorak@email.cz</span></div></div>
+        <div class="field"><label>Údaje o kartě</label>
+          <div class="cardbox" id="c-box">
+            <div class="input" id="c-num"><span class="v"></span><span class="caret"></span><span class="ph">1234 1234 1234 1234</span><span class="cardbrands"><i></i><i></i><i></i></span></div>
+            <div class="split"><div class="input" id="c-exp"><span class="v"></span><span class="caret"></span><span class="ph">MM / RR</span></div><div class="input" id="c-cvc"><span class="v"></span><span class="caret"></span><span class="ph">CVC</span></div></div>
+          </div></div>
+        <div class="field"><label>Jméno držitele karty</label><div class="input" id="c-name"><span class="v"></span><span class="caret"></span><span class="ph">Celé jméno</span></div></div>
+        <div class="paybtn" id="c-pay"><span class="t">Zaplatit</span><span class="spin" id="c-spin"></span><svg class="ok" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <div class="secure">Kódy poukazů dostanete hned po zaplacení e-mailem.</div>
+      </div>
+    </div>
+
+    <!-- 4) návrat na web -->
+    <div class="scr" id="s-done" style="visibility:hidden;transform:translateX(100%)">
+      <div class="addr"><div class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>jogaskralicky.cz/koupit-poukaz</div><i class="load"></i></div>
+      <div class="body">
+        <div class="nav"><div class="logo"><img src="../../assets/logo.svg" alt="">Jóga s králíčky</div><div class="burger"></div></div>
+        <div class="card state" style="margin-top:10px">
+          <div id="d-wait">
+            <div class="ic info"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg></div>
+            <div class="h2">Ověřujeme platbu…</div>
+            <div class="p">Chviličku strpení, ptáme se platební brány na potvrzení.</div>
+          </div>
+          <div id="d-ok" style="display:none">
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg></div>
+            <div class="h2">Poukaz je zaplacený 🐰</div>
+            <div class="p">Děkujeme! Tady je kód dárkového poukazu. Obdarovaný ho uplatní v rezervaci u pole „Mám dárkový poukaz“.</div>
+            <div class="codebox" id="d-code">DK-Q7K4M2XA</div>
+            <div class="p">Poslali jsme ho i na petr.dvorak@email.cz.</div>
+            <div class="acts"><span class="btn">Vybrat termín →</span><span class="btn ghost">Koupit další poukaz</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5) e-mail -->
+    <div class="scr noaddr" id="s-mail" style="visibility:hidden;transform:translateX(100%)">
+      <div class="body">
+        <div class="mailbar"><span>‹ Doručená pošta</span><span class="icons"><i></i><i></i></span></div>
+        <div class="subject">Dárkový poukaz DK-Q7K4M2XA</div>
+        <div class="from"><div class="av"><img src="../../assets/logo.svg" alt=""></div><div><b>Jóga s králíčky</b><span>info@jogaskralicky.cz</span></div><span class="sub when">teď</span></div>
+        <div class="mail">
+          <div class="mh"><span class="lc"><img src="../../assets/logo.svg" alt=""></span>Jóga s králíčky</div>
+          <div class="mb">
+            <p>Dobrý den,</p>
+            <p>děkujeme za nákup. Tohle je dárkový poukaz na jednu lekci Jóga s králíčky.</p>
+            <div class="vcode" id="m-code"><div class="k">Kód poukazu</div><div class="c">DK-Q7K4M2XA</div><div class="h">Hodnota 499 Kč</div></div>
+            <p style="margin:14px 0 6px;font-weight:700">Jak si vybrat termín</p>
+            <div class="steps3" id="m-steps">
+              <b>1.</b> Na <u>jogaskralicky.cz/rezervace</u> vyberte termín, který vám sedí.<br>
+              <b>2.</b> Ve formuláři rozklikněte <b>„Mám dárkový poukaz“</b> a vepište kód výš.<br>
+              <b>3.</b> Odešlete. <b>Nic se neplatí</b> — poukaz je vstupné.
+            </div>
+            <p style="margin-top:10px">Potvrzení rezervace vám pak přijde e-mailem <b>i s QR kódem</b>.</p>
+            <span class="mbtn">Vybrat termín</span>
+            <p style="margin-top:12px">Poukaz platí <b>6 měsíců</b> od zakoupení a může ho uplatnit kdokoliv — klidně ho rovnou přepošlete dál.</p>
+          </div>
+        </div>
+        <div class="attach" id="m-att"><div class="pdf">PDF</div><div><b>darkovy-poukaz-dk-q7k4m2xa.pdf</b><span>Poukaz k vytištění</span></div></div>
+      </div>
+    </div>
+
+    <div class="pdfview" id="pdf">
+      <div class="fn">darkovy-poukaz-dk-q7k4m2xa.pdf</div>
+      <div class="voucher">
+        <div class="l"><div class="c"><img src="../../assets/logo.svg" alt=""></div><b>Jóga s králíčky</b></div>
+        <div class="r">
+          <div class="t">Dárkový poukaz</div>
+          <div class="p2">Darujte hodinu klidu mezi králíčky. Poukaz na jednu lekci jógy v Ostravě.</div>
+          <div class="k"><div><span>Kód poukazu</span><b>DK-Q7K4M2XA</b></div><div><span>Platí</span><b class="d">6 měsíců</b></div></div>
+        </div>
+      </div>
+      <div class="fn" style="margin:16px 0 0;font-weight:500;opacity:.8">Vytisknout · Sdílet · Přeposlat</div>
+    </div>
+
+    <div class="notif" id="notif"><div class="app"><svg viewBox="0 0 24 24" fill="none" stroke="#F7F4EC" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></div>
+      <div style="flex:1"><div class="top"><span>POŠTA</span><span>teď</span></div><b>Jóga s králíčky</b><span class="s">Dárkový poukaz DK-Q7K4M2XA</span></div></div>
+  </div></div>
+
+  <div class="finger"></div><div class="ripple"></div>
+
+  <div class="end">
+    <div class="lc"><img src="../../assets/logo.svg" alt=""></div>
+    <h2>Dárek během<br>pár minut</h2>
+    <p>Obdarovaný si v rezervaci rozklikne „Mám dárkový poukaz“, vepíše kód a nic nedoplácí.</p>
+    <div class="url">jogaskralicky.cz/koupit-poukaz</div>
+    <div class="small">Dotazy: info@jogaskralicky.cz · +420 603 340 860</div>
+  </div>
+</div>
+
+<script src="engine.js"></script>
+<script>
+(function () {
+  const { D, $ } = NAVOD;
+  const N = 9;
+
+  D.show('#s-home');
+  D.step(1, N, 'Otevřete jogaskralicky.cz', 'Poukaz koupíte rovnou z úvodní stránky.');
+  D.wait(1.2).fingerIn().wait(.8);
+  D.scroll('#s-home', 60, 1.0).wait(.4);
+
+  D.step(2, N, 'Klepněte na „Koupit poukaz“');
+  D.wait(.7).tap($('#h-pk')).wait(.25);
+  D.show('#s-buy').wait(.6);
+
+  D.step(3, N, 'Vyberte, na jakou lekci poukaz bude', 'Jóga s králíčky za 499 Kč, nebo Děti & králíčci od 1 090 Kč.');
+  D.wait(.8).scrollTo($('#d-deti'), .5, 1.1).wait(.4);
+  D.tap($('#d-klasik')).wait(1.0);
+
+  D.step(4, N, 'Napište e-mail, kam má přijít kód', 'Víc poukazů najednou přidáte tlačítkem +, až 10 kusů.');
+  D.wait(.4).scrollTo($('#p-email'), .45, .9).wait(.2);
+  D.moveTo($('#p-inc'), .6).wait(.5);
+  D.tap($('#p-email'), { press: null, d: .5 }).type($('#p-email'), 'petr.dvorak@email.cz', 15).wait(.4).blur($('#p-email'));
+
+  D.step(5, N, 'Klepněte na „Zaplatit 499 Kč“');
+  D.wait(.4).scrollTo($('#p-pay'), .55, .8).wait(.3);
+  D.tap($('#p-pay'));
+  D.text($('#p-pay'), 'Otevírám platbu…').wait(.9);
+  D.show('#s-pay').wait(.5);
+
+  D.step(6, N, 'Zaplaťte kartou', 'Nebo přes Apple Pay či Google Pay. Platba jde přes zabezpečenou bránu Stripe.');
+  D.wait(1.2).scrollTo($('#c-num'), .42, .9).wait(.2);
+  D.tap($('#c-num'), { press: null }).cls($('#c-box'), 'focus').type($('#c-num'), '4242 4242 4242 4242', 15).blur($('#c-num'));
+  D.tap($('#c-exp'), { press: null, d: .4 }).type($('#c-exp'), '12 / 28', 10).blur($('#c-exp'));
+  D.tap($('#c-cvc'), { press: null, d: .4 }).type($('#c-cvc'), '123', 8).blur($('#c-cvc')).cls($('#c-box'), 'focus', false);
+  D.tap($('#c-name'), { press: null, d: .45 }).type($('#c-name'), 'Petr Dvořák').wait(.2).blur($('#c-name'));
+  D.wait(.2).tap($('#c-pay'));
+  D.cls($('#c-pay'), 'busy');
+  const spin = $('#c-spin');
+  D.at(D.now, 1.6, [spin], (p) => { spin.style.transform = `rotate(${p * 720}deg)`; }, D.E.lin);
+  D.fingerOut().wait(1.6).cls($('#c-pay'), 'busy', false).cls($('#c-pay'), 'done').wait(.8);
+  D.show('#s-done').wait(.2);
+
+  D.step(7, N, 'Kód poukazu uvidíte hned', 'Můžete ho opsat do přáníčka, nebo počkat na e-mail.');
+  D.wait(1.3);
+  D.set($('#d-wait'), (el) => { el.style.display = 'none'; }).set($('#d-ok'), (el) => { el.style.display = 'block'; });
+  D.fadeIn($('#d-ok'), .5).wait(.4);
+  const code = $('#d-code');
+  D.at(D.now, .8, [code], (p) => { code.style.transform = `scale(${1 + .08 * Math.sin(Math.PI * p)})`; });
+  D.wait(2.6);
+
+  D.step(8, N, 'Stejný kód přijde i e-mailem', 'I s návodem, jak si obdarovaný vybere termín.');
+  D.wait(.6).notify($('#notif')).fingerIn().wait(1.4);
+  D.tap($('#notif'), { press: null });
+  D.hideNotify($('#notif'));
+  D.show('#s-mail').wait(1.4);
+  D.scrollTo($('#m-steps'), .45, 1.4).wait(2.0);
+
+  D.step(9, N, 'V příloze je poukaz k vytištění', 'PDF v barvách studia — hodí se, když chcete dárek předat na papíře.');
+  D.wait(.4).scrollTo($('#m-att'), .6, 1.0).wait(.3);
+  D.tap($('#m-att'));
+  D.fadeIn($('#pdf'), .5);
+  const v = $('#pdf .voucher');
+  D.at(D.now - .5, .7, [v], (p) => { v.style.transform = `scale(${.85 + .15 * p})`; }, D.E.out);
+  D.wait(3.2);
+  D.fingerOut().wait(.3);
+  D.endCard().wait(2.6);
+})();
+</script>
+</body>
+</html>
