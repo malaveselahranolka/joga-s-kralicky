@@ -44,7 +44,7 @@
     '  opacity:0;transform:translateY(12px) scale(.98);transform-origin:bottom right;transition:opacity .22s,transform .26s cubic-bezier(.23,1,.32,1)}',
     '.jsk-chat.open{opacity:1;transform:none}',
     '.jsk-chat[hidden]{display:none}',
-    '@media (max-width:640px){.jsk-chat{inset:0;width:100%;height:var(--jsk-vh,100dvh);border-radius:0}}',
+    '@media (max-width:640px){.jsk-chat{top:0;left:0;right:0;bottom:auto;width:100%;height:100dvh;border-radius:0;transform:none;transition:opacity .18s}.jsk-chat.open{transform:none}}',
     '.jsk-chat-head{display:flex;align-items:center;gap:.7rem;padding:.8rem .6rem .8rem 1rem;background:var(--forest-deep,#1E2920);color:var(--cream,#F7F4EC);',
     '  padding-top:max(.8rem,env(safe-area-inset-top))}',
     '.jsk-chat-head img{width:34px;height:34px;flex:none}',
@@ -130,9 +130,39 @@
 
   var panel, log, pole, odeslat, chips, historie = nactiHistorii(), ceka = false;
 
+  var mobil = function () { return window.matchMedia('(max-width: 640px)').matches; };
+
+  // ---- TELEFON A KLÁVESNICE ------------------------------------------
+  // Když se na iPhonu (i v prohlížeči uvnitř Instagramu a Facebooku)
+  // otevře klávesnice, telefon posune viditelnou část stránky, aby bylo
+  // vidět pole na psaní. Okno chatu přitom zůstalo přišpendlené nahoře,
+  // takže člověk viděl jen jeho spodek a pod ním stránku — vypadalo to,
+  // jako by se chat zavřel. Proto:
+  //  1) stránku pod chatem zamkneme, aby se nemohla posouvat,
+  //  2) okno kopíruje skutečně viditelnou plochu (visualViewport):
+  //     její výšku i posun shora, při každé změně klávesnice.
+  var zamcenoNa = null;
+  function zamkniStranku() {
+    if (zamcenoNa !== null) return;
+    zamcenoNa = window.scrollY;
+    var b = document.body.style;
+    b.position = 'fixed'; b.top = -zamcenoNa + 'px'; b.left = '0'; b.right = '0'; b.width = '100%';
+  }
+  function odemkniStranku() {
+    if (zamcenoNa === null) return;
+    var b = document.body.style;
+    b.position = ''; b.top = ''; b.left = ''; b.right = ''; b.width = '';
+    // homepage má scroll-behavior: smooth — návrat musí být okamžitý
+    window.scrollTo({top: zamcenoNa, left: 0, behavior: 'instant'});
+    zamcenoNa = null;
+  }
   function vyska() {
-    // klávesnice na telefonu zmenší viditelnou plochu — panel se jí přizpůsobí
-    if (panel && window.visualViewport) panel.style.setProperty('--jsk-vh', window.visualViewport.height + 'px');
+    if (!panel || panel.hidden) return;
+    var vv = window.visualViewport;
+    if (!mobil() || !vv) { panel.style.top = ''; panel.style.height = ''; return; }
+    panel.style.top = Math.max(0, vv.offsetTop) + 'px';
+    panel.style.height = vv.height + 'px';
+    if (document.activeElement === pole) log.scrollTop = log.scrollHeight;
   }
 
   function bublina(text, kdo, tridy) {
@@ -202,15 +232,21 @@
       pole.style.height = 'auto';
       pole.style.height = Math.min(pole.scrollHeight, 120) + 'px';
     });
-    if (window.visualViewport) window.visualViewport.addEventListener('resize', vyska);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', vyska);
+      window.visualViewport.addEventListener('scroll', vyska);
+    }
+    // klávesnice vyjíždí animovaně — po focusu změřit ještě jednou, až dojede
+    pole.addEventListener('focus', function () { vyska(); setTimeout(vyska, 150); setTimeout(vyska, 400); });
+    pole.addEventListener('blur', function () { setTimeout(vyska, 150); });
   }
 
   function otevri() {
     if (!panel) postav();
-    vyska();
     panel.hidden = false;
+    if (mobil()) zamkniStranku();
+    vyska();
     document.body.classList.add('jsk-chat-open');
-    if (window.matchMedia('(max-width: 640px)').matches) document.documentElement.style.overflow = 'hidden';
     requestAnimationFrame(function () { panel.classList.add('open'); });
     btn.setAttribute('aria-expanded', 'true');
     // na telefonu klávesnici hned nevyskakovat — nejdřív ať člověk vidí rychlé otázky
@@ -224,7 +260,8 @@
     panel.classList.remove('open');
     panel.hidden = true;
     document.body.classList.remove('jsk-chat-open');
-    document.documentElement.style.overflow = '';
+    odemkniStranku();
+    panel.style.top = ''; panel.style.height = '';
     btn.setAttribute('aria-expanded', 'false');
     if (vratitFokus) btn.focus();
   }
