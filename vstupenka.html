@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="preload" href="/assets/fonts/schibsted-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="preload" href="/assets/fonts/schibsted-grotesk-latin-ext.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/assets/fonts/hanken-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/assets/fonts/hanken-grotesk-latin-ext.woff2" as="font" type="font/woff2" crossorigin />
 <!-- Měření návštěvnosti (Google Analytics) se načte AŽ PO souhlasu.
      Skript souhlas.js ukáže lištu, uloží rozhodnutí a teprve pak
      případně natáhne gtag.js. Nepředbíhat ho vlastním script tagem. -->
@@ -88,8 +90,9 @@
   header.bar { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--paper) 90%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
   .bar-inner { display: flex; align-items: center; justify-content: space-between; height: 68px; }
   .brand { display: inline-flex; align-items: center; gap: .55rem; font-family: "Schibsted Grotesk"; font-weight: 700; font-size: 1.12rem; letter-spacing: -.02em; }
+  .brand { min-height: 44px; }
   .brand img { width: 32px; height: 32px; }
-  .home-link { display: inline-flex; align-items: center; gap: .45rem; font-weight: 600; font-size: .95rem; color: var(--ink-soft); transition: color .3s var(--ease); }
+  .home-link { display: inline-flex; align-items: center; gap: .45rem; min-height: 44px; font-weight: 600; font-size: .95rem; color: var(--ink-soft); transition: color .3s var(--ease); }
   .home-link:hover { color: var(--forest); }
 
   main { padding: clamp(2rem, 5vw, 3.4rem) 0 4rem; }
@@ -226,7 +229,7 @@
   </div>
 </main>
 
-<footer style="text-align:center;padding:2rem 1rem;font-size:.82rem;color:var(--ink-soft)">
+<footer style="text-align:center;padding:2rem 1rem;font-size:.82rem;line-height:2.6;color:var(--ink-soft)">
   Barbora Kovačíková, IČO 29731828 · Tovární 486/7, Ostrava-Mariánské Hory · <a href="mailto:info@jogaskralicky.cz" style="color:inherit">info@jogaskralicky.cz</a> ·
   <a href="obchodni-podminky.html" style="color:inherit">Obchodní podmínky</a> · <a href="zasady-osobnich-udaju.html" style="color:inherit">Osobní údaje</a>
 </footer>

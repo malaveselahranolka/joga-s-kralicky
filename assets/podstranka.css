@@ -193,6 +193,7 @@ header.nav.open .nav-quick, header.nav.open .nav-cta { opacity: 0; pointer-event
 /* ---------- úvod podstránky: fotka, nadpis, výzva ---------- */
 .phero { position: relative; min-height: min(78svh, 760px); display: flex; flex-direction: column; justify-content: flex-end; color: #fff; overflow: hidden; padding: 110px 0 0; }
 .phero-bg { position: absolute; inset: 0; z-index: -1; }
+.phero-bg picture { display: contents; }
 .phero-bg img { width: 100%; height: 100%; object-fit: cover; }
 .phero-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20,24,18,.6) 0%, rgba(20,24,18,.2) 34%, rgba(20,24,18,.55) 66%, rgba(20,24,18,.92) 100%); }
 .phero-bg::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(165deg, rgba(110,138,78,.45) 0%, rgba(44,59,46,.3) 55%, rgba(44,59,46,.45) 100%); mix-blend-mode: multiply; }
@@ -399,3 +400,23 @@ html.js .phero .wrap > :nth-child(5) { animation-delay: .42s; }
 @media (max-width: 860px) { .mosaic { aspect-ratio: 4/3; } }
 .on-dark .split-text p { color: rgba(255,255,255,.8); }
 .on-dark .split-text a:not(.btn) { color: var(--cream); }
+
+/* ---------- telefon: dotykové plochy aspoň 44 px ----------
+   80–90 % návštěv přichází z telefonu (reklamy na Instagramu a Facebooku).
+   Hamburger, logo, drobečky, kontakty i patička proto dostávají plochu,
+   na kterou se pohodlně trefí palec. */
+.menu-toggle { width: 44px; height: 44px; margin-right: -7px; }
+.menu-toggle .bar { left: 10px; right: 10px; }
+.menu-toggle .bar:nth-child(1) { top: 15px; }
+.menu-toggle .bar:nth-child(2) { top: 22px; }
+.menu-toggle .bar:nth-child(3) { top: 29px; }
+.brand { min-height: 44px; min-width: 44px; justify-content: center; }
+.nav-links a { padding-block: .55rem; }
+.crumbs a { display: inline-block; padding-block: .7rem; }
+.contact-list a { min-height: 44px; }
+.field label small { font-size: .8rem; }
+@media (max-width: 640px) {
+  .nav-cta { min-height: 44px; }
+  .foot-col a { padding-block: .6rem; }
+  .foot-bottom a { display: inline-block; padding-block: .6rem; }
+}

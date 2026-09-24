@@ -950,7 +950,9 @@
     const note = $('lf-imgnote');
     note.textContent = 'Zpracovávám obrázek…';
     try {
-      const small = await shrinkImage(file, 1000, 0.78);
+      // Fotka lekce se na webu ukazuje jen jako náhled 58–66 px (na ostrém
+      // displeji telefonu ~200 px). 600 px na delší straně bohatě stačí.
+      const small = await shrinkImage(file, 600, 0.78);
       note.textContent = 'Nahrávám…';
       let url;
       try {
@@ -981,8 +983,13 @@
         c.width = Math.max(1, Math.round(img.width * scale));
         c.height = Math.max(1, Math.round(img.height * scale));
         c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        // Safari WebP z canvasu neumí a místo null vrátí nekomprimované PNG
+        // (tak to chce specifikace). Takhle se do úložiště dostaly „.webp“
+        // soubory, které byly ve skutečnosti PNG po 1,1–1,4 MB — a rezervace
+        // je stahovala na telefonu kvůli náhledu 58 px. Proto kontrolujeme
+        // skutečný typ a cokoliv jiného než WebP převedeme na JPEG.
         c.toBlob((blob) => {
-          if (blob) { resolve(blob); return; }
+          if (blob && blob.type === 'image/webp') { resolve(blob); return; }
           c.toBlob((jpg) => jpg ? resolve(jpg) : reject(new Error('convert')), 'image/jpeg', quality);
         }, 'image/webp', quality);
       };

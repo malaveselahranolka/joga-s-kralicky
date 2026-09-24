@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="preload" href="/assets/fonts/schibsted-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="preload" href="/assets/fonts/schibsted-grotesk-latin-ext.woff2" as="font" type="font/woff2" crossorigin />
-<link rel="preload" as="image" href="assets/photos/yoga-20.webp" fetchpriority="high" />
+<link rel="preload" href="/assets/fonts/hanken-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/assets/fonts/hanken-grotesk-latin-ext.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" as="image" href="assets/photos/yoga-20.webp" imagesrcset="assets/photos/yoga-20-768.webp 768w, assets/photos/yoga-20.webp 1500w" imagesizes="100vw" fetchpriority="high" media="(min-width: 641px)" />
+<link rel="preload" as="image" href="assets/photos/yoga-20-mobil.webp" fetchpriority="high" media="(max-width: 640px)" />
 <!-- Měření návštěvnosti (Google Analytics) se načte AŽ PO souhlasu. -->
 <script defer src="/souhlas.js?v=1"></script>
 <title>Dárkový poukaz na jógu s králíčky v Ostravě — zážitek za 499 Kč</title>
@@ -112,7 +115,12 @@
   <!-- ============ ÚVOD ============ -->
   <section class="phero">
     <div class="phero-bg">
-      <img src="assets/photos/yoga-20.webp" alt="Cvičenka drží v náručí šedého klopoušího králíka" width="1500" height="1000" fetchpriority="high" decoding="async" />
+      <!-- Na telefonu vlastní výřez na výšku: široká fotka by se do úzké
+           obrazovky ořízla na střed a králík by zmizel pod textem. -->
+      <picture>
+        <source media="(max-width: 640px)" srcset="assets/photos/yoga-20-mobil.webp" width="600" height="1000" />
+        <img srcset="assets/photos/yoga-20-768.webp 768w, assets/photos/yoga-20.webp 1500w" sizes="100vw" src="assets/photos/yoga-20.webp" alt="Cvičenka drží v náručí šedého klopoušího králíka" width="1500" height="1000" fetchpriority="high" decoding="async" />
+      </picture>
     </div>
     <div class="wrap">
       <nav class="crumbs" aria-label="Drobečková navigace"><a href="/">Jóga s králíčky</a> / Dárkový poukaz</nav>

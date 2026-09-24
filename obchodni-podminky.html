@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="preload" href="/assets/fonts/schibsted-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="preload" href="/assets/fonts/schibsted-grotesk-latin-ext.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/assets/fonts/hanken-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/assets/fonts/hanken-grotesk-latin-ext.woff2" as="font" type="font/woff2" crossorigin />
 <!-- Měření návštěvnosti (Google Analytics) se načte AŽ PO souhlasu.
      Skript souhlas.js ukáže lištu, uloží rozhodnutí a teprve pak
      případně natáhne gtag.js. Nepředbíhat ho vlastním script tagem. -->
@@ -106,8 +108,9 @@
   header.bar { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--paper) 92%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
   .bar-inner { display: flex; align-items: center; justify-content: space-between; height: 68px; }
   .brand { display: inline-flex; align-items: center; gap: .55rem; font-family: "Schibsted Grotesk"; font-weight: 700; font-size: 1.12rem; color: var(--ink); text-decoration: none; }
+  .brand { min-height: 44px; }
   .brand img { width: 32px; height: 32px; }
-  .home-link { font-weight: 600; font-size: .95rem; color: var(--ink-soft); text-decoration: none; }
+  .home-link { font-weight: 600; font-size: .95rem; color: var(--ink-soft); text-decoration: none; display: inline-block; padding-block: .7rem; }
 
   main { padding: clamp(2.4rem, 5vw, 4rem) 0 5rem; }
   h1 { font-size: clamp(1.9rem, 1.4rem + 2vw, 2.8rem); margin: 0 0 .6rem; }
@@ -126,7 +129,7 @@
   th { font-family: "Schibsted Grotesk"; font-weight: 600; color: var(--forest); }
   .tbl-wrap { overflow-x: auto; }
   footer.foot { border-top: 1px solid var(--line); padding: 2rem 0 3rem; font-size: .9rem; color: var(--ink-soft); }
-  footer.foot a { margin-right: 1.2rem; }
+  footer.foot a { margin-right: 1.2rem; display: inline-block; padding-block: .6rem; }
 
   /* Blur pod lepivou hlavičkou stojí prohlížeč přepočet při každém snímku
      scrollování. Na telefonu (a hlavně v úsporném režimu) je to nejdražší

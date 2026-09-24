@@ -63,6 +63,92 @@ if (existsSync(obsahPath) && existsSync(indexPath)) {
 }
 
 // ---------------------------------------------------------------------
+//  FOTKY PRO TELEFON: srcset s 768px variantou
+//
+//  80–90 % návštěv přichází z reklam na Instagramu a Facebooku, tedy
+//  z telefonu. Fotky v kartách, panelech a článcích přitom měly 1260 až
+//  1500 px a jedna JPG z CMS vážila 206 KB — telefon je stahoval celé,
+//  i když je vykreslil na šířku kolem 390 px.
+//
+//  Když vedle fotky leží soubor se stejným jménem a koncovkou -768.webp,
+//  doplní se sem srcset a prohlížeč si vybere menší verzi sám. Varianty
+//  se generují ručně (sharp) a commitují; bez varianty zůstane <img>
+//  beze změny, takže nová fotka z CMS nic nerozbije, jen je větší.
+//
+//  Vynechané jsou: hlavní fotka úvodu (fetchpriority="high", má vlastní
+//  <picture>) a fotky v galerii (button.rshot), kde se náhled a plná
+//  verze pro lightbox řídí vlastní logikou.
+// ---------------------------------------------------------------------
+function rozmerObrazku(soubor) {
+  try {
+    const b = readFileSync(soubor)
+    if (b.toString('ascii', 0, 4) === 'RIFF') {
+      const typ = b.toString('ascii', 12, 16)
+      if (typ === 'VP8X') return 1 + b.readUIntLE(24, 3)
+      if (typ === 'VP8 ') return b.readUInt16LE(26) & 0x3fff
+      if (typ === 'VP8L') return (b.readUInt32LE(21) & 0x3fff) + 1
+      return null
+    }
+    if (b[0] === 0xff && b[1] === 0xd8) {
+      let i = 2
+      while (i < b.length) {
+        const znacka = b[i + 1]
+        if (znacka >= 0xc0 && znacka <= 0xc3) return b.readUInt16BE(i + 7)
+        i += 2 + b.readUInt16BE(i + 2)
+      }
+    }
+  } catch (_e) { /* neznámý formát = bez srcsetu */ }
+  return null
+}
+
+let doplnenoSrcset = 0
+for (const file of files.filter((f) => f.endsWith('.html'))) {
+  const cesta = join(output, file)
+  if (!existsSync(cesta)) continue
+  const html = readFileSync(cesta, 'utf8')
+  const nove = html.replace(/<img\b[^>]*>/g, (tag, index) => {
+    if (/\ssrcset=/.test(tag) || /fetchpriority="high"/.test(tag)) return tag
+    if (/<button[^>]*class="rshot"[^>]*>\s*$/.test(html.slice(Math.max(0, index - 200), index))) return tag
+    const src = (tag.match(/\ssrc="(assets\/photos\/[^"]+\.(?:webp|jpe?g))"/) || [])[1]
+    if (!src) return tag
+    const varianta = src.replace(/\.(?:webp|jpe?g)$/, '-768.webp')
+    if (!existsSync(join(root, varianta))) return tag
+    const sirka = rozmerObrazku(join(root, src))
+    if (!sirka || sirka <= 768) return tag
+    doplnenoSrcset += 1
+    return tag.replace(/\ssrc="/, ` srcset="${varianta} 768w, ${src} ${sirka}w" sizes="(max-width: 860px) 100vw, 50vw" src="`)
+  })
+  if (nove !== html) writeFileSync(cesta, nove)
+}
+console.log(`Fotky: srcset s mobilní variantou doplněn u ${doplnenoSrcset} obrázků.`)
+
+// ---------------------------------------------------------------------
+//  SDÍLENÉ CSS INLINE
+//
+//  Podstránky a články načítaly styl jako samostatný soubor. Na mobilní
+//  síti to je další cesta k serveru, než se cokoliv vykreslí — Lighthouse
+//  u podstránek počítal 0,3–0,5 s zdržení. Homepage má styly inline už
+//  dávno, tak to sjednocujeme: v repu zůstává jeden sdílený soubor
+//  (snadno se edituje), do nasazeného HTML se vloží jeho obsah.
+// ---------------------------------------------------------------------
+let vlozenoCss = 0
+for (const file of files.filter((f) => f.endsWith('.html'))) {
+  const cesta = join(output, file)
+  if (!existsSync(cesta)) continue
+  const html = readFileSync(cesta, 'utf8')
+  const nove = html.replace(
+    /<link rel="stylesheet" href="\/?(assets\/(?:article|podstranka)\.css)(?:\?[^"]*)?"\s*\/?>/g,
+    (tag, soubor) => {
+      if (!existsSync(join(root, soubor))) return tag
+      vlozenoCss += 1
+      return `<style>\n${readFileSync(join(root, soubor), 'utf8').replace(/<\/style/gi, '<\\/style')}\n</style>`
+    },
+  )
+  if (nove !== html) writeFileSync(cesta, nove)
+}
+console.log(`CSS: sdílený styl vložen inline do ${vlozenoCss} stránek.`)
+
+// ---------------------------------------------------------------------
 //  SITEMAP: lastmod podle poslední změny v gitu
 //
 //  Datumy v sitemap.xml byly napsané ručně, takže se po každé úpravě
