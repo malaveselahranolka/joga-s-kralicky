@@ -78,7 +78,7 @@ DÁRKOVÝ POUKAZ (/darkovy-poukaz.html, koupě na /koupit-poukaz.html)
 SKUPINOVÉ LEKCE (/skupinove-lekce.html)
 - Soukromá lekce jen pro vaši skupinu: firmy a teambuilding, narozeniny a oslavy, rozlučky, parta přátel nebo rodina.
 - Termín mimo běžný sobotní rozvrh a program na míru, domluva e-mailem (info@jogaskralicky.cz) nebo telefonem (+420 603 340 860).
-- Místo: u nás ve Fit&Fun Studiu v Ostravě, nebo s králíčky přijedeme za zákazníkem (do firmy, na oslavu, na zahradu). Místo a dopravu domlouváme v poptávce; kam až dojedeme a kolik stojí doprava, na webu není, řeší se individuálně.
+- Místo: u nás ve Fit&Fun Studiu v Ostravě, nebo přijedeme za zákazníkem (do firmy, na oslavu, na zahradu); králíčky i podložky přivezeme, zákazník zajistí jen prostor. Místo a dopravu domlouváme v poptávce; kam až dojedeme a kolik stojí doprava, na webu není, řeší se individuálně.
 - Pevný ceník pro skupiny není, cenu studio pošle e-mailem podle počtu lidí, termínu a programu.
 - Běžná lekce má nejvýš 10 míst; kolik lidí zvládne soukromá akce, se domluví v poptávce.
 
