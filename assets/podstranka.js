@@ -80,12 +80,28 @@
     const dnes = new Date();
     const dvoj = (n) => String(n).padStart(2, '0');
     if (form.elements.datum) form.elements.datum.min = `${dnes.getFullYear()}-${dvoj(dnes.getMonth() + 1)}-${dvoj(dnes.getDate())}`;
+    // Lekce může být u nás ve studiu, nebo přijedeme za zákazníkem.
+    // Pole s adresou ukážeme, jen když chce, abychom přijeli.
+    const kde = form.elements.kde;
+    const adresaPole = document.getElementById('p-adresa-pole');
+    const jedemeZaVami = () => !!kde && kde.selectedIndex === 1;
+    if (kde && adresaPole) {
+      const prepni = () => { adresaPole.hidden = !jedemeZaVami(); };
+      kde.addEventListener('change', prepni);
+      prepni();
+    }
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const val = (name) => (form.elements[name] && form.elements[name].value || '').trim();
       if (!val('jmeno') || !val('email')) {
         msg.textContent = 'Vyplňte prosím jméno a e-mail, ať máme kam odpovědět.';
         msg.classList.add('err');
+        return;
+      }
+      if (jedemeZaVami() && !val('adresa')) {
+        msg.textContent = 'Napište prosím, kam máme s králíčky přijet.';
+        msg.classList.add('err');
+        form.elements.adresa.focus();
         return;
       }
       if (!val('datum') || !val('cas')) {
@@ -105,6 +121,7 @@
         '',
         'Příležitost: ' + (val('typ') || '—'),
         'Počet lidí: ' + (val('pocet') || '—'),
+        'Kde: ' + (jedemeZaVami() ? 'přijeďte za námi — ' + val('adresa') : 'u vás ve studiu v Ostravě'),
         'Termín, který by se nám hodil: ' + termin,
         '',
         val('zprava'),
