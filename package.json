@@ -8,8 +8,9 @@
     "verify": "node scripts/verify.mjs",
     "verify:public": "node scripts/verify-public.mjs",
     "test:business": "node --test tests/business-domain.test.mjs tests/business-integrations.test.mjs tests/business-store.test.mjs",
+    "test:chat": "node --test tests/chat.test.mjs",
     "test:business-browser": "node scripts/check-business-browser.mjs",
-    "check": "node --test tests/business-domain.test.mjs tests/business-integrations.test.mjs tests/business-store.test.mjs && node scripts/verify.mjs && node --env-file-if-exists=.env.local scripts/build.mjs && node scripts/verify-public.mjs"
+    "check": "node --test tests/business-domain.test.mjs tests/business-integrations.test.mjs tests/business-store.test.mjs tests/chat.test.mjs && node scripts/verify.mjs && node --env-file-if-exists=.env.local scripts/build.mjs && node scripts/verify-public.mjs"
   },
   "dependencies": {
     "@vercel/speed-insights": "^2.0.0",

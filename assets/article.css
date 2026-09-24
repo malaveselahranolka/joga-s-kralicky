@@ -144,7 +144,7 @@ a:hover { color: var(--clover); }
 
 .eyebrow {
   display: inline-flex; align-items: center;
-  font-size: .82rem; font-weight: 600; letter-spacing: .04em; color: var(--clover);
+  font-size: .82rem; font-weight: 600; letter-spacing: .04em; color: #5C7341; /* clover má na drobné písmo málo kontrastu */
 }
 .eyebrow::before {
   content: ""; width: 1.05em; height: 1.05em; margin-right: .45rem; flex: 0 0 auto;
@@ -226,3 +226,10 @@ footer {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
+
+/* ---------- telefon: dotykové plochy aspoň 44 px ----------
+   Většina návštěv je z telefonu; odkazy v patičce a drobečcích měly
+   18–24 px na výšku, logo 32 px. */
+.brand { min-height: 44px; }
+.crumbs a { display: inline-block; padding-block: .7rem; }
+.foot-links a { display: inline-block; padding-block: .6rem; }

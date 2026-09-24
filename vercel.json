@@ -3,6 +3,12 @@
   "buildCommand": "npm run build",
   "outputDirectory": "public",
   "framework": null,
+  "functions": {
+    "api/chat.js": {
+      "includeFiles": "content/obsah.json",
+      "maxDuration": 30
+    }
+  },
   "routes": [
     {
       "has": [
@@ -67,6 +73,20 @@
       "status": 308,
       "headers": {
         "Location": "/darkovy-poukaz.html"
+      }
+    },
+    {
+      "src": "/o-nas",
+      "status": 308,
+      "headers": {
+        "Location": "/o-nas.html"
+      }
+    },
+    {
+      "src": "/skupinove-lekce",
+      "status": 308,
+      "headers": {
+        "Location": "/skupinove-lekce.html"
       }
     },
     {

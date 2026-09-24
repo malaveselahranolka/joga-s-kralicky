@@ -5,12 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="preload" href="/assets/fonts/schibsted-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="preload" href="/assets/fonts/schibsted-grotesk-latin-ext.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/assets/fonts/hanken-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/assets/fonts/hanken-grotesk-latin-ext.woff2" as="font" type="font/woff2" crossorigin />
 <!-- Měření návštěvnosti (Google Analytics) se načte AŽ PO souhlasu.
      Skript souhlas.js ukáže lištu, uloží rozhodnutí a teprve pak
      případně natáhne gtag.js. Nepředbíhat ho vlastním script tagem. -->
 <script defer src="/souhlas.js?v=1"></script>
 <title>Rezervace lekce jógy s králíčky Ostrava — volné termíny</title>
-<meta name="description" content="Vyberte si aktuální termín 60minutové jógy se 7 králíčky v Ostravě. Fit&amp;Fun Studio, 499 Kč, max. 10 míst. Rezervace a platba online." />
+<meta name="description" content="Vyberte si aktuální termín 60minutové jógy s 10 králíčky v Ostravě. Fit&amp;Fun Studio, 499 Kč, max. 10 míst. Rezervace a platba online." />
 <link rel="canonical" href="https://www.jogaskralicky.cz/rezervace.html" />
 <meta name="robots" content="index, follow, max-image-preview:large" />
 <meta property="og:type" content="website" />
@@ -126,8 +128,9 @@
   header.bar { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--paper) 90%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
   .bar-inner { display: flex; align-items: center; justify-content: space-between; height: 68px; }
   .brand { display: inline-flex; align-items: center; gap: .55rem; font-family: "Schibsted Grotesk"; font-weight: 700; font-size: 1.12rem; letter-spacing: -.02em; }
+  .brand { min-height: 44px; }
   .brand img { width: 32px; height: 32px; }
-  .home-link { display: inline-flex; align-items: center; gap: .45rem; font-weight: 600; font-size: .95rem; color: var(--ink-soft); transition: color .3s var(--ease); }
+  .home-link { display: inline-flex; align-items: center; gap: .45rem; min-height: 44px; font-weight: 600; font-size: .95rem; color: var(--ink-soft); transition: color .3s var(--ease); }
   .home-link:hover { color: var(--forest); }
 
   main { padding: clamp(2.4rem, 5vw, 4rem) 0 5rem; }
@@ -148,11 +151,11 @@
   .slot:hover { transform: translateY(-3px); box-shadow: var(--sh-3); }
   .slot .time { display: flex; flex-direction: column; gap: .4rem; align-items: flex-start; }
   .slot .time .rng { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: 1.08rem; color: var(--ink); background: var(--cream); border: 1px solid var(--line); border-radius: var(--r-md); padding: .55rem .8rem; white-space: nowrap; }
-  .slot .time .dur { font-size: .74rem; font-weight: 600; color: var(--ink-soft); border: 1px solid var(--line); border-radius: 999px; padding: .18em .7em; }
+  .slot .time .dur { font-size: .78rem; font-weight: 600; color: var(--ink-soft); border: 1px solid var(--line); border-radius: 999px; padding: .18em .7em; }
   .slot .info { display: flex; align-items: center; gap: 1rem; min-width: 0; }
   .slot .thumb { width: 58px; height: 58px; border-radius: 14px; object-fit: cover; flex: none; border: 1px solid var(--line); }
   .slot .meta { min-width: 0; }
-  .slot .meta .lbl { font-size: .72rem; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-soft); }
+  .slot .meta .lbl { font-size: .76rem; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-soft); }
   .slot .meta .val { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: 1.02rem; color: var(--ink); }
   .slot .meta .place { margin-top: .4rem; }
   .slot .meta .place .val { font-family: "Hanken Grotesk"; font-weight: 500; font-size: .92rem; color: var(--ink-soft); }
@@ -176,7 +179,7 @@
   .back { display: inline-flex; align-items: center; gap: .5rem; font-weight: 600; color: var(--carrot-text); margin-bottom: 1.4rem; transition: gap .3s var(--ease); }
   .back:hover { gap: .8rem; }
   .summary { display: flex; align-items: center; gap: clamp(1rem, 3vw, 2.4rem); flex-wrap: wrap; justify-content: center; text-align: left; margin: 0 auto 2rem; max-width: 760px; }
-  .summary .blk .lbl { font-size: .72rem; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-soft); }
+  .summary .blk .lbl { font-size: .76rem; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-soft); }
   .summary .blk .big { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: 1.2rem; color: var(--forest); }
   .summary .blk .sub { font-weight: 500; color: var(--ink); }
   .summary .thumb { width: 66px; height: 66px; border-radius: 16px; object-fit: cover; border: 1px solid var(--line); }
@@ -443,7 +446,7 @@
   </div>
 </main>
 
-<footer style="text-align:center;padding:2rem 1rem;font-size:.82rem;color:var(--ink-soft)">
+<footer style="text-align:center;padding:2rem 1rem;font-size:.82rem;line-height:2.6;color:var(--ink-soft)">
   Barbora Kovačíková, IČO 29731828 · Tovární 486/7, Ostrava-Mariánské Hory · <a href="mailto:info@jogaskralicky.cz" style="color:inherit">info@jogaskralicky.cz</a> ·
   <a href="obchodni-podminky.html" style="color:inherit">Obchodní podmínky</a> · <a href="zasady-osobnich-udaju.html" style="color:inherit">Osobní údaje</a>
 </footer>
@@ -619,7 +622,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // ---- načtení termínů ----
   async function load() {
     if (!CONFIGURED) {
-      $('dayList').innerHTML = '<div class="empty">Online rezervace se připravuje. Zatím nám napište na <a href="mailto:info@jogaskralicky.cz" style="color:var(--clover)">info@jogaskralicky.cz</a> nebo zavolejte na +420 603 340 860.</div>';
+      $('dayList').innerHTML = '<div class="empty">Online rezervace se připravuje. Zatím nám napište na <a href="mailto:info@jogaskralicky.cz" style="color:var(--forest);text-decoration:underline">info@jogaskralicky.cz</a> nebo zavolejte na +420 603 340 860.</div>';
       return;
     }
     // Statický seznam termínů z buildu necháme na místě, dokud nedorazí
@@ -1003,7 +1006,7 @@ document.addEventListener('DOMContentLoaded', function () {
           '<p>Děkujeme, platba je potvrzená a místo je vaše. QR kód pro vstup máte v potvrzovacím e-mailu — ve studiu ho jen ukážete.</p>',
           statusBtn('btn-primary') + backBtn);
       }
-      else stateBox('info', 'Platbu ještě potvrzujeme', '<p>Peníze nejspíš odešly, jen se k nám potvrzení ještě nepropsalo. Zkuste za chvíli otevřít stav rezervace — kdyby tam platba nenaskočila ani za pár minut, napište nám na <a href="mailto:info@jogaskralicky.cz" style="color:var(--clover)">info@jogaskralicky.cz</a> a dořešíme to.</p>', statusBtn('btn-primary') + backBtn);
+      else stateBox('info', 'Platbu ještě potvrzujeme', '<p>Peníze nejspíš odešly, jen se k nám potvrzení ještě nepropsalo. Zkuste za chvíli otevřít stav rezervace — kdyby tam platba nenaskočila ani za pár minut, napište nám na <a href="mailto:info@jogaskralicky.cz" style="color:var(--forest);text-decoration:underline">info@jogaskralicky.cz</a> a dořešíme to.</p>', statusBtn('btn-primary') + backBtn);
     }
     else if (platba === 'zrus') {
       stateBox('info', 'Platba nedokončena',

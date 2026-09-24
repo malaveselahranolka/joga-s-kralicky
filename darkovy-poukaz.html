@@ -5,12 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="preload" href="/assets/fonts/schibsted-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="preload" href="/assets/fonts/schibsted-grotesk-latin-ext.woff2" as="font" type="font/woff2" crossorigin />
-<!-- Měření návštěvnosti (Google Analytics) se načte AŽ PO souhlasu.
-     Skript souhlas.js ukáže lištu, uloží rozhodnutí a teprve pak
-     případně natáhne gtag.js. Nepředbíhat ho vlastním script tagem. -->
+<link rel="preload" href="/assets/fonts/hanken-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/assets/fonts/hanken-grotesk-latin-ext.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" as="image" href="assets/photos/yoga-20.webp" imagesrcset="assets/photos/yoga-20-768.webp 768w, assets/photos/yoga-20.webp 1500w" imagesizes="100vw" fetchpriority="high" media="(min-width: 641px)" />
+<link rel="preload" as="image" href="assets/photos/yoga-20-mobil.webp" fetchpriority="high" media="(max-width: 640px)" />
+<!-- Měření návštěvnosti (Google Analytics) se načte AŽ PO souhlasu. -->
 <script defer src="/souhlas.js?v=1"></script>
-<title>Dárkový poukaz na jógu s králíčky — zážitkový dárek z Ostravy</title>
-<meta name="description" content="Dárkový poukaz na lekci jógy se sedmi králíky za 499 Kč. Přijde e-mailem během pár minut, platí 6 měsíců na kteroukoliv lekci a může ho uplatnit kdokoliv." />
+<title>Dárkový poukaz na jógu s králíčky v Ostravě — zážitek za 499 Kč</title>
+<meta name="description" content="Darujte hodinu jógy a mazlení s deseti králíčky v Ostravě. Poukaz za 499 Kč přijde e-mailem během pár minut, platí 6 měsíců a termín si obdarovaný vybere sám." />
 <link rel="canonical" href="https://www.jogaskralicky.cz/darkovy-poukaz.html" />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
 <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
@@ -18,13 +20,15 @@
 <meta property="og:type" content="product" />
 <meta property="og:locale" content="cs_CZ" />
 <meta property="og:site_name" content="Jóga s králíčky" />
-<meta property="og:title" content="Dárkový poukaz na jógu s králíčky — zážitkový dárek z Ostravy" />
-<meta property="og:description" content="Lekce jógy se sedmi králíky za 499 Kč. Poukaz přijde e-mailem během pár minut a platí 6 měsíců." />
+<meta property="og:title" content="Dárkový poukaz na jógu s králíčky v Ostravě" />
+<meta property="og:description" content="Hodina jógy a mazlení s deseti králíčky jako dárek. 499 Kč, e-mailem během pár minut, platnost 6 měsíců." />
 <meta property="og:url" content="https://www.jogaskralicky.cz/darkovy-poukaz.html" />
-<meta property="og:image" content="https://www.jogaskralicky.cz/assets/photos/yoga-3.jpg" />
+<meta property="og:image" content="https://www.jogaskralicky.cz/assets/photos/yoga-20.jpg" />
 <meta property="og:image:width" content="1500" />
 <meta property="og:image:height" content="1000" />
-<meta name="twitter:card" content="summary_large_image" /><link rel="stylesheet" href="assets/article.css" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="stylesheet" href="assets/podstranka.css" />
+<script>document.documentElement.classList.add('js');</script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -41,7 +45,7 @@
       "@id": "https://www.jogaskralicky.cz/darkovy-poukaz.html#produkt",
       "name": "Dárkový poukaz na lekci jógy s králíčky",
       "description": "Poukaz na jeden vstup na kteroukoliv lekci jógy s králíčky ve Fit&Fun Studiu v Ostravě-Mariánských Horách. Doručení e-mailem, platnost 6 měsíců, přenosný.",
-      "image": "https://www.jogaskralicky.cz/assets/photos/yoga-3.jpg",
+      "image": "https://www.jogaskralicky.cz/assets/photos/yoga-20.jpg",
       "category": "Zážitkový dárek",
       "brand": {"@type": "Brand", "name": "Jóga s králíčky"},
       "offers": {
@@ -57,17 +61,17 @@
       "@type": "FAQPage",
       "mainEntity": [
         {"@type": "Question", "name": "Jak rychle poukaz dorazí?",
-         "acceptedAnswer": {"@type": "Answer", "text": "E-mailem během pár minut po zaplacení. Nic se nikam neposílá poštou, takže se dá koupit i večer před tím, než dárek předáváte."}},
+         "acceptedAnswer": {"@type": "Answer", "text": "E-mailem během pár minut po zaplacení. Poštou nic neposíláme, takže poukaz stihnete koupit i večer před předáním."}},
         {"@type": "Question", "name": "Na jakou lekci poukaz platí?",
-         "acceptedAnswer": {"@type": "Answer", "text": "Na kteroukoliv právě nabízenou lekci — hathu pro dospělé i dětský formát od 10 let. Obdarovaný si vybere termín přímo v rezervačním formuláři na webu, rozklikne „Mám dárkový poukaz“ a vepíše kód. Rezervace se rovnou potvrdí, nic se přitom neplatí."}},
-        {"@type": "Question", "name": "Jak dlouho poukaz platí?",
-         "acceptedAnswer": {"@type": "Answer", "text": "6 měsíců od zakoupení. Termín si obdarovaný vybírá sám a nemusí se rozhodovat hned."}},
-        {"@type": "Question", "name": "Může poukaz uplatnit někdo jiný?",
-         "acceptedAnswer": {"@type": "Answer", "text": "Ano, poukaz je přenosný. Uplatní ho kdokoliv, kdo má kód — nekontrolujeme, komu byl původně vystaven."}},
+         "acceptedAnswer": {"@type": "Answer", "text": "Na kteroukoliv vypsanou lekci — pro dospělé i dětskou lekci pro děti od 10 let s rodičem."}},
+        {"@type": "Question", "name": "Jak obdarovaný poukaz uplatní?",
+         "acceptedAnswer": {"@type": "Answer", "text": "V rezervaci na webu si vybere termín, rozklikne „Mám dárkový poukaz“ a vepíše kód. Rezervace se rovnou potvrdí a nic se nedoplácí."}},
+        {"@type": "Question", "name": "Může poukaz použít někdo jiný?",
+         "acceptedAnswer": {"@type": "Answer", "text": "Ano. Poukaz je přenosný, uplatní ho kdokoliv, kdo má kód."}},
         {"@type": "Question", "name": "Můžu koupit víc poukazů najednou?",
-         "acceptedAnswer": {"@type": "Answer", "text": "Ano. V objednávce si zvolíte počet a platební brána spočítá celou částku. Hodí se, když chcete darovat lekci dvěma lidem, aby mohli přijít spolu."}},
-        {"@type": "Question", "name": "Co když se obdarovaný nemůže dostavit?",
-         "acceptedAnswer": {"@type": "Answer", "text": "Termín jde bezplatně přesunout. Poukaz nelze směnit zpět za peníze a nevyplácíme z něj hotovost."}}
+         "acceptedAnswer": {"@type": "Answer", "text": "Ano. V objednávce zvolíte počet a platební brána spočítá celou částku. Každý poukaz platí na jeden vstup."}},
+        {"@type": "Question", "name": "Dá se poukaz vrátit?",
+         "acceptedAnswer": {"@type": "Answer", "text": "Poukaz nejde směnit zpět za peníze ani z něj vyplatit hotovost. Platí 6 měsíců od zakoupení, takže je dost času vybrat termín."}}
       ]
     }
   ]
@@ -76,126 +80,275 @@
 <script defer src="/speed-insights.js"></script>
 </head>
 <body>
+<a class="skip-link" href="#obsah">Přeskočit na obsah</a>
 
-<header class="nav">
+<header class="nav" id="nav">
   <div class="wrap nav-inner">
-    <a class="brand" href="/">
-      <img src="assets/logo.svg" alt="" width="32" height="32" />
-      <span>Jóga&nbsp;s&nbsp;králíčky</span>
+    <div class="nav-left">
+      <a class="btn nav-cta" href="rezervace.html">Rezervovat</a>
+      <nav class="nav-quick" aria-label="Stránky">
+        <a href="darkovy-poukaz.html" aria-current="page">Dárkový poukaz</a>
+        <a href="skupinove-lekce.html">Skupinové lekce</a>
+      </nav>
+    </div>
+    <a class="brand" href="/" aria-label="Jóga s králíčky — domů">
+      <img decoding="async" class="mark" src="assets/logo.svg" alt="" width="34" height="34" />
+      <span class="word">Jóga&nbsp;s&nbsp;králíčky</span>
     </a>
-    <a class="btn btn-primary" href="rezervace.html#voucherCard">Koupit poukaz</a>
+    <div class="nav-right">
+      <button class="menu-toggle" id="menuToggle" aria-label="Otevřít menu" aria-controls="navLinks" aria-expanded="false">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+    </div>
   </div>
 </header>
+<div class="nav-backdrop" id="navBackdrop"></div>
+<nav class="nav-links" id="navLinks" aria-label="Hlavní menu">
+  <a href="/">Domů</a>
+  <a href="darkovy-poukaz.html" aria-current="page">Dárkový poukaz</a>
+  <a href="skupinove-lekce.html">Skupinové lekce</a>
+  <a href="o-nas.html">O nás</a>
+  <a class="btn btn-primary menu-cta" href="rezervace.html">Rezervovat lekci <span class="arrow">→</span></a>
+</nav>
 
-<div class="wrap">
-  <nav class="crumbs" aria-label="Drobečková navigace">
-    <a href="/">Jóga s králíčky</a> · <span>Dárkový poukaz</span>
-  </nav>
-
-  <main id="obsah">
-  <article>
-    <span class="eyebrow">Dárek</span>
-    <h1>Dárkový poukaz na jógu s králíčky</h1>
-
-    <p class="lead">499 Kč za hodinu, po které někomu usne na klíně králík. Poukaz přijde e-mailem během pár minut, platí 6 měsíců a obdarovaný si sám vybere termín.</p>
-
-    <p><a class="btn btn-primary" href="rezervace.html#voucherCard">Koupit poukaz →</a></p>
-
-    <figure>
-      <img src="assets/photos/yoga-3.webp" alt="Lekce jógy s králíčky ve Fit&amp;Fun Studiu v Ostravě" width="1500" height="1000" loading="eager" decoding="async" />
-      <figcaption>Fit&amp;Fun Studio, Ostrava-Mariánské Hory. Maximálně deset lidí a sedm králíků.</figcaption>
-    </figure>
-
-    <h2>Komu se hodí</h2>
-
-    <p>Poukaz na jógu s králíčky funguje jako dárek pro člověka, kterému se špatně kupuje — protože si věci kupuje sám. Zážitek se nedá mít doma dvakrát.</p>
-
-    <ul>
-      <li><strong>Někomu, kdo má toho hodně.</strong> Hodina, ve které se nedá nic stíhat, protože králíka nejde popohnat.</li>
-      <li><strong>Někomu, kdo nikdy necvičil.</strong> Lekce je vedená pro úplné začátečníky a nikdo nikoho neopravuje.</li>
-      <li><strong>Rodičům s dětmi.</strong> Dětský formát je od 10 let a dítě chodí s doprovodem.</li>
-      <li><strong>Dvěma lidem najednou.</strong> Kupte dva poukazy, ať můžou přijít spolu.</li>
-      <li><strong>Na poslední chvíli.</strong> Doručení e-mailem znamená, že se dá koupit večer před předáním.</li>
-    </ul>
-
-    <h2>Jak to funguje</h2>
-
-    <div class="table-scroll">
-      <table>
-        <thead>
-          <tr><th scope="col">Krok</th><th scope="col">Co se stane</th></tr>
-        </thead>
-        <tbody>
-          <tr><td><strong>1. Zaplatíte</strong></td><td>Kartou online, 499 Kč za poukaz. Můžete jich koupit víc naráz.</td></tr>
-          <tr><td><strong>2. Přijde e-mail</strong></td><td>Během pár minut, s kódem a k vytištění jako PDF. Nic se neposílá poštou.</td></tr>
-          <tr><td><strong>3. Předáte dárek</strong></td><td>Přepošlete e-mail, nebo PDF vytiskněte a vložte do obálky.</td></tr>
-          <tr><td><strong>4. Obdarovaný uplatní kód</strong></td><td>V <a href="rezervace.html">rezervačním formuláři</a> rozklikne „Mám dárkový poukaz“, vybere termín a vepíše kód. Rezervace se rovnou potvrdí — nic se přitom neplatí, poukaz je vstup.</td></tr>
-          <tr><td><strong>5. Přijde potvrzení</strong></td><td>E-mailem, i s QR kódem. Ten ve studiu jen ukáže. Nic se nedoplácí.</td></tr>
-        </tbody>
-      </table>
+<main id="obsah">
+  <!-- ============ ÚVOD ============ -->
+  <section class="phero">
+    <div class="phero-bg">
+      <!-- Na telefonu vlastní výřez na výšku: široká fotka by se do úzké
+           obrazovky ořízla na střed a králík by zmizel pod textem. -->
+      <picture>
+        <source media="(max-width: 640px)" srcset="assets/photos/yoga-20-mobil.webp" width="600" height="1000" />
+        <img srcset="assets/photos/yoga-20-768.webp 768w, assets/photos/yoga-20.webp 1500w" sizes="100vw" src="assets/photos/yoga-20.webp" alt="Cvičenka drží v náručí šedého klopoušího králíka" width="1500" height="1000" fetchpriority="high" decoding="async" />
+      </picture>
     </div>
-
-    <div class="note">
-      <p><strong>Podmínky ve zkratce:</strong> 499 Kč · platnost 6 měsíců od zakoupení · platí na kteroukoliv lekci · kód se uplatňuje přímo v rezervačním formuláři · přenosný, uplatní ho kdokoliv s kódem · zpět za peníze ho nesměňujeme. Celé znění je v <a href="obchodni-podminky.html">obchodních podmínkách</a>, článek 5.</p>
+    <div class="wrap">
+      <nav class="crumbs" aria-label="Drobečková navigace"><a href="/">Jóga s králíčky</a> / Dárkový poukaz</nav>
+      <span class="eyebrow">Dárek, který se nedá mít doma</span>
+      <h1>Dárkový poukaz na <em>jógu s králíčky</em></h1>
+      <p class="phero-sub">Hodina klidu, protažení a mazlení s deseti králíčky v Ostravě. Poukaz přijde e-mailem pár minut po zaplacení a termín si obdarovaný vybere sám.</p>
+      <div class="phero-actions">
+        <a class="btn btn-light" href="rezervace.html#voucherCard">Koupit poukaz za 499&nbsp;Kč <span class="arrow">→</span></a>
+        <a class="btn btn-ghost" href="#jak-to-funguje">Jak to funguje</a>
+      </div>
     </div>
+  </section>
 
-    <h2>Co obdarovaný dostane</h2>
-
-    <p>Šedesát minut pomalé hathy ve světlém sále v Ostravě-Mariánských Horách. Posledních dvacet minut se sál otevře sedmi králíkům, kteří si sami vybírají, ke komu půjdou. Podložku, dečku i polštář půjčujeme — stačí pohodlné oblečení a ponožky.</p>
-
-    <p>Nikdo se nedívá, jak komu to jde. To je vlastně celý dárek.</p>
-
-    <h2>Časté dotazy</h2>
-
-    <div class="faq">
-      <details>
-        <summary>Jak rychle poukaz dorazí?</summary>
-        <p>E-mailem během pár minut po zaplacení. Nic se nikam neposílá poštou, takže se dá koupit i večer před tím, než dárek předáváte.</p>
-      </details>
-      <details>
-        <summary>Na jakou lekci poukaz platí?</summary>
-        <p>Na kteroukoliv právě nabízenou lekci — hathu pro dospělé i dětský formát od 10 let. Obdarovaný si vybere termín přímo v rezervačním formuláři na webu, rozklikne „Mám dárkový poukaz“ a vepíše kód. Rezervace se rovnou potvrdí, nic se přitom neplatí.</p>
-      </details>
-      <details>
-        <summary>Jak dlouho poukaz platí?</summary>
-        <p>6 měsíců od zakoupení. Termín si obdarovaný vybírá sám a nemusí se rozhodovat hned.</p>
-      </details>
-      <details>
-        <summary>Může poukaz uplatnit někdo jiný?</summary>
-        <p>Ano, poukaz je přenosný. Uplatní ho kdokoliv, kdo má kód — nekontrolujeme, komu byl původně vystaven.</p>
-      </details>
-      <details>
-        <summary>Můžu koupit víc poukazů najednou?</summary>
-        <p>Ano. V objednávce si zvolíte počet a platební brána spočítá celou částku. Hodí se, když chcete darovat lekci dvěma lidem, aby mohli přijít spolu.</p>
-      </details>
-      <details>
-        <summary>Co když se obdarovaný nemůže dostavit?</summary>
-        <p>Termín jde bezplatně přesunout. Poukaz nelze směnit zpět za peníze a nevyplácíme z něj hotovost.</p>
-      </details>
+  <!-- ============ TŘI ČÍSLA ============ -->
+  <section class="facts-sec" aria-label="Poukaz v kostce">
+    <div class="wrap">
+      <div class="facts">
+        <div class="fact"><b>499&nbsp;Kč</b><span>jeden vstup na lekci pro jednoho člověka</span></div>
+        <div class="fact"><b>6 měsíců</b><span>platnost od zakoupení, termín si obdarovaný vybere sám</span></div>
+        <div class="fact"><b>Pár minut</b><span>a poukaz s kódem i PDF k tisku je ve vaší schránce</span></div>
+      </div>
     </div>
+  </section>
 
-    <section class="cta">
-      <h2>Poukaz přijde e-mailem během pár minut</h2>
-      <p>499 Kč za jednu lekci. Platí 6 měsíců, na kteroukoliv lekci, a uplatnit ho může kdokoliv.</p>
-      <a class="btn btn-primary" href="rezervace.html#voucherCard">Koupit poukaz →</a>
-    </section>
-  </article>
+  <!-- ============ KOMU ============ -->
+  <section class="for-whom">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Komu ho dát</span>
+        <h2>Pro každého, kdo potřebuje chvíli zpomalit</h2>
+        <p class="lead">Nemusí umět jógu ani mít doma zvíře. Stačí, že má rád klid a králíky.</p>
+      </div>
+      <div class="cards">
+        <article class="card reveal">
+          <div class="card-pic"><img src="assets/photos/yoga-17-768.webp" alt="Cvičenka krmí mrkví šedého klopoušího králíka" width="768" height="512" loading="lazy" decoding="async" /></div>
+          <div class="card-body">
+            <h3>Milovníkům zvířat</h3>
+            <p>Hlavně těm, kdo si mazlíčka doma pořídit nemůžou. Tady si ho pohladí, nakrmí a vyfotí.</p>
+          </div>
+        </article>
+        <article class="card reveal">
+          <div class="card-pic"><img src="assets/photos/yoga-23-768.webp" alt="Cvičenka fotí mobilem kamarádku s králíkem v náručí" width="768" height="512" loading="lazy" decoding="async" /></div>
+          <div class="card-body">
+            <h3>Dvojici nebo kamarádkám</h3>
+            <p>Kupte dva poukazy najednou a darujte společný zážitek. Na lekci pak můžou přijít spolu.</p>
+          </div>
+        </article>
+        <article class="card reveal">
+          <div class="card-pic"><img src="assets/photos/yoga-15.webp" alt="Chlapec na dětské lekci drží v náručí šedého králíka" width="1500" height="1000" loading="lazy" decoding="async" /></div>
+          <div class="card-body">
+            <h3>Dětem s rodičem</h3>
+            <p>Poukaz platí i na dětskou lekci pro děti od 10 let. Dítě na ni chodí s rodičem.</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ JAK TO FUNGUJE ============ -->
+  <section class="on-dark" id="jak-to-funguje">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Jak to funguje</span>
+        <h2>Od nákupu k lekci ve čtyřech krocích</h2>
+        <p class="lead">Nic se neposílá poštou a nikde se nečeká. Stihnete to i večer před předáním.</p>
+      </div>
+      <ol class="steps">
+        <li class="reveal">
+          <h3>Zaplatíte online</h3>
+          <p>Kartou, 499&nbsp;Kč za poukaz. Můžete jich koupit víc najednou.</p>
+        </li>
+        <li class="reveal">
+          <h3>Přijde e-mail</h3>
+          <p>Během pár minut, s kódem poukazu a PDF, které jde vytisknout.</p>
+        </li>
+        <li class="reveal">
+          <h3>Předáte dárek</h3>
+          <p>E-mail přepošlete, nebo PDF vytisknete a vložíte do obálky.</p>
+        </li>
+        <li class="reveal">
+          <h3>Obdarovaný si vybere termín</h3>
+          <p>V <a href="rezervace.html">rezervaci</a> klikne na „Mám dárkový poukaz“, vepíše kód a je hotovo.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============ CO OBDAROVANÝ ZAŽIJE ============ -->
+  <section class="experience">
+    <div class="wrap split">
+      <div class="split-pic reveal">
+        <img src="assets/photos/yoga-21.webp" alt="Cvičenka v pozici se zvednutou nohou hladí šedého králíka" width="1500" height="1000" loading="lazy" decoding="async" />
+      </div>
+      <div class="split-text reveal">
+        <span class="eyebrow">Co obdarovaný zažije</span>
+        <h2>Šedesát minut, kdy nemusí nic stíhat</h2>
+        <p>Lekce začíná seznámením s králíčky, pak přijde jemná jóga s lektorkou. Závěr patří mazlení, hlazení a focení. Nikdo se nedívá, jak komu to jde.</p>
+        <ul class="ticks">
+          <li><b>Deset králíčků</b>, kteří si sami vyberou, ke komu půjdou</li>
+          <li><b>Nejvýš 10 lidí</b> na lekci, takže je na každého dost místa i králíků</li>
+          <li><b>Podložku, dečku i polštář</b> půjčíme, stačí pohodlné oblečení a ponožky</li>
+          <li><b>Fit&amp;Fun Studio</b> v Ostravě-Mariánských Horách, parkování zdarma u studia</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PODMÍNKY ============ -->
+  <section class="conditions" style="padding-top:0">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Podmínky ve zkratce</span>
+        <h2>Žádné háčky</h2>
+      </div>
+      <div class="terms reveal">
+        <div><b>Na kteroukoliv lekci</b><span>pro dospělé i dětskou, podle toho, co je zrovna vypsané</span></div>
+        <div><b>Přenosný</b><span>uplatní ho kdokoliv, kdo má kód</span></div>
+        <div><b>Bez doplácení</b><span>poukaz je vstupné, při rezervaci se už nic neplatí</span></div>
+        <div><b>Nevyměnitelný za peníze</b><span>zpět na hotovost ho nesměňujeme</span></div>
+      </div>
+      <p class="terms-note">Celé znění najdete v <a href="obchodni-podminky.html">obchodních podmínkách</a>, článek 5.</p>
+    </div>
+  </section>
+
+  <!-- ============ FAQ ============ -->
+  <section class="faq" style="border-top:1px solid var(--line-soft)">
+    <div class="wrap faq-wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Časté dotazy</span>
+        <h2>Na co se lidi ptají</h2>
+        <p class="lead">Něco chybí? Napište na <a href="mailto:info@jogaskralicky.cz">info@jogaskralicky.cz</a>.</p>
+      </div>
+      <div class="faq-list reveal">
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Jak rychle poukaz dorazí?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4v14M4 11h14"/></svg></button>
+          <div class="faq-a"><div><p>E-mailem během pár minut po zaplacení. Poštou nic neposíláme, takže poukaz stihnete koupit i večer před předáním.</p></div></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Na jakou lekci poukaz platí?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4v14M4 11h14"/></svg></button>
+          <div class="faq-a"><div><p>Na kteroukoliv vypsanou lekci — pro dospělé i dětskou lekci pro děti od 10 let s rodičem.</p></div></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Jak obdarovaný poukaz uplatní?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4v14M4 11h14"/></svg></button>
+          <div class="faq-a"><div><p>V rezervaci na webu si vybere termín, rozklikne „Mám dárkový poukaz“ a vepíše kód. Rezervace se rovnou potvrdí a nic se nedoplácí.</p></div></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Může poukaz použít někdo jiný?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4v14M4 11h14"/></svg></button>
+          <div class="faq-a"><div><p>Ano. Poukaz je přenosný, uplatní ho kdokoliv, kdo má kód.</p></div></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Můžu koupit víc poukazů najednou?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4v14M4 11h14"/></svg></button>
+          <div class="faq-a"><div><p>Ano. V objednávce zvolíte počet a platební brána spočítá celou částku. Každý poukaz platí na jeden vstup.</p></div></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Dá se poukaz vrátit?<svg class="ic" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4v14M4 11h14"/></svg></button>
+          <div class="faq-a"><div><p>Poukaz nejde směnit zpět za peníze ani z něj vyplatit hotovost. Platí 6 měsíců od zakoupení, takže je dost času vybrat termín.</p></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ZÁVĚREČNÁ VÝZVA S LÍSTKEM ============ -->
+  <section class="on-dark">
+    <div class="wrap split">
+      <div class="ticket reveal" aria-hidden="true">
+        <div class="ticket-main">
+          <span class="ticket-kicker">Dárkový poukaz</span>
+          <h3>Jóga s králíčky</h3>
+          <p>Jeden vstup na lekci ve Fit&amp;Fun Studiu Ostrava</p>
+          <span class="ticket-code">KRALICEK</span>
+        </div>
+        <div class="ticket-stub">
+          <img src="assets/logo.svg" alt="" width="34" height="34" loading="lazy" />
+          <span class="ticket-price">499<small> Kč</small></span>
+          <span class="ticket-valid">platí 6 měsíců</span>
+        </div>
+      </div>
+      <div class="split-text reveal">
+        <span class="eyebrow">Hotovo za pár minut</span>
+        <h2>Dárek, na který se nezapomíná</h2>
+        <p>Zaplatíte kartou, kód přijde e-mailem a zbytek je na obdarovaném. Králíci už se těší.</p>
+        <a class="btn btn-light" href="rezervace.html#voucherCard">Koupit poukaz <span class="arrow">→</span></a>
+      </div>
+    </div>
+  </section>
 </main>
-</div>
 
-<footer>
+<footer class="foot">
   <div class="wrap">
-    <nav class="foot-links" aria-label="Patička">
-      <a href="/">Domů</a>
-      <a href="/#lekce">Lekce</a>
-      <a href="/#joga-se-zviraty">Jóga se zvířaty</a>
-      <a href="rezervace.html">Rezervace</a>
-      <a href="obchodni-podminky.html">Obchodní podmínky</a>
-      <a href="zasady-osobnich-udaju.html">Osobní údaje</a>
-    </nav>
-    <p>© 2026 Jóga s králíčky · Barbora Kovačíková, IČO 29731828 · Tovární 486/7, Ostrava-Mariánské Hory · <a href="mailto:info@jogaskralicky.cz">info@jogaskralicky.cz</a></p>
+    <div class="foot-grid">
+      <div class="brand-cell">
+        <a class="brand" href="/" aria-label="Jóga s králíčky — domů"><img decoding="async" class="mark" src="assets/logo.svg" alt="" width="34" height="34" /> <span class="word">Jóga&nbsp;s&nbsp;králíčky</span></a>
+        <p class="ftag">Studio klidu, kde tempo udávají králíci. Fit&amp;Fun Studio Ostrava, Tovární 486/7, Ostrava-Mariánské Hory.</p>
+        <div class="socials">
+          <a href="https://www.instagram.com/zooterapie_joga" target="_blank" rel="noopener me" aria-label="Instagram"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+          <a href="https://www.facebook.com/share/188akYWtuR/" target="_blank" rel="noopener me" aria-label="Facebook"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 9V7c0-1 .5-2 2-2h2V2h-3c-2.5 0-4 1.5-4 4v3H8v3h3v8h3v-8h3l1-3z"/></svg></a>
+        </div>
+      </div>
+      <nav class="foot-col" aria-label="Stránky">
+        <h3>Stránky</h3>
+        <a href="/">Domů</a>
+        <a href="darkovy-poukaz.html">Dárkový poukaz</a>
+        <a href="skupinove-lekce.html">Skupinové lekce</a>
+        <a href="o-nas.html">O nás</a>
+      </nav>
+      <nav class="foot-col" aria-label="Více">
+        <h3>Více</h3>
+        <a href="rezervace.html">Rezervace</a>
+        <a href="joga-pro-deti-ostrava.html">Jóga pro děti</a>
+        <a href="joga-se-zviraty.html">Průvodce jógou se zvířaty</a>
+        <a href="obchodni-podminky.html">Obchodní podmínky</a>
+        <a href="zasady-osobnich-udaju.html">Zpracování osobních údajů</a>
+      </nav>
+      <div class="foot-col">
+        <h3>Ozvěte se</h3>
+        <a class="foot-contact" href="mailto:info@jogaskralicky.cz">info@jogaskralicky.cz</a>
+        <a class="foot-contact" href="tel:+420603340860" style="margin-top:.6rem">+420 603 340 860</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 Jóga s králíčky · Barbora Kovačíková, IČO 29731828. Dýchejte pomalu.</span>
+      <span><a href="obchodni-podminky.html">Obchodní podmínky</a> · <a href="zasady-osobnich-udaju.html">Osobní údaje</a></span>
+    </div>
   </div>
 </footer>
 
+<script defer src="assets/podstranka.js?v=1"></script>
+<!-- Chat s pomocníkem: defer, vytvoří jen bublinu; okno se staví až po kliknutí. -->
+<script defer src="/assets/chat.js?v=1"></script>
 </body>
 </html>

@@ -31,6 +31,7 @@ const contentProblem = (where, what) => (contentDriftAllowed ? warnings : proble
 // zabírat místo v sitemapě ani ve výsledcích hledání.
 const INDEXABLE_PAGES = [
   'index.html', 'rezervace.html', 'darkovy-poukaz.html',
+  'skupinove-lekce.html', 'o-nas.html',
   'joga-pro-deti-ostrava.html', 'joga-se-zviraty.html',
 ]
 const NOINDEX_PAGES = [
@@ -92,7 +93,7 @@ for (const page of ALL_PAGES) {
 //     ve strukturovaných datech, v CMS seedu i v generátoru rozvrhu.
 //     Stačí je změnit na jednom místě a web začne lhát.
 // ---------------------------------------------------------------------
-const FAKTA = {delkaMin: 60, kapacita: 10, cenaKc: 499, kraliku: 7, vekDeti: 10, poukazPlatnostMesicu: 6}
+const FAKTA = {delkaMin: 60, kapacita: 10, cenaKc: 499, kraliku: 10, vekDeti: 10, poukazPlatnostMesicu: 6}
 
 // Zakázané formulace = staré hodnoty, které se nesmí vrátit.
 // Články o štěňatech smí psát o obecném trhu ("60 až 75 minut"), proto
@@ -106,16 +107,17 @@ const ZAKAZANE = [
   [/dvanáct/i, 'stará kapacita (12 osob)'],
   [/max 12 míst/i, 'stará kapacita (12 míst)'],
   [/230\s*(\+|hodnocení|klidných)/i, 'nedoložená statistika (230 hostů/hodnocení)'],
-  // Kapacita je deset MÍST, králíků je ale sedm. Obě desítky se v textu
-  // potkávají, tak hlídáme jen tu, která patří ke králíkům — „deset lidí",
-  // „deset míst" i „o deset minut dřív" musí projít.
-  [/\b(deset|deseti|10)\s+králí/i, 'starý počet králíků (10)'],
-  [/\bz\s+desítky\b/i, 'starý počet králíků (10)'],
+  // Králíků je od 24. 9. 2026 deset (dřív sedm). Hlídáme jen číslovku,
+  // která stojí u králíků — „Sedm věcí, na které se lidi ptají" v úvodu
+  // FAQ je počet otázek a projít musí.
+  [/\b(sedm|sedmi|7)\s+(?:domácí\w*\s+)?králí/i, 'starý počet králíků (7)'],
+  [/\bze\s+sedmi\s+má\b/i, 'starý počet králíků (7)'],
   [/(?:děti|dítě)[^.\n]{0,35}(?:od\s*)?7\s*(?:let|\+)/i, 'nesprávný minimální věk dětí (7 let)'],
   [/sobot(?:a|ní)[^.\n]{0,25}(?:od\s*)?9:30/i, 'neaktuální dětský čas (sobota 9:30)'],
 ]
 
-for (const page of [...PUBLIC_PAGES, 'content/obsah.json', 'llms.txt']) {
+// Znalosti chatbota a popis termínů pro Google musí říkat totéž co web.
+for (const page of [...PUBLIC_PAGES, 'content/obsah.json', 'llms.txt', 'api/_chat-znalosti.js', 'scripts/build.mjs']) {
   if (!existsSync(join(root, page))) continue
   const text = read(page)
   for (const [re, popis] of ZAKAZANE) {
@@ -192,7 +194,7 @@ for (const fn of ['supabase/functions/stripe-confirm/index.ts', 'supabase/functi
 }
 
 // d) texty, které platnost slibují návštěvníkovi
-const SLIB_PLATNOSTI = ['index.html', 'darkovy-poukaz.html', 'obchodni-podminky.html', 'llms.txt']
+const SLIB_PLATNOSTI = ['index.html', 'darkovy-poukaz.html', 'obchodni-podminky.html', 'llms.txt', 'api/_chat-znalosti.js']
 const spravnyText = `${PLATNOST} ${mesicuSlovo(PLATNOST)}`
 for (const soubor of SLIB_PLATNOSTI) {
   if (!existsSync(join(root, soubor))) continue
@@ -362,8 +364,11 @@ try {
   fail('index.html', `lokální profily v JSON-LD nejdou ověřit — ${error.message}`)
 }
 
+// Doprava se z homepage přestěhovala na stránku O nás (sekce Kde nás
+// najdete). Ověřené údaje o MHD a parkování tam musí zůstat celé.
+const oNasHtml = read('o-nas.html')
 for (const fakt of ['Daliborova', '3, 4, 8, 18 a 19', '100 metrů', 'dvě minuty', 'bezplatné parkování']) {
-  if (!homeHtml.includes(fakt)) fail('index.html', `sekce dopravy neobsahuje ověřený údaj „${fakt}“`)
+  if (!oNasHtml.includes(fakt)) fail('o-nas.html', `sekce dopravy neobsahuje ověřený údaj „${fakt}“`)
 }
 
 let obsah = {}
@@ -552,6 +557,8 @@ try {
     ['/joga-se-zviraty', '/joga-se-zviraty.html'],
     ['/joga-pro-deti-ostrava', '/joga-pro-deti-ostrava.html'],
     ['/darkovy-poukaz', '/darkovy-poukaz.html'],
+    ['/skupinove-lekce', '/skupinove-lekce.html'],
+    ['/o-nas', '/o-nas.html'],
     ['/rezervace', '/rezervace.html'],
   ])
   for (const [path, target] of requiredRedirects) {
