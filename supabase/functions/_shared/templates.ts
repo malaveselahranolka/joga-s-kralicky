@@ -99,6 +99,8 @@ export type MailOut = { subject: string; html: string; text: string };
 //  params: name, lesson, datetime, spots, price, location, ticket_url, qr_url
 // ---------------------------------------------------------------------
 export function bookingMail(p: Record<string, string>): MailOut {
+  // Lekce Děti & králíčci má vlastní potvrzení (doprovod, co s sebou).
+  if (p.druh === "deti") return detiBookingMail(p);
   const firstName = String(p.name || "").trim().split(/\s+/)[0] || "";
   const greeting = firstName ? `Dobrý den, ${esc(firstName)},` : "Dobrý den,";
 
@@ -148,6 +150,77 @@ export function bookingMail(p: Record<string, string>): MailOut {
 
   return {
     subject: p.datetime ? `Rezervace potvrzena — ${p.datetime}` : "Rezervace potvrzena",
+    html,
+    text,
+  };
+}
+
+// ---------------------------------------------------------------------
+//  POTVRZENÍ REZERVACE — lekce Děti & králíčci
+//  params: jako u bookingMail + druh = 'deti'; spots je „zástupce + N děti".
+//  Pokyny jsou převzaté z joga-pro-deti-ostrava.html (Praktické informace
+//  a Časté dotazy) — když se změní tam, změň je i tady.
+// ---------------------------------------------------------------------
+const DETI_POKYNY = [
+  "Dítě je na lekci vždy s vámi — zákonný zástupce cvičí s ním, nejde o hlídání.",
+  "S sebou pohodlné oblečení a ponožky, cvičí se bez bot. Podložky, dečky i polštáře máme.",
+  "Silné parfémy a vonné krémy raději ne, králíci mají citlivý čich.",
+  "Nikoho k ničemu nenutíme — kdo se králíka bojí, může ho jen chvíli sledovat zpovzdálí.",
+];
+
+export function detiBookingMail(p: Record<string, string>): MailOut {
+  const firstName = String(p.name || "").trim().split(/\s+/)[0] || "";
+  const greeting = firstName ? `Dobrý den, ${esc(firstName)},` : "Dobrý den,";
+
+  const html = shell(
+    `Děti & králíčci · ${p.datetime || ""} — těšíme se na vás i na děti.`,
+    `<p style="margin:0 0 14px;">${greeting}</p>
+     <p style="margin:0 0 22px;">platba dorazila a na lekci <strong>Děti &amp; králíčci</strong> máte místo. Tady je všechno na jednom místě:</p>
+     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-top:1px solid ${LINE};border-bottom:1px solid ${LINE};padding:4px 0;">
+       ${row("Lekce", p.lesson)}
+       ${row("Kdy", p.datetime)}
+       ${row("Kdo", p.spots)}
+       ${row("Zaplaceno", p.price)}
+       ${row("Kde", p.location)}
+     </table>
+     ${p.qr_url ? qrBlock(p.qr_url, "Ve studiu stačí ukázat tenhle kód — jeden za celou rodinu.<br>Nemusíte nic tisknout.") : ""}
+     <p style="margin:26px 0 12px;font-weight:600;">Než vyrazíte</p>
+     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+       <tr><td style="padding:14px 16px;background:${PAPER};border:1px solid ${LINE};border-radius:12px;font-size:14px;line-height:1.6;">
+         ${DETI_POKYNY.map((t) => `&bull;&nbsp;${esc(t)}`).join("<br>")}
+       </td></tr>
+     </table>
+     ${p.ticket_url ? `<p style="margin:22px 0 0;text-align:center;">
+       <a href="${esc(p.ticket_url)}" style="display:inline-block;background:${FOREST};color:${CREAM};text-decoration:none;font-weight:600;font-size:15px;padding:13px 26px;border-radius:999px;">Stav rezervace</a>
+     </p>
+     <p style="margin:14px 0 0;text-align:center;font-size:12px;color:${INK_SOFT};word-break:break-all;">${esc(p.ticket_url)}</p>` : ""}
+     <p style="margin:26px 0 0;font-size:13px;color:${INK_SOFT};">Přijďte prosím o 10 minut dřív, ať se stihnete v klidu zout a králíci si vás stihnou očichat. Kdyby cokoliv, odepište na tenhle e-mail.</p>`,
+  );
+
+  const text = [
+    firstName ? `Dobrý den, ${firstName},` : "Dobrý den,",
+    "",
+    "platba dorazila a na lekci Děti & králíčci máte místo.",
+    "",
+    p.lesson ? `Lekce: ${p.lesson}` : null,
+    p.datetime ? `Kdy: ${p.datetime}` : null,
+    p.spots ? `Kdo: ${p.spots}` : null,
+    p.price ? `Zaplaceno: ${p.price}` : null,
+    p.location ? `Kde: ${p.location}` : null,
+    "",
+    "NEŽ VYRAZÍTE",
+    ...DETI_POKYNY.map((t) => `- ${t}`),
+    "",
+    p.ticket_url ? `Stav rezervace a QR kód (jeden za celou rodinu): ${p.ticket_url}` : null,
+    p.ticket_url ? "" : null,
+    "Přijďte prosím o 10 minut dřív. Kdyby cokoliv, odepište na tenhle e-mail.",
+    "",
+    "Jóga s králíčky, Fit&Fun Studio, Tovární 486/7, Ostrava-Mariánské Hory",
+    "info@jogaskralicky.cz, +420 603 340 860",
+  ].filter((l) => l !== null).join("\n");
+
+  return {
+    subject: p.datetime ? `Děti & králíčci — rezervace potvrzena, ${p.datetime}` : "Děti & králíčci — rezervace potvrzena",
     html,
     text,
   };

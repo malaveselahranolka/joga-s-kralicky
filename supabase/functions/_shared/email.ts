@@ -200,6 +200,8 @@ export function bookingEmail(bk: Booking, siteUrl: string) {
       lesson: title,
       datetime,
       spots: bk.lesson?.druh === "deti" ? detiSpotsTxt(spots) : spotsTxt(spots),
+      // Děti & králíčci mají vlastní šablonu potvrzení (templates.ts).
+      druh: bk.lesson?.druh === "deti" ? "deti" : "klasik",
       // haléře → koruny; když sloupec chybí, radši nic než špatné číslo
       price: bk.payment_amount ? czk(Math.round(Number(bk.payment_amount) / 100)) : "",
       location: PLACE,
