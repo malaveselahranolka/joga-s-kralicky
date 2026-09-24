@@ -158,7 +158,7 @@ header.nav.scrolled { background: color-mix(in srgb, var(--paper) 90%, transpare
 .nav-quick a:hover::after, .nav-quick a:focus-visible::after, .nav-quick a[aria-current="page"]::after { transform: scaleX(1); }
 .brand { display: inline-flex; align-items: center; gap: .6rem; font-family: "Schibsted Grotesk"; font-weight: 700; font-size: 1.22rem; letter-spacing: -.02em; justify-self: center; }
 .brand .mark { width: 34px; height: 34px; flex: none; }
-.nav-right { display: flex; align-items: center; justify-content: flex-end; gap: 1rem; }
+.nav-right { display: flex; align-items: center; justify-content: flex-end; gap: 1.5rem; }
 .nav-cta { padding: .62em 1.3em; font-size: .92rem; background: var(--forest); color: var(--cream); }
 @media (hover: hover) and (pointer: fine) { .nav-cta:hover { background: var(--forest-deep); transform: translateY(-2px); } }
 
@@ -352,7 +352,12 @@ html.js .phero .wrap > :nth-child(5) { animation-delay: .42s; }
 }
 
 /* ---------- šířky ---------- */
-@media (max-width: 1240px) {
+/* Počítač: vlevo Rezervovat + poukaz, uprostřed logo, vpravo dvě stránky,
+   hamburger vůbec. Užší obrazovky: odkazy schované, hamburger jen se stránkami. */
+@media (min-width: 901px) {
+  .menu-toggle, .nav-links, .nav-backdrop { display: none; }
+}
+@media (max-width: 900px) {
   .nav-quick { display: none; }
 }
 @media (max-width: 1040px) {

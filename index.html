@@ -496,7 +496,7 @@
   .nav-quick a:hover::after, .nav-quick a:focus-visible::after { transform: scaleX(1); }
   .brand { display: inline-flex; align-items: center; gap: .6rem; font-family: "Schibsted Grotesk"; font-weight: 700; font-size: 1.22rem; letter-spacing: -.02em; justify-self: center; }
   .brand .mark { width: 34px; height: 34px; flex: none; }
-  .nav-right { display: flex; align-items: center; justify-content: flex-end; gap: 1rem; }
+  .nav-right { display: flex; align-items: center; justify-content: flex-end; gap: 1.7rem; }
   .nav-cta { padding: .62em 1.3em; font-size: .92rem; background: var(--forest); color: var(--cream); border: 1px solid transparent; }
   @media (hover: hover) and (pointer: fine) { .nav-cta:hover { background: var(--forest-deep); color: var(--cream); transform: translateY(-2px); } }
 
@@ -516,6 +516,7 @@
   .nav-links.open { transform: translateY(0); }
   .nav-links a { font-family: "Schibsted Grotesk"; font-weight: 600; font-size: clamp(1.35rem, 1.05rem + 1vw, 1.8rem); letter-spacing: -.02em; color: var(--ink); padding: .42rem 0; transition: color .25s var(--ease), transform .25s var(--ease-out); }
   .nav-links a:hover { color: var(--clover-text); transform: translateX(4px); }
+  .nav-links a[aria-current="page"] { color: var(--clover-text); }
   .nav-links .menu-cta { color: var(--cream); justify-content: center; margin-top: 1.1rem; font-size: 1rem; padding: .9em 1.5em; }
   .nav-links .menu-cta:hover { color: var(--cream); transform: none; }
 
@@ -1045,9 +1046,13 @@
   }
 
   /* ---------- responsive ---------- */
-  /* Odkazy na podstránky jsou delší než dřívější kotvy — pod touhle šířkou
-     by se v levém sloupci zalomily přes logo. V hamburgeru jsou taky. */
-  @media (max-width: 1240px) {
+  /* Počítač: vlevo Rezervovat + poukaz, uprostřed logo, vpravo dvě stránky,
+     hamburger vůbec. Užší obrazovky: odkazy schované, hamburger jen se
+     stránkami webu (sekce homepage v něm záměrně nejsou). */
+  @media (min-width: 901px) {
+    .menu-toggle, .nav-links, .nav-backdrop { display: none; }
+  }
+  @media (max-width: 900px) {
     .nav-quick { display: none; }
   }
   @media (max-width: 1040px) {
@@ -1134,10 +1139,8 @@
   <div class="wrap nav-inner">
     <div class="nav-left">
       <a class="btn nav-cta" href="rezervace.html">Rezervovat</a>
-      <nav class="nav-quick" aria-label="Rychlé odkazy">
+      <nav class="nav-quick" aria-label="Stránky vlevo">
         <a href="darkovy-poukaz.html">Dárkový poukaz</a>
-        <a href="skupinove-lekce.html">Skupinové lekce</a>
-        <a href="o-nas.html">O nás</a>
       </nav>
     </div>
     <a class="brand" href="#top" aria-label="Jóga s králíčky — domů">
@@ -1145,6 +1148,10 @@
       <span class="word">Jóga&nbsp;s&nbsp;králíčky</span>
     </a>
     <div class="nav-right">
+      <nav class="nav-quick" aria-label="Stránky vpravo">
+        <a href="skupinove-lekce.html">Skupinové lekce</a>
+        <a href="o-nas.html">O nás</a>
+      </nav>
       <button class="menu-toggle" id="menuToggle" aria-label="Otevřít menu" aria-controls="navLinks" aria-expanded="false">
         <span class="bar"></span><span class="bar"></span><span class="bar"></span>
       </button>
@@ -1153,14 +1160,10 @@
 </header>
 <div class="nav-backdrop" id="navBackdrop"></div>
 <nav class="nav-links" id="navLinks" aria-label="Hlavní menu">
-  <a href="#proc">Proč se lidi vracejí</a>
-  <a href="#lekce">Lekce</a>
-  <a href="#kralicci">Králíčci</a>
+  <a href="#top" aria-current="page">Domů</a>
   <a href="darkovy-poukaz.html">Dárkový poukaz</a>
   <a href="skupinove-lekce.html">Skupinové lekce</a>
   <a href="o-nas.html">O nás</a>
-  <a href="#faq">Časté dotazy</a>
-  <a href="#kontakt">Kde nás najdete</a>
   <a class="btn btn-primary menu-cta" href="rezervace.html">Rezervovat lekci <span class="arrow">→</span></a>
 </nav>
 
