@@ -11,7 +11,7 @@
 --    Rezervace tedy drží 2 až 5 míst (bookings.spots).
 --  * Cena: 1 090 Kč za zástupce s jedním dítětem + 500 Kč za každé další
 --    dítě (nejvýš 3 další). Počítá ji server při platbě —
---    supabase/functions/_shared/cena.ts. Tady se jen hlídá počet míst.
+--    supabase/functions/stripe-create/index.ts. Tady se jen hlídá počet míst.
 --  * Dárkový poukaz za 499 Kč platí jen na klasickou lekci. Na dětskou
 --    lekci ho nejde uplatnit, a z dětské rezervace se poukaz nevystavuje
 --    (jedno místo tu nemá cenu 499 Kč a poukaz na „místo“ by nedával smysl).
