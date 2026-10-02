@@ -465,17 +465,8 @@
   .btn .arrow { transition: transform .3s var(--ease-out); }
   @media (hover: hover) and (pointer: fine) { .btn:hover .arrow { transform: translateX(3px); } }
 
-  /* split CTA: pill + circular arrow */
-  .cta-split { display: inline-flex; align-items: stretch; gap: .4rem; }
-  .cta-split .arrow-btn {
-    width: 3.2em; border-radius: 999px; flex: none; display: grid; place-items: center;
-    background: var(--forest); color: var(--cream); border: 0; cursor: pointer;
-    transition: transform .18s var(--ease-out), background-color .3s var(--ease);
-  }
-  @media (hover: hover) and (pointer: fine) { .cta-split .arrow-btn:hover { transform: translateY(-2px) rotate(8deg); background: var(--forest-deep); } }
-  .cta-split .arrow-btn:active { transform: scale(.95); }
+  .cta-split { display: inline-flex; align-items: stretch; }
   .cta-split.on-photo .btn-light { background: var(--cream); }
-  .cta-split.on-photo .arrow-btn { background: var(--cream); color: var(--ink); }
 
   /* ---------- nav ---------- */
   header.nav {
@@ -1110,11 +1101,10 @@
     section { padding: clamp(3.5rem, 9vw, 5rem) 0; }
     .tcard { flex-basis: 100%; }
     /* Na telefonu dvě stejně široká tlačítka vedle sebe: Rezervovat lekci
-       a Koupit poukaz. Šipka vedle rezervace by se sem už nevešla. */
+       a Koupit poukaz. */
     .hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
     .hero-actions .cta-split { width: 100%; min-width: 0; }
     .hero-actions .cta-split .btn-light { flex: 1; }
-    .hero-actions .cta-split .arrow-btn { display: none; }
     .hero-actions .btn { min-width: 0; padding-inline: .5em; white-space: nowrap; }
     .l-run div { grid-template-columns: 4.8rem 1fr; gap: .6rem; }
     .foot-grid, .foot-news { grid-template-columns: 1fr; }
@@ -1217,9 +1207,6 @@
       <div class="hero-actions">
         <div class="cta-split on-photo">
           <a class="btn btn-light" href="rezervace.html">Rezervovat lekci</a>
-          <a class="arrow-btn" href="rezervace.html" aria-label="Rezervovat lekci">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M9 7h8v8"/></svg>
-          </a>
         </div>
         <a class="btn hero-gift" href="koupit-poukaz.html">Koupit poukaz</a>
       </div>
