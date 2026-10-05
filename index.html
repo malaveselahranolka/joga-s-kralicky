@@ -792,10 +792,10 @@
     will-change: transform;
   }
   .gal-big { flex: none; width: calc(var(--shot-h) * 3 / 4); }
-  .gal-stack { flex: none; display: grid; gap: var(--gal-gap); }
-  .gal-hero { flex: none; }
+  .gal-stack { flex: none; display: grid; gap: var(--gal-gap); width: calc((var(--shot-h) - var(--gal-gap)) * 3 / 4); }
+  .gal-hero { flex: none; width: calc(var(--shot-h) * 3 / 2); }
 
-  .rshot { position: relative; display: block; padding: 0; border: 0; margin: 0; cursor: pointer; background: var(--surface); overflow: hidden; border-radius: var(--r-lg); box-shadow: 0 12px 24px -14px rgba(44,59,46,.4); transition: transform .45s var(--ease-out), box-shadow .45s var(--ease); }
+  .rshot { position: relative; display: block; width: 100%; padding: 0; border: 0; margin: 0; cursor: pointer; background: var(--surface); overflow: hidden; border-radius: var(--r-lg); box-shadow: 0 12px 24px -14px rgba(44,59,46,.4); transition: transform .45s var(--ease-out), box-shadow .45s var(--ease); }
   .rshot img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s var(--ease); }
   /* tři typy sloupců, ale všechny fotky leží ve stejném vodorovném pásu:
      stejná horní i dolní hrana, takže mezery kolem nich vycházejí všude stejně */
@@ -813,25 +813,21 @@
   .gal-bar span { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, var(--clover), var(--carrot)); transform: scaleX(0); transform-origin: 0 50%; }
   .gal-hint { font-size: .84rem; color: var(--ink-soft); white-space: nowrap; }
 
-  /* ---------- gal-lite: žádné scroll-jacking, jen normální tažení prstem ----------
-     Pin zůstává zapnutý defaultně i na mobilu — je to schválně, galerie má
-     jet přišpendlená všude, kde na to prohlížeč stačí. Přepíná se JEN podle
-     skutečně naměřeného FPS (viz níž), ne podle .lite (to se zapíná i pro
-     každý dotykový telefon bez ohledu na výkon a shodilo by pin úplně
-     všude). Pin+pan vázaný na window.scrollY je za nízkého obnovování
-     (úsporný režim, slabší telefon) trhaný — snímky dobíhají scroll se
-     zpožděním, kdežto nativní vodorovné táhnutí prstem jede plynule na
-     compositoru bez ohledu na to, kolik snímků za vteřinu stránka stihne
-     přepočítat. Teprve když se to skutečně změří, stopa se stane obyčejným
-     posouvatelným pásem. */
-  .gal-lite .gal-wrap { height: auto; }
-  .gal-lite .gal-sticky { position: static; height: auto; }
-  .gal-lite .gal-view {
-    overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain;
-    scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch;
+  /* Native scrolling is selected before the first paint, never from an FPS
+     sample during a gesture. Keep this query in sync with nativeGallery below. */
+  .gal-swipe-hint { display: none; font-size: .84rem; color: var(--ink-soft); }
+  @media (max-width: 760px), (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {
+    .gal .gal-wrap { height: auto; }
+    .gal .gal-sticky { position: static; height: auto; padding-block: 0 1.2rem; }
+    .gal .gal-view {
+      overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain;
+      scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch;
+    }
+    .gal .gal-track { transform: none !important; will-change: auto; }
+    .gal-track > * { scroll-snap-align: start; }
+    .gal .gal-hint, .gal .gal-bar { display: none; }
+    .gal .gal-swipe-hint { display: inline; }
   }
-  .gal-lite .gal-track > * { scroll-snap-align: start; }
-  .gal-lite .gal-bar { visibility: hidden; }
 
   /* ---------- testimonials ---------- */
   .reference { background: var(--cream); overflow: hidden; border-top: 1px solid var(--line-soft); }
@@ -1458,12 +1454,9 @@
 
         </div>
 
-        <div class="wrap gal-foot">        </div>
-
-        <div class="wrap gal-foot">        </div>
-
         <div class="wrap gal-foot">
           <span class="gal-hint">Scrollujte, galerie jede do strany</span>
+          <span class="gal-swipe-hint">Posuňte fotky do strany</span>
           <span class="gal-bar" aria-hidden="true"><span id="galBar"></span></span>
           <a class="btn btn-ghost" href="rezervace.html">Chci je poznat <span class="arrow">→</span></a>
         </div>
@@ -1693,12 +1686,8 @@
   // trvale o něco skromnější. A protože degradace jenom ubírá efekty,
   // nejhorší možný omyl je, že je web na chvíli klidnější, než musel být.
   //
-  // Měří se i na zařízeních, kde je LITE už zapnuté synchronně (dotykové
-  // telefony) — galerie s králíčky má zůstat přišpendlená (pin + scroll-jack)
-  // úplně všude, kde na to prohlížeč reálně stačí, a drtivá většina telefonů
-  // stačí. Teprve naměřené nízké FPS (skutečný projev úsporného režimu nebo
-  // fakt slabého hardwaru) galerii přepne na obyčejný posouvatelný pás —
-  // viz .gal-lite v CSS a `galPinned` níž.
+  // Výsledek omezuje pouze dekorativní efekty. Režim galerie se za běhu
+  // podle FPS nemění, jinak by se při gestu změnila výška celé stránky.
   (function () {
     if (REDUCE) return;
     let snimku = 0, prvni = 0, meri = false;
@@ -1710,10 +1699,6 @@
       if (ubehlo < 1000) { requestAnimationFrame(vzorek); return; }
       if (snimku / (ubehlo / 1000) < 35) {
         document.documentElement.classList.add('lite');
-        document.documentElement.classList.add('gal-lite');
-        // přepočítat rozvržení galerie hned, ne až při dalším resize —
-        // jinak zůstane přišpendlená ještě jednu návštěvu scrollování
-        window.dispatchEvent(new Event('resize'));
       }
       meri = false;
     }
@@ -1983,7 +1968,8 @@
       if (REDUCE) ctaLead.style.setProperty('--draw', 1);
     }
 
-    const galPinned = () => !REDUCE && !document.documentElement.classList.contains('gal-lite');
+    const nativeGallery = window.matchMedia('(max-width: 760px), (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce)');
+    const galPinned = () => !nativeGallery.matches;
 
     let vh = 0, docMax = 1, heroEnd = 0;
     let galTop = 0, galSpan = 1, galTravel = 0;
@@ -2019,7 +2005,7 @@
       if (galWrap && galTrack && zmenaSirky) {
         if (pinned) {
           // stopa ujede celou šířku za kratší scroll, jinak by pin trval věčnost
-          galTravel = Math.max(galTrack.scrollWidth - window.innerWidth, 0);
+          galTravel = Math.max(galTrack.scrollWidth - galTrack.parentElement.clientWidth, 0);
           galWrap.style.setProperty('--travel', Math.round(galTravel * 0.6) + 'px');
         } else {
           galWrap.style.removeProperty('--travel');
@@ -2035,7 +2021,7 @@
 
       if (galWrap && galTrack && pinned) {
         galTop = docTop(galWrap);
-        galSpan = Math.max(galWrap.offsetHeight - vh, 1);
+        galSpan = Math.max(galWrap.offsetHeight - galWrap.querySelector('.gal-sticky').offsetHeight, 1);
       }
       if (ctaSec) { ctaTop = docTop(ctaSec); ctaH = Math.max(ctaSec.offsetHeight, 1); }
 
@@ -2104,6 +2090,7 @@
 
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', measureSoon, { passive: true });
+    nativeGallery.addEventListener('change', measureSoon);
     window.addEventListener('load', measureSoon);
     if (galTrack && 'ResizeObserver' in window) new ResizeObserver(measureSoon).observe(galTrack);
     measure(); update();

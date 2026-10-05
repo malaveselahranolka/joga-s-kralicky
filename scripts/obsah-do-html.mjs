@@ -157,6 +157,7 @@ export function obsahDoHtml(html, o) {
   text(root, '.gal-intro h2', o.galleryTitle)
   text(root, '.gal-intro .lead', o.galleryLead)
   text(root, '.gal-hint', o.galleryHint)
+  text(root, '.gal-swipe-hint', o.gallerySwipeHint)
   leadingText(root, '.gal-foot .btn', o.galleryButtonLabel)
 
   // Náhled v pásu a fotka v lightboxu jsou dva různé soubory (menší a plná
