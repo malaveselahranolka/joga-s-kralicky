@@ -1209,13 +1209,13 @@
       <!-- three of the ten, so the promise of the page is visible before a word is read -->
       <div class="hero-deck deck-anim" id="heroDeck" aria-hidden="true">
         <figure class="hd-card" style="--rot:-9deg;--dd:.72s;--depth:1.6">
-          <img src="assets/photos/rabbit-1-320.webp" alt="Králík na podložce během lekce jógy s králíčky v Ostravě" width="320" height="427" loading="eager" decoding="async" />
+          <img src="assets/photos/rabbit-1-320.webp" alt="Králík na podložce během lekce jógy s králíčky v Ostravě" width="320" height="427" loading="eager" fetchpriority="low" decoding="async" />
         </figure>
         <figure class="hd-card" style="--rot:4deg;--dd:.84s;--depth:1">
-          <img src="assets/photos/rabbit-5-320.webp" alt="Domácí králík odpočívá v sále studia jógy se zvířaty" width="320" height="427" loading="eager" decoding="async" />
+          <img src="assets/photos/rabbit-5-320.webp" alt="Domácí králík odpočívá v sále studia jógy se zvířaty" width="320" height="427" loading="eager" fetchpriority="low" decoding="async" />
         </figure>
         <figure class="hd-card" style="--rot:12deg;--dd:.96s;--depth:.5">
-          <img src="assets/photos/rabbit-4-320.webp" alt="Králík s klopenýma ušima mezi cvičenci na lekci jógy" width="320" height="569" loading="eager" decoding="async" />
+          <img src="assets/photos/rabbit-4-320.webp" alt="Králík s klopenýma ušima mezi cvičenci na lekci jógy" width="320" height="569" loading="eager" fetchpriority="low" decoding="async" />
         </figure>
       </div>
     </div>
@@ -1651,16 +1651,14 @@
   </div>
 </footer>
 
-<!-- `defer` je tu nutnost, ne kosmetika: bez něj Chrome drží první vykreslení,
-     dokud se tyhle skripty nestáhnou z cizí domény. Na homepage je potřebuje
-     jediná věc — přihlášení k newsletteru v patičce. Ta se proto níž spouští
-     až na DOMContentLoaded, jinak by sáhla na window.supabase dřív, než existuje.
-     Zbytek skriptu (animace, měření, parallax) žádnou konfiguraci nepoužívá
-     a zůstává beze změny. -->
+<!-- Na homepage potřebuje Supabase jediná věc — přihlášení k newsletteru
+     v patičce. supabase-js (56 KB z cizí domény, z toho 84 % nevyužitých,
+     podle PageSpeed 6. 10. 2026) se proto už nestahuje: newsletter volá
+     dvě RPC funkce přímo přes fetch. Tady zůstává jen konfigurace (URL a
+     veřejný klíč), s `defer`, takže blok níž čeká na DOMContentLoaded. -->
 <!-- EmailJS se odsud odstranil 3. 9. 2026: skript se stahoval z cizí domény
      na každé zobrazení homepage a nikdy se nezavolal. E-maily posílá server
      přes Brevo, prohlížeč z téhle stránky žádný neodesílá. -->
-<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="supabase-config.js?v=2"></script>
 <script>
   const REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2107,7 +2105,8 @@
   })();
 
   // ============ Newsletter (patička) ============
-  // Jediné místo na homepage, které potřebuje supabase-js. Načítá se
+  // Jediné místo na homepage, které mluví se Supabase — bez supabase-js,
+  // RPC je obyčejný POST na /rest/v1/rpc/<funkce>. Konfigurace se načítá
   // s `defer`, takže tenhle blok musí počkat na DOMContentLoaded.
   document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('newsForm');
@@ -2116,8 +2115,15 @@
     const btn = document.getElementById('newsBtn');
     const msg = document.getElementById('newsMsg');
     const CONFIGURED = /^https:\/\/.+\.supabase\.co/.test(window.SUPABASE_URL || '') &&
-      !!window.SUPABASE_ANON_KEY && window.SUPABASE_ANON_KEY.length > 20 && typeof window.supabase !== 'undefined';
-    const sb = CONFIGURED ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY) : null;
+      !!window.SUPABASE_ANON_KEY && window.SUPABASE_ANON_KEY.length > 20;
+    // Stejný tvar odpovědi jako sb.rpc(): { data, error }.
+    const sb = CONFIGURED ? {
+      rpc: (fn, args) => fetch(window.SUPABASE_URL + '/rest/v1/rpc/' + fn, {
+        method: 'POST',
+        headers: { apikey: window.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify(args)
+      }).then((r) => r.json().then((data) => r.ok ? { data, error: null } : { data: null, error: data }))
+    } : null;
     const setMsg = (t, cls) => { msg.textContent = t; msg.className = 'fn-msg' + (cls ? ' ' + cls : ''); };
 
     // odhlášení z odkazu v e-mailu (?unsub=email)

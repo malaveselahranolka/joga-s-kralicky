@@ -137,6 +137,13 @@
       }
     },
     {
+      "src": "/assets/(fonts|photos/nahrane)/(.*)",
+      "continue": true,
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      }
+    },
+    {
       "handle": "filesystem"
     },
     {
