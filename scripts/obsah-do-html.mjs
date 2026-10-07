@@ -154,6 +154,12 @@ export function obsahDoHtml(html, o) {
   text(root, '.business-intro p', o.businessBody)
   leadingText(root, '.business-intro .btn', o.businessButtonLabel)
 
+  // Krátký blok s běžnými názvy služby (pet yoga, bunny yoga…). Title
+  // homepage cílí na „jóga se zvířaty Ostrava" a text to musí podpírat.
+  text(root, '.animal-seo h2', o.animalTitle)
+  text(root, '.animal-seo p', o.animalBody)
+  leadingText(root, '.animal-seo .btn', o.animalButtonLabel)
+
   text(root, '.gal-intro h2', o.galleryTitle)
   text(root, '.gal-intro .lead', o.galleryLead)
   text(root, '.gal-hint', o.galleryHint)
