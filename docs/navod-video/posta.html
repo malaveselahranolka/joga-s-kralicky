@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pošta</title>
+<!-- Poštovní aplikace pro návodové video. Tělo e-mailu je skutečný výstup
+     šablon supabase/functions/_shared/templates.ts (recorder ho dosadí
+     do window.MAIL), okolo je jen obyčejné rozhraní mobilní pošty. -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Inter, -apple-system, sans-serif; background: #fff; color: #111; -webkit-font-smoothing: antialiased; }
+  .tb { position: sticky; top: 0; z-index: 5; background: rgba(255,255,255,.96); display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #EEE; }
+  .tb .b { color: #0A6CFF; font-size: 16px; display: flex; align-items: center; gap: 4px; }
+  .tb .b svg { width: 12px; height: 20px; }
+  .tb .i { display: flex; gap: 20px; }
+  .tb .i svg { width: 21px; height: 21px; stroke: #0A6CFF; }
+  .hd { padding: 14px 16px 12px; }
+  .sub { font-size: 21px; font-weight: 700; line-height: 1.25; letter-spacing: -.01em; }
+  .fr { display: flex; gap: 11px; align-items: center; margin-top: 14px; }
+  .av { width: 40px; height: 40px; border-radius: 50%; background: #2C3B2E; display: flex; align-items: center; justify-content: center; flex: none; }
+  .av img { width: 26px; height: 26px; }
+  .fr b { display: block; font-size: 15px; }
+  .fr span { font-size: 13px; color: #6B6B6B; }
+  .fr .t { margin-left: auto; align-self: flex-start; font-size: 13px; color: #6B6B6B; }
+  .att { margin: 4px 16px 24px; display: flex; gap: 12px; align-items: center; border: 1px solid #E5E5E5; border-radius: 12px; padding: 10px 12px; }
+  .att img { width: 72px; height: 34px; object-fit: cover; border-radius: 4px; border: 1px solid #E5E5E5; }
+  .att b { display: block; font-size: 14px; }
+  .att span { font-size: 12.5px; color: #6B6B6B; }
+  .pv { position: fixed; inset: 0; z-index: 20; background: #F2F2F2; display: none; flex-direction: column; }
+  .pv.on { display: flex; }
+  .pv .tb2 { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: #fff; border-bottom: 1px solid #E5E5E5; font-size: 15px; }
+  .pv .tb2 .d { color: #0A6CFF; font-weight: 600; }
+  .pv .tb2 .n { font-weight: 600; font-size: 13.5px; }
+  .pv .pg { flex: 1; display: flex; align-items: center; justify-content: center; padding: 18px; }
+  .pv .pg img { width: 100%; border-radius: 3px; box-shadow: 0 10px 30px rgba(0,0,0,.18); }
+  .pv .bt { text-align: center; padding: 16px; font-size: 14px; color: #0A6CFF; background: #fff; border-top: 1px solid #E5E5E5; }
+</style>
+</head>
+<body>
+<div class="tb">
+  <span class="b"><svg viewBox="0 0 12 20" fill="none" stroke="#0A6CFF" stroke-width="2.4"><path d="M10 2 2 10l8 8"/></svg>Doručená</span>
+  <span class="i">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M4 21V4h11l-1.5 4L15 12H4"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M3 7h18M8 7V4h8v3M6 7l1 14h10l1-14"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 5 5v5"/></svg>
+  </span>
+</div>
+<div class="hd">
+  <div class="sub" id="sub"></div>
+  <div class="fr"><div class="av"><img src="https://www.jogaskralicky.cz/assets/logo.svg" alt=""></div>
+    <div><b>Jóga s králíčky</b><span id="to"></span></div><span class="t">teď</span></div>
+</div>
+<div id="body"></div>
+<div id="attWrap"></div>
+<div class="pv" id="pv">
+  <div class="tb2"><span class="d">Hotovo</span><span class="n" id="pvn"></span><span style="width:48px"></span></div>
+  <div class="pg"><img src="https://www.jogaskralicky.cz/assets/photos/poukaz-ukazka.webp" alt=""></div>
+  <div class="bt">Sdílet · Tisk · Uložit do Souborů</div>
+</div>
+<script>
+  const M = window.MAIL || {};
+  document.getElementById('sub').textContent = M.subject || '';
+  document.getElementById('to').textContent = 'Komu: ' + (M.to || '');
+  // e-mail je celý HTML dokument — vezmeme z něj <body> i s jeho pozadím
+  const doc = new DOMParser().parseFromString(M.html || '', 'text/html');
+  const box = document.getElementById('body');
+  box.setAttribute('style', doc.body.getAttribute('style') || '');
+  box.innerHTML = doc.body.innerHTML;
+  if (M.attachment) {
+    document.getElementById('attWrap').innerHTML =
+      '<div class="att" id="att"><img src="https://www.jogaskralicky.cz/assets/photos/poukaz-ukazka-640.webp" alt=""><div><b>' + M.attachment + '</b><span>PDF · poukaz k vytištění</span></div></div>';
+    document.getElementById('pvn').textContent = M.attachment;
+    document.getElementById('att').addEventListener('click', () => document.getElementById('pv').classList.add('on'));
+  }
+</script>
+</body>
+</html>
